@@ -1,0 +1,20 @@
+แหล่งที่มาของ Dataset
+=====================
+
+ชื่อ Dataset : Cat and Dog
+เจ้าของ      : tongpython
+แพลตฟอร์ม   : Kaggle
+ลิงก์        : https://www.kaggle.com/datasets/tongpython/cat-and-dog
+
+รายละเอียด:
+- training_set/cats  : 4000 รูป
+- training_set/dogs  : 4000 รูป
+- test_set/cats      : 1000 รูป
+- test_set/dogs      : 1000 รูป
+- single_prediction  : 2 รูป (สำหรับทดสอบทำนายภาพเดี่ยว)
+
+หมายเหตุ:
+ในโปรเจกต์นี้ได้นำภาพจากทั้ง training_set และ test_set ของ Kaggle
+มารวมกันใหม่ในโฟลเดอร์ PetImages/Cat และ PetImages/Dog (รวม 5000 รูป/คลาส
+รวมทั้งหมด 10000 รูป) แล้วให้สคริปต์ split_data.py เป็นผู้แบ่ง Train/Test
+เอง (80/20) เพื่อให้ pipeline ควบคุมการแบ่งข้อมูลได้เองทั้งหมด

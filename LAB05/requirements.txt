@@ -1,0 +1,8 @@
+numpy
+pandas
+pillow
+scikit-image
+scikit-learn
+matplotlib
+joblib
+pytest

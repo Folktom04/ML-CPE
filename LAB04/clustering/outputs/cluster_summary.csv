@@ -1,0 +1,5 @@
+cluster,n_counties,total_cases_mean,total_deaths_mean,death_rate_pct_mean,peak_daily_new_cases_mean,avg_daily_new_cases_mean,case_growth_rate_mean,avg_cohesion,example_counties
+0,134,223710.172,2501.142,1.131,9268.44,281.352,280.261,0.9417,"Riverside, California, Broward, Florida, Orange, California"
+1,6,1408766.333,15241.333,1.051,57129.167,1707.053,1705.136,24.2142,"Los Angeles, California, Maricopa, Arizona, Miami-Dade, Florida"
+2,2063,16800.124,193.251,1.195,655.778,21.474,21.394,0.0699,"Ada, Idaho, Ramsey, Minnesota, Morris, New Jersey"
+3,936,6128.013,134.91,2.345,254.182,7.97,7.877,0.0641,"Marion, Florida, Stark, Ohio, Mohave, Arizona"
