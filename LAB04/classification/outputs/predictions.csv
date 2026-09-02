@@ -1,0 +1,628 @@
+fips,county,state,total_cases,total_deaths,duration_days,peak_daily_new_cases,avg_daily_new_cases,std_daily_new_cases,case_growth_rate,risk_level,predicted_risk_level,correct,prob_Low,prob_Medium,prob_High
+54059,Mingo,West Virginia,7968,123.0,762,127.0,10.492,15.483,10.457,Medium,Low,False,1.0,0.0,0.0
+35051,Sierra,New Mexico,2048,73.0,745,49.0,2.774,5.663,2.749,High,High,True,0.0,0.0,1.0
+37141,Pender,North Carolina,15405,128.0,769,733.0,20.194,51.172,20.033,Low,Low,True,1.0,0.0,0.0
+38099,Walsh,North Dakota,3374,34.0,782,70.0,4.349,8.342,4.315,Low,Low,True,1.0,0.0,0.0
+19071,Fremont,Iowa,1387,25.0,736,86.0,1.897,6.075,1.885,High,High,True,0.0,0.0,1.0
+8111,San Juan,Colorado,203,2.0,738,13.0,0.393,1.221,0.275,Low,Low,True,1.0,0.0,0.0
+36045,Jefferson,New York,21422,138.0,787,273.0,27.22,39.68,27.22,Low,Low,True,1.0,0.0,0.0
+29127,Marion,Missouri,8051,118.0,756,466.0,10.786,25.825,10.649,Medium,Medium,True,0.0,1.0,0.0
+42107,Schuylkill,Pennsylvania,34853,675.0,783,424.0,44.519,59.554,44.512,High,High,True,0.0,0.0,1.0
+27003,Anoka,Minnesota,100743,797.0,795,2133.0,126.721,215.592,126.721,Low,Low,True,1.0,0.0,0.0
+53015,Cowlitz,Washington,23312,348.0,785,893.0,29.75,63.04,29.697,Medium,Medium,True,0.0,1.0,0.0
+37181,Vance,North Carolina,11936,122.0,782,464.0,15.298,35.888,15.263,Low,Medium,False,0.0,1.0,0.0
+19193,Woodbury,Iowa,28838,339.0,783,1890.0,36.862,119.133,36.83,Low,Low,True,1.0,0.0,0.0
+2013,Aleutians East Borough,Alaska,1101,3.0,704,182.0,1.577,9.424,1.564,Low,Medium,False,0.0,1.0,0.0
+38101,Ward,North Dakota,20887,252.0,794,312.0,26.338,45.801,26.306,Low,Medium,False,0.0,1.0,0.0
+20185,Stafford,Kansas,1139,26.0,776,64.0,1.468,4.355,1.468,High,High,True,0.0,0.0,1.0
+42037,Columbia,Pennsylvania,15476,246.0,783,207.0,19.829,26.721,19.765,Medium,High,False,0.0,0.0,1.0
+26123,Newaygo,Michigan,11622,158.0,782,287.0,14.882,30.821,14.862,Medium,Low,False,1.0,0.0,0.0
+28117,Prentiss,Mississippi,8245,103.0,780,268.0,10.587,21.598,10.571,Medium,Medium,True,0.0,1.0,0.0
+39043,Erie,Ohio,19730,267.0,784,338.0,25.177,39.937,25.166,Medium,Low,False,1.0,0.0,0.0
+28075,Lauderdale,Mississippi,18898,367.0,779,546.0,24.381,47.44,24.259,High,High,True,0.0,0.0,1.0
+45085,Sumter,South Carolina,28100,394.0,785,1400.0,35.831,92.873,35.796,Medium,Medium,True,0.0,1.0,0.0
+36043,Herkimer,New York,14827,193.0,793,169.0,18.697,26.687,18.697,Medium,Medium,True,0.0,1.0,0.0
+25013,Hampden,Massachusetts,139047,2077.0,790,6064.0,176.348,410.46,176.009,Medium,Low,False,1.0,0.0,0.0
+39073,Hocking,Ohio,6731,123.0,763,100.0,8.827,13.223,8.822,High,High,True,0.0,0.0,1.0
+48389,Reeves,Texas,4636,74.0,736,571.0,7.052,24.695,6.299,Medium,High,False,0.0,0.0,1.0
+29169,Pulaski,Missouri,8918,116.0,785,567.0,11.473,32.247,11.361,Medium,Medium,True,0.0,1.0,0.0
+5069,Jefferson,Arkansas,18608,277.0,794,360.0,23.45,39.396,23.436,Medium,Medium,True,0.0,1.0,0.0
+31169,Thayer,Nebraska,1110,8.0,715,135.0,1.59,6.118,1.552,Low,Medium,False,0.0,1.0,0.0
+2998,Yakutat plus Hoonah-Angoon,Alaska,556,5.0,659,43.0,0.859,2.862,0.844,Low,Low,True,1.0,0.0,0.0
+18171,Warren,Indiana,2109,30.0,779,44.0,2.719,5.249,2.707,Medium,High,False,0.0,0.0,1.0
+42001,Adams,Pennsylvania,25114,364.0,787,542.0,31.92,48.294,31.911,Medium,Medium,True,0.0,1.0,0.0
+13307,Webster,Georgia,439,8.0,774,25.0,0.579,1.603,0.567,High,Low,False,1.0,0.0,0.0
+46051,Grant,South Dakota,2047,51.0,738,46.0,2.78,5.148,2.774,High,High,True,0.0,0.0,1.0
+42021,Cambria,Pennsylvania,34936,732.0,782,643.0,44.711,65.465,44.675,High,High,True,0.0,0.0,1.0
+6007,Butte,California,40181,424.0,784,1986.0,51.3,122.368,51.251,Low,Low,True,1.0,0.0,0.0
+21213,Simpson,Kentucky,5635,94.0,781,173.0,7.229,14.993,7.215,Medium,High,False,0.0,0.0,1.0
+24001,Allegany,Maryland,17291,362.0,772,789.0,22.408,51.549,22.398,High,High,True,0.0,0.0,1.0
+37003,Alexander,North Carolina,10479,139.0,775,366.0,13.668,29.022,13.521,Medium,Medium,True,0.0,1.0,0.0
+17057,Fulton,Illinois,10257,135.0,764,352.0,13.45,28.963,13.425,Medium,Medium,True,0.0,1.0,0.0
+19165,Shelby,Iowa,2724,51.0,777,115.0,3.574,10.362,3.506,High,Medium,False,0.0,1.0,0.0
+27039,Dodge,Minnesota,5888,21.0,784,172.0,7.522,15.002,7.51,Low,Low,True,1.0,0.0,0.0
+54069,Ohio,West Virginia,11335,170.0,780,345.0,14.592,25.165,14.532,Medium,Medium,True,0.0,1.0,0.0
+36091,Saratoga,New York,49890,335.0,798,775.0,62.519,97.004,62.519,Low,Low,True,1.0,0.0,0.0
+26077,Kalamazoo,Michigan,60792,675.0,782,2702.0,77.74,189.842,77.739,Low,Low,True,1.0,0.0,0.0
+22093,St. James,Louisiana,5805,77.0,786,300.0,7.478,19.502,7.385,Medium,Low,False,1.0,0.0,0.0
+17179,Tazewell,Illinois,37644,500.0,779,1048.0,48.412,90.014,48.323,Medium,Medium,True,0.0,1.0,0.0
+16087,Washington,Idaho,2394,57.0,772,39.0,3.12,4.887,3.101,High,High,True,0.0,0.0,1.0
+27099,Mower,Minnesota,12083,74.0,786,597.0,15.38,34.563,15.373,Low,Low,True,1.0,0.0,0.0
+37037,Chatham,North Carolina,13262,115.0,799,623.0,16.663,39.007,16.598,Low,Low,True,1.0,0.0,0.0
+13279,Toombs,Georgia,7114,202.0,779,122.0,9.276,15.006,9.132,High,High,True,0.0,0.0,1.0
+5121,Randolph,Arkansas,5217,89.0,779,87.0,6.703,9.578,6.697,High,High,True,0.0,0.0,1.0
+2240,Southeast Fairbanks Census Area,Alaska,2052,20.0,771,63.0,2.678,6.221,2.661,Low,Low,True,1.0,0.0,0.0
+10001,Kent,Delaware,51836,650.0,787,992.0,66.067,104.733,65.865,Medium,Medium,True,0.0,1.0,0.0
+19075,Grundy,Iowa,2576,44.0,770,119.0,3.369,9.593,3.345,High,Medium,False,0.0,1.0,0.0
+47179,Washington,Tennessee,38862,496.0,786,2225.0,49.74,173.002,49.443,Medium,Low,False,1.0,0.0,0.0
+20107,Linn,Kansas,2827,28.0,786,130.0,3.707,11.155,3.597,Low,Low,True,1.0,0.0,0.0
+18069,Huntington,Indiana,11572,157.0,778,246.0,14.973,27.203,14.874,Medium,Medium,True,0.0,1.0,0.0
+20145,Pawnee,Kansas,2139,24.0,710,72.0,3.079,8.401,3.013,Low,Medium,False,0.0,1.0,0.0
+18063,Hendricks,Indiana,41062,555.0,797,1192.0,51.626,102.021,51.521,Medium,Medium,True,0.0,1.0,0.0
+12041,Gilchrist,Florida,4562,93.0,767,275.0,6.017,24.531,5.948,High,Medium,False,0.0,1.0,0.0
+38061,Mountrail,North Dakota,3254,37.0,777,66.0,4.218,7.506,4.188,Low,Medium,False,0.0,1.0,0.0
+12035,Flagler,Florida,22651,359.0,783,1469.0,29.049,121.354,28.928,Medium,Medium,True,0.0,1.0,0.0
+17089,Kane,Illinois,131751,1179.0,795,4530.0,165.725,350.061,165.725,Low,Low,True,1.0,0.0,0.0
+28151,Washington,Mississippi,10470,199.0,784,207.0,13.369,22.654,13.355,High,Medium,False,0.0,1.0,0.0
+34041,Warren,New Jersey,24838,342.0,788,453.0,31.569,51.837,31.52,Medium,Low,False,1.0,0.0,0.0
+48471,Walker,Texas,19223,212.0,780,1023.0,27.983,66.206,24.645,Low,Low,True,1.0,0.0,0.0
+47181,Wayne,Tennessee,5700,72.0,775,967.0,7.444,41.13,7.355,Medium,Low,False,1.0,0.0,0.0
+20209,Wyandotte,Kansas,47365,508.0,793,1472.0,59.73,139.481,59.729,Low,Low,True,1.0,0.0,0.0
+48069,Castro,Texas,2297,47.0,784,284.0,2.949,13.32,2.93,High,High,True,0.0,0.0,1.0
+19195,Worth,Iowa,1781,17.0,766,103.0,2.346,7.937,2.325,Low,Low,True,1.0,0.0,0.0
+45047,Greenwood,South Carolina,22607,305.0,784,1271.0,28.881,81.532,28.835,Medium,Medium,True,0.0,1.0,0.0
+46049,Faulk,South Dakota,573,16.0,778,29.0,0.748,1.829,0.737,High,High,True,0.0,0.0,1.0
+40027,Cleveland,Oklahoma,79713,822.0,790,7005.0,100.919,479.607,100.903,Low,Low,True,1.0,0.0,0.0
+20105,Lincoln,Kansas,623,10.0,673,24.0,0.932,2.742,0.926,Medium,High,False,0.0,0.0,1.0
+36099,Seneca,New York,6391,91.0,774,81.0,8.257,11.987,8.257,Medium,Medium,True,0.0,1.0,0.0
+51085,Hanover,Virginia,22386,286.0,793,737.0,28.266,54.339,28.23,Medium,Medium,True,0.0,1.0,0.0
+22025,Catahoula,Louisiana,2700,55.0,785,131.0,3.575,8.827,3.439,High,High,True,0.0,0.0,1.0
+13039,Camden,Georgia,11467,120.0,781,290.0,14.781,26.937,14.682,Low,Low,True,1.0,0.0,0.0
+20019,Chautauqua,Kansas,844,17.0,774,45.0,1.094,3.184,1.09,High,High,True,0.0,0.0,1.0
+20139,Osage,Kansas,3946,49.0,778,196.0,5.084,14.791,5.072,Medium,High,False,0.0,0.0,1.0
+19059,Dickinson,Iowa,4140,72.0,778,163.0,5.329,13.875,5.321,High,High,True,0.0,0.0,1.0
+17065,Hamilton,Illinois,2181,34.0,756,77.0,2.923,6.038,2.885,Medium,High,False,0.0,0.0,1.0
+20055,Finney,Kansas,11545,115.0,776,600.0,14.878,38.432,14.878,Low,Low,True,1.0,0.0,0.0
+28121,Rankin,Mississippi,36738,489.0,785,1225.0,46.801,104.663,46.8,Medium,Low,False,1.0,0.0,0.0
+13037,Calhoun,Georgia,1365,22.0,779,82.0,2.004,5.446,1.752,Medium,High,False,0.0,0.0,1.0
+21151,Madison,Kentucky,27833,280.0,784,655.0,35.537,64.957,35.501,Low,Low,True,1.0,0.0,0.0
+55003,Ashland,Wisconsin,3364,36.0,774,64.0,4.36,7.755,4.346,Low,Medium,False,0.0,1.0,0.0
+28103,Noxubee,Mississippi,2730,48.0,781,97.0,3.501,7.226,3.496,High,Medium,False,0.0,1.0,0.0
+39063,Hancock,Ohio,17253,277.0,783,365.0,22.054,34.047,22.034,Medium,Medium,True,0.0,1.0,0.0
+17195,Whiteside,Illinois,15768,268.0,790,538.0,19.963,42.576,19.959,Medium,Medium,True,0.0,1.0,0.0
+37113,Macon,North Carolina,7978,121.0,772,265.0,10.385,19.371,10.334,Medium,Medium,True,0.0,1.0,0.0
+13235,Pulaski,Georgia,2180,78.0,781,55.0,2.832,6.14,2.791,High,High,True,0.0,0.0,1.0
+54025,Greenbrier,West Virginia,9763,160.0,778,179.0,12.617,21.16,12.549,Medium,Medium,True,0.0,1.0,0.0
+47139,Polk,Tennessee,4740,74.0,772,310.0,6.187,19.976,6.14,Medium,Medium,True,0.0,1.0,0.0
+18169,Wabash,Indiana,8750,157.0,777,167.0,11.27,19.013,11.261,High,High,True,0.0,0.0,1.0
+48225,Houston,Texas,4253,111.0,755,366.0,6.313,18.641,5.633,High,Medium,False,0.0,1.0,0.0
+21227,Warren,Kentucky,43102,372.0,787,1454.0,54.771,106.449,54.767,Low,Low,True,1.0,0.0,0.0
+30091,Sheridan,Montana,699,11.0,680,21.0,1.034,2.42,1.028,Medium,High,False,0.0,0.0,1.0
+20191,Sumner,Kansas,5724,70.0,779,281.0,7.356,19.618,7.348,Medium,Low,False,1.0,0.0,0.0
+26027,Cass,Michigan,11215,145.0,778,300.0,14.427,26.245,14.415,Medium,Medium,True,0.0,1.0,0.0
+13033,Burke,Georgia,5315,110.0,782,171.0,6.848,13.909,6.797,High,High,True,0.0,0.0,1.0
+12059,Holmes,Florida,5429,87.0,775,385.0,7.063,28.466,7.005,Medium,Medium,True,0.0,1.0,0.0
+47009,Blount,Tennessee,39310,440.0,785,3037.0,50.104,197.088,50.076,Low,Low,True,1.0,0.0,0.0
+21115,Johnson,Kentucky,6173,118.0,769,113.0,8.044,14.157,8.027,High,High,True,0.0,0.0,1.0
+17129,Menard,Illinois,3560,24.0,776,108.0,4.601,10.448,4.588,Low,Low,True,1.0,0.0,0.0
+18149,Starke,Indiana,4785,99.0,781,59.0,6.152,9.26,6.127,High,High,True,0.0,0.0,1.0
+26121,Muskegon,Michigan,42498,650.0,782,1479.0,54.726,122.682,54.345,Medium,High,False,0.0,0.0,1.0
+48125,Dickens,Texas,453,16.0,766,41.0,0.617,2.307,0.591,High,High,True,0.0,0.0,1.0
+40003,Alfalfa,Oklahoma,1716,15.0,761,117.0,2.268,8.843,2.255,Low,Low,True,1.0,0.0,0.0
+20129,Morton,Kansas,623,11.0,768,32.0,0.818,2.8,0.811,High,Medium,False,0.0,1.0,0.0
+48473,Waller,Texas,9695,108.0,776,276.0,12.75,18.692,12.494,Low,Medium,False,0.0,1.0,0.0
+25019,Nantucket,Massachusetts,3481,3.0,784,152.0,4.454,10.977,4.44,Low,Low,True,1.0,0.0,0.0
+30077,Powell,Montana,1872,29.0,654,142.0,2.894,8.293,2.862,Medium,Medium,True,0.0,1.0,0.0
+55133,Waukesha,Wisconsin,115887,1093.0,794,14926.0,145.96,564.352,145.953,Low,Medium,False,0.0,1.0,0.0
+17189,Washington,Illinois,3455,41.0,787,122.0,4.409,8.984,4.39,Low,Medium,False,0.0,1.0,0.0
+56041,Uinta,Wyoming,5643,39.0,772,138.0,7.396,13.599,7.31,Low,Low,True,1.0,0.0,0.0
+47171,Unicoi,Tennessee,5191,96.0,779,434.0,6.697,24.824,6.664,High,Medium,False,0.0,1.0,0.0
+21195,Pike,Kentucky,19099,307.0,769,339.0,24.84,43.974,24.836,Medium,Medium,True,0.0,1.0,0.0
+37051,Cumberland,North Carolina,87898,630.0,783,3304.0,112.258,235.452,112.258,Low,Low,True,1.0,0.0,0.0
+27077,Lake of the Woods,Minnesota,779,6.0,658,17.0,1.193,2.155,1.184,Low,Medium,False,0.0,1.0,0.0
+56007,Carbon,Wyoming,4627,52.0,784,192.0,5.918,12.934,5.902,Low,Low,True,1.0,0.0,0.0
+46103,Pennington,South Dakota,32903,342.0,782,1191.0,42.079,80.988,42.075,Low,Low,True,1.0,0.0,0.0
+37001,Alamance,North Carolina,47756,488.0,782,1950.0,61.087,136.656,61.069,Low,Medium,False,0.0,1.0,0.0
+51770,Roanoke city,Virginia,21671,376.0,778,781.0,28.441,56.313,27.855,High,Medium,False,0.0,1.0,0.0
+48205,Hartley,Texas,1364,3.0,754,165.0,1.885,8.042,1.809,Low,Low,True,1.0,0.0,0.0
+20083,Hodgeman,Kansas,412,10.0,722,25.0,0.587,2.075,0.571,High,High,True,0.0,0.0,1.0
+48015,Austin,Texas,5818,73.0,780,131.0,7.506,11.301,7.459,Medium,Medium,True,0.0,1.0,0.0
+19055,Delaware,Iowa,4056,68.0,767,169.0,5.301,14.549,5.288,Medium,Medium,True,0.0,1.0,0.0
+20099,Labette,Kansas,6636,74.0,774,437.0,8.63,27.087,8.574,Low,Medium,False,0.0,1.0,0.0
+28115,Pontotoc,Mississippi,10364,145.0,783,234.0,13.239,23.883,13.236,Medium,Medium,True,0.0,1.0,0.0
+45049,Hampton,South Carolina,5024,86.0,772,309.0,6.543,17.847,6.508,High,High,True,0.0,0.0,1.0
+49021,Iron,Utah,14774,92.0,782,684.0,18.893,46.651,18.893,Low,Low,True,1.0,0.0,0.0
+21085,Grayson,Kentucky,8121,134.0,780,223.0,10.503,21.599,10.412,Medium,Medium,True,0.0,1.0,0.0
+39117,Morrow,Ohio,7845,103.0,773,107.0,10.159,14.643,10.149,Medium,Medium,True,0.0,1.0,0.0
+51750,Radford city,Virginia,5018,53.0,779,127.0,6.467,12.344,6.442,Low,Medium,False,0.0,1.0,0.0
+48481,Wharton,Texas,9175,214.0,780,189.0,11.915,18.777,11.763,High,High,True,0.0,0.0,1.0
+40097,Mayes,Oklahoma,10399,163.0,781,999.0,13.32,54.71,13.315,Medium,Medium,True,0.0,1.0,0.0
+19077,Guthrie,Iowa,2372,46.0,775,121.0,3.063,9.173,3.061,High,High,True,0.0,0.0,1.0
+18085,Kosciusko,Indiana,19862,237.0,778,292.0,25.559,40.161,25.53,Low,Low,True,1.0,0.0,0.0
+40009,Beckham,Oklahoma,5983,107.0,775,429.0,7.734,28.492,7.72,High,Medium,False,0.0,1.0,0.0
+18081,Johnson,Indiana,42798,615.0,794,1087.0,54.016,101.723,53.902,Medium,Medium,True,0.0,1.0,0.0
+51840,Winchester city,Virginia,6440,81.0,776,251.0,8.401,17.722,8.299,Medium,Medium,True,0.0,1.0,0.0
+21131,Leslie,Kentucky,3724,49.0,769,93.0,4.867,10.1,4.843,Medium,High,False,0.0,0.0,1.0
+16067,Minidoka,Idaho,4235,64.0,775,75.0,5.488,8.31,5.465,Medium,Medium,True,0.0,1.0,0.0
+51137,Orange,Virginia,6928,86.0,780,201.0,9.172,18.124,8.882,Medium,Low,False,1.0,0.0,0.0
+26119,Montmorency,Michigan,1750,48.0,761,62.0,2.346,5.555,2.3,High,High,True,0.0,0.0,1.0
+37071,Gaston,North Carolina,65857,850.0,787,2434.0,83.704,169.03,83.681,Medium,Low,False,1.0,0.0,0.0
+16031,Cassia,Idaho,5037,53.0,781,112.0,6.47,10.11,6.449,Low,Low,True,1.0,0.0,0.0
+46039,Deuel,South Dakota,1043,12.0,777,30.0,1.349,2.499,1.342,Low,Medium,False,0.0,1.0,0.0
+16065,Madison,Idaho,12674,50.0,788,339.0,16.108,30.702,16.084,Low,Low,True,1.0,0.0,0.0
+17193,White,Illinois,4413,59.0,754,155.0,5.885,11.714,5.853,Medium,Low,False,1.0,0.0,0.0
+19149,Plymouth,Iowa,6330,100.0,771,269.0,8.224,20.517,8.21,Medium,Medium,True,0.0,1.0,0.0
+40139,Texas,Oklahoma,5996,54.0,776,380.0,7.741,24.417,7.727,Low,Low,True,1.0,0.0,0.0
+20135,Ness,Kansas,781,18.0,726,37.0,1.085,3.426,1.076,High,Medium,False,0.0,1.0,0.0
+36057,Montgomery,New York,12471,205.0,790,174.0,15.786,22.668,15.786,Medium,Medium,True,0.0,1.0,0.0
+37109,Lincoln,North Carolina,24543,174.0,787,916.0,31.225,60.929,31.186,Low,Low,True,1.0,0.0,0.0
+13081,Crisp,Georgia,4679,137.0,781,180.0,6.009,13.434,5.991,High,High,True,0.0,0.0,1.0
+48469,Victoria,Texas,18919,413.0,781,689.0,24.224,49.895,24.224,High,High,True,0.0,0.0,1.0
+8029,Delta,Colorado,6232,140.0,781,100.0,8.09,13.194,7.98,High,High,True,0.0,0.0,1.0
+48235,Irion,Texas,445,3.0,711,29.0,0.662,2.039,0.626,Low,Low,True,1.0,0.0,0.0
+18051,Gibson,Indiana,11742,146.0,781,365.0,15.06,31.816,15.035,Medium,Low,False,1.0,0.0,0.0
+51760,Richmond city,Virginia,46245,515.0,787,1395.0,58.981,115.401,58.761,Low,Low,True,1.0,0.0,0.0
+28017,Chickasaw,Mississippi,5603,96.0,783,260.0,7.181,16.628,7.156,High,Medium,False,0.0,1.0,0.0
+31003,Antelope,Nebraska,1119,14.0,775,79.0,1.493,4.203,1.444,Medium,High,False,0.0,0.0,1.0
+26081,Kent,Michigan,170251,1533.0,793,6681.0,214.749,481.408,214.692,Low,Low,True,1.0,0.0,0.0
+51059,Fairfax,Virginia,188156,1453.0,798,7655.0,235.851,521.563,235.784,Low,Low,True,1.0,0.0,0.0
+20141,Osborne,Kansas,803,17.0,771,36.0,1.074,3.212,1.042,High,Low,False,1.0,0.0,0.0
+55078,Menominee,Wisconsin,1987,14.0,773,176.0,2.595,8.75,2.571,Low,Low,True,1.0,0.0,0.0
+6083,Santa Barbara,California,92683,693.0,790,3799.0,117.587,314.403,117.32,Low,Low,True,1.0,0.0,0.0
+56031,Platte,Wyoming,1911,41.0,723,42.0,2.676,4.745,2.643,High,High,True,0.0,0.0,1.0
+19145,Page,Iowa,3339,46.0,779,103.0,4.297,11.923,4.286,Medium,Medium,True,0.0,1.0,0.0
+28139,Tippah,Mississippi,7361,109.0,785,246.0,9.377,18.929,9.377,Medium,Medium,True,0.0,1.0,0.0
+42075,Lebanon,Pennsylvania,37011,518.0,786,610.0,47.088,65.256,47.088,Medium,Medium,True,0.0,1.0,0.0
+37039,Cherokee,North Carolina,7126,122.0,783,242.0,9.165,19.747,9.101,High,High,True,0.0,0.0,1.0
+13195,Madison,Georgia,6950,110.0,782,244.0,8.925,17.977,8.887,Medium,Medium,True,0.0,1.0,0.0
+17149,Pike,Illinois,5050,70.0,770,138.0,6.588,13.23,6.558,Medium,Medium,True,0.0,1.0,0.0
+18037,Dubois,Indiana,12909,165.0,782,278.0,16.518,29.934,16.508,Medium,Low,False,1.0,0.0,0.0
+31073,Gosper,Nebraska,381,7.0,777,25.0,0.532,1.489,0.49,High,High,True,0.0,0.0,1.0
+8097,Pitkin,Colorado,6676,7.0,794,472.0,8.518,25.444,8.408,Low,Low,True,1.0,0.0,0.0
+22107,Tensas,Louisiana,988,11.0,763,71.0,1.372,4.323,1.295,Low,Low,True,1.0,0.0,0.0
+30063,Missoula,Montana,27678,209.0,791,605.0,35.0,66.854,34.991,Low,Low,True,1.0,0.0,0.0
+23007,Franklin,Maine,6014,60.0,779,209.0,7.737,17.121,7.72,Low,Low,True,1.0,0.0,0.0
+12033,Escambia,Florida,78190,1311.0,789,5007.0,103.774,382.01,99.1,Medium,Medium,True,0.0,1.0,0.0
+51147,Prince Edward,Virginia,5107,71.0,793,87.0,6.522,11.638,6.44,Medium,Low,False,1.0,0.0,0.0
+53005,Benton,Washington,53006,472.0,787,2328.0,68.212,175.538,67.352,Low,Low,True,1.0,0.0,0.0
+18113,Noble,Indiana,13139,157.0,796,270.0,16.524,27.256,16.506,Low,Low,True,1.0,0.0,0.0
+12073,Leon,Florida,85724,663.0,787,6221.0,110.112,470.209,108.925,Low,Low,True,1.0,0.0,0.0
+22017,Caddo,Louisiana,67560,1156.0,794,3670.0,85.334,231.173,85.088,High,Medium,False,0.0,1.0,0.0
+39047,Fayette,Ohio,7846,121.0,780,154.0,10.074,16.16,10.059,Medium,High,False,0.0,0.0,1.0
+37107,Lenoir,North Carolina,15839,220.0,780,709.0,20.355,49.624,20.306,Medium,Medium,True,0.0,1.0,0.0
+48181,Grayson,Texas,27166,636.0,781,1488.0,34.784,92.757,34.784,High,High,True,0.0,0.0,1.0
+28107,Panola,Mississippi,10566,169.0,784,300.0,13.485,27.258,13.477,Medium,High,False,0.0,0.0,1.0
+28027,Coahoma,Mississippi,6486,126.0,787,222.0,8.25,17.286,8.241,High,High,True,0.0,0.0,1.0
+48491,Williamson,Texas,135522,935.0,787,4971.0,172.612,367.162,172.201,Low,Low,True,1.0,0.0,0.0
+22109,Terrebonne,Louisiana,31012,419.0,792,1554.0,39.289,99.575,39.157,Medium,Medium,True,0.0,1.0,0.0
+18035,Delaware,Indiana,25113,444.0,784,576.0,32.073,52.61,32.032,High,High,True,0.0,0.0,1.0
+21179,Nelson,Kentucky,14507,153.0,791,455.0,18.36,37.02,18.34,Low,Medium,False,0.0,1.0,0.0
+48351,Newton,Texas,1367,61.0,773,237.0,2.16,10.584,1.768,High,High,True,0.0,0.0,1.0
+28085,Lincoln,Mississippi,8324,157.0,784,307.0,10.621,20.93,10.617,High,High,True,0.0,0.0,1.0
+39123,Ottawa,Ohio,8618,138.0,777,162.0,11.107,16.137,11.091,Medium,Medium,True,0.0,1.0,0.0
+54095,Tyler,West Virginia,2214,32.0,767,41.0,2.923,5.236,2.887,Medium,Medium,True,0.0,1.0,0.0
+8005,Arapahoe,Colorado,158561,1284.0,796,4334.0,199.219,357.22,199.197,Low,Low,True,1.0,0.0,0.0
+29035,Carter,Missouri,1500,24.0,779,92.0,1.981,5.048,1.926,Medium,High,False,0.0,0.0,1.0
+18009,Blackford,Indiana,3123,69.0,772,63.0,4.074,7.555,4.045,High,Medium,False,0.0,1.0,0.0
+13069,Coffee,Georgia,11189,284.0,783,281.0,14.347,25.186,14.29,High,High,True,0.0,0.0,1.0
+47039,Decatur,Tennessee,3738,70.0,766,257.0,4.907,16.936,4.88,High,Medium,False,0.0,1.0,0.0
+48493,Wilson,Texas,11032,157.0,780,307.0,14.242,33.425,14.144,Medium,Medium,True,0.0,1.0,0.0
+27173,Yellow Medicine,Minnesota,2580,29.0,773,42.0,3.348,5.558,3.338,Low,Medium,False,0.0,1.0,0.0
+17173,Shelby,Illinois,6262,80.0,767,186.0,8.177,15.119,8.164,Medium,Medium,True,0.0,1.0,0.0
+51007,Amelia,Virginia,2683,61.0,779,65.0,3.469,6.955,3.444,High,High,True,0.0,0.0,1.0
+35013,Doña Ana,New Mexico,63972,773.0,785,2858.0,81.531,187.182,81.493,Low,Medium,False,0.0,1.0,0.0
+13109,Evans,Georgia,2383,67.0,762,70.0,3.193,6.068,3.127,High,Medium,False,0.0,1.0,0.0
+13171,Lamar,Georgia,4864,113.0,785,188.0,6.21,13.478,6.196,High,High,True,0.0,0.0,1.0
+51163,Rockbridge,Virginia,3301,80.0,782,60.0,4.357,7.206,4.221,High,High,True,0.0,0.0,1.0
+13309,Wheeler,Georgia,1414,39.0,777,73.0,1.869,5.634,1.82,High,High,True,0.0,0.0,1.0
+48107,Crosby,Texas,1894,45.0,767,321.0,2.51,12.836,2.469,High,High,True,0.0,0.0,1.0
+20111,Lyon,Kansas,10084,122.0,782,669.0,12.895,39.111,12.895,Low,Medium,False,0.0,1.0,0.0
+20001,Allen,Kansas,3989,53.0,698,273.0,5.732,16.602,5.715,Medium,Medium,True,0.0,1.0,0.0
+29051,Cole,Missouri,20202,286.0,788,745.0,25.801,48.797,25.637,Medium,Medium,True,0.0,1.0,0.0
+39143,Sandusky,Ohio,14015,238.0,782,297.0,17.987,29.315,17.922,Medium,High,False,0.0,0.0,1.0
+56019,Johnson,Wyoming,1845,19.0,779,90.0,2.404,6.436,2.368,Low,High,False,0.0,0.0,1.0
+28083,Leflore,Mississippi,7326,169.0,792,321.0,9.256,21.579,9.25,High,Medium,False,0.0,1.0,0.0
+19117,Lucas,Iowa,1763,32.0,727,89.0,2.443,7.603,2.425,High,High,True,0.0,0.0,1.0
+41037,Lake,Oregon,1429,29.0,717,36.0,2.014,4.106,1.993,High,High,True,0.0,0.0,1.0
+48303,Lubbock,Texas,96835,1329.0,788,3699.0,123.91,244.347,122.887,Medium,Low,False,1.0,0.0,0.0
+54105,Wirt,West Virginia,1455,25.0,776,27.0,1.894,3.414,1.875,High,High,True,0.0,0.0,1.0
+17055,Franklin,Illinois,12275,178.0,779,520.0,15.863,33.47,15.757,Medium,Medium,True,0.0,1.0,0.0
+38055,McLean,North Dakota,2737,49.0,777,34.0,3.553,5.35,3.523,High,Medium,False,0.0,1.0,0.0
+21027,Breckinridge,Kentucky,5170,78.0,777,150.0,6.704,14.929,6.654,Medium,High,False,0.0,0.0,1.0
+28057,Itawamba,Mississippi,7430,144.0,784,176.0,9.487,18.299,9.477,High,High,True,0.0,0.0,1.0
+1071,Jackson,Alabama,15049,241.0,785,766.0,19.287,42.047,19.171,Medium,Medium,True,0.0,1.0,0.0
+49003,Box Elder,Utah,14144,124.0,787,712.0,17.982,41.774,17.972,Low,Low,True,1.0,0.0,0.0
+28163,Yazoo,Mississippi,8054,107.0,786,403.0,10.253,27.674,10.247,Medium,Medium,True,0.0,1.0,0.0
+19087,Henry,Iowa,5573,74.0,784,238.0,7.126,20.897,7.108,Medium,Low,False,1.0,0.0,0.0
+42035,Clinton,Pennsylvania,9157,127.0,771,139.0,11.885,17.289,11.877,Medium,High,False,0.0,0.0,1.0
+20201,Washington,Kansas,1400,22.0,703,50.0,2.001,5.594,1.991,Medium,High,False,0.0,0.0,1.0
+8059,Jefferson,Colorado,128067,1356.0,800,5188.0,160.864,309.097,160.084,Low,Low,True,1.0,0.0,0.0
+26051,Gladwin,Michigan,5632,114.0,783,280.0,7.211,17.309,7.193,High,High,True,0.0,0.0,1.0
+31097,Johnson,Nebraska,895,10.0,769,77.0,1.233,4.286,1.164,Low,Low,True,1.0,0.0,0.0
+19185,Wayne,Iowa,1271,33.0,743,90.0,1.715,5.745,1.711,High,High,True,0.0,0.0,1.0
+28055,Issaquena,Mississippi,262,9.0,688,42.0,0.384,1.934,0.381,High,Medium,False,0.0,1.0,0.0
+48293,Limestone,Texas,5100,124.0,780,789.0,6.574,30.878,6.538,High,Medium,False,0.0,1.0,0.0
+48129,Donley,Texas,1153,26.0,772,101.0,1.53,5.97,1.494,High,Low,False,1.0,0.0,0.0
+21121,Knox,Kentucky,11523,144.0,765,218.0,15.339,28.938,15.063,Medium,Low,False,1.0,0.0,0.0
+24041,Talbot,Maryland,5702,88.0,789,431.0,7.246,19.761,7.227,Medium,Medium,True,0.0,1.0,0.0
+56025,Natrona,Wyoming,22380,273.0,785,671.0,28.545,55.804,28.51,Low,Low,True,1.0,0.0,0.0
+5061,Howard,Arkansas,3763,50.0,779,168.0,4.846,9.438,4.831,Medium,Medium,True,0.0,1.0,0.0
+54009,Brooke,West Virginia,5082,106.0,767,86.0,6.644,10.134,6.626,High,High,True,0.0,0.0,1.0
+2020,Anchorage,Alaska,105418,526.0,793,5448.0,132.952,356.301,132.936,Low,Low,True,1.0,0.0,0.0
+29139,Montgomery,Missouri,2548,57.0,780,394.0,3.388,15.185,3.267,High,High,True,0.0,0.0,1.0
+32013,Humboldt,Nevada,4509,54.0,777,214.0,5.858,18.551,5.803,Low,Low,True,1.0,0.0,0.0
+41007,Clatsop,Oregon,4810,50.0,781,134.0,6.172,13.694,6.159,Low,Low,True,1.0,0.0,0.0
+8115,Sedgwick,Colorado,490,11.0,669,15.0,0.746,1.64,0.732,High,Low,False,1.0,0.0,0.0
+18147,Spencer,Indiana,5253,61.0,772,100.0,6.825,11.251,6.804,Low,Medium,False,0.0,1.0,0.0
+51187,Warren,Virginia,8675,157.0,779,283.0,11.193,20.0,11.136,High,High,True,0.0,0.0,1.0
+13211,Morgan,Georgia,4709,70.0,782,122.0,6.061,11.283,6.022,Medium,Low,False,1.0,0.0,0.0
+20003,Anderson,Kansas,2133,29.0,735,128.0,2.905,8.763,2.902,Medium,Medium,True,0.0,1.0,0.0
+48091,Comal,Texas,34812,551.0,781,1469.0,44.574,82.047,44.574,Medium,Medium,True,0.0,1.0,0.0
+47061,Grundy,Tennessee,3998,73.0,781,192.0,5.147,14.737,5.119,High,Medium,False,0.0,1.0,0.0
+28137,Tate,Mississippi,7396,143.0,783,209.0,9.46,18.463,9.446,High,High,True,0.0,0.0,1.0
+24019,Dorchester,Maryland,7819,108.0,773,499.0,10.135,26.141,10.115,Medium,Low,False,1.0,0.0,0.0
+48281,Lampasas,Texas,5556,90.0,771,628.0,7.245,29.812,7.206,Medium,Medium,True,0.0,1.0,0.0
+29119,McDonald,Missouri,5813,73.0,780,255.0,7.455,18.822,7.453,Medium,Medium,True,0.0,1.0,0.0
+46037,Day,South Dakota,1295,35.0,745,41.0,1.76,3.409,1.738,High,High,True,0.0,0.0,1.0
+49055,Wayne,Utah,444,0.0,656,22.0,0.686,1.766,0.677,Low,Medium,False,0.0,1.0,0.0
+48013,Atascosa,Texas,13647,231.0,780,563.0,18.353,50.262,17.496,Medium,High,False,0.0,0.0,1.0
+51091,Highland,Virginia,387,7.0,752,10.0,0.525,1.274,0.515,High,Low,False,1.0,0.0,0.0
+22051,Jefferson,Louisiana,115373,1341.0,796,4959.0,144.965,374.532,144.941,Low,Low,True,1.0,0.0,0.0
+17071,Henderson,Illinois,1166,28.0,757,32.0,1.561,2.888,1.54,High,Low,False,1.0,0.0,0.0
+19025,Calhoun,Iowa,2608,25.0,743,137.0,3.525,11.613,3.51,Low,Medium,False,0.0,1.0,0.0
+42069,Lackawanna,Pennsylvania,45137,776.0,787,651.0,57.357,82.91,57.353,High,Medium,False,0.0,1.0,0.0
+26039,Crawford,Michigan,2629,31.0,778,68.0,3.411,7.706,3.379,Low,High,False,0.0,0.0,1.0
+29205,Shelby,Missouri,1603,15.0,780,146.0,2.099,6.328,2.055,Low,High,False,0.0,0.0,1.0
+19099,Jasper,Iowa,8707,110.0,781,338.0,11.157,31.69,11.149,Medium,Low,False,1.0,0.0,0.0
+13285,Troup,Georgia,15503,379.0,789,529.0,19.677,38.906,19.649,High,Medium,False,0.0,1.0,0.0
+1003,Baldwin,Alabama,55862,681.0,791,2175.0,70.637,141.525,70.622,Low,Low,True,1.0,0.0,0.0
+36075,Oswego,New York,28826,194.0,782,373.0,36.862,48.146,36.862,Low,Low,True,1.0,0.0,0.0
+50005,Caledonia,Vermont,5854,25.0,781,856.0,7.574,33.039,7.496,Low,Low,True,1.0,0.0,0.0
+24003,Anne Arundel,Maryland,92830,1078.0,792,6466.0,117.21,292.148,117.21,Low,Low,True,1.0,0.0,0.0
+35057,Torrance,New Mexico,3152,56.0,775,95.0,4.093,8.909,4.067,High,High,True,0.0,0.0,1.0
+34031,Passaic,New Jersey,149761,2337.0,797,2973.0,188.356,335.568,187.906,Medium,Medium,True,0.0,1.0,0.0
+18041,Fayette,Indiana,6871,146.0,787,168.0,8.762,16.229,8.731,High,High,True,0.0,0.0,1.0
+18135,Randolph,Indiana,5935,148.0,778,193.0,7.676,14.804,7.629,High,High,True,0.0,0.0,1.0
+21167,Mercer,Kentucky,7401,106.0,779,199.0,9.61,20.154,9.501,Medium,Medium,True,0.0,1.0,0.0
+45021,Cherokee,South Carolina,14761,322.0,772,542.0,19.128,42.483,19.12,High,Medium,False,0.0,1.0,0.0
+45055,Kershaw,South Carolina,21623,261.0,799,1105.0,27.106,74.52,27.063,Low,Medium,False,0.0,1.0,0.0
+21127,Lawrence,Kentucky,4550,69.0,774,87.0,5.888,10.484,5.879,Medium,Medium,True,0.0,1.0,0.0
+17087,Johnson,Illinois,4538,47.0,761,132.0,5.986,13.456,5.963,Low,Low,True,1.0,0.0,0.0
+37081,Guilford,North Carolina,121303,1208.0,787,6657.0,154.163,357.722,154.133,Low,Low,True,1.0,0.0,0.0
+39089,Licking,Ohio,42276,475.0,784,881.0,53.926,84.117,53.923,Low,Low,True,1.0,0.0,0.0
+27111,Otter Tail,Minnesota,13763,167.0,776,241.0,17.745,29.26,17.736,Low,Medium,False,0.0,1.0,0.0
+17203,Woodford,Illinois,10578,124.0,791,249.0,13.437,25.642,13.373,Low,Low,True,1.0,0.0,0.0
+12089,Nassau,Florida,21949,294.0,795,1336.0,28.174,108.553,27.609,Medium,Low,False,1.0,0.0,0.0
+20093,Kearny,Kansas,1237,20.0,762,46.0,1.647,4.368,1.623,Medium,High,False,0.0,0.0,1.0
+36059,Nassau,New York,425386,3853.0,800,8121.0,531.732,945.122,531.732,Low,Low,True,1.0,0.0,0.0
+18165,Vermillion,Indiana,4130,75.0,777,72.0,5.324,9.213,5.315,High,Medium,False,0.0,1.0,0.0
+19155,Pottawattamie,Iowa,24382,319.0,796,1682.0,30.642,106.146,30.631,Medium,Medium,True,0.0,1.0,0.0
+54107,Wood,West Virginia,22312,346.0,781,331.0,28.583,42.652,28.569,Medium,Medium,True,0.0,1.0,0.0
+21175,Morgan,Kentucky,5272,28.0,762,217.0,6.946,20.295,6.919,Low,Low,True,1.0,0.0,0.0
+28155,Webster,Mississippi,3388,70.0,783,104.0,4.355,9.615,4.327,High,High,True,0.0,0.0,1.0
+29133,Mississippi,Missouri,3521,59.0,752,105.0,4.722,8.818,4.682,Medium,High,False,0.0,0.0,1.0
+28009,Benton,Mississippi,2274,49.0,779,58.0,2.958,5.948,2.919,High,High,True,0.0,0.0,1.0
+19125,Marion,Iowa,7590,125.0,768,301.0,9.906,27.693,9.883,Medium,Medium,True,0.0,1.0,0.0
+42061,Huntingdon,Pennsylvania,11594,249.0,777,183.0,14.967,21.112,14.921,High,High,True,0.0,0.0,1.0
+20123,Mitchell,Kansas,1429,22.0,783,129.0,1.837,7.0,1.825,Medium,Low,False,1.0,0.0,0.0
+5035,Crittenden,Arkansas,14315,226.0,786,262.0,18.214,29.153,18.212,Medium,Medium,True,0.0,1.0,0.0
+29123,Madison,Missouri,3622,57.0,768,257.0,4.811,11.768,4.716,Medium,Medium,True,0.0,1.0,0.0
+36065,Oneida,New York,58360,803.0,785,688.0,74.344,97.637,74.344,Medium,Medium,True,0.0,1.0,0.0
+31017,Brown,Nebraska,523,4.0,639,57.0,0.878,2.901,0.818,Low,High,False,0.0,0.0,1.0
+29181,Ripley,Missouri,2697,61.0,777,169.0,3.569,7.977,3.471,High,High,True,0.0,0.0,1.0
+5039,Dallas,Arkansas,1747,31.0,770,36.0,2.286,4.537,2.269,High,High,True,0.0,0.0,1.0
+48243,Jeff Davis,Texas,224,9.0,687,13.0,0.376,1.265,0.326,High,High,True,0.0,0.0,1.0
+40075,Kiowa,Oklahoma,1965,52.0,772,202.0,2.553,12.04,2.545,High,High,True,0.0,0.0,1.0
+19013,Black Hawk,Iowa,33140,480.0,788,2040.0,42.057,134.861,42.056,Medium,Medium,True,0.0,1.0,0.0
+40045,Ellis,Oklahoma,774,8.0,692,55.0,1.146,4.295,1.118,Low,High,False,0.0,0.0,1.0
+22029,Concordia,Louisiana,5103,89.0,774,270.0,6.694,17.269,6.593,High,Medium,False,0.0,1.0,0.0
+18039,Elkhart,Indiana,54388,734.0,784,1019.0,69.529,102.456,69.372,Medium,Medium,True,0.0,1.0,0.0
+5077,Lee,Arkansas,2912,59.0,773,197.0,3.789,11.539,3.767,High,High,True,0.0,0.0,1.0
+29041,Chariton,Missouri,1718,38.0,778,230.0,2.239,8.926,2.208,High,High,True,0.0,0.0,1.0
+6015,Del Norte,California,6381,50.0,772,180.0,8.266,19.953,8.266,Low,Low,True,1.0,0.0,0.0
+55071,Manitowoc,Wisconsin,20803,189.0,770,434.0,27.019,44.042,27.017,Low,Medium,False,0.0,1.0,0.0
+27117,Pipestone,Minnesota,2013,34.0,769,38.0,2.624,4.402,2.618,Medium,Medium,True,0.0,1.0,0.0
+13071,Colquitt,Georgia,11752,246.0,781,369.0,15.229,32.141,15.047,High,High,True,0.0,0.0,1.0
+29001,Adair,Missouri,6095,63.0,782,227.0,7.804,18.833,7.794,Low,Low,True,1.0,0.0,0.0
+5083,Logan,Arkansas,5130,80.0,768,85.0,6.708,9.91,6.68,Medium,Medium,True,0.0,1.0,0.0
+48009,Archer,Texas,2213,28.0,729,70.0,3.043,6.912,3.036,Medium,High,False,0.0,0.0,1.0
+53003,Asotin,Washington,4554,66.0,771,220.0,5.931,13.958,5.907,Medium,Medium,True,0.0,1.0,0.0
+29225,Webster,Missouri,9053,148.0,775,459.0,11.752,23.759,11.681,Medium,Medium,True,0.0,1.0,0.0
+12047,Hamilton,Florida,3841,56.0,768,232.0,5.04,19.81,5.001,Medium,Medium,True,0.0,1.0,0.0
+48313,Madison,Texas,3778,54.0,765,608.0,5.282,29.104,4.939,Medium,High,False,0.0,0.0,1.0
+51153,Prince William,Virginia,97967,748.0,793,3284.0,123.876,246.319,123.54,Low,Low,True,1.0,0.0,0.0
+46013,Brown,South Dakota,10344,121.0,783,297.0,13.213,22.345,13.211,Low,Medium,False,0.0,1.0,0.0
+47097,Lauderdale,Tennessee,7764,106.0,773,574.0,10.129,36.17,10.044,Medium,Medium,True,0.0,1.0,0.0
+17043,DuPage,Illinois,224631,1806.0,791,7411.0,283.984,593.45,283.984,Low,Low,True,1.0,0.0,0.0
+1131,Wilcox,Alabama,2892,46.0,780,205.0,3.756,10.814,3.708,Medium,Low,False,1.0,0.0,0.0
+30097,Sweet Grass,Montana,785,13.0,668,23.0,1.193,2.5,1.175,Medium,Low,False,1.0,0.0,0.0
+13029,Bryan,Georgia,9218,91.0,781,300.0,11.931,24.545,11.803,Low,Low,True,1.0,0.0,0.0
+37193,Wilkes,North Carolina,17625,264.0,774,547.0,22.876,45.085,22.771,Medium,Medium,True,0.0,1.0,0.0
+47021,Cheatham,Tennessee,10967,119.0,787,719.0,13.957,46.473,13.935,Low,Medium,False,0.0,1.0,0.0
+48037,Bowie,Texas,20222,433.0,789,825.0,25.797,57.278,25.63,High,High,True,0.0,0.0,1.0
+30081,Ravalli,Montana,7089,164.0,784,237.0,9.106,18.157,9.042,High,High,True,0.0,0.0,1.0
+40147,Washington,Oklahoma,12718,262.0,786,1025.0,16.187,63.316,16.181,High,Medium,False,0.0,1.0,0.0
+6023,Humboldt,California,20952,146.0,814,668.0,25.759,65.504,25.74,Low,Low,True,1.0,0.0,0.0
+12103,Pinellas,Florida,212746,3356.0,795,14310.0,270.052,1061.005,267.605,Medium,Medium,True,0.0,1.0,0.0
+26003,Alger,Michigan,1880,13.0,703,130.0,2.693,8.838,2.674,Low,Medium,False,0.0,1.0,0.0
+54035,Jackson,West Virginia,6926,135.0,785,118.0,8.921,14.134,8.823,High,High,True,0.0,0.0,1.0
+21029,Bullitt,Kentucky,21805,223.0,778,743.0,28.613,59.839,28.027,Low,Low,True,1.0,0.0,0.0
+41003,Benton,Oregon,16301,71.0,789,813.0,20.676,57.838,20.66,Low,Low,True,1.0,0.0,0.0
+11001,District of Columbia,District of Columbia,143943,1340.0,798,9201.0,180.395,588.968,180.38,Low,Low,True,1.0,0.0,0.0
+30021,Dawson,Montana,2357,58.0,693,46.0,3.599,6.73,3.401,High,High,True,0.0,0.0,1.0
+28101,Newton,Mississippi,6059,98.0,781,153.0,7.796,14.852,7.758,Medium,High,False,0.0,0.0,1.0
+29163,Pike,Missouri,4264,63.0,775,263.0,5.61,13.212,5.502,Medium,Medium,True,0.0,1.0,0.0
+8091,Ouray,Colorado,884,6.0,770,27.0,1.177,2.53,1.148,Low,Medium,False,0.0,1.0,0.0
+20189,Stevens,Kansas,1465,20.0,776,69.0,1.894,5.521,1.888,Medium,High,False,0.0,0.0,1.0
+18143,Scott,Indiana,7943,106.0,783,222.0,10.165,20.05,10.144,Medium,Low,False,1.0,0.0,0.0
+48185,Grimes,Texas,8511,120.0,780,1164.0,11.182,51.339,10.912,Medium,Medium,True,0.0,1.0,0.0
+54063,Monroe,West Virginia,4260,46.0,763,93.0,5.62,10.129,5.583,Low,Low,True,1.0,0.0,0.0
+22037,East Feliciana,Louisiana,7324,170.0,779,569.0,9.615,32.257,9.402,High,High,True,0.0,0.0,1.0
+54091,Taylor,West Virginia,4585,73.0,768,72.0,6.02,9.483,5.97,Medium,Medium,True,0.0,1.0,0.0
+27001,Aitkin,Minnesota,3049,62.0,757,43.0,4.067,6.865,4.028,High,High,True,0.0,0.0,1.0
+47141,Putnam,Tennessee,25178,304.0,784,1431.0,32.585,105.253,32.115,Low,Low,True,1.0,0.0,0.0
+42033,Clearfield,Pennsylvania,19533,348.0,781,197.0,25.051,31.888,25.01,High,High,True,0.0,0.0,1.0
+4011,Greenlee,Arizona,2226,33.0,775,68.0,2.917,5.871,2.872,Medium,Medium,True,0.0,1.0,0.0
+48329,Midland,Texas,40910,496.0,784,1699.0,52.216,140.689,52.181,Low,Low,True,1.0,0.0,0.0
+48179,Gray,Texas,6195,125.0,773,669.0,8.272,32.197,8.014,High,Medium,False,0.0,1.0,0.0
+55031,Douglas,Wisconsin,11993,79.0,785,277.0,15.306,27.586,15.278,Low,Low,True,1.0,0.0,0.0
+53029,Island,Washington,10635,76.0,794,486.0,13.413,41.334,13.394,Low,Low,True,1.0,0.0,0.0
+40117,Pawnee,Oklahoma,4121,85.0,788,263.0,5.264,20.058,5.23,High,Medium,False,0.0,1.0,0.0
+23015,Lincoln,Maine,5578,35.0,790,306.0,7.072,17.487,7.061,Low,Low,True,1.0,0.0,0.0
+21031,Butler,Kentucky,3874,54.0,777,80.0,5.017,9.567,4.986,Medium,Medium,True,0.0,1.0,0.0
+19111,Lee,Iowa,7880,142.0,770,298.0,10.245,30.06,10.234,High,Medium,False,0.0,1.0,0.0
+55013,Burnett,Wisconsin,4062,43.0,730,64.0,5.581,9.202,5.564,Low,Low,True,1.0,0.0,0.0
+30019,Daniels,Montana,386,9.0,658,11.0,0.593,1.476,0.587,High,Medium,False,0.0,1.0,0.0
+13233,Polk,Georgia,11910,193.0,799,395.0,14.927,29.038,14.906,Medium,Medium,True,0.0,1.0,0.0
+19057,Des Moines,Iowa,9192,139.0,779,297.0,11.842,32.409,11.8,Medium,Medium,True,0.0,1.0,0.0
+36023,Cortland,New York,11365,120.0,783,176.0,14.515,20.135,14.515,Low,Medium,False,0.0,1.0,0.0
+41045,Malheur,Oregon,8251,108.0,774,188.0,10.68,19.356,10.66,Medium,Low,False,1.0,0.0,0.0
+27091,Martin,Minnesota,5685,65.0,788,102.0,7.226,11.859,7.214,Low,Low,True,1.0,0.0,0.0
+29121,Macon,Missouri,3652,58.0,775,275.0,4.81,12.516,4.712,Medium,Medium,True,0.0,1.0,0.0
+48119,Delta,Texas,1820,25.0,766,634.0,2.38,23.155,2.376,Medium,High,False,0.0,0.0,1.0
+45005,Allendale,South Carolina,2093,24.0,773,109.0,2.749,7.796,2.708,Low,Medium,False,0.0,1.0,0.0
+20181,Sherman,Kansas,1514,20.0,757,53.0,2.018,5.639,2.0,Medium,Low,False,1.0,0.0,0.0
+29227,Worth,Missouri,407,3.0,768,20.0,0.542,1.432,0.53,Low,Low,True,1.0,0.0,0.0
+18043,Floyd,Indiana,19191,302.0,789,557.0,24.355,45.493,24.323,Medium,Medium,True,0.0,1.0,0.0
+20151,Pratt,Kansas,1931,30.0,773,59.0,2.507,6.613,2.498,Medium,Medium,True,0.0,1.0,0.0
+1049,DeKalb,Alabama,18799,330.0,779,773.0,24.176,49.571,24.132,High,High,True,0.0,0.0,1.0
+27167,Wilkin,Minnesota,1662,22.0,779,28.0,2.141,3.605,2.134,Medium,High,False,0.0,0.0,1.0
+20065,Graham,Kansas,572,15.0,677,32.0,0.852,2.687,0.845,High,High,True,0.0,0.0,1.0
+51620,Franklin city,Virginia,2470,54.0,774,65.0,3.249,6.034,3.191,High,High,True,0.0,0.0,1.0
+48087,Collingsworth,Texas,702,16.0,739,71.0,0.963,4.274,0.95,High,High,True,0.0,0.0,1.0
+13077,Coweta,Georgia,33335,491.0,791,1275.0,42.15,90.489,42.143,Medium,Medium,True,0.0,1.0,0.0
+55125,Vilas,Wisconsin,5270,89.0,779,150.0,6.789,12.811,6.765,Medium,High,False,0.0,0.0,1.0
+1117,Shelby,Alabama,61273,452.0,790,2518.0,77.641,165.794,77.561,Low,Low,True,1.0,0.0,0.0
+27007,Beltrami,Minnesota,12179,128.0,778,415.0,15.659,28.934,15.654,Low,Low,True,1.0,0.0,0.0
+21221,Trigg,Kentucky,4016,44.0,762,167.0,5.329,11.812,5.27,Low,Medium,False,0.0,1.0,0.0
+48165,Gaines,Texas,2327,83.0,780,59.0,3.828,8.624,2.983,High,High,True,0.0,0.0,1.0
+42123,Warren,Pennsylvania,7506,212.0,780,110.0,9.631,16.489,9.623,High,High,True,0.0,0.0,1.0
+55001,Adams,Wisconsin,4738,61.0,772,93.0,6.155,10.787,6.137,Medium,Medium,True,0.0,1.0,0.0
+48213,Henderson,Texas,15410,424.0,776,562.0,21.157,53.861,19.858,High,High,True,0.0,0.0,1.0
+30065,Musselshell,Montana,917,31.0,774,44.0,1.199,2.967,1.185,High,High,True,0.0,0.0,1.0
+46033,Custer,South Dakota,2034,26.0,709,41.0,2.877,4.746,2.869,Medium,Medium,True,0.0,1.0,0.0
+41029,Jackson,Oregon,43552,535.0,798,1835.0,54.581,121.476,54.576,Medium,Low,False,1.0,0.0,0.0
+31129,Nuckolls,Nebraska,980,13.0,728,114.0,1.478,5.46,1.346,Medium,Low,False,1.0,0.0,0.0
+48221,Hood,Texas,13472,274.0,778,827.0,17.436,43.231,17.316,High,High,True,0.0,0.0,1.0
+16073,Owyhee,Idaho,2274,54.0,776,30.0,2.96,4.663,2.93,High,High,True,0.0,0.0,1.0
+16083,Twin Falls,Idaho,24129,296.0,787,374.0,30.677,44.54,30.659,Medium,Medium,True,0.0,1.0,0.0
+8003,Alamosa,Colorado,4560,62.0,778,114.0,5.945,10.421,5.861,Medium,Medium,True,0.0,1.0,0.0
+38023,Divide,North Dakota,459,4.0,777,13.0,0.596,1.381,0.591,Low,High,False,0.0,0.0,1.0
+1099,Monroe,Alabama,5276,80.0,777,250.0,6.815,16.08,6.79,Medium,Low,False,1.0,0.0,0.0
+18079,Jennings,Indiana,6995,108.0,787,197.0,8.914,17.42,8.888,Medium,High,False,0.0,0.0,1.0
+21153,Magoffin,Kentucky,3950,51.0,728,59.0,5.456,9.881,5.426,Medium,Low,False,1.0,0.0,0.0
+8105,Rio Grande,Colorado,2856,46.0,779,54.0,3.718,6.694,3.666,Medium,High,False,0.0,0.0,1.0
+48075,Childress,Texas,2638,33.0,755,599.0,3.766,23.846,3.494,Medium,Medium,True,0.0,1.0,0.0
+49039,Sanpete,Utah,8374,56.0,756,338.0,11.119,28.532,11.077,Low,Medium,False,0.0,1.0,0.0
+51169,Scott,Virginia,5847,111.0,764,125.0,7.686,14.162,7.653,High,High,True,0.0,0.0,1.0
+32031,Washoe,Nevada,105973,1202.0,800,3748.0,132.506,266.332,132.466,Low,Low,True,1.0,0.0,0.0
+39069,Henry,Ohio,6485,106.0,766,121.0,8.479,12.595,8.466,Medium,Medium,True,0.0,1.0,0.0
+6103,Tehama,California,14753,202.0,771,648.0,19.152,41.954,19.135,Medium,Low,False,1.0,0.0,0.0
+48367,Parker,Texas,34819,450.0,781,1150.0,44.722,87.198,44.583,Medium,Medium,True,0.0,1.0,0.0
+21039,Carlisle,Kentucky,1076,20.0,751,25.0,1.451,2.873,1.433,High,Low,False,1.0,0.0,0.0
+6049,Modoc,California,1485,11.0,654,89.0,2.439,7.733,2.271,Low,Medium,False,0.0,1.0,0.0
+31047,Dawson,Nebraska,5303,44.0,783,323.0,6.897,17.821,6.773,Low,Low,True,1.0,0.0,0.0
+41023,Grant,Oregon,1704,22.0,785,68.0,2.182,5.936,2.171,Medium,High,False,0.0,0.0,1.0
+36035,Fulton,New York,13428,169.0,785,149.0,17.106,21.962,17.106,Medium,Medium,True,0.0,1.0,0.0
+46073,Jerauld,South Dakota,415,20.0,765,44.0,0.55,1.979,0.542,High,Medium,False,0.0,1.0,0.0
+38015,Burleigh,North Dakota,35087,303.0,788,493.0,44.582,65.102,44.527,Low,Low,True,1.0,0.0,0.0
+12019,Clay,Florida,53825,856.0,793,3897.0,68.004,290.535,67.875,Medium,Medium,True,0.0,1.0,0.0
+27047,Freeborn,Minnesota,9250,75.0,773,317.0,11.981,22.693,11.966,Low,Low,True,1.0,0.0,0.0
+2180,Nome Census Area,Alaska,6245,5.0,759,222.0,8.232,27.422,8.228,Low,Low,True,1.0,0.0,0.0
+48415,Scurry,Texas,4983,104.0,765,252.0,8.409,26.627,6.514,High,High,True,0.0,0.0,1.0
+54041,Lewis,West Virginia,5359,87.0,768,70.0,7.049,10.912,6.978,Medium,Medium,True,0.0,1.0,0.0
+51660,Harrisonburg city,Virginia,13492,161.0,792,440.0,17.102,32.005,17.035,Low,Medium,False,0.0,1.0,0.0
+21035,Calloway,Kentucky,8414,94.0,785,227.0,10.741,21.164,10.718,Low,Medium,False,0.0,1.0,0.0
+26133,Osceola,Michigan,5067,80.0,777,181.0,6.532,14.199,6.521,Medium,High,False,0.0,0.0,1.0
+51027,Buchanan,Virginia,4902,122.0,767,179.0,6.441,12.585,6.391,High,High,True,0.0,0.0,1.0
+56037,Sweetwater,Wyoming,11088,126.0,781,223.0,14.215,26.624,14.197,Low,Low,True,1.0,0.0,0.0
+13147,Hart,Georgia,4899,100.0,778,174.0,6.33,11.801,6.297,High,High,True,0.0,0.0,1.0
+12027,DeSoto,Florida,9455,150.0,783,505.0,12.103,43.348,12.075,Medium,Medium,True,0.0,1.0,0.0
+22087,St. Bernard,Louisiana,11439,111.0,790,505.0,14.513,38.192,14.48,Low,Low,True,1.0,0.0,0.0
+48397,Rockwall,Texas,26778,266.0,779,1028.0,34.408,77.06,34.375,Low,Medium,False,0.0,1.0,0.0
+28147,Walthall,Mississippi,3622,79.0,786,140.0,4.621,10.386,4.608,High,High,True,0.0,0.0,1.0
+12037,Franklin,Florida,3087,52.0,771,192.0,4.074,16.71,4.004,Medium,Medium,True,0.0,1.0,0.0
+22089,St. Charles,Louisiana,13920,145.0,792,618.0,17.676,44.873,17.576,Low,Low,True,1.0,0.0,0.0
+55121,Trempealeau,Wisconsin,8555,65.0,772,277.0,11.11,20.536,11.082,Low,Medium,False,0.0,1.0,0.0
+39019,Carroll,Ohio,5291,126.0,783,83.0,6.773,9.993,6.757,High,High,True,0.0,0.0,1.0
+39127,Perry,Ohio,8356,125.0,774,133.0,10.801,16.408,10.796,Medium,Low,False,1.0,0.0,0.0
+46045,Edmunds,South Dakota,949,16.0,715,32.0,1.343,2.554,1.327,Medium,Medium,True,0.0,1.0,0.0
+12079,Madison,Florida,5849,97.0,773,460.0,7.613,34.681,7.567,Medium,Medium,True,0.0,1.0,0.0
+19073,Greene,Iowa,1745,21.0,767,78.0,2.284,7.301,2.275,Low,Medium,False,0.0,1.0,0.0
+21139,Livingston,Kentucky,2482,61.0,760,49.0,3.283,6.018,3.266,High,Low,False,1.0,0.0,0.0
+16051,Jefferson,Idaho,6043,65.0,780,116.0,7.763,12.488,7.747,Low,Medium,False,0.0,1.0,0.0
+12081,Manatee,Florida,96960,1434.0,804,5416.0,121.642,448.821,120.597,Medium,High,False,0.0,0.0,1.0
+18055,Greene,Indiana,7262,139.0,776,158.0,9.393,16.48,9.358,High,High,True,0.0,0.0,1.0
+28093,Marshall,Mississippi,9941,174.0,785,223.0,12.685,23.58,12.664,High,Medium,False,0.0,1.0,0.0
+40063,Hughes,Oklahoma,2586,62.0,715,215.0,3.624,13.091,3.617,High,High,True,0.0,0.0,1.0
+35001,Bernalillo,New Mexico,149543,1854.0,794,6092.0,188.341,394.834,188.341,Medium,Low,False,1.0,0.0,0.0
+29207,Stoddard,Missouri,6139,130.0,779,142.0,7.949,12.993,7.881,High,High,True,0.0,0.0,1.0
+26089,Leelanau,Michigan,3697,55.0,792,171.0,4.693,12.027,4.668,Medium,Low,False,1.0,0.0,0.0
+20177,Shawnee,Kansas,48858,633.0,780,2961.0,62.638,182.324,62.638,Medium,Medium,True,0.0,1.0,0.0
+54077,Preston,West Virginia,9367,137.0,781,346.0,12.48,21.706,11.994,Medium,Low,False,1.0,0.0,0.0
+21203,Rockcastle,Kentucky,5059,59.0,774,137.0,6.558,13.093,6.536,Low,Medium,False,0.0,1.0,0.0
+26037,Clinton,Michigan,22007,209.0,786,723.0,28.095,67.371,27.999,Low,Low,True,1.0,0.0,0.0
+23029,Washington,Maine,4585,57.0,771,209.0,5.962,13.867,5.947,Medium,Medium,True,0.0,1.0,0.0
+17165,Saline,Illinois,7935,111.0,775,297.0,10.25,22.679,10.239,Medium,Medium,True,0.0,1.0,0.0
+31101,Keith,Nebraska,1549,20.0,742,140.0,2.142,6.804,2.088,Medium,Low,False,1.0,0.0,0.0
+21019,Boyd,Kentucky,16369,177.0,776,450.0,21.101,42.898,21.094,Low,Medium,False,0.0,1.0,0.0
+4027,Yuma,Arizona,62751,1181.0,785,1129.0,80.087,139.811,79.938,High,Medium,False,0.0,1.0,0.0
+39007,Ashtabula,Ohio,20537,431.0,785,323.0,26.175,38.319,26.162,High,High,True,0.0,0.0,1.0
+47129,Morgan,Tennessee,6209,87.0,777,435.0,8.021,29.106,7.991,Medium,Medium,True,0.0,1.0,0.0
+19133,Monona,Iowa,1723,49.0,779,108.0,2.232,7.056,2.212,High,High,True,0.0,0.0,1.0
+51131,Northampton,Virginia,2183,65.0,779,111.0,2.846,8.192,2.802,High,High,True,0.0,0.0,1.0
+21069,Fleming,Kentucky,3928,59.0,763,82.0,5.21,9.866,5.148,Medium,High,False,0.0,0.0,1.0
+51073,Gloucester,Virginia,7453,104.0,785,322.0,9.541,22.463,9.494,Medium,Medium,True,0.0,1.0,0.0
+29091,Howell,Missouri,9185,215.0,772,567.0,12.028,30.732,11.898,High,High,True,0.0,0.0,1.0
+1043,Cullman,Alabama,24649,367.0,785,1198.0,31.419,69.582,31.4,Medium,Medium,True,0.0,1.0,0.0
+69100,Rota,Northern Mariana Islands,415,0.0,114,232.0,3.64,24.788,3.64,Low,Low,True,1.0,0.0,0.0
+48271,Kinney,Texas,741,11.0,714,58.0,1.056,3.816,1.038,Medium,High,False,0.0,0.0,1.0
+46053,Gregory,South Dakota,1065,34.0,713,21.0,1.506,2.725,1.494,High,High,True,0.0,0.0,1.0
+30011,Carter,Montana,252,5.0,597,20.0,0.474,1.664,0.422,High,High,True,0.0,0.0,1.0
+47019,Carter,Tennessee,16546,336.0,777,899.0,21.295,65.78,21.295,High,Medium,False,0.0,1.0,0.0
+21051,Clay,Kentucky,7867,92.0,755,181.0,10.448,23.162,10.42,Low,Medium,False,0.0,1.0,0.0
+28079,Leake,Mississippi,6427,120.0,784,179.0,8.204,16.817,8.198,High,High,True,0.0,0.0,1.0
+22123,West Carroll,Louisiana,3629,66.0,768,218.0,4.845,14.725,4.725,High,Medium,False,0.0,1.0,0.0
+48159,Franklin,Texas,2228,42.0,776,121.0,2.888,7.106,2.871,High,High,True,0.0,0.0,1.0
+48093,Comanche,Texas,3698,78.0,773,144.0,4.798,11.596,4.784,High,High,True,0.0,0.0,1.0
+12091,Okaloosa,Florida,51630,688.0,798,3365.0,64.974,262.21,64.699,Medium,Low,False,1.0,0.0,0.0
+20149,Pottawatomie,Kansas,5785,58.0,781,350.0,7.434,22.39,7.407,Low,Low,True,1.0,0.0,0.0
+16049,Idaho,Idaho,2998,52.0,780,91.0,3.845,7.881,3.844,High,High,True,0.0,0.0,1.0
+56003,Big Horn,Wyoming,2586,61.0,762,54.0,3.416,5.894,3.394,High,Medium,False,0.0,1.0,0.0
+49007,Carbon,Utah,5264,46.0,771,101.0,6.834,12.743,6.827,Low,Low,True,1.0,0.0,0.0
+6021,Glenn,California,6631,67.0,777,257.0,8.55,19.743,8.534,Low,Low,True,1.0,0.0,0.0
+37101,Johnston,North Carolina,60301,452.0,793,2816.0,76.044,178.971,76.042,Low,Low,True,1.0,0.0,0.0
+12031,Duval,Florida,255189,3410.0,793,19318.0,323.677,1314.063,321.802,Medium,Low,False,1.0,0.0,0.0
+36067,Onondaga,New York,121727,1073.0,789,2084.0,154.304,232.382,154.28,Low,Low,True,1.0,0.0,0.0
+37195,Wilson,North Carolina,21886,316.0,790,882.0,27.727,60.331,27.704,Medium,Low,False,1.0,0.0,0.0
+37115,Madison,North Carolina,5186,81.0,749,228.0,6.983,16.359,6.924,Medium,Medium,True,0.0,1.0,0.0
+55057,Juneau,Wisconsin,7859,69.0,780,301.0,10.095,22.039,10.076,Low,Low,True,1.0,0.0,0.0
+48189,Hale,Texas,8989,245.0,780,157.0,12.832,25.604,11.524,High,High,True,0.0,0.0,1.0
+12097,Osceola,Florida,115328,1147.0,792,8905.0,146.571,592.293,145.616,Low,Low,True,1.0,0.0,0.0
+44005,Newport,Rhode Island,21237,94.0,780,1899.0,27.231,131.66,27.227,Low,Medium,False,0.0,1.0,0.0
+33019,Sullivan,New Hampshire,9725,68.0,783,412.0,12.436,31.11,12.42,Low,Low,True,1.0,0.0,0.0
+55075,Marinette,Wisconsin,11760,127.0,778,204.0,15.125,25.082,15.116,Low,Medium,False,0.0,1.0,0.0
+51171,Shenandoah,Virginia,10936,222.0,780,292.0,14.162,24.585,14.021,High,High,True,0.0,0.0,1.0
+48035,Bosque,Texas,4130,70.0,759,423.0,5.441,20.704,5.441,Medium,Medium,True,0.0,1.0,0.0
+26109,Menominee,Michigan,5693,70.0,764,217.0,7.461,16.066,7.452,Medium,Low,False,1.0,0.0,0.0
+29079,Grundy,Missouri,2543,69.0,721,173.0,3.591,8.527,3.527,High,Medium,False,0.0,1.0,0.0
+13091,Dodge,Georgia,5244,154.0,780,186.0,6.836,16.312,6.723,High,High,True,0.0,0.0,1.0
+28133,Sunflower,Mississippi,5773,125.0,783,155.0,7.381,12.8,7.373,High,High,True,0.0,0.0,1.0
+40105,Nowata,Oklahoma,2785,40.0,777,232.0,3.601,14.375,3.584,Medium,Medium,True,0.0,1.0,0.0
+27107,Norman,Minnesota,1535,14.0,759,41.0,2.036,3.946,2.022,Low,Low,True,1.0,0.0,0.0
+22113,Vermilion,Louisiana,15334,224.0,779,772.0,19.783,46.231,19.684,Medium,Medium,True,0.0,1.0,0.0
+41015,Curry,Oregon,3385,54.0,768,134.0,4.417,11.154,4.408,Medium,Medium,True,0.0,1.0,0.0
+1121,Talladega,Alabama,22396,377.0,787,1054.0,28.515,62.885,28.457,Medium,High,False,0.0,0.0,1.0
+28131,Stone,Mississippi,5409,71.0,769,182.0,7.049,15.242,7.034,Medium,High,False,0.0,0.0,1.0
+17113,McLean,Illinois,52348,330.0,785,1746.0,66.694,153.855,66.685,Low,Low,True,1.0,0.0,0.0
+6093,Siskiyou,California,7478,105.0,784,458.0,9.538,25.384,9.538,Medium,Medium,True,0.0,1.0,0.0
+13021,Bibb,Georgia,37615,788.0,786,1535.0,47.966,98.673,47.856,High,High,True,0.0,0.0,1.0
+36037,Genesee,New York,14395,187.0,785,185.0,18.338,26.804,18.338,Medium,Low,False,1.0,0.0,0.0
+36017,Chenango,New York,9858,121.0,787,112.0,12.526,15.801,12.526,Medium,Medium,True,0.0,1.0,0.0
+32029,Storey,Nevada,345,11.0,726,24.0,0.57,1.851,0.475,High,Medium,False,0.0,1.0,0.0
+39003,Allen,Ohio,27636,478.0,777,693.0,35.58,53.646,35.568,High,High,True,0.0,0.0,1.0
+46101,Moody,South Dakota,1386,28.0,758,40.0,1.839,3.725,1.828,High,Medium,False,0.0,1.0,0.0
+13053,Chattahoochee,Georgia,7486,22.0,778,137.0,9.658,16.187,9.622,Low,Low,True,1.0,0.0,0.0
+5019,Clark,Arkansas,5379,79.0,786,93.0,6.87,11.51,6.844,Medium,Medium,True,0.0,1.0,0.0
+51195,Wise,Virginia,10306,199.0,771,195.0,13.416,23.12,13.367,High,Medium,False,0.0,1.0,0.0
+19109,Kossuth,Iowa,3783,88.0,783,117.0,4.851,12.627,4.831,High,High,True,0.0,0.0,1.0
+39121,Noble,Ohio,3220,58.0,765,52.0,4.227,7.089,4.209,High,High,True,0.0,0.0,1.0
+12117,Seminole,Florida,105227,1096.0,793,8183.0,132.987,576.528,132.695,Low,Low,True,1.0,0.0,0.0
+20137,Norton,Kansas,2153,38.0,743,142.0,2.91,12.148,2.898,High,Medium,False,0.0,1.0,0.0
+27011,Big Stone,Minnesota,1425,9.0,782,31.0,1.829,3.38,1.822,Low,Low,True,1.0,0.0,0.0
+45027,Clarendon,South Carolina,8776,159.0,785,486.0,11.234,30.761,11.18,High,High,True,0.0,0.0,1.0
+48003,Andrews,Texas,3822,72.0,770,295.0,5.282,17.564,4.964,High,Medium,False,0.0,1.0,0.0
+26021,Berrien,Michigan,35344,561.0,784,1240.0,45.11,98.768,45.082,Medium,Medium,True,0.0,1.0,0.0
+26161,Washtenaw,Michigan,83317,522.0,793,3017.0,105.127,230.77,105.066,Low,Low,True,1.0,0.0,0.0
+18091,LaPorte,Indiana,25905,368.0,791,638.0,32.777,57.286,32.75,Medium,Low,False,1.0,0.0,0.0
+16007,Bear Lake,Idaho,931,16.0,683,21.0,1.373,2.478,1.363,High,High,True,0.0,0.0,1.0
+1079,Lawrence,Alabama,7682,160.0,780,374.0,9.858,23.978,9.849,High,High,True,0.0,0.0,1.0
+51015,Augusta,Virginia,19073,216.0,773,677.0,25.598,57.38,24.674,Low,Low,True,1.0,0.0,0.0
+21231,Wayne,Kentucky,6107,92.0,780,301.0,7.855,20.021,7.829,Medium,Medium,True,0.0,1.0,0.0
+21023,Bracken,Kentucky,2186,26.0,777,73.0,2.848,5.865,2.813,Low,Low,True,1.0,0.0,0.0
+47155,Sevier,Tennessee,30457,415.0,789,1787.0,38.632,117.658,38.602,Medium,Low,False,1.0,0.0,0.0
+54027,Hampshire,West Virginia,5906,73.0,766,90.0,7.748,11.706,7.71,Medium,Low,False,1.0,0.0,0.0
+34021,Mercer,New Jersey,80988,1261.0,791,1480.0,102.809,171.746,102.387,Medium,Medium,True,0.0,1.0,0.0
+38057,Mercer,North Dakota,2577,24.0,739,56.0,3.509,6.2,3.487,Low,Low,True,1.0,0.0,0.0
+34001,Atlantic,New Jersey,70482,997.0,787,3118.0,89.83,170.812,89.558,Medium,Medium,True,0.0,1.0,0.0
+27127,Redwood,Minnesota,3985,54.0,768,64.0,5.195,8.846,5.189,Medium,Medium,True,0.0,1.0,0.0
+26137,Otsego,Michigan,5779,101.0,788,113.0,7.377,13.889,7.334,High,High,True,0.0,0.0,1.0
+5001,Arkansas,Arkansas,5696,79.0,776,173.0,7.387,14.797,7.34,Medium,Medium,True,0.0,1.0,0.0
+39079,Jackson,Ohio,8988,141.0,766,184.0,11.742,17.586,11.734,Medium,Medium,True,0.0,1.0,0.0
+54007,Braxton,West Virginia,3940,43.0,766,246.0,5.21,12.0,5.144,Low,Medium,False,0.0,1.0,0.0
+19047,Crawford,Iowa,4539,54.0,775,179.0,5.916,15.065,5.857,Low,Medium,False,0.0,1.0,0.0
+12113,Santa Rosa,Florida,48592,621.0,800,3112.0,61.064,252.188,60.74,Medium,Low,False,1.0,0.0,0.0
+46127,Union,South Dakota,4026,52.0,778,100.0,5.197,8.909,5.175,Medium,Low,False,1.0,0.0,0.0
+28141,Tishomingo,Mississippi,6172,122.0,774,244.0,7.982,16.798,7.974,High,Medium,False,0.0,1.0,0.0
+29007,Audrain,Missouri,5734,111.0,755,627.0,7.797,26.969,7.595,High,Medium,False,0.0,1.0,0.0
+48285,Lavaca,Texas,4271,120.0,787,252.0,5.537,14.333,5.427,High,High,True,0.0,0.0,1.0
+31055,Douglas,Nebraska,151824,1119.0,817,6669.0,186.953,390.987,185.831,Low,Low,True,1.0,0.0,0.0
+39097,Madison,Ohio,9754,136.0,782,239.0,12.48,19.208,12.473,Medium,Medium,True,0.0,1.0,0.0
+48113,Dallas,Texas,573644,6772.0,795,15202.0,744.857,1185.408,721.565,Low,Low,True,1.0,0.0,0.0
+47029,Cocke,Tennessee,11634,217.0,784,551.0,14.87,43.188,14.839,High,Medium,False,0.0,1.0,0.0
+26041,Delta,Michigan,10050,157.0,775,577.0,12.992,32.712,12.968,Medium,Medium,True,0.0,1.0,0.0
+21059,Daviess,Kentucky,31176,391.0,786,1110.0,39.69,86.45,39.664,Medium,Medium,True,0.0,1.0,0.0
+30109,Wibaux,Montana,204,8.0,669,8.0,0.309,0.905,0.305,High,High,True,0.0,0.0,1.0
+12023,Columbia,Florida,21193,402.0,783,1216.0,27.135,112.489,27.066,High,Medium,False,0.0,1.0,0.0
+48001,Anderson,Texas,9691,239.0,773,1051.0,16.173,65.701,12.537,High,Medium,False,0.0,1.0,0.0
+13035,Butts,Georgia,6556,157.0,783,222.0,8.433,16.116,8.373,High,High,True,0.0,0.0,1.0
+6033,Lake,California,11699,137.0,768,349.0,15.431,34.19,15.233,Low,Medium,False,0.0,1.0,0.0
+9013,Tolland,Connecticut,21898,275.0,786,489.0,27.894,52.275,27.86,Medium,Medium,True,0.0,1.0,0.0
+20057,Ford,Kansas,10629,113.0,788,597.0,13.511,36.061,13.489,Low,Medium,False,0.0,1.0,0.0
+47049,Fentress,Tennessee,5722,128.0,775,361.0,7.397,24.879,7.383,High,High,True,0.0,0.0,1.0
+49053,Washington,Utah,45053,463.0,799,1887.0,56.418,126.738,56.387,Low,Low,True,1.0,0.0,0.0
+29187,St. Francois,Missouri,19117,296.0,782,1065.0,24.701,56.458,24.446,Medium,Medium,True,0.0,1.0,0.0
+26097,Mackinac,Michigan,2479,31.0,773,96.0,3.224,8.165,3.207,Medium,Medium,True,0.0,1.0,0.0
+51061,Fauquier,Virginia,13267,144.0,779,416.0,17.113,32.156,17.031,Low,Low,True,1.0,0.0,0.0
+22057,Lafourche,Louisiana,27889,372.0,791,1450.0,35.3,90.299,35.258,Medium,Low,False,1.0,0.0,0.0
+48435,Sutton,Texas,848,12.0,694,95.0,1.372,4.305,1.222,Medium,Medium,True,0.0,1.0,0.0
+21043,Carter,Kentucky,8675,107.0,769,209.0,11.303,23.443,11.281,Medium,Medium,True,0.0,1.0,0.0
+37067,Forsyth,North Carolina,94312,824.0,793,4574.0,118.933,278.533,118.931,Low,Low,True,1.0,0.0,0.0
+35005,Chaves,New Mexico,21774,328.0,782,844.0,27.867,61.559,27.844,Medium,Medium,True,0.0,1.0,0.0
+19001,Adair,Iowa,1588,51.0,788,48.0,2.025,5.627,2.015,High,High,True,0.0,0.0,1.0
+45013,Beaufort,South Carolina,43530,380.0,791,1835.0,55.076,136.094,55.032,Low,Low,True,1.0,0.0,0.0
+54043,Lincoln,West Virginia,5606,82.0,760,357.0,7.843,17.216,7.376,Medium,Medium,True,0.0,1.0,0.0
+27033,Cottonwood,Minnesota,3253,41.0,776,87.0,4.204,7.728,4.192,Medium,Medium,True,0.0,1.0,0.0
+19067,Floyd,Iowa,3605,62.0,743,185.0,4.875,14.704,4.852,High,Medium,False,0.0,1.0,0.0
+19135,Monroe,Iowa,1882,49.0,741,70.0,2.561,7.068,2.54,High,Medium,False,0.0,1.0,0.0
+13183,Long,Georgia,2801,35.0,780,102.0,3.733,8.899,3.591,Medium,Medium,True,0.0,1.0,0.0
+40145,Wagoner,Oklahoma,21915,277.0,781,1691.0,28.064,123.32,28.06,Medium,Medium,True,0.0,1.0,0.0
+35049,Santa Fe,New Mexico,29503,287.0,794,1802.0,37.164,96.681,37.157,Low,Medium,False,0.0,1.0,0.0
+35009,Curry,New Mexico,12797,198.0,781,558.0,16.391,33.826,16.385,Medium,High,False,0.0,0.0,1.0
+41013,Crook,Oregon,6158,79.0,771,231.0,8.003,18.338,7.987,Medium,Medium,True,0.0,1.0,0.0
+30057,Madison,Montana,1819,20.0,786,37.0,2.355,4.429,2.314,Low,Medium,False,0.0,1.0,0.0
+17127,Massac,Illinois,3887,71.0,773,113.0,5.039,10.305,5.028,High,Medium,False,0.0,1.0,0.0
+12009,Brevard,Florida,135740,2100.0,788,11548.0,173.166,772.513,172.259,Medium,Medium,True,0.0,1.0,0.0
+21025,Breathitt,Kentucky,3801,54.0,783,71.0,4.885,9.933,4.854,Medium,High,False,0.0,0.0,1.0
+39105,Meigs,Ohio,4686,88.0,767,72.0,6.115,9.097,6.11,High,High,True,0.0,0.0,1.0
+48275,Knox,Texas,492,25.0,767,31.0,0.738,2.793,0.641,High,High,True,0.0,0.0,1.0
+39041,Delaware,Ohio,45538,272.0,787,1014.0,57.864,94.627,57.863,Low,Low,True,1.0,0.0,0.0
+27139,Scott,Minnesota,41236,261.0,786,788.0,52.499,86.99,52.463,Low,Low,True,1.0,0.0,0.0
+47095,Lake,Tennessee,2749,43.0,761,351.0,3.862,18.32,3.612,Medium,Low,False,1.0,0.0,0.0
+51075,Goochland,Virginia,4153,53.0,788,138.0,5.308,10.566,5.27,Medium,High,False,0.0,0.0,1.0
+55101,Racine,Wisconsin,57729,690.0,792,1794.0,72.893,140.972,72.89,Low,Medium,False,0.0,1.0,0.0
+20183,Smith,Kansas,645,8.0,759,26.0,0.872,2.79,0.85,Medium,Low,False,1.0,0.0,0.0
+31105,Kimball,Nebraska,776,9.0,774,55.0,1.023,3.467,1.003,Low,Low,True,1.0,0.0,0.0
+13127,Glynn,Georgia,23341,406.0,786,1019.0,29.927,71.783,29.696,High,High,True,0.0,0.0,1.0
+2100,Haines Borough,Alaska,624,1.0,704,37.0,0.893,3.587,0.886,Low,High,False,0.0,0.0,1.0
+27031,Cook,Minnesota,594,4.0,700,22.0,0.871,1.924,0.849,Low,Medium,False,0.0,1.0,0.0
+48223,Hopkins,Texas,7264,180.0,780,970.0,10.224,45.264,9.313,High,Medium,False,0.0,1.0,0.0
+42093,Montour,Pennsylvania,4637,93.0,784,201.0,7.788,19.143,5.915,High,High,True,0.0,0.0,1.0
+48423,Smith,Texas,45581,968.0,792,1635.0,62.652,150.007,57.552,High,High,True,0.0,0.0,1.0
+27069,Kittson,Minnesota,1051,27.0,756,24.0,1.406,2.758,1.39,High,Medium,False,0.0,1.0,0.0
+42057,Fulton,Pennsylvania,4153,65.0,769,47.0,5.41,7.958,5.401,Medium,High,False,0.0,0.0,1.0
+21119,Knott,Kentucky,4233,64.0,763,90.0,5.574,11.015,5.548,Medium,High,False,0.0,0.0,1.0
+39051,Fulton,Ohio,10436,180.0,778,177.0,13.425,19.252,13.414,High,High,True,0.0,0.0,1.0
+39071,Highland,Ohio,10675,184.0,781,245.0,13.697,22.889,13.668,High,Medium,False,0.0,1.0,0.0
+55069,Lincoln,Wisconsin,7188,148.0,743,140.0,9.689,15.505,9.674,High,Medium,False,0.0,1.0,0.0
+29067,Douglas,Missouri,2560,80.0,713,118.0,3.624,6.991,3.59,High,High,True,0.0,0.0,1.0
+26095,Luce,Michigan,2306,14.0,771,372.0,3.131,16.492,2.991,Low,Low,True,1.0,0.0,0.0
+33009,Grafton,New Hampshire,19227,68.0,803,921.0,23.961,62.338,23.944,Low,Low,True,1.0,0.0,0.0
+20079,Harvey,Kansas,9636,124.0,778,488.0,12.567,35.304,12.386,Medium,Low,False,1.0,0.0,0.0
+48231,Hunt,Texas,15811,363.0,780,385.0,20.66,41.223,20.271,High,High,True,0.0,0.0,1.0
+47147,Robertson,Tennessee,21626,305.0,787,1252.0,27.494,89.868,27.479,Medium,Medium,True,0.0,1.0,0.0
+48405,San Augustine,Texas,1082,44.0,773,45.0,1.56,4.07,1.4,High,High,True,0.0,0.0,1.0
+26055,Grand Traverse,Michigan,17858,236.0,783,785.0,22.816,53.556,22.807,Medium,Medium,True,0.0,1.0,0.0
+5033,Crawford,Arkansas,15884,249.0,781,332.0,20.342,31.189,20.338,Medium,Medium,True,0.0,1.0,0.0
+12067,Lafayette,Florida,2780,61.0,766,308.0,3.654,19.109,3.629,High,High,True,0.0,0.0,1.0
+18115,Ohio,Indiana,1458,19.0,781,60.0,1.882,4.171,1.867,Medium,High,False,0.0,0.0,1.0
