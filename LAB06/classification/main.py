@@ -1,71 +1,78 @@
 """
 main.py
--------
-Main training pipeline for the ML-07-CNN project (Yeast dataset, 1D-CNN).
+--------
+End-to-end training pipeline for the ML-06-NN project:
 
-Run this script from inside the classification/ folder:
+  1. Load the Zoo dataset (data_loader.py)
+  2. Extract & scale features (preprocessing.py)
+  3. Split into train/val/test (split_data.py)
+  4. Search for the best k and train the final k-NN model (nn_model.py)
+  5. Evaluate on the test set: accuracy, report, confusion matrix,
+     accuracy-vs-k plot (evaluate.py)
+  6. Sanity-check the saved model on 4 random test samples (test_nn.py)
 
-    cd classification
-    python main.py
-
-Pipeline steps:
-    1. Load raw data from ../dataset.csv           (data_loader.py)
-    2. Scale features + encode labels               (preprocessing.py)
-    3. Split into train / validation / test          (split_data.py)
-    4. Build and train the 1D-CNN                    (cnn_model.py)
-    5. Evaluate on the test set                       (evaluate.py)
-    6. Run a quick prediction sanity check             (test_cnn.py)
+Run with:  python main.py
 """
 
 import os
 import json
+import numpy as np
 
-from data_loader import load_dataset
-from preprocessing import preprocess
-from split_data import split_dataset
-from cnn_model import build_model, train_model, save_model
-from evaluate import evaluate_model, plot_training_history
-from test_cnn import test_random_samples
+from data_loader import load_zoo_dataset, load_class_names, save_classes_json
+from preprocessing import extract_features_labels, save_features_labels, scale_features
+from split_data import split_dataset, save_splits
+from nn_model import search_best_k, build_model, train_model, save_model, save_history
+from evaluate import load_class_names as load_class_names_json, evaluate_model, plot_training_history
+from test_nn import run_test
 
-DATASET_PATH = os.path.join(os.path.dirname(__file__), "..", "dataset.csv")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
 
 
 def main():
     print("=" * 60)
-    print("STEP 1/6 - Loading dataset")
+    print("ML-06-NN | Nearest Neighbor classification - Zoo dataset")
     print("=" * 60)
-    df = load_dataset(DATASET_PATH)
 
-    print("\n" + "=" * 60)
-    print("STEP 2/6 - Preprocessing (scaling + label encoding)")
-    print("=" * 60)
-    X, y, class_names = preprocess(df)
+    # 1) Load data
+    df = load_zoo_dataset()
+    class_map = load_class_names()
+    save_classes_json(class_map)
 
-    print("\n" + "=" * 60)
-    print("STEP 3/6 - Splitting into train / val / test")
-    print("=" * 60)
+    # 2) Preprocess
+    X, y, names = extract_features_labels(df)
+    save_features_labels(X, y)
+
+    # 3) Split
     X_train, X_val, X_test, y_train, y_val, y_test = split_dataset(X, y)
+    save_splits(X_train, X_val, X_test, y_train, y_val, y_test)
 
-    print("\n" + "=" * 60)
-    print("STEP 4/6 - Building and training the 1D-CNN")
-    print("=" * 60)
-    model = build_model(input_shape=X_train.shape[1:], num_classes=len(class_names))
-    model.summary()
-    train_model(model, X_train, y_train, X_val, y_val)
+    # Scale using training-set statistics only
+    X_train_s, X_val_s, X_test_s, scaler = scale_features(X_train, X_val, X_test)
+
+    # 4) Model selection + training
+    best_k, history = search_best_k(X_train_s, y_train, X_val_s, y_val)
+    save_history(history, best_k)
+
+    model = build_model(best_k)
+    X_trainval = np.concatenate([X_train_s, X_val_s], axis=0)
+    y_trainval = np.concatenate([y_train, y_val], axis=0)
+    model = train_model(model, X_trainval, y_trainval)
     save_model(model)
 
-    print("\n" + "=" * 60)
-    print("STEP 5/6 - Evaluating on the test set")
-    print("=" * 60)
-    evaluate_model(model, X_test, y_test, class_names)
-    plot_training_history()
+    # 5) Evaluate
+    class_names = load_class_names_json()
+    acc, report, y_pred = evaluate_model(model, X_test_s, y_test, class_names)
+    plot_training_history(history, best_k)
 
-    print("\n" + "=" * 60)
-    print("STEP 6/6 - Prediction sanity check (4 random test samples)")
-    print("=" * 60)
-    test_random_samples()
+    # 6) Quick sanity test on random samples (re-applies the saved scaler
+    #    to the raw X_test.npy split internally).
+    run_test()
 
-    print("\nDone. All outputs saved to classification/outputs/")
+    print("-" * 60)
+    print(f"DONE. Best k = {best_k} | Test accuracy = {acc:.4f}")
+    print(f"All outputs saved under: {OUTPUT_DIR}")
+    print("-" * 60)
 
 
 if __name__ == "__main__":

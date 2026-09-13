@@ -1,95 +1,83 @@
-# ML-07-CNN: Yeast Protein Localization Classification (1D-CNN)
+# ML-06-NN: การจำแนกประเภทสัตว์ด้วย Nearest Neighbor (k-NN)
 
-## Overview
-This project classifies yeast proteins into one of **10 cellular localization
-sites** using a **1D Convolutional Neural Network (Conv1D)** built with
-TensorFlow / Keras.
+โปรเจกต์นี้สาธิตอัลกอริทึม **Nearest Neighbor (NN)** โดยใช้ **k-Nearest Neighbors (k-NN)** จากไลบรารี scikit-learn เพื่อจำแนกประเภทของสัตว์ (Mammal, Bird, Reptile, Fish, Amphibian, Bug, Invertebrate) จากลักษณะทางกายภาพ/พฤติกรรม 16 อย่าง โดยใช้ **Zoo Dataset** จาก UCI Machine Learning Repository
 
-> **Note on dataset:** the assignment template for ML-07-CNN was originally
-> written for image data (`PetImages/Cat`, `PetImages/Dog`). The dataset
-> provided for this project, `dataset.csv` ([UCI Yeast
-> dataset](https://archive.ics.uci.edu/dataset/110/yeast)), is **tabular**
-> (8 numeric features per row), not images. The pipeline below keeps the same
-> stages (load → preprocess → split → train CNN → evaluate → test) but is
-> adapted for tabular data: a **1D-CNN** treats the 8 features of each protein
-> as a short sequence, instead of a 2D-CNN treating pixels as a grid.
+> **หมายเหตุ:** โครงสร้างไฟล์ต้นฉบับที่ขอมา ออกแบบไว้สำหรับชุดข้อมูลรูปภาพ (โฟลเดอร์ `PetImages/Cat`, `PetImages/Dog`) แต่ชุดข้อมูลที่แนบมาจริงคือ `zoo.csv` ซึ่งเป็นข้อมูลตาราง (tabular data) จึงปรับโครงสร้างให้เหมาะสม โดยตัดโฟลเดอร์ `PetImages/` ออก และปรับสคริปต์ภายใน `classification/` ให้ทำงานกับข้อมูลตารางแทน (คงชื่อไฟล์ script เดิมไว้ตามที่ระบุ)
 
-## Dataset
-- **Source:** UCI Machine Learning Repository — Yeast dataset
-- **Samples:** 1,484 (after removing duplicate/corrupted rows)
-- **Features (8):** `mcg`, `gvh`, `alm`, `mit`, `erl`, `pox`, `vac`, `nuc`
-  — physicochemical measurements related to protein sequence signals
-- **Target:** `name` — the protein's localization site, one of:
-  `CYT, NUC, MIT, ME3, ME2, ME1, EXC, VAC, POX, ERL`
-- Classes are **imbalanced** (from 463 samples for `CYT` down to 5 for `ERL`)
+## 1. ที่มาของข้อมูล (Dataset)
 
-## Project Structure
+- **ชื่อชุดข้อมูล:** Zoo Data Set
+- **แหล่งที่มา:** UCI Machine Learning Repository — https://archive.ics.uci.edu/dataset/111/zoo
+- **จำนวนตัวอย่าง:** 101 ตัวอย่าง (สัตว์ 101 ชนิด)
+- **จำนวนคุณลักษณะ (features):** 16 คุณลักษณะ ส่วนใหญ่เป็นค่าไบนารี (0/1) เช่น hair, feathers, eggs, milk, airborne, aquatic, predator, toothed, backbone, breathes, venomous, fins, tail, domestic, catsize และ legs (จำนวนขา ค่าจำนวนเต็ม)
+- **ป้ายกำกับ (label):** `class_type` (1–7) แมปกับชื่อคลาสจาก `class.csv` ได้แก่ Mammal, Bird, Reptile, Fish, Amphibian, Bug, Invertebrate
+- ไฟล์ `dataset.csv` ที่ระดับบนสุดของโปรเจกต์ คือไฟล์ `zoo.csv` ต้นฉบับ (คัดลอกมาเพื่อให้ตรงกับโครงสร้างที่ต้องการอัพโหลด GitHub)
+
+## 2. โครงสร้างโปรเจกต์
+
 ```
-ML-07-CNN/
-│
-├── dataset.csv                 # Yeast tabular dataset
-├── report.pdf                  # Full write-up (Thai)
-├── README.md                   # This file
-├── requirements.txt
-│
+ML-06-NN/
+├── dataset.csv                     # ชุดข้อมูล Zoo (สำเนาของ zoo.csv)
+├── report.pdf                      # รายงานฉบับเต็ม (ภาษาไทย)
+├── README.md                       # ไฟล์นี้
+├── requirements.txt                # รายชื่อไลบรารีที่ต้องติดตั้ง
 └── classification/
-    ├── main.py                 # Runs the full pipeline end-to-end
-    ├── data_loader.py          # Load CSV, drop corrupted/duplicate rows
-    ├── preprocessing.py        # Scale features, encode labels, reshape for Conv1D
-    ├── split_data.py           # Stratified train/val/test split (70/15/15)
-    ├── cnn_model.py            # Build, train, save, and predict with the 1D-CNN
-    ├── evaluate.py             # Accuracy, classification report, confusion matrix, training plots
-    ├── test_cnn.py             # Test the trained model on 4 random samples
-    └── outputs/
+    ├── zoo.csv                     # ชุดข้อมูลหลัก (ใช้จริงโดยสคริปต์)
+    ├── class.csv                   # ตารางแมปหมายเลขคลาส -> ชื่อคลาส
+    ├── main.py                     # รันทั้ง pipeline ตั้งแต่ต้นจนจบ
+    ├── data_loader.py              # โหลดข้อมูล ตรวจสอบ/ข้ามแถวที่ผิดพลาด
+    ├── preprocessing.py            # แปลงเป็น feature/label array และ scale
+    ├── split_data.py               # แบ่งข้อมูลเป็น train / validation / test
+    ├── nn_model.py                 # สร้าง เทรน บันทึก และทำนายด้วย k-NN
+    ├── evaluate.py                 # accuracy, classification report, confusion matrix, กราฟ
+    ├── test_nn.py                  # ทดสอบโมเดลกับตัวอย่างสุ่ม 4 ตัว
+    └── outputs/                    # ผลลัพธ์ทั้งหมดจากการรัน pipeline
         ├── features.npy
         ├── labels.npy
         ├── classes.json
         ├── X_train.npy / X_val.npy / X_test.npy
         ├── y_train.npy / y_val.npy / y_test.npy
-        ├── cnn_model.keras
+        ├── scaler.joblib
+        ├── nn_model.joblib
         ├── history.json
-        ├── classification_report.txt
+        ├── classification_report.json / .txt
+        ├── test_predictions.json
         ├── confusion_matrix.png
         ├── training_history.png
         └── prediction_sample.png
 ```
 
-## Model Architecture
-```
-Input (8, 1)
- └─ Conv1D(32, kernel=3, relu) + BatchNorm
-     └─ Conv1D(64, kernel=3, relu) + BatchNorm
-         └─ GlobalAveragePooling1D
-             └─ Dense(64, relu) + Dropout(0.3)
-                 └─ Dense(10, softmax)
-```
-- Optimizer: Adam (lr = 1e-3)
-- Loss: sparse categorical cross-entropy
-- Early stopping on validation loss (patience = 10)
+## 3. วิธีการทำงานของ Pipeline
 
-## How to Run
+1. **data_loader.py** — โหลด `zoo.csv` และ `class.csv`, ข้ามแถวที่มีค่าว่าง/label ผิดช่วง, บันทึกตารางชื่อคลาสเป็น `classes.json`
+2. **preprocessing.py** — แยกฟีเจอร์ 16 คอลัมน์และป้ายกำกับออกจากตาราง แล้ว standardize ฟีเจอร์ด้วย `StandardScaler` (สำคัญมากสำหรับ k-NN เพราะอัลกอริทึมนี้วัดระยะห่างแบบ Euclidean หากไม่ scale ฟีเจอร์ที่มีค่าตัวเลขต่างสเกลกันจะมีอิทธิพลไม่เท่ากัน)
+3. **split_data.py** — แบ่งข้อมูลแบบ stratified เป็น train 60% / validation 20% / test 20%
+4. **nn_model.py** — ค้นหาค่า **k** ที่ดีที่สุด (k = 1 ถึง 15) โดยดู accuracy บน validation set (model selection) จากนั้นเทรนโมเดลสุดท้ายด้วย train+validation แล้วบันทึกโมเดล
+5. **evaluate.py** — ประเมินผลบน test set: accuracy, classification report (precision/recall/f1 ต่อคลาส), confusion matrix, และกราฟ accuracy เทียบกับค่า k
+6. **test_nn.py** — สุ่มตัวอย่างจาก test set 4 ตัว ทำนายและเปรียบเทียบกับค่าจริง
+
+รันทั้งหมดด้วยคำสั่งเดียว:
+
 ```bash
-pip install -r requirements.txt
 cd classification
+pip install -r ../requirements.txt
 python main.py
 ```
-This runs the full pipeline (load → preprocess → split → train → evaluate →
-test) and writes every artifact into `classification/outputs/`.
 
-To re-run a single stage after `main.py` has been run once:
-```bash
-python evaluate.py     # re-evaluate the saved model
-python test_cnn.py     # re-run the 4-sample sanity check
-```
+## 4. ผลลัพธ์ที่ได้ (ตัวอย่างจากการรันจริง)
 
-## Results
-- **Test accuracy:** ≈ 0.60 (comparable to published results on this dataset,
-  which is known to be difficult due to class imbalance and overlapping
-  feature distributions)
-- Strongest classes: `ME1`, `ME3`, `MIT` (high precision/recall)
-- Weakest classes: `ERL`, `VAC`, `POX` (very few training samples)
-- Full metrics: see `classification/outputs/classification_report.txt` and
-  `confusion_matrix.png`
+- **ค่า k ที่ดีที่สุด:** เลือกจาก validation accuracy (ดูกราฟ `training_history.png`) — ที่ k น้อยมาก (k=1) โมเดลจะ overfit (train accuracy = 100% แต่ validation ต่ำกว่า) ส่วนที่ k มากเกินไปโมเดลจะ underfit ค่ากลาง ๆ ให้ validation accuracy สูงสุด
+- **Test accuracy:** ดูค่าจริงได้ที่ `outputs/classification_report.txt` (จากการรันตัวอย่าง ได้ 100% บน test set 21 ตัวอย่าง เนื่องจากชุดข้อมูลมีรูปแบบฟีเจอร์ที่แยกแต่ละคลาสได้ชัดเจน)
+- **Confusion Matrix:** `outputs/confusion_matrix.png` แสดงจำนวนที่ทำนายถูก/ผิดของแต่ละคลาส
 
-See **report.pdf** for the full write-up (in Thai), including methodology,
-results, and discussion.
+## 5. การประยุกต์ใช้งาน Nearest Neighbor
+
+นอกจากการจำแนกประเภทสัตว์แล้ว แนวคิด k-NN ในโปรเจกต์นี้สาธิตการประยุกต์ใช้งานหลักสองด้าน:
+
+1. **Model selection ด้วยการค้นหาค่า k (Elbow method แบบ validation curve)** — เลือกจำนวนเพื่อนบ้านที่เหมาะสมที่สุดจากข้อมูลจริง แทนการเดาค่า k ตายตัว ซึ่งเป็นขั้นตอนสำคัญของการนำ k-NN ไปใช้งานจริง
+2. **Feature scaling ก่อนวัดระยะห่าง** — แสดงให้เห็นว่าทำไมการ standardize ข้อมูลจึงจำเป็นสำหรับอัลกอริทึมที่อาศัยระยะห่างเป็นหลัก (distance-based algorithm) เช่น k-NN
+
+## 6. หมายเหตุเรื่อง Reproducibility
+
+- ใช้ `random_state=42` ในการแบ่งข้อมูล เพื่อให้ผลลัพธ์สามารถทำซ้ำได้
+- ไฟล์ `.npy` และ `.joblib` ทั้งหมดใน `outputs/` เป็นผลลัพธ์จากการรัน pipeline จริง สามารถลบแล้วรัน `python main.py` ใหม่เพื่อสร้างซ้ำได้ทุกครั้ง
