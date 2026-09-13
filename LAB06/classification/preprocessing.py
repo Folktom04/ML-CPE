@@ -1,70 +1,65 @@
 """
 preprocessing.py
 -----------------
-Tabular equivalent of "resize images and convert BGR to RGB":
-  - Scales numeric features to a common range (StandardScaler)
-  - Encodes the text class label into integers, then reshapes the
-    feature vector into (features, 1) so it can be fed into a 1D-CNN
-    (Conv1D expects a "sequence" axis, similar to how a 2D-CNN expects
-    an image's width/height axes).
-
-Outputs are saved to classification/outputs/ as .npy / .json files,
-mirroring the structure of features.npy, labels.npy, classes.json in
-the original image-based pipeline.
+Turn the cleaned Zoo DataFrame into numeric feature/label arrays ready for
+a Nearest Neighbor model:
+  - features are mostly already binary (0/1); 'legs' is a small integer
+    count, so it is standardized along with the rest so no single feature
+    dominates the Euclidean distance used by k-NN.
+  - labels (class_type, 1-7) are shifted to 0-6 for scikit-learn.
 """
 
-import json
 import os
 import numpy as np
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler
+import joblib
 
-from data_loader import FEATURE_COLUMNS, LABEL_COLUMN
+from data_loader import FEATURE_COLUMNS, LABEL_COLUMN, ID_COLUMN
 
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "outputs")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
 
 
-def preprocess(df, output_dir: str = OUTPUT_DIR):
+def extract_features_labels(df):
+    """Return (X, y, animal_names) as numpy arrays."""
+    X = df[FEATURE_COLUMNS].astype(float).values
+    y = df[LABEL_COLUMN].astype(int).values - 1  # 0-indexed for sklearn
+    names = df[ID_COLUMN].values
+    return X, y, names
+
+
+def scale_features(X_train, X_val, X_test, output_dir: str = OUTPUT_DIR):
+    """Fit a StandardScaler on the training split only, apply to all splits.
+
+    Nearest-Neighbor distance is sensitive to feature scale, so this step
+    matters more here than it would for a tree-based model.
     """
-    Scale features and encode labels.
-
-    Returns
-    -------
-    X : np.ndarray, shape (n_samples, n_features, 1)   -- ready for Conv1D
-    y : np.ndarray, shape (n_samples,)                  -- integer-encoded labels
-    class_names : list[str]                             -- index -> class name
-    """
-    os.makedirs(output_dir, exist_ok=True)
-
-    X_raw = df[FEATURE_COLUMNS].values.astype("float32")
-    y_raw = df[LABEL_COLUMN].values
-
-    # Scale features (equivalent to normalizing pixel values 0-255 -> 0-1)
     scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X_raw).astype("float32")
+    X_train_s = scaler.fit_transform(X_train)
+    X_val_s = scaler.transform(X_val)
+    X_test_s = scaler.transform(X_test)
 
-    # Encode class labels to integers
-    encoder = LabelEncoder()
-    y_encoded = encoder.fit_transform(y_raw).astype("int64")
-    class_names = list(encoder.classes_)
+    os.makedirs(output_dir, exist_ok=True)
+    scaler_path = os.path.join(output_dir, "scaler.joblib")
+    joblib.dump(scaler, scaler_path)
+    print(f"[preprocessing] Fitted StandardScaler, saved -> {scaler_path}")
 
-    # Reshape to (samples, features, 1) - the "channel" axis Conv1D expects
-    X_reshaped = X_scaled.reshape(X_scaled.shape[0], X_scaled.shape[1], 1)
+    return X_train_s, X_val_s, X_test_s, scaler
 
-    # Save artifacts
-    np.save(os.path.join(output_dir, "features.npy"), X_reshaped)
-    np.save(os.path.join(output_dir, "labels.npy"), y_encoded)
-    with open(os.path.join(output_dir, "classes.json"), "w") as f:
-        json.dump(class_names, f, indent=2)
 
-    print(f"[preprocessing] Feature matrix shape: {X_reshaped.shape}")
-    print(f"[preprocessing] Label vector shape:    {y_encoded.shape}")
-    print(f"[preprocessing] Classes ({len(class_names)}): {class_names}")
-
-    return X_reshaped, y_encoded, class_names
+def save_features_labels(X, y, output_dir: str = OUTPUT_DIR):
+    os.makedirs(output_dir, exist_ok=True)
+    np.save(os.path.join(output_dir, "features.npy"), X)
+    np.save(os.path.join(output_dir, "labels.npy"), y)
+    print(f"[preprocessing] Saved features.npy {X.shape} and "
+          f"labels.npy {y.shape} -> {output_dir}")
 
 
 if __name__ == "__main__":
-    from data_loader import load_dataset
+    from data_loader import load_zoo_dataset
 
-    data = load_dataset("../dataset.csv")
-    preprocess(data)
+    df = load_zoo_dataset()
+    X, y, names = extract_features_labels(df)
+    save_features_labels(X, y)
+    print("Feature matrix shape:", X.shape)
+    print("Label vector shape:", y.shape)

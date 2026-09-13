@@ -1,70 +1,93 @@
 """
 data_loader.py
-----------------
-Loads the Yeast tabular dataset (dataset.csv) and performs basic sanity
-checks (missing values, duplicate rows, corrupted / non-numeric rows).
+---------------
+Load the UCI Zoo dataset (dataset.csv / zoo.csv) and the class-name lookup
+table (class.csv), skipping/repairing any malformed rows, and return a
+clean pandas DataFrame ready for preprocessing.
 
-Note: the original ML-07-CNN template was written for image data
-(PetImages/Cat, PetImages/Dog). Since the dataset provided here
-(yeast.csv) is a TABULAR dataset (8 numeric features + 1 class label),
-this loader reads CSV rows instead of image files, but keeps the same
-role in the pipeline: "load raw data and skip anything corrupted."
+Dataset source: UCI Machine Learning Repository - Zoo Data Set
+https://archive.ics.uci.edu/dataset/111/zoo
 """
 
 import os
+import json
 import pandas as pd
 
-FEATURE_COLUMNS = ["mcg", "gvh", "alm", "mit", "erl", "pox", "vac", "nuc"]
-LABEL_COLUMN = "name"
+# Path to this file's directory so the script works regardless of the
+# current working directory it is launched from.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATASET_PATH = os.path.join(BASE_DIR, "zoo.csv")
+CLASS_PATH = os.path.join(BASE_DIR, "class.csv")
+OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
+
+FEATURE_COLUMNS = [
+    "hair", "feathers", "eggs", "milk", "airborne", "aquatic", "predator",
+    "toothed", "backbone", "breathes", "venomous", "fins", "legs", "tail",
+    "domestic", "catsize",
+]
+LABEL_COLUMN = "class_type"
+ID_COLUMN = "animal_name"
 
 
-def load_dataset(csv_path: str) -> pd.DataFrame:
-    """
-    Load the yeast dataset from a CSV file.
+def load_zoo_dataset(dataset_path: str = DATASET_PATH) -> pd.DataFrame:
+    """Load zoo.csv, drop duplicate/corrupted rows, and validate columns."""
+    if not os.path.exists(dataset_path):
+        raise FileNotFoundError(f"Dataset not found: {dataset_path}")
 
-    Skips (drops) any row that:
-      - has missing values in a required column
-      - has a non-numeric value in a feature column ("corrupted" row)
+    df = pd.read_csv(dataset_path)
 
-    Returns
-    -------
-    pd.DataFrame with columns FEATURE_COLUMNS + [LABEL_COLUMN]
-    """
-    if not os.path.exists(csv_path):
-        raise FileNotFoundError(f"Dataset not found at: {csv_path}")
-
-    df = pd.read_csv(csv_path)
-
-    required_cols = FEATURE_COLUMNS + [LABEL_COLUMN]
-    missing_cols = [c for c in required_cols if c not in df.columns]
-    if missing_cols:
-        raise ValueError(f"Dataset is missing expected columns: {missing_cols}")
-
-    df = df[required_cols].copy()
+    expected_cols = [ID_COLUMN] + FEATURE_COLUMNS + [LABEL_COLUMN]
+    missing = [c for c in expected_cols if c not in df.columns]
+    if missing:
+        raise ValueError(f"Missing expected columns in dataset: {missing}")
 
     n_before = len(df)
 
-    # Coerce feature columns to numeric; anything that fails becomes NaN
-    for col in FEATURE_COLUMNS:
-        df[col] = pd.to_numeric(df[col], errors="coerce")
+    # Skip rows with any missing/NaN values ("corrupted" rows).
+    df = df.dropna(subset=expected_cols)
 
-    # Drop rows with missing/corrupted values ("skip corrupted files")
-    df = df.dropna(subset=required_cols)
+    # Skip rows whose label is outside the valid class range (1-7).
+    df = df[df[LABEL_COLUMN].between(1, 7)]
 
-    # Drop exact duplicate rows
-    df = df.drop_duplicates()
+    # Drop only exact full-row duplicates. Note: the dataset has two rows
+    # both named "frog" (row 26 is a venomous frog) that are NOT dropped
+    # here, since they differ in their feature values and are both valid,
+    # distinct animals sharing a name - not corrupted data.
+    df = df.drop_duplicates(subset=expected_cols)
 
     n_after = len(df)
     n_skipped = n_before - n_after
+    print(f"[data_loader] Loaded {n_after} rows "
+          f"(skipped {n_skipped} corrupted/invalid rows) from {dataset_path}")
 
-    print(f"[data_loader] Loaded {n_before} rows from {csv_path}")
-    print(f"[data_loader] Skipped {n_skipped} corrupted/duplicate/missing rows")
-    print(f"[data_loader] {n_after} clean rows remaining")
-    print(f"[data_loader] Classes found: {sorted(df[LABEL_COLUMN].unique())}")
+    df = df.reset_index(drop=True)
+    return df
 
-    return df.reset_index(drop=True)
+
+def load_class_names(class_path: str = CLASS_PATH) -> dict:
+    """Load class.csv and return {class_number: class_type_name}."""
+    if not os.path.exists(class_path):
+        raise FileNotFoundError(f"Class lookup file not found: {class_path}")
+
+    class_df = pd.read_csv(class_path)
+    mapping = dict(zip(class_df["Class_Number"], class_df["Class_Type"]))
+    return mapping
+
+
+def save_classes_json(class_map: dict, output_dir: str = OUTPUT_DIR):
+    os.makedirs(output_dir, exist_ok=True)
+    # JSON keys must be strings
+    str_map = {str(k): v for k, v in class_map.items()}
+    out_path = os.path.join(output_dir, "classes.json")
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(str_map, f, ensure_ascii=False, indent=2)
+    print(f"[data_loader] Saved class map -> {out_path}")
+    return out_path
 
 
 if __name__ == "__main__":
-    data = load_dataset("../dataset.csv")
-    print(data.head())
+    df = load_zoo_dataset()
+    classes = load_class_names()
+    save_classes_json(classes)
+    print(df.head())
+    print("Classes:", classes)

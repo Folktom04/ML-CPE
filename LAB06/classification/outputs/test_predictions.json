@@ -1,0 +1,26 @@
+[
+  {
+    "test_index": 10,
+    "true_class": "Invertebrate",
+    "predicted_class": "Invertebrate",
+    "correct": true
+  },
+  {
+    "test_index": 4,
+    "true_class": "Mammal",
+    "predicted_class": "Mammal",
+    "correct": true
+  },
+  {
+    "test_index": 12,
+    "true_class": "Mammal",
+    "predicted_class": "Mammal",
+    "correct": true
+  },
+  {
+    "test_index": 1,
+    "true_class": "Bird",
+    "predicted_class": "Bird",
+    "correct": true
+  }
+]

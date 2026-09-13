@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-generate_report.py
--------------------
-Generates report.pdf (Thai) summarizing the ML-07-CNN (Yeast, 1D-CNN) project.
-"""
-
+ 
 import json
 import os
 
