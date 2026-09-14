@@ -1,15 +1,23 @@
 """
 split_data.py
 --------------
-Split the feature/label arrays into training, validation, and test sets,
-and persist every split as a .npy file in outputs/.
+Split the feature/label arrays (and the matching animal names) into
+training, validation, and test sets, and persist every split as a file
+in outputs/.
 
 The Zoo dataset only has 101 rows and 7 imbalanced classes (one class,
 "Amphibian", has just 4 members), so splits are stratified wherever
 possible to keep every class represented in train/val/test.
+
+Animal names are split alongside X and y (via shared indices) so that a
+Nearest Neighbor prediction can later be traced back to exactly which
+training animal it matched (see nn_model.nearest_neighbor_lookup and
+test_nn.py) - this traceability is one of the practical strengths of NN
+that other model types don't offer as directly.
 """
 
 import os
+import json
 import numpy as np
 from sklearn.model_selection import train_test_split
 
@@ -21,9 +29,15 @@ TEST_SIZE = 0.20     # 20% held out for final testing
 VAL_SIZE = 0.20       # 20% of the remaining 80% -> 16% overall for validation
 
 
-def split_dataset(X, y, test_size=TEST_SIZE, val_size=VAL_SIZE,
+def split_dataset(X, y, names=None, test_size=TEST_SIZE, val_size=VAL_SIZE,
                    random_state=RANDOM_STATE):
-    """Return X_train, X_val, X_test, y_train, y_val, y_test."""
+    """Split X, y (and optionally names) into train/val/test.
+
+    Splitting is done on the row indices so that X, y, and names always
+    stay aligned to the same animals, no matter which arrays are passed.
+    Returns (X_train, X_val, X_test, y_train, y_val, y_test) when names is
+    None, otherwise that tuple plus (names_train, names_val, names_test).
+    """
 
     def _safe_stratify(labels):
         # Stratification requires every class to have >= 2 members in the
@@ -31,23 +45,35 @@ def split_dataset(X, y, test_size=TEST_SIZE, val_size=VAL_SIZE,
         counts = np.bincount(labels)
         return labels if counts[counts > 0].min() >= 2 else None
 
-    X_temp, X_test, y_temp, y_test = train_test_split(
-        X, y, test_size=test_size, random_state=random_state,
-        stratify=_safe_stratify(y),
+    idx = np.arange(len(X))
+    idx_temp, idx_test = train_test_split(
+        idx, test_size=test_size, random_state=random_state,
+        stratify=_safe_stratify(y[idx]),
     )
 
     relative_val_size = val_size / (1 - test_size)
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_temp, y_temp, test_size=relative_val_size, random_state=random_state,
-        stratify=_safe_stratify(y_temp),
+    idx_train, idx_val = train_test_split(
+        idx_temp, test_size=relative_val_size, random_state=random_state,
+        stratify=_safe_stratify(y[idx_temp]),
     )
+
+    X_train, X_val, X_test = X[idx_train], X[idx_val], X[idx_test]
+    y_train, y_val, y_test = y[idx_train], y[idx_val], y[idx_test]
 
     print(f"[split_data] train={len(X_train)}  val={len(X_val)}  "
           f"test={len(X_test)}  (total={len(X)})")
-    return X_train, X_val, X_test, y_train, y_val, y_test
+
+    if names is None:
+        return X_train, X_val, X_test, y_train, y_val, y_test
+
+    names = np.asarray(names)
+    names_train, names_val, names_test = names[idx_train], names[idx_val], names[idx_test]
+    return (X_train, X_val, X_test, y_train, y_val, y_test,
+            names_train, names_val, names_test)
 
 
 def save_splits(X_train, X_val, X_test, y_train, y_val, y_test,
+                 names_train=None, names_val=None, names_test=None,
                  output_dir: str = OUTPUT_DIR):
     os.makedirs(output_dir, exist_ok=True)
     arrays = {
@@ -56,7 +82,17 @@ def save_splits(X_train, X_val, X_test, y_train, y_val, y_test,
     }
     for fname, arr in arrays.items():
         np.save(os.path.join(output_dir, fname), arr)
-    print(f"[split_data] Saved 6 split files -> {output_dir}")
+
+    if names_train is not None:
+        name_files = {
+            "names_train.json": names_train, "names_val.json": names_val,
+            "names_test.json": names_test,
+        }
+        for fname, arr in name_files.items():
+            with open(os.path.join(output_dir, fname), "w", encoding="utf-8") as f:
+                json.dump(list(map(str, arr)), f, ensure_ascii=False, indent=2)
+
+    print(f"[split_data] Saved split files -> {output_dir}")
 
 
 if __name__ == "__main__":
@@ -67,5 +103,7 @@ if __name__ == "__main__":
     X, y, names = extract_features_labels(df)
     save_features_labels(X, y)
 
-    X_train, X_val, X_test, y_train, y_val, y_test = split_dataset(X, y)
-    save_splits(X_train, X_val, X_test, y_train, y_val, y_test)
+    (X_train, X_val, X_test, y_train, y_val, y_test,
+     names_train, names_val, names_test) = split_dataset(X, y, names)
+    save_splits(X_train, X_val, X_test, y_train, y_val, y_test,
+                names_train, names_val, names_test)
