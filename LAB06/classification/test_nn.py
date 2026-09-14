@@ -1,10 +1,14 @@
 """
 test_nn.py
 -----------
-Load the saved k-NN model and run a quick sanity check by predicting the
-class of four random animals taken from the test set, printing the true
-vs. predicted class name for each, and saving a small bar-chart summary
-(prediction_sample.png).
+Load the saved Nearest Neighbor model and run a quick sanity check by
+predicting the class of four random animals taken from the test set.
+
+Because this is plain 1-NN, every prediction can be traced back to
+exactly one training animal - the closest one. For each sample we print
+and plot not just true-vs-predicted class, but which training animal was
+matched and how far away it was, which is the clearest way to "see" a
+Nearest Neighbor model working.
 """
 
 import os
@@ -17,13 +21,21 @@ import matplotlib.pyplot as plt
 
 import joblib
 
-from nn_model import load_model
+from nn_model import load_model, nearest_neighbor_lookup
 from evaluate import load_class_names
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
 N_SAMPLES = 4
 SEED = 7
+
+
+def _load_names(fname):
+    path = os.path.join(OUTPUT_DIR, fname)
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 def pick_random_test_samples(X_test, y_test, names_test=None, n=N_SAMPLES, seed=SEED):
@@ -43,13 +55,25 @@ def run_test():
     y_test = np.load(os.path.join(OUTPUT_DIR, "y_test.npy"))
     class_names = load_class_names()
 
+    animal_names_test = _load_names("names_test.json")
+    # The saved model was trained on train+val combined (see nn_model.py),
+    # so the nearest-neighbor lookup needs animal names in that same order.
+    names_train = _load_names("names_train.json")
+    names_val = _load_names("names_val.json")
+    animal_names_trainval = (
+        (names_train or []) + (names_val or []) if names_train and names_val else None
+    )
+
     scaler = joblib.load(os.path.join(OUTPUT_DIR, "scaler.joblib"))
     X_test = scaler.transform(X_test_raw)
 
     model = load_model()
 
-    X_sample, y_sample, idx, _ = pick_random_test_samples(X_test, y_test)
+    X_sample, y_sample, idx, _ = pick_random_test_samples(
+        X_test, y_test, animal_names_test
+    )
     y_pred = model.predict(X_sample)
+    distances, neighbor_idx = nearest_neighbor_lookup(model, X_sample)
 
     print("[test_nn] Random sample predictions:")
     results = []
@@ -57,13 +81,21 @@ def run_test():
         true_name = class_names[true_label]
         pred_name = class_names[pred_label]
         correct = "correct" if true_label == pred_label else "WRONG"
-        print(f"  sample #{idx[i]}: true={true_name:<12} "
-              f"predicted={pred_name:<12} [{correct}]")
+        query_animal = idx[i] if isinstance(idx[i], str) else f"test#{idx[i]}"
+        neighbor_animal = (
+            animal_names_trainval[neighbor_idx[i]]
+            if animal_names_trainval is not None else f"train#{neighbor_idx[i]}"
+        )
+        print(f"  {query_animal:<14} true={true_name:<12} predicted={pred_name:<12} "
+              f"[{correct}]  nearest neighbor = {neighbor_animal} "
+              f"(distance={distances[i]:.3f})")
         results.append({
-            "test_index": int(idx[i]),
+            "animal": query_animal,
             "true_class": true_name,
             "predicted_class": pred_name,
             "correct": bool(true_label == pred_label),
+            "nearest_neighbor_animal": neighbor_animal,
+            "nearest_neighbor_distance": float(distances[i]),
         })
 
     with open(os.path.join(OUTPUT_DIR, "test_predictions.json"), "w",
@@ -75,10 +107,10 @@ def run_test():
 
 
 def plot_sample_predictions(results):
-    labels = [f"sample #{r['test_index']}" for r in results]
+    labels = [r["animal"] for r in results]
     colors = ["#4CAF50" if r["correct"] else "#E53935" for r in results]
 
-    fig, ax = plt.subplots(figsize=(8, 4.5))
+    fig, ax = plt.subplots(figsize=(9, 4.5))
     y_pos = np.arange(len(results))
     ax.barh(y_pos, [1] * len(results), color=colors)
     ax.set_yticks(y_pos)
@@ -88,10 +120,13 @@ def plot_sample_predictions(results):
     ax.set_title("Random Test Predictions (green = correct, red = wrong)")
 
     for i, r in enumerate(results):
-        ax.text(0.02, i,
-                 f"true: {r['true_class']}  |  predicted: {r['predicted_class']}",
-                 va="center", ha="left", color="white", fontsize=10,
-                 fontweight="bold")
+        ax.text(
+            0.02, i,
+            f"true: {r['true_class']}  |  predicted: {r['predicted_class']}  |  "
+            f"nearest neighbor: {r['nearest_neighbor_animal']} "
+            f"(d={r['nearest_neighbor_distance']:.2f})",
+            va="center", ha="left", color="white", fontsize=9.5, fontweight="bold",
+        )
 
     fig.tight_layout()
     out_path = os.path.join(OUTPUT_DIR, "prediction_sample.png")

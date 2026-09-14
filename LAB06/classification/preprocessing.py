@@ -5,7 +5,7 @@ Turn the cleaned Zoo DataFrame into numeric feature/label arrays ready for
 a Nearest Neighbor model:
   - features are mostly already binary (0/1); 'legs' is a small integer
     count, so it is standardized along with the rest so no single feature
-    dominates the Euclidean distance used by k-NN.
+    dominates the Euclidean distance used by the Nearest Neighbor model.
   - labels (class_type, 1-7) are shifted to 0-6 for scikit-learn.
 """
 

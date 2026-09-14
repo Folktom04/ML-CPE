@@ -1,10 +1,11 @@
 """
 evaluate.py
 ------------
-Evaluate the trained k-NN model on the held-out test set: accuracy,
-classification report, confusion matrix, and a plot of accuracy vs. k
-(the "training history" for a Nearest Neighbor model, since k-NN has no
-epoch-based loss curve the way a neural network does).
+Evaluate the trained Nearest Neighbor (NN) model on the held-out test
+set: accuracy, classification report, confusion matrix, and a plot of
+each test sample's distance to its nearest neighbor (the natural
+diagnostic for a 1-NN model, which has no epoch-based loss curve the way
+a neural network does, and no k to sweep the way k-NN does).
 """
 
 import os
@@ -68,7 +69,7 @@ def plot_confusion_matrix(y_true, y_pred, class_names, output_dir: str = OUTPUT_
     ax.set_yticklabels(class_names)
     ax.set_xlabel("Predicted class")
     ax.set_ylabel("True class")
-    ax.set_title("Confusion Matrix - k-NN Zoo Classifier")
+    ax.set_title("Confusion Matrix - Nearest Neighbor (1-NN) Zoo Classifier")
 
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
@@ -85,42 +86,55 @@ def plot_confusion_matrix(y_true, y_pred, class_names, output_dir: str = OUTPUT_
     return out_path
 
 
-def plot_training_history(history, best_k, output_dir: str = OUTPUT_DIR):
-    """Plot train/validation accuracy across candidate k values."""
-    ks = [h["k"] for h in history]
-    train_acc = [h["train_accuracy"] for h in history]
-    val_acc = [h["val_accuracy"] for h in history]
+def plot_neighbor_distances(distances, correct_mask, output_dir: str = OUTPUT_DIR):
+    """Plot each test sample's distance to its single nearest neighbor,
+    colored by whether the prediction was correct. This is the natural
+    "confidence" signal for a 1-NN model: a large distance means the test
+    point didn't closely resemble anything seen during training, which is
+    exactly the application highlighted in the report (novelty / low-
+    confidence flagging).
+    """
+    order = np.argsort(distances)
+    d_sorted = distances[order]
+    c_sorted = np.array(correct_mask)[order]
+    colors = ["#2E7D32" if c else "#C62828" for c in c_sorted]
 
     fig, ax = plt.subplots(figsize=(8, 5))
-    ax.plot(ks, train_acc, marker="o", label="Train accuracy")
-    ax.plot(ks, val_acc, marker="s", label="Validation accuracy")
-    ax.axvline(best_k, color="gray", linestyle="--",
-               label=f"Chosen k = {best_k}")
-    ax.set_xlabel("k (number of neighbors)")
-    ax.set_ylabel("Accuracy")
-    ax.set_title("k-NN Accuracy vs. k (model selection)")
-    ax.set_xticks(ks)
-    ax.legend()
-    ax.grid(alpha=0.3)
+    ax.bar(range(len(d_sorted)), d_sorted, color=colors)
+    ax.set_xlabel("Test samples (sorted by distance)")
+    ax.set_ylabel("Distance to nearest neighbor (Euclidean, scaled features)")
+    ax.set_title("Nearest Neighbor Distance per Test Sample")
+    ax.grid(axis="y", alpha=0.3)
+
+    from matplotlib.patches import Patch
+    ax.legend(handles=[
+        Patch(color="#2E7D32", label="Correct prediction"),
+        Patch(color="#C62828", label="Wrong prediction"),
+    ])
     fig.tight_layout()
 
-    out_path = os.path.join(output_dir, "training_history.png")
+    out_path = os.path.join(output_dir, "neighbor_distance.png")
     fig.savefig(out_path, dpi=150)
     plt.close(fig)
-    print(f"[evaluate] Saved training history plot -> {out_path}")
+    print(f"[evaluate] Saved neighbor distance plot -> {out_path}")
     return out_path
 
 
 if __name__ == "__main__":
-    from nn_model import load_model
+    import joblib
+    from nn_model import load_model, nearest_neighbor_lookup
 
-    X_test = np.load(os.path.join(OUTPUT_DIR, "X_test.npy"))
+    # X_test.npy holds the raw (unscaled) split; apply the same scaler used
+    # during training before evaluating (same reasoning as in test_nn.py).
+    X_test_raw = np.load(os.path.join(OUTPUT_DIR, "X_test.npy"))
     y_test = np.load(os.path.join(OUTPUT_DIR, "y_test.npy"))
     class_names = load_class_names()
 
-    model = load_model()
-    evaluate_model(model, X_test, y_test, class_names)
+    scaler = joblib.load(os.path.join(OUTPUT_DIR, "scaler.joblib"))
+    X_test = scaler.transform(X_test_raw)
 
-    with open(os.path.join(OUTPUT_DIR, "history.json"), encoding="utf-8") as f:
-        payload = json.load(f)
-    plot_training_history(payload["k_search_history"], payload["best_k"])
+    model = load_model()
+    acc, report, y_pred = evaluate_model(model, X_test, y_test, class_names)
+
+    distances, _ = nearest_neighbor_lookup(model, X_test)
+    plot_neighbor_distances(distances, y_pred == y_test)

@@ -1,26 +1,34 @@
 [
   {
-    "test_index": 10,
+    "animal": "octopus",
     "true_class": "Invertebrate",
     "predicted_class": "Invertebrate",
-    "correct": true
+    "correct": true,
+    "nearest_neighbor_animal": "lobster",
+    "nearest_neighbor_distance": 2.264554068289194
   },
   {
-    "test_index": 4,
+    "animal": "lynx",
     "true_class": "Mammal",
     "predicted_class": "Mammal",
-    "correct": true
+    "correct": true,
+    "nearest_neighbor_animal": "polecat",
+    "nearest_neighbor_distance": 5.960464477539063e-08
   },
   {
-    "test_index": 12,
+    "animal": "goat",
     "true_class": "Mammal",
     "predicted_class": "Mammal",
-    "correct": true
+    "correct": true,
+    "nearest_neighbor_animal": "reindeer",
+    "nearest_neighbor_distance": 5.960464477539063e-08
   },
   {
-    "test_index": 1,
+    "animal": "lark",
     "true_class": "Bird",
     "predicted_class": "Bird",
-    "correct": true
+    "correct": true,
+    "nearest_neighbor_animal": "wren",
+    "nearest_neighbor_distance": 0.0
   }
 ]
