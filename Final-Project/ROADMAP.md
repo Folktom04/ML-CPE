@@ -83,9 +83,15 @@
   > ⚠️ recall ระดับ**สูงมาก** 0.79 แต่ระดับ**รุนแรงมาก**แค่ **0.11** (6/53 ชม.; โมเดลทำนาย CMF 0.71 ขณะที่ค่าจริง 0.81 ตอนเที่ยงวันฟ้าเปิด) → วัน 9 ต้องตรวจ recall ด้วย q90 ซึ่งเป็นค่าที่ใช้เตือนจริงตาม rules
 
 ### วัน 7 — Multi-Output + TimeSeriesSplit
-- [ ] MultiOutputRegressor ทำนาย [CMF_UVI, CMF_A, CMF_B] (target UVA/UVB จาก NASA POWER)
-- [ ] TimeSeriesSplit 5 folds (เฉพาะในช่วง 2023–2024 ห้ามรวมปี 2025)
-- [ ] ตรวจ data leakage
+- [x] ทดลอง sample_weight (ไม่ถ่วง / `uvi_clear` / `uvi_clear²`) กับ XGBoost CMF_UVI บน dev 2024 → `docs/weight_experiment_dev_2024.csv`
+  > MAE 0.462 / 0.459 / 0.461; recall สูงมาก 0.79 / 0.79 / 0.80; recall รุนแรงมาก 0.11 / 0.09 / 0.11 ใช้กฎที่ประกาศไว้ก่อน (ตัดแบบที่ MAE แย่กว่าค่าต่ำสุด > 0.02 แล้วเลือกแบบที่ recall เฉลี่ยของระดับเตือนสูงสุด) ได้ **`uvi_clear²`** แต่ความต่างอยู่ในระดับ noise **การถ่วงน้ำหนักจึงไม่ได้แก้ recall ระดับรุนแรงมาก** เพราะชั่วโมงระดับนี้มี NASA เฉลี่ย 10.98 ซึ่งอยู่เหนือเส้นแบ่ง 10.5 เพียงเล็กน้อย → ต้องเตือนด้วย q90 ในวัน 9
+- [x] MultiOutputRegressor ทำนาย [CMF_UVI, CMF_A, CMF_B] (target UVA/UVB จาก NASA POWER) → `source_code/models/cmf_multi_xgb_v1.joblib` + metrics
+  > dev 2024: UVI MAE 0.461 (R² 0.942), UVA MAE 2.93 W/m², UVB MAE 0.086 W/m² ใช้ weight `uvi_clear²` ชุดเดียวกันกับทุก target (ข้อจำกัดของ MultiOutputRegressor)
+- [x] TimeSeriesSplit 5 folds (เฉพาะในช่วง 2023–2024 ห้ามรวมปี 2025) → `docs/cv_folds_2023_2024.csv`
+  > gap 12 แถว (≈1 วัน) MAE 0.49 ± 0.08 UVI, UVA 3.05 ± 0.33 W/m², UVB 0.090 ± 0.011 W/m²; fold 2 (ก.ย.–ธ.ค. 2023) แย่ที่สุด (bias −0.44) เพราะฝึกด้วยข้อมูลไม่ครบฤดู → ต้องใช้ข้อมูลอย่างน้อย 1 ปีเต็ม
+- [x] ตรวจ data leakage → `leakage_checks()` ใน `src/train_multi.py`, `docs/leakage_checks.csv`
+  > ผ่านทั้ง 5 ข้อ: ไม่มีแถวปี 2025, ไม่มี feature ต้องห้าม, fold เรียงตามเวลาและมี gap, |Spearman| สูงสุด 0.66, โมเดลที่ฝึกกับ target สุ่มสลับได้ R² −0.10
+→ `source_code/src/train_multi.py`, `source_code/notebooks/07_multioutput_cv.ipynb`
 
 ### วัน 8 — Optuna tuning
 - [ ] กำหนด search space

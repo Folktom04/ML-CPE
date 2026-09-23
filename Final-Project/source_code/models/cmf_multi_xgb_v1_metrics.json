@@ -1,0 +1,330 @@
+{
+  "model": "MultiOutputRegressor(XGBRegressor)",
+  "targets": [
+    "cmf_uvi",
+    "cmf_a",
+    "cmf_b"
+  ],
+  "created": "2026-09-23",
+  "features": [
+    "cos_sza",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "uv_index",
+    "uv_index_clear_sky",
+    "cloud_cover",
+    "cloud_cover_low",
+    "cloud_cover_mid",
+    "cloud_cover_high",
+    "relative_humidity_2m",
+    "temperature_2m",
+    "shortwave_radiation",
+    "direct_radiation",
+    "diffuse_radiation",
+    "precipitation",
+    "om_kt",
+    "om_diffuse_fraction",
+    "aerosol_optical_depth",
+    "dust",
+    "pm2_5",
+    "ozone"
+  ],
+  "params": {
+    "n_estimators": 600,
+    "learning_rate": 0.05,
+    "max_depth": 6,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "min_child_weight": 1.0,
+    "reg_lambda": 1.0,
+    "random_state": 42
+  },
+  "sample_weight": {
+    "scheme": "uvi_clear^2",
+    "rule": "select_weight_scheme (day-7 plan)"
+  },
+  "split": {
+    "fit": "train 2023",
+    "dev": "2024",
+    "cv": "TimeSeriesSplit(n_splits=5, gap=12) on 2023-2024",
+    "test": "2025 untouched until day 10"
+  },
+  "mae": 0.4611467885965911,
+  "rmse": 0.719894220436164,
+  "r2": 0.9423378335354455,
+  "scale_of_headline_metrics": "UVI on dev 2024",
+  "dev": {
+    "uvi": {
+      "cmf": {
+        "n": 3726,
+        "mae": 0.0652027042002728,
+        "rmse": 0.08643031583570995,
+        "r2": 0.60800273146502,
+        "bias": 0.009690815185768378
+      },
+      "uvi": {
+        "n": 3726,
+        "mae": 0.4611467885965911,
+        "rmse": 0.719894220436164,
+        "r2": 0.9423378335354455,
+        "bias": 0.051253406744903765
+      },
+      "who": {
+        "accuracy": 0.833064949006978,
+        "recall": {
+          "Low": 0.9631949882537196,
+          "Moderate": 0.797338792221085,
+          "High": 0.7434895833333334,
+          "Very high": 0.7956989247311828,
+          "Extreme": 0.11320754716981132
+        },
+        "labels": [
+          "Low",
+          "Moderate",
+          "High",
+          "Very high",
+          "Extreme"
+        ],
+        "confusion": [
+          [
+            1230,
+            46,
+            1,
+            0,
+            0
+          ],
+          [
+            44,
+            779,
+            140,
+            14,
+            0
+          ],
+          [
+            0,
+            53,
+            571,
+            144,
+            0
+          ],
+          [
+            0,
+            1,
+            128,
+            518,
+            4
+          ],
+          [
+            0,
+            0,
+            0,
+            47,
+            6
+          ]
+        ]
+      }
+    },
+    "uva": {
+      "n": 3726,
+      "mae": 2.9339048009640663,
+      "rmse": 4.201838101673446,
+      "r2": 0.9120116160877522,
+      "bias": 0.2772546830435476
+    },
+    "uvb": {
+      "n": 3726,
+      "mae": 0.08641527008198972,
+      "rmse": 0.1336959347632701,
+      "r2": 0.9437748266581573,
+      "bias": 0.009325504636268949
+    },
+    "cmf": {
+      "cmf_uvi": {
+        "n": 3726,
+        "mae": 0.0652027042002728,
+        "rmse": 0.08643031583570995,
+        "r2": 0.60800273146502,
+        "bias": 0.009690815185768378
+      },
+      "cmf_a": {
+        "n": 3726,
+        "mae": 0.07297224074953383,
+        "rmse": 0.0977103006024615,
+        "r2": 0.5210450804369591,
+        "bias": 0.00812308896597773
+      },
+      "cmf_b": {
+        "n": 3726,
+        "mae": 0.07705956028413358,
+        "rmse": 0.10244585599599519,
+        "r2": 0.5047430353502332,
+        "bias": 0.011508823713009883
+      }
+    }
+  },
+  "fold_scores": [
+    {
+      "fold": 1,
+      "train_end": "2023-05-06T08:00:00.000Z",
+      "val_start": "2023-05-07T10:00:00.000Z",
+      "val_end": "2023-08-28T05:00:00.000Z",
+      "n_train": 1231,
+      "n_val": 1239,
+      "uvi_mae": 0.5072076998,
+      "uvi_rmse": 0.7808115612,
+      "uvi_r2": 0.9430499754,
+      "uvi_bias": 0.0055911075,
+      "who_accuracy": 0.8305084746,
+      "recall_Very high": 0.761732852,
+      "recall_Extreme": 0.4117647059,
+      "uva_mae_wm2": 3.1959392868,
+      "uvb_mae_wm2": 0.0949818965
+    },
+    {
+      "fold": 2,
+      "train_end": "2023-08-27T04:00:00.000Z",
+      "val_start": "2023-08-28T06:00:00.000Z",
+      "val_end": "2024-01-01T10:00:00.000Z",
+      "n_train": 2470,
+      "n_val": 1239,
+      "uvi_mae": 0.5845430929,
+      "uvi_rmse": 0.8079946593,
+      "uvi_r2": 0.9141283339,
+      "uvi_bias": -0.4437034322,
+      "who_accuracy": 0.789346247,
+      "recall_Very high": 0.3882352941,
+      "recall_Extreme": 0.3333333333,
+      "uva_mae_wm2": 3.2217403722,
+      "uvb_mae_wm2": 0.0969559697
+    },
+    {
+      "fold": 3,
+      "train_end": "2023-12-31T07:00:00.000Z",
+      "val_start": "2024-01-02T02:00:00.000Z",
+      "val_end": "2024-05-06T08:00:00.000Z",
+      "n_train": 3709,
+      "n_val": 1239,
+      "uvi_mae": 0.4541362525,
+      "uvi_rmse": 0.7042950585,
+      "uvi_r2": 0.9469288059,
+      "uvi_bias": -0.0507072296,
+      "who_accuracy": 0.8248587571,
+      "recall_Very high": 0.8032786885,
+      "recall_Extreme": 0.0384615385,
+      "uva_mae_wm2": 2.8015846216,
+      "uvb_mae_wm2": 0.0854142535
+    },
+    {
+      "fold": 4,
+      "train_end": "2024-05-05T07:00:00.000Z",
+      "val_start": "2024-05-06T09:00:00.000Z",
+      "val_end": "2024-08-27T04:00:00.000Z",
+      "n_train": 4948,
+      "n_val": 1239,
+      "uvi_mae": 0.5367078495,
+      "uvi_rmse": 0.8049192095,
+      "uvi_r2": 0.9347195473,
+      "uvi_bias": 0.022082462,
+      "who_accuracy": 0.8046811945,
+      "recall_Very high": 0.7991452991,
+      "recall_Extreme": 0.2,
+      "uva_mae_wm2": 3.4084139537,
+      "uvb_mae_wm2": 0.1000574822
+    },
+    {
+      "fold": 5,
+      "train_end": "2024-08-26T03:00:00.000Z",
+      "val_start": "2024-08-27T05:00:00.000Z",
+      "val_end": "2024-12-31T10:00:00.000Z",
+      "n_train": 6187,
+      "n_val": 1239,
+      "uvi_mae": 0.3829036909,
+      "uvi_rmse": 0.6104378982,
+      "uvi_r2": 0.9512411036,
+      "uvi_bias": 0.1222137392,
+      "who_accuracy": 0.8668280872,
+      "recall_Very high": 0.7861271676,
+      "recall_Extreme": 0.0,
+      "uva_mae_wm2": 2.6114813612,
+      "uvb_mae_wm2": 0.0722357511
+    }
+  ],
+  "cv_mean": {
+    "uvi_mae": 0.49309971713142564,
+    "uvi_rmse": 0.741691677325731,
+    "uvi_r2": 0.9380135532114471,
+    "uva_mae_wm2": 3.0478319191114376,
+    "uvb_mae_wm2": 0.0899290705901685
+  },
+  "cv_std": {
+    "uvi_mae": 0.0776593702325692,
+    "uvi_rmse": 0.08448407124376722,
+    "uvi_r2": 0.014672845176033454,
+    "uva_mae_wm2": 0.3291044237753294,
+    "uvb_mae_wm2": 0.011301882699191952
+  },
+  "leakage_checks": [
+    {
+      "check": "no test-year (2025) rows",
+      "passed": true,
+      "detail": "0 rows >= 2025"
+    },
+    {
+      "check": "features exclude NASA / targets / denominators",
+      "passed": true,
+      "detail": "none"
+    },
+    {
+      "check": "folds chronological, gap kept, no shared timestamps",
+      "passed": true,
+      "detail": "fold 1: gap 12 rows; fold 2: gap 12 rows; fold 3: gap 12 rows; fold 4: gap 12 rows; fold 5: gap 12 rows"
+    },
+    {
+      "check": "no feature with |Spearman| > 0.95 vs cmf_uvi",
+      "passed": true,
+      "detail": "max 0.656 (direct_radiation)"
+    },
+    {
+      "check": "shuffled-target model R² <= 0.05",
+      "passed": true,
+      "detail": "R² -0.105"
+    }
+  ],
+  "weight_experiment": [
+    {
+      "scheme": "none",
+      "uvi_mae": 0.4617264325,
+      "uvi_rmse": 0.717990637,
+      "uvi_r2": 0.9426423772,
+      "uvi_bias": 0.0395526402,
+      "who_accuracy": 0.8309178744,
+      "recall_Very high": 0.7910906298,
+      "recall_Extreme": 0.1132075472,
+      "selected": false
+    },
+    {
+      "scheme": "uvi_clear",
+      "uvi_mae": 0.4592465758,
+      "uvi_rmse": 0.7164362978,
+      "uvi_r2": 0.9428904493,
+      "uvi_bias": 0.0373171065,
+      "who_accuracy": 0.8317230274,
+      "recall_Very high": 0.7880184332,
+      "recall_Extreme": 0.0943396226,
+      "selected": false
+    },
+    {
+      "scheme": "uvi_clear^2",
+      "uvi_mae": 0.4611467886,
+      "uvi_rmse": 0.7198942204,
+      "uvi_r2": 0.9423378335,
+      "uvi_bias": 0.0512534067,
+      "who_accuracy": 0.833064949,
+      "recall_Very high": 0.7956989247,
+      "recall_Extreme": 0.1132075472,
+      "selected": true
+    }
+  ]
+}

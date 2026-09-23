@@ -1,0 +1,6 @@
+check,passed,detail
+no test-year (2025) rows,True,0 rows >= 2025
+features exclude NASA / targets / denominators,True,none
+"folds chronological, gap kept, no shared timestamps",True,fold 1: gap 12 rows; fold 2: gap 12 rows; fold 3: gap 12 rows; fold 4: gap 12 rows; fold 5: gap 12 rows
+no feature with |Spearman| > 0.95 vs cmf_uvi,True,max 0.656 (direct_radiation)
+shuffled-target model R² <= 0.05,True,R² -0.105
