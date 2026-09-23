@@ -8,11 +8,14 @@
 ## Phase 1: ข้อมูล + ฟิสิกส์ (วัน 1–5)
 
 ### วัน 1 — ตั้งโปรเจกต์ + ดึงข้อมูล
-- [ ] ตั้ง venv + `requirements.txt` + ติดตั้งแพ็กเกจ
-- [ ] `source_code/src/fetch_data.py` ดึงข้อมูลรายชั่วโมงย้อนหลัง 2–3 ปีของปทุมธานี (uv_index, uv_index_clear_sky, cloud_cover, relative_humidity_2m, temperature_2m)
-- [ ] ดึง Air Quality API (aerosol_optical_depth, dust, pm2_5, ozone)
-- [ ] ดึง NASA POWER hourly (ALLSKY_SFC_UVA, ALLSKY_SFC_UVB, ALLSKY_SFC_UV_INDEX, CLRSKY_SFC_SW_DWN, ALLSKY_SFC_SW_DWN, CLOUD_AMT) ช่วงเวลาเดียวกัน
+- [x] ตั้ง venv + `requirements.txt` + ติดตั้งแพ็กเกจ
+- [x] `source_code/src/fetch_data.py` ดึงข้อมูลรายชั่วโมงย้อนหลัง 2–3 ปีของปทุมธานี (uv_index, uv_index_clear_sky, cloud_cover, relative_humidity_2m, temperature_2m)
+- [x] ดึง Air Quality API (aerosol_optical_depth, dust, pm2_5, ozone)
+- [x] ดึง NASA POWER hourly (ALLSKY_SFC_UVA, ALLSKY_SFC_UVB, ALLSKY_SFC_UV_INDEX, CLRSKY_SFC_SW_DWN, ALLSKY_SFC_SW_DWN, CLOUD_AMT) ช่วงเวลาเดียวกัน
+  > หมายเหตุ: community AG ส่งหน่วย MJ/m²/hr → แปลงเป็น W/m² แล้วใน `convert_nasapower_units`; ALLSKY_SFC_UV_INDEX เป็น UVI อยู่แล้ว ("W m-2 x 40")
+  > ตรวจวัน 2: จุดยอด UV ของ NASA POWER (~05 UTC) เร็วกว่า Open-Meteo (~05–06 UTC) ประมาณ 1 ชม. — เช็ก convention ของ timestamp ก่อน merge; UVI สูงสุดของ Open-Meteo แค่ 9.3; ozone ผิวพื้นมีค่าสูงผิดปกติ (สูงสุด 666 µg/m³)
 - [ ] สมัคร NASA Earthdata account (ใช้ดึง OMI ในวัน 2) (ทำเอง)
+  > ค้าง: ผู้ใช้ต้องสมัครเองที่ https://urs.earthdata.nasa.gov แล้วใส่ EARTHDATA_USERNAME / EARTHDATA_PASSWORD ใน `.env`
 → `dataset/raw/openmeteo_*.csv`, `dataset/raw/nasapower_*.csv`
 
 ### วัน 2 — ข้อมูลตรวจสอบ + ทำความสะอาด + EDA
