@@ -26,6 +26,7 @@ from src.physics import (
     save_ozone_climatology,
     solar_zenith,
 )
+from src.splits import TEST_START
 
 PROCESSED_DIR = ROOT / "dataset" / "processed"
 
@@ -233,9 +234,10 @@ def main(argv: list[str] | None = None) -> None:
 
     df = merge_sources(weather, air, power)
 
-    o3 = df["nasa_ozone_du"].mask(df["nasa_ozone_du"] <= 0)
-    clim = build_ozone_climatology(df["time_utc"], o3)
-    years = df["time_utc"].dt.year
+    fit = df.loc[df["time_utc"] < TEST_START]  # never fit anything on the test year 2025
+    o3 = fit["nasa_ozone_du"].mask(fit["nasa_ozone_du"] <= 0)
+    clim = build_ozone_climatology(fit["time_utc"], o3)
+    years = fit["time_utc"].dt.year
     save_ozone_climatology(
         clim,
         {

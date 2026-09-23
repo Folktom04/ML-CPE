@@ -17,6 +17,7 @@ TEMIS_SAMPLE = """# TEMIS v2.0 UV index and UV dose overpass file
   20221231   10.000   0.500   5.0   0.3  -1.000  -1.000   9.0   0.8  -1.000  -1.000   3.0   0.2  -1.000  -1.000  -1.000  250.0
   20230101   11.000   0.500   5.0   0.3  -1.000  -1.000   9.0   0.8  -1.000  -1.000   3.0   0.2  -1.000  -1.000  -1.000  -1.000
   20240101   12.000   0.500   5.0   0.3  -1.000  -1.000   9.0   0.8  -1.000  -1.000   3.0   0.2  -1.000  -1.000  -1.000  260.0
+  20250101   13.000   0.500   5.0   0.3  -1.000  -1.000   9.0   0.8  -1.000  -1.000   3.0   0.2  -1.000  -1.000  -1.000  270.0
 """
 
 
@@ -37,30 +38,41 @@ def test_parse_temis_keeps_columns_and_masks_nodata():
     df = fv.parse_temis(TEMIS_SAMPLE)
     assert list(df.columns) == fv.TEMIS_KEEP
     assert df["date"].tolist()[1] == pd.Timestamp("2023-01-01")
-    assert df["uvi_clear"].tolist() == [10.0, 11.0, 12.0]
+    assert df["uvi_clear"].tolist() == [10.0, 11.0, 12.0, 13.0]
     assert pd.isna(df.loc[1, "ozone_du"])
 
 
 def test_split_range_and_unknown_split():
     assert fv.split_range("select") == (date(2023, 1, 1), date(2023, 12, 31))
-    assert fv.split_range("test") == (date(2024, 1, 1), date(2025, 12, 31))
+    assert fv.split_range("test") == (date(2025, 1, 1), date(2025, 12, 31))
     with pytest.raises(ValueError):
         fv.split_range("train")
 
 
-def test_filter_split_separates_years():
+def test_filter_split_separates_years_and_never_returns_2024():
     df = fv.parse_temis(TEMIS_SAMPLE)
     assert fv.filter_split(df, "select")["date"].dt.year.tolist() == [2023]
-    assert fv.filter_split(df, "test")["date"].dt.year.tolist() == [2024]
+    assert fv.filter_split(df, "test")["date"].dt.year.tolist() == [2025]
+    assert 2024 not in set(fv.SPLIT_YEARS["select"]) | set(fv.SPLIT_YEARS["test"])
 
 
 def test_write_split_holdout_prints_only_row_count(tmp_path, capsys):
     df = fv.filter_split(fv.parse_temis(TEMIS_SAMPLE), "test")
     path = fv.write_split(df, "temis", "test", out_dir=tmp_path)
     out = capsys.readouterr().out
-    assert path.name == "temis_holdout_2024_2025.csv"
+    assert path.name == "temis_holdout_2025.csv"
     assert "1 rows" in out
-    assert "12.0" not in out and "missing" not in out
+    assert "13.0" not in out and "missing" not in out
+
+
+def test_load_validation_test_split_is_2025_only(tmp_path):
+    df = fv.parse_temis(TEMIS_SAMPLE)
+    fv.write_split(fv.filter_split(df, "test"), "temis", "test", out_dir=tmp_path)
+    loaded = fv.load_validation("temis", split="test", val_dir=tmp_path)
+    assert loaded["date"].dt.year.unique().tolist() == [2025]
+    df.to_csv(tmp_path / fv.SPLIT_FILES[("temis", "test")], index=False)  # 2024 leaked in
+    with pytest.raises(ValueError):
+        fv.load_validation("temis", split="test", val_dir=tmp_path)
 
 
 def test_load_validation_defaults_to_select_and_rejects_other_years(tmp_path):
