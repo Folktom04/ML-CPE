@@ -6,6 +6,7 @@ requests-cache
 retry-requests
 openmeteo-requests
 pvlib
+scipy<1.18  # 1.18.1 DLL is blocked by Windows Smart App Control
 scikit-learn
 xgboost
 lightgbm
