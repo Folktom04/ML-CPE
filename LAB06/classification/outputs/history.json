@@ -1,0 +1,80 @@
+{
+  "k_search_history": [
+    {
+      "k": 1,
+      "train_accuracy": 1.0,
+      "val_accuracy": 0.85
+    },
+    {
+      "k": 2,
+      "train_accuracy": 0.95,
+      "val_accuracy": 0.85
+    },
+    {
+      "k": 3,
+      "train_accuracy": 0.95,
+      "val_accuracy": 0.9
+    },
+    {
+      "k": 4,
+      "train_accuracy": 0.9,
+      "val_accuracy": 0.95
+    },
+    {
+      "k": 5,
+      "train_accuracy": 0.9333333333333333,
+      "val_accuracy": 0.95
+    },
+    {
+      "k": 6,
+      "train_accuracy": 0.85,
+      "val_accuracy": 0.9
+    },
+    {
+      "k": 7,
+      "train_accuracy": 0.8,
+      "val_accuracy": 0.9
+    },
+    {
+      "k": 8,
+      "train_accuracy": 0.8333333333333334,
+      "val_accuracy": 0.95
+    },
+    {
+      "k": 9,
+      "train_accuracy": 0.8166666666666667,
+      "val_accuracy": 0.95
+    },
+    {
+      "k": 10,
+      "train_accuracy": 0.8166666666666667,
+      "val_accuracy": 0.95
+    },
+    {
+      "k": 11,
+      "train_accuracy": 0.85,
+      "val_accuracy": 0.95
+    },
+    {
+      "k": 12,
+      "train_accuracy": 0.85,
+      "val_accuracy": 0.95
+    },
+    {
+      "k": 13,
+      "train_accuracy": 0.85,
+      "val_accuracy": 0.9
+    },
+    {
+      "k": 14,
+      "train_accuracy": 0.85,
+      "val_accuracy": 0.9
+    },
+    {
+      "k": 15,
+      "train_accuracy": 0.85,
+      "val_accuracy": 0.9
+    }
+  ],
+  "best_k": 4
+}
