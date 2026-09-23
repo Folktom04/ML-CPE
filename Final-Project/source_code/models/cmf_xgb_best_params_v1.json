@@ -1,0 +1,69 @@
+{
+  "study": "cmf_xgb_v1",
+  "created": "2026-09-24",
+  "objective": "mean UVI MAE of XGBoost CMF_UVI (weights uvi_clear^2) on folds [3, 4, 5] of TimeSeriesSplit(5, gap=12), 2023-2024",
+  "rule": "accept best trial only if CV MAE gain > 0.01 UVI and mean alert recall (Very high + Extreme) drop <= 0.03",
+  "n_trials": 100,
+  "trial_states": {
+    "PRUNED": 58,
+    "COMPLETE": 42
+  },
+  "accepted": true,
+  "reason": "MAE gain +0.0113 (need > 0.01) -> ok; alert-recall drop -0.0054 (max 0.03) -> ok",
+  "params": {
+    "n_estimators": 850,
+    "learning_rate": 0.01092265347287312,
+    "max_depth": 10,
+    "min_child_weight": 8.809610396480752,
+    "subsample": 0.876321273972357,
+    "colsample_bytree": 0.5249129521941819,
+    "reg_lambda": 0.002463511356175994,
+    "reg_alpha": 0.0003529861396838399,
+    "gamma": 1.991269195547748e-05
+  },
+  "best_trial": {
+    "number": 50,
+    "params": {
+      "n_estimators": 850,
+      "learning_rate": 0.01092265347287312,
+      "max_depth": 10,
+      "min_child_weight": 8.809610396480752,
+      "subsample": 0.876321273972357,
+      "colsample_bytree": 0.5249129521941819,
+      "reg_lambda": 0.002463511356175994,
+      "reg_alpha": 0.0003529861396838399,
+      "gamma": 1.991269195547748e-05
+    },
+    "uvi_mae": 0.44659409544532425,
+    "alert_recall": 0.4432651035891821,
+    "recall_Very high": 0.8070430276911846,
+    "recall_Extreme": 0.0794871794871795
+  },
+  "default": {
+    "uvi_mae": 0.45791593097254263,
+    "alert_recall": 0.4378354489602476,
+    "recall_Very high": 0.7961837184333157,
+    "recall_Extreme": 0.0794871794871795
+  },
+  "default_folds": [
+    {
+      "uvi_mae": 0.45413625254481443,
+      "recall_Very high": 0.8032786885245902,
+      "recall_Extreme": 0.038461538461538464,
+      "alert_recall": 0.4208701134930643
+    },
+    {
+      "uvi_mae": 0.5367078495159496,
+      "recall_Very high": 0.7991452991452992,
+      "recall_Extreme": 0.2,
+      "alert_recall": 0.4995726495726496
+    },
+    {
+      "uvi_mae": 0.3829036908568637,
+      "recall_Very high": 0.7861271676300579,
+      "recall_Extreme": 0.0,
+      "alert_recall": 0.3930635838150289
+    }
+  ],
+  "note": "dev 2024 scores after tuning are optimistic (folds 3-5 are in 2024); the unbiased estimate is test 2025 on day 10"
+}
