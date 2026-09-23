@@ -14,23 +14,24 @@
 - [x] ดึง NASA POWER hourly (ALLSKY_SFC_UVA, ALLSKY_SFC_UVB, ALLSKY_SFC_UV_INDEX, CLRSKY_SFC_SW_DWN, ALLSKY_SFC_SW_DWN, CLOUD_AMT) ช่วงเวลาเดียวกัน
   > หมายเหตุ (แก้วัน 2): เปลี่ยนจาก community AG เป็น **RE** เพราะ AG ปัดเป็น 0.01 MJ/hr (ขั้นละ 2.78 W/m²) ทำให้ UVB แทบเป็น 0 ทั้งหมด ส่วน RE ให้ Wh/m² ต่อชั่วโมง ซึ่งเท่ากับ W/m² เฉลี่ย; ALLSKY_SFC_UV_INDEX เป็น UVI อยู่แล้ว ("W m-2 x 40")
   > ตรวจแล้ววัน 2: timestamp ต่างกัน 1 ชม. จริง (POWER ใช้ label ต้นชั่วโมง, Open-Meteo ใช้ปลายชั่วโมง) → เลื่อน POWER +1 ชม. ใน `preprocess.py`; ozone > 400 µg/m³ ตั้งเป็น NaN แล้ว interpolate
-- [ ] สมัคร NASA Earthdata account (ใช้ดึง OMI ในวัน 2) (ทำเอง)
-  > ค้าง: ผู้ใช้ต้องสมัครเองที่ https://urs.earthdata.nasa.gov แล้วใส่ EARTHDATA_USERNAME / EARTHDATA_PASSWORD ใน `.env`
+- [x] สมัคร NASA Earthdata account (ใช้ดึง OMI ในวัน 2) (ทำเอง)
+  > หมายเหตุ: ต้อง authorize แอป "NASA GESDISC DATA ARCHIVE" ในหน้า Earthdata ด้วย ไม่อย่างนั้นจะเจอ `EulaNotAccepted`
 → `dataset/raw/openmeteo_*.csv`, `dataset/raw/nasapower_*.csv`
 
 ### วัน 2 — ข้อมูลตรวจสอบ + ทำความสะอาด + EDA
 - [x] ดึง TEMIS UV index รายวัน (ฟ้าใส + มีเมฆ) ของจุดที่ใกล้ปทุมธานีที่สุด → `dataset/validation/temis_*.csv`
   > หมายเหตุ: สถานี Bangkok (13.667N, 100.612E) มีเฉพาะ **ฟ้าใส** (คอลัมน์ฟ้ามีเมฆเป็น -1 เพราะอยู่นอกพื้นที่ MSG) ได้ `temis_select_2023.csv` (365 แถว) และ `temis_holdout_2024_2025.csv` (731 แถว ยังไม่ได้เปิดดู)
-- [ ] ดึง OMI OMUVB (UVI + irradiance 305/310/324/380 nm) ด้วย earthaccess → `dataset/validation/omi_*.csv`
-  > ค้าง: เขียนโค้ด `fetch_omi` (OMUVBd v003, พิกเซล 1°) และเทสต์เสร็จแล้ว แต่ยังไม่มี Earthdata credentials ใน `.env` เมื่อใส่แล้วให้รัน `python -m src.fetch_validation` (ดึงเฉพาะปี 2023; ส่วน `--split test` ไว้ใช้ในวัน 10)
+- [x] ดึง OMI OMUVB (UVI + irradiance 305/310/324/380 nm) ด้วย earthaccess → `dataset/validation/omi_*.csv`
+  > ดึงเฉพาะปี 2023 → `omi_select_2023.csv` (364 วัน, missing 24%) ตรวจพิกเซลแล้ว: CSUVindex เทียบ TEMIS ได้ MAE 0.97, r 0.86 ส่วน 2024–2025 ให้รัน `--split test` ในวัน 10
 - [x] **ห้ามใช้ TEMIS / OMI ในการฝึกหรือ tuning**: ปี 2023 ใช้ได้เฉพาะเลือกแหล่ง target ใน `02_source_selection.ipynb` ส่วนปี 2024–2025 เก็บไว้ทดสอบวัน 10 (กฎอยู่ใน `.agents/rules/00-project-context.md` และบังคับผ่าน `load_validation()`)
 - [x] รวมไฟล์ฝึก (Open-Meteo + NASA POWER) ตามเวลา UTC, จัดการ missing values, ตัดช่วงกลางคืน → `dataset/processed/train_merged.parquet` (13,280 ชม. กลางวัน)
 - [x] กราฟ UV ตามชั่วโมง / เดือน / ฤดูกาล
 - [x] Correlation heatmap
 - [x] เทียบ UVI ของ Open-Meteo กับ NASA POWER (ดูว่าสองแหล่งต่างกันแค่ไหน)
   > รายชั่วโมง: MAE 1.09, bias −0.05, r 0.87
-- [ ] `02_source_selection.ipynb` เลือกแหล่ง target (Open-Meteo vs NASA POWER) ด้วย TEMIS/OMI ปี 2023 เท่านั้น
-  > ค้าง: ตัวชี้วัดหลัก (MAE เทียบ OMI ฟ้ามีเมฆ) ต้องรอข้อมูล OMI ตอนนี้มีผลฟ้าใสเทียบกับ TEMIS: Open-Meteo clear-sky bias −3.50 UVI (ค่าอิ่มตัวที่ ~9.3 ขณะที่ TEMIS 12–15), NASA POWER (วันฟ้าใส n=71) bias −2.68 → ให้ตรวจเพิ่มในวัน 3 ด้วย `uvi_clear()` (Madronich)
+- [x] `02_source_selection.ipynb` เลือกแหล่ง target (Open-Meteo vs NASA POWER) ด้วย TEMIS/OMI ปี 2023 เท่านั้น
+  > **ผล: NASA POWER** — MAE เทียบ OMI ฟ้ามีเมฆ (n=275): NASA 1.14 (bias −0.99, r 0.78) vs Open-Meteo 2.43 (bias −2.34, r 0.40) ต่างกันเกินเกณฑ์ 0.3 UVI; Open-Meteo อิ่มตัวที่ ~9.3 และ clear-sky ต่ำกว่า TEMIS 3.5 UVI → ตาราง `docs/source_selection_2023.csv`
+  > ต้องตัดสินใจ: rules ยังเขียนว่า ground truth / CMF_UVI target มาจาก Open-Meteo `uv_index` ต้องแก้ให้ตรงกับผลนี้ (รอผู้ใช้ยืนยัน)
 → `source_code/notebooks/01_eda.ipynb`, `source_code/notebooks/02_source_selection.ipynb`
 
 ### วัน 3 — UVI ฟ้าใส (Madronich)
