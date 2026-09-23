@@ -1,0 +1,30 @@
+{
+  "accuracy": 0.752,
+  "report": {
+    "Cat": {
+      "precision": 0.7456140350877193,
+      "recall": 0.765,
+      "f1-score": 0.7551826258637709,
+      "support": 1000.0
+    },
+    "Dog": {
+      "precision": 0.7587268993839835,
+      "recall": 0.739,
+      "f1-score": 0.7487335359675785,
+      "support": 1000.0
+    },
+    "accuracy": 0.752,
+    "macro avg": {
+      "precision": 0.7521704672358513,
+      "recall": 0.752,
+      "f1-score": 0.7519580809156747,
+      "support": 2000.0
+    },
+    "weighted avg": {
+      "precision": 0.7521704672358515,
+      "recall": 0.752,
+      "f1-score": 0.7519580809156747,
+      "support": 2000.0
+    }
+  }
+}

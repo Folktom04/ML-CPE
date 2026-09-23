@@ -1,0 +1,12 @@
+Original raw dataset (source):
+The New York Times, "Coronavirus (Covid-19) Data in the United States", us-counties.csv
+GitHub repository: https://github.com/nytimes/covid-19-data
+
+File used in this project: us-counties.csv
+  Columns: date, county, state, fips, cases, deaths
+  Rows: ~2,500,000 (daily cumulative case/death counts per US county, 2020-01-21 to 2022-05-13)
+
+Processed dataset used for KNN modeling:
+  data-covid/us_counties_dataset.csv
+  -> One row per county (fips), engineered from the raw daily time series
+     (see README.md "Dataset & Feature Engineering" section for details).

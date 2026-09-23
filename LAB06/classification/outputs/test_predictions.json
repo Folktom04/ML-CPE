@@ -1,0 +1,34 @@
+[
+  {
+    "animal": "octopus",
+    "true_class": "Invertebrate",
+    "predicted_class": "Invertebrate",
+    "correct": true,
+    "nearest_neighbor_animal": "lobster",
+    "nearest_neighbor_distance": 2.264554068289194
+  },
+  {
+    "animal": "lynx",
+    "true_class": "Mammal",
+    "predicted_class": "Mammal",
+    "correct": true,
+    "nearest_neighbor_animal": "polecat",
+    "nearest_neighbor_distance": 5.960464477539063e-08
+  },
+  {
+    "animal": "goat",
+    "true_class": "Mammal",
+    "predicted_class": "Mammal",
+    "correct": true,
+    "nearest_neighbor_animal": "reindeer",
+    "nearest_neighbor_distance": 5.960464477539063e-08
+  },
+  {
+    "animal": "lark",
+    "true_class": "Bird",
+    "predicted_class": "Bird",
+    "correct": true,
+    "nearest_neighbor_animal": "wren",
+    "nearest_neighbor_distance": 0.0
+  }
+]
