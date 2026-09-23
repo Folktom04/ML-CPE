@@ -46,6 +46,13 @@ POWER_RENAME = {
 NON_NEGATIVE = [
     "uv_index",
     "uv_index_clear_sky",
+    "cloud_cover_low",
+    "cloud_cover_mid",
+    "cloud_cover_high",
+    "shortwave_radiation",
+    "direct_radiation",
+    "diffuse_radiation",
+    "precipitation",
     "aerosol_optical_depth",
     "dust",
     "pm2_5",

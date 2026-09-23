@@ -44,6 +44,14 @@ WEATHER_VARS = [
     "cloud_cover",
     "relative_humidity_2m",
     "temperature_2m",
+    # day 5: run-time cloud / radiation features (also in the Open-Meteo forecast API)
+    "cloud_cover_low",
+    "cloud_cover_mid",
+    "cloud_cover_high",
+    "shortwave_radiation",
+    "direct_radiation",
+    "diffuse_radiation",
+    "precipitation",
 ]
 AIR_VARS = ["aerosol_optical_depth", "dust", "pm2_5", "ozone"]
 NASAPOWER_VARS = [

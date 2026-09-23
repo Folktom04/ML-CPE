@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "created": "2026-09-23",
+  "features": [
+    "cos_sza",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "uv_index",
+    "uv_index_clear_sky",
+    "cloud_cover",
+    "cloud_cover_low",
+    "cloud_cover_mid",
+    "cloud_cover_high",
+    "relative_humidity_2m",
+    "temperature_2m",
+    "shortwave_radiation",
+    "direct_radiation",
+    "diffuse_radiation",
+    "precipitation",
+    "om_kt",
+    "om_diffuse_fraction",
+    "aerosol_optical_depth",
+    "dust",
+    "pm2_5",
+    "ozone"
+  ],
+  "targets": [
+    "cmf_uvi",
+    "cmf_a",
+    "cmf_b"
+  ],
+  "denominators": [
+    "uvi_clear",
+    "uva_clear",
+    "uvb_clear"
+  ],
+  "diagnostic_not_features": [
+    "nasa_uvi",
+    "nasa_uva_wm2",
+    "nasa_uvb_wm2",
+    "nasa_cloud_pct",
+    "nasa_sw_all_wm2",
+    "nasa_sw_clear_wm2",
+    "nasa_ozone_du",
+    "ozone_clim_du",
+    "ghi_clear"
+  ],
+  "target_formulas": {
+    "cmf_uvi": "nasa_uvi / uvi_clear",
+    "cmf_a": "nasa_uva_wm2 / uva_clear",
+    "cmf_b": "nasa_uvb_wm2 / uvb_clear"
+  },
+  "row_mask": "uvi_clear >= 0.5",
+  "clear_sky": {
+    "substeps": 12,
+    "ozone": "monthly climatology (models/ozone_climatology_v1.json)",
+    "aod500": 0.0
+  },
+  "feature_rule": "Open-Meteo or time/location only; no NASA POWER columns",
+  "n_rows": 11173,
+  "n_input_rows": 13280,
+  "time_range_utc": [
+    "2023-01-01 02:00:00+00:00",
+    "2025-12-31 10:00:00+00:00"
+  ],
+  "target_stats": {
+    "cmf_uvi": {
+      "p01": 0.2496,
+      "p50": 0.6274,
+      "p99": 0.8779,
+      "mean": 0.6146,
+      "share_gt_1": 0.0,
+      "share_lt_0.05": 0.0
+    },
+    "cmf_a": {
+      "p01": 0.3132,
+      "p50": 0.7425,
+      "p99": 0.9611,
+      "mean": 0.7244,
+      "share_gt_1": 0.0,
+      "share_lt_0.05": 0.0
+    },
+    "cmf_b": {
+      "p01": 0.3292,
+      "p50": 0.754,
+      "p99": 0.9995,
+      "mean": 0.7375,
+      "share_gt_1": 0.0096,
+      "share_lt_0.05": 0.0
+    }
+  }
+}
