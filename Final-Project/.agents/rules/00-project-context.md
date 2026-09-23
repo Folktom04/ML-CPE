@@ -70,7 +70,8 @@ Run all commands from `Final-Project/`. `pytest.ini` sets `pythonpath = source_c
 - UVB band 280–315 nm, UVA band 315–400 nm (pvlib spectrl2 starts at 300 nm — note this in docs)
 - CMF targets (all from NASA POWER, skip rows where the clear-sky denominator is small — UVI < 0.5 — to avoid noise at dawn/dusk):
   - CMF_UVI = nasa ALLSKY_SFC_UV_INDEX / `uvi_clear_interval(end_times, substeps=CMF_SUBSTEPS)` (Madronich averaged over the hour, climatology ozone; `src/physics.py`)
-  - CMF_A = nasa ALLSKY_SFC_UVA / clear-sky UVA (spectrl2); CMF_B = nasa ALLSKY_SFC_UVB / clear-sky UVB (spectrl2)
+  - CMF_A = nasa ALLSKY_SFC_UVA / clear-sky UVA; CMF_B = nasa ALLSKY_SFC_UVB / clear-sky UVB, from `uva_uvb_clear_interval(end_times, substeps=CMF_SUBSTEPS)` (pvlib SPECTRL2, climatology ozone, **aod500 = 0**, PW 4 cm, albedo 0.2). The denominator is aerosol-free on purpose (decided day 4), so all three CMFs mean "cloud + aerosol" modification, like the Madronich-based CMF_UVI. Do not pass real AOD to the denominator; AOD / PM2.5 go in as model features.
+  - UVB from SPECTRL2 covers 300–315 nm only (grid starts at 300 nm, 4 points: 300/305/310/315) while NASA POWER UVB is 280–315 nm; report this as a limitation.
   - Clear-sky denominators are the MEAN over the hourly interval (`CMF_SUBSTEPS = 12` instants), not the midpoint value, because NASA POWER values are hourly means. The midpoint differs by 6–13 % in the first/last daylight hour (notebook 03). Apply the same averaging to spectrl2 UVA/UVB.
   - The CMF also absorbs aerosol attenuation (Madronich has no aerosol term): on clear hours it is ~0.7–0.8 and falls with AOD, so AOD / PM2.5 must be model features.
 

@@ -80,6 +80,62 @@ def test_fill_ozone_uses_climatology_for_gaps(clim_path):
     assert filled.tolist() == [270.0, 253.0]
 
 
+NOON = pd.DatetimeIndex(["2024-04-15 05:30"], tz="UTC")  # near solar noon in Pathum Thani
+
+
+def test_spectrl2_grid_starts_at_300nm():
+    wl = ph.spectrl2_wavelengths()
+    assert wl[0] == 300.0
+    assert wl[(wl >= 300) & (wl <= 315)].tolist() == [300.0, 305.0, 310.0, 315.0]
+
+
+def test_integrate_band_flat_and_edges():
+    wl = np.array([300.0, 310.0, 320.0, 330.0])
+    flat = np.ones((2, 4))
+    assert ph.integrate_band(wl, flat, 300, 330).tolist() == pytest.approx([30.0, 30.0])
+    ramp = wl - 300.0  # linear spectrum: integral of x from 5 to 25 = 300
+    assert ph.integrate_band(wl, ramp, 305, 325) == pytest.approx(300.0)
+    with pytest.raises(ValueError):
+        ph.integrate_band(wl, flat, 290, 320)
+
+
+def test_clear_sky_spectrum_night_is_zero_and_shape():
+    t = pd.DatetimeIndex(["2024-04-15 05:30", "2024-04-15 17:30"], tz="UTC")
+    wl, spec = ph.clear_sky_spectrum(t, ozone_du=270.0)
+    assert spec.shape == (2, len(wl))
+    assert spec[1].sum() == 0.0 and spec[0].max() > 0
+    with pytest.raises(ValueError):
+        ph.clear_sky_spectrum(t, aod500=-0.1)
+
+
+def test_uva_uvb_noon_magnitudes():
+    r = ph.uva_uvb_clear(NOON, ozone_du=270.0).iloc[0]
+    assert 40 < r["uva_wm2"] < 75
+    assert 1.0 < r["uvb_wm2"] < 3.5
+    assert 0.02 < r["uvb_wm2"] / r["uva_wm2"] < 0.05
+
+
+def test_ozone_cuts_uvb_not_uva_and_aerosol_cuts_both():
+    base = ph.uva_uvb_clear(NOON, ozone_du=270.0).iloc[0]
+    more_o3 = ph.uva_uvb_clear(NOON, ozone_du=350.0).iloc[0]
+    dusty = ph.uva_uvb_clear(NOON, ozone_du=270.0, aod500=0.5).iloc[0]
+    assert more_o3["uvb_wm2"] < 0.9 * base["uvb_wm2"]
+    assert more_o3["uva_wm2"] == pytest.approx(base["uva_wm2"], rel=0.02)
+    assert dusty["uva_wm2"] < 0.9 * base["uva_wm2"] and dusty["uvb_wm2"] < base["uvb_wm2"]
+
+
+def test_uva_uvb_clear_interval_midpoint_mean_and_climatology(clim_path):
+    end = pd.DatetimeIndex(["2024-04-15 06:00", "2024-04-15 11:00"], tz="UTC")
+    mid = ph.uva_uvb_clear(end - pd.Timedelta(minutes=30), ozone_du=300.0)
+    one = ph.uva_uvb_clear_interval(end, ozone_du=300.0, substeps=1)
+    assert one.to_numpy() == pytest.approx(mid.to_numpy())
+    mean = ph.uva_uvb_clear_interval(end, ozone_du=300.0, substeps=ph.CMF_SUBSTEPS)
+    assert mean.loc[0, "uva_wm2"] == pytest.approx(one.loc[0, "uva_wm2"], rel=0.02)
+    clim = ph.uva_uvb_clear_interval(end, climatology_path=clim_path)  # April -> 254 DU
+    ref = ph.uva_uvb_clear_interval(end, ozone_du=254.0)
+    assert clim.to_numpy() == pytest.approx(ref.to_numpy())
+
+
 def test_uvi_clear_interval_midpoint_and_mean(clim_path):
     end = pd.DatetimeIndex(["2024-03-01 06:00", "2024-03-01 12:00"], tz="UTC")
     mid = ph.uvi_clear(ph.solar_zenith(end - pd.Timedelta(minutes=30)), 300.0)
