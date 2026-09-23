@@ -94,9 +94,14 @@
 → `source_code/src/train_multi.py`, `source_code/notebooks/07_multioutput_cv.ipynb`
 
 ### วัน 8 — Optuna tuning
-- [ ] กำหนด search space
-- [ ] รัน 50–100 trials
-- [ ] บันทึก best params
+> ⚠️ **หลังวัน 8 ตัวเลข dev 2024 มี optimistic bias** เพราะ fold 3–5 ที่ใช้เป็น objective ของการ tune อยู่ในปี 2024 ตัวเลขที่ไม่ลำเอียงคือ **test 2025 ในวัน 10**
+- [x] กำหนด search space (ประกาศก่อนรัน) → `search_space()` ใน `src/tune.py`
+  > `n_estimators` 200–1500, `learning_rate` 0.01–0.2, `max_depth` 3–10, `min_child_weight` 1–30, `subsample` 0.5–1, `colsample_bytree` 0.4–1, `reg_lambda` 1e-3–10, `reg_alpha` 1e-4–1, `gamma` 1e-6–0.05 objective = UVI MAE ของ XGBoost CMF_UVI (weight `uvi_clear²`) เฉลี่ยบน fold 3–5 ของ TimeSeriesSplit(5, gap 12) ใน 2023–2024 (ฝึกด้วยข้อมูลอย่างน้อย 12 เดือน) กฎรับ params: MAE ดีกว่าเดิม > 0.01 **และ** recall เฉลี่ยระดับสูงมาก+รุนแรงมากลดลง ≤ 0.03
+- [x] รัน 100 trials (TPE seed 42 + MedianPruner, study ใน `source_code/models/optuna_cmf_xgb_v1.db`, ทุก trial log recall) → `docs/optuna_trials.csv`
+  > complete 42 / pruned 58; best #50 CV MAE **0.4466** เทียบกับ default 0.4579 (−0.0113) recall 0.443 เทียบกับ 0.438 → **ผ่านกฎแบบเฉียดฉิว** trial 10 อันดับแรกห่างกัน < 0.001 (ที่ราบ) `learning_rate` สำคัญที่สุด (fANOVA 44 %) และชนขอบล่าง 0.01 ส่วนที่ได้เพิ่มถ้าขยายช่วงน่าจะเล็กกว่า noise
+- [x] บันทึก best params → `source_code/models/cmf_xgb_best_params_v1.json` และ multi-output ที่ใช้ params นี้ → `cmf_multi_xgb_v2.joblib` + metrics
+  > dev 2024 (optimistic): UVI MAE 0.461 → **0.450**, UVA 2.93 → 2.87 W/m², UVB 0.086 → 0.084 W/m²; CV 5 folds: UVI 0.493 → 0.470 แต่ recall ระดับรุนแรงมากเฉลี่ย 0.20 → 0.16 → การ tune ไม่ได้แก้ระดับรุนแรงมาก ยังต้องเตือนด้วย q90 ในวัน 9
+→ `source_code/src/tune.py`, `source_code/notebooks/08_optuna.ipynb`, `docs/tuning_dev_2024.csv`, `docs/cv_folds_2023_2024_tuned.csv`, `docs/figures/optuna_*.png`
 
 ### วัน 9 — Quantile Regression
 - [ ] quantile 0.1 / 0.5 / 0.9

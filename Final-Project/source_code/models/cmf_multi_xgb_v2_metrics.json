@@ -1,0 +1,271 @@
+{
+  "model": "MultiOutputRegressor(XGBRegressor), Optuna-tuned",
+  "targets": [
+    "cmf_uvi",
+    "cmf_a",
+    "cmf_b"
+  ],
+  "created": "2026-09-24",
+  "features": [
+    "cos_sza",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "uv_index",
+    "uv_index_clear_sky",
+    "cloud_cover",
+    "cloud_cover_low",
+    "cloud_cover_mid",
+    "cloud_cover_high",
+    "relative_humidity_2m",
+    "temperature_2m",
+    "shortwave_radiation",
+    "direct_radiation",
+    "diffuse_radiation",
+    "precipitation",
+    "om_kt",
+    "om_diffuse_fraction",
+    "aerosol_optical_depth",
+    "dust",
+    "pm2_5",
+    "ozone"
+  ],
+  "params": {
+    "n_estimators": 850,
+    "learning_rate": 0.01092265347287312,
+    "max_depth": 10,
+    "subsample": 0.876321273972357,
+    "colsample_bytree": 0.5249129521941819,
+    "min_child_weight": 8.809610396480752,
+    "reg_lambda": 0.002463511356175994,
+    "random_state": 42,
+    "reg_alpha": 0.0003529861396838399,
+    "gamma": 1.991269195547748e-05
+  },
+  "tuning": "cmf_xgb_best_params_v1.json",
+  "sample_weight": {
+    "scheme": "uvi_clear^2",
+    "rule": "select_weight_scheme (day 7)"
+  },
+  "split": {
+    "fit": "train 2023",
+    "dev": "2024 (optimistic: tuning folds 3-5 lie in 2024)",
+    "cv": "TimeSeriesSplit(n_splits=5, gap=12) on 2023-2024",
+    "test": "2025 untouched until day 10"
+  },
+  "mae": 0.44988795661087655,
+  "rmse": 0.7059982378774121,
+  "r2": 0.9445424325758988,
+  "scale_of_headline_metrics": "UVI on dev 2024",
+  "dev": {
+    "uvi": {
+      "cmf": {
+        "n": 3726,
+        "mae": 0.06436768309109209,
+        "rmse": 0.08581215976587753,
+        "r2": 0.6135898673982765,
+        "bias": 0.012713406298788765
+      },
+      "uvi": {
+        "n": 3726,
+        "mae": 0.44988795661087655,
+        "rmse": 0.7059982378774121,
+        "r2": 0.9445424325758988,
+        "bias": 0.0622679613420131
+      },
+      "who": {
+        "accuracy": 0.8384326355340848,
+        "recall": {
+          "Low": 0.9600626468285043,
+          "Moderate": 0.804503582395087,
+          "High": 0.7513020833333334,
+          "Very high": 0.8125960061443932,
+          "Extreme": 0.11320754716981132
+        },
+        "labels": [
+          "Low",
+          "Moderate",
+          "High",
+          "Very high",
+          "Extreme"
+        ],
+        "confusion": [
+          [
+            1226,
+            49,
+            2,
+            0,
+            0
+          ],
+          [
+            38,
+            786,
+            139,
+            14,
+            0
+          ],
+          [
+            0,
+            51,
+            577,
+            139,
+            1
+          ],
+          [
+            0,
+            0,
+            119,
+            529,
+            3
+          ],
+          [
+            0,
+            0,
+            0,
+            47,
+            6
+          ]
+        ]
+      }
+    },
+    "uva": {
+      "n": 3726,
+      "mae": 2.8709035515566956,
+      "rmse": 4.160225266184171,
+      "r2": 0.9137457693417781,
+      "bias": 0.3515780343486256
+    },
+    "uvb": {
+      "n": 3726,
+      "mae": 0.08396541583268442,
+      "rmse": 0.13092880582009053,
+      "r2": 0.9460781464593787,
+      "bias": 0.012362363350014291
+    },
+    "cmf": {
+      "cmf_uvi": {
+        "n": 3726,
+        "mae": 0.06436768309109209,
+        "rmse": 0.08581215976587753,
+        "r2": 0.6135898673982765,
+        "bias": 0.012713406298788765
+      },
+      "cmf_a": {
+        "n": 3726,
+        "mae": 0.07136511903392412,
+        "rmse": 0.09635076513668593,
+        "r2": 0.5342806578701382,
+        "bias": 0.00898345213900182
+      },
+      "cmf_b": {
+        "n": 3726,
+        "mae": 0.07515066358173549,
+        "rmse": 0.10063573070923454,
+        "r2": 0.5220898997541141,
+        "bias": 0.014203731132741343
+      }
+    }
+  },
+  "fold_scores": [
+    {
+      "fold": 1,
+      "train_end": "2023-05-06T08:00:00.000Z",
+      "val_start": "2023-05-07T10:00:00.000Z",
+      "val_end": "2023-08-28T05:00:00.000Z",
+      "n_train": 1231,
+      "n_val": 1239,
+      "uvi_mae": 0.5008936273,
+      "uvi_rmse": 0.7671482825,
+      "uvi_r2": 0.9450256529,
+      "uvi_bias": -0.0546803498,
+      "who_accuracy": 0.8313155771,
+      "recall_Very high": 0.7725631769,
+      "recall_Extreme": 0.2352941176,
+      "uva_mae_wm2": 3.2158387421,
+      "uvb_mae_wm2": 0.1002299457
+    },
+    {
+      "fold": 2,
+      "train_end": "2023-08-27T04:00:00.000Z",
+      "val_start": "2023-08-28T06:00:00.000Z",
+      "val_end": "2024-01-01T10:00:00.000Z",
+      "n_train": 2470,
+      "n_val": 1239,
+      "uvi_mae": 0.5085547806,
+      "uvi_rmse": 0.7040433177,
+      "uvi_r2": 0.9348023908,
+      "uvi_bias": -0.3541189654,
+      "who_accuracy": 0.8208232446,
+      "recall_Very high": 0.4352941176,
+      "recall_Extreme": 0.3333333333,
+      "uva_mae_wm2": 2.9553574025,
+      "uvb_mae_wm2": 0.087276342
+    },
+    {
+      "fold": 3,
+      "train_end": "2023-12-31T07:00:00.000Z",
+      "val_start": "2024-01-02T02:00:00.000Z",
+      "val_end": "2024-05-06T08:00:00.000Z",
+      "n_train": 3709,
+      "n_val": 1239,
+      "uvi_mae": 0.4461236372,
+      "uvi_rmse": 0.69729003,
+      "uvi_r2": 0.9479792645,
+      "uvi_bias": 0.0038423665,
+      "who_accuracy": 0.8280871671,
+      "recall_Very high": 0.8114754098,
+      "recall_Extreme": 0.0384615385,
+      "uva_mae_wm2": 2.737564895,
+      "uvb_mae_wm2": 0.0831885064
+    },
+    {
+      "fold": 4,
+      "train_end": "2024-05-05T07:00:00.000Z",
+      "val_start": "2024-05-06T09:00:00.000Z",
+      "val_end": "2024-08-27T04:00:00.000Z",
+      "n_train": 4948,
+      "n_val": 1239,
+      "uvi_mae": 0.5222377689,
+      "uvi_rmse": 0.7882197072,
+      "uvi_r2": 0.9374001704,
+      "uvi_bias": 0.042239205,
+      "who_accuracy": 0.816787732,
+      "recall_Very high": 0.811965812,
+      "recall_Extreme": 0.2,
+      "uva_mae_wm2": 3.2844479812,
+      "uvb_mae_wm2": 0.0972488817
+    },
+    {
+      "fold": 5,
+      "train_end": "2024-08-26T03:00:00.000Z",
+      "val_start": "2024-08-27T05:00:00.000Z",
+      "val_end": "2024-12-31T10:00:00.000Z",
+      "n_train": 6187,
+      "n_val": 1239,
+      "uvi_mae": 0.3714208802,
+      "uvi_rmse": 0.5895798414,
+      "uvi_r2": 0.9545162627,
+      "uvi_bias": 0.1077033965,
+      "who_accuracy": 0.8732849072,
+      "recall_Very high": 0.7976878613,
+      "recall_Extreme": 0.0,
+      "uva_mae_wm2": 2.5279569934,
+      "uvb_mae_wm2": 0.0692780076
+    }
+  ],
+  "cv_mean": {
+    "uvi_mae": 0.469846138837765,
+    "uvi_rmse": 0.7092562357666555,
+    "uvi_r2": 0.9439447482499114,
+    "uva_mae_wm2": 2.9442332028333347,
+    "uvb_mae_wm2": 0.08744433668136872
+  },
+  "cv_std": {
+    "uvi_mae": 0.062164051100225104,
+    "uvi_rmse": 0.07758789026980685,
+    "uvi_r2": 0.007994010143848405,
+    "uva_mae_wm2": 0.31844822350302143,
+    "uvb_mae_wm2": 0.012326361230775323
+  }
+}
