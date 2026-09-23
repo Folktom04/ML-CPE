@@ -63,14 +63,16 @@ Run all commands from `Final-Project/`. `pytest.ini` sets `pythonpath = source_c
 ## Domain constants (use exactly these)
 - 1 UVI = 0.025 W/m² erythemal irradiance
 - Clear-sky UVI (Madronich approx.): UVI = 12.5 · μ^2.42 · (O3/300)^-1.23, μ = cos(solar zenith), clipped at 0
+- Ozone input O3 (total column, DU): the monthly climatology `source_code/models/ozone_climatology_v1.json` (built from NASA POWER TO3 2023–2025, Asia/Bangkok months), read with `src.physics.ozone_climatology()`. Use it by default for BOTH training targets and the app/API (train–serve consistency), and to fill TO3 gaps. Do not use a constant 300 DU (−15 % UVI bias in the tropics). Surface ozone from Open-Meteo (µg/m³) is NOT column ozone.
 - MED (J/m²) by skin type: I 200, II 250, III 350, IV 450, V 600, VI 1000
 - Minutes to burn = MED / (UVI × 0.025 × 60); always use the UPPER quantile of UVI for warnings
 - WHO levels: 0–2 ต่ำ, 3–5 ปานกลาง, 6–7 สูง, 8–10 สูงมาก, 11+ รุนแรงมาก
 - UVB band 280–315 nm, UVA band 315–400 nm (pvlib spectrl2 starts at 300 nm — note this in docs)
 - CMF targets (all from NASA POWER, skip rows where the clear-sky denominator is small — UVI < 0.5 — to avoid noise at dawn/dusk):
-  - CMF_UVI = nasa ALLSKY_SFC_UV_INDEX / `uvi_clear()` (Madronich, `src/physics.py`)
+  - CMF_UVI = nasa ALLSKY_SFC_UV_INDEX / `uvi_clear_interval(end_times, substeps=CMF_SUBSTEPS)` (Madronich averaged over the hour, climatology ozone; `src/physics.py`)
   - CMF_A = nasa ALLSKY_SFC_UVA / clear-sky UVA (spectrl2); CMF_B = nasa ALLSKY_SFC_UVB / clear-sky UVB (spectrl2)
-  - Compute the clear-sky denominator at the hourly interval midpoint (POWER values are hourly means; see `src/preprocess.py`)
+  - Clear-sky denominators are the MEAN over the hourly interval (`CMF_SUBSTEPS = 12` instants), not the midpoint value, because NASA POWER values are hourly means. The midpoint differs by 6–13 % in the first/last daylight hour (notebook 03). Apply the same averaging to spectrl2 UVA/UVB.
+  - The CMF also absorbs aerosol attenuation (Madronich has no aerosol term): on clear hours it is ~0.7–0.8 and falls with AOD, so AOD / PM2.5 must be model features.
 
 ## Working rules
 - Always make an implementation plan first and wait for approval on any task that touches more than 3 files.

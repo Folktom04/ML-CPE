@@ -14,6 +14,7 @@ Run from the project root: ``PYTHONPATH=source_code python -m src.fetch_data``.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import logging
 from datetime import date
@@ -52,6 +53,7 @@ NASAPOWER_VARS = [
     "CLRSKY_SFC_SW_DWN",
     "ALLSKY_SFC_SW_DWN",
     "CLOUD_AMT",
+    "TO3",  # total column ozone [Dobson units], for the Madronich clear-sky UVI
 ]
 NASAPOWER_FILL = -999.0
 NASAPOWER_COMMUNITY = "RE"
@@ -196,9 +198,26 @@ def convert_nasapower_units(
     return df, new_units
 
 
-def _cache_name(source: str, lat: float, lon: float, start: date, end: date) -> Path:
-    """Build the cache file path for one request chunk."""
-    return CACHE_DIR / f"{source}_{lat:.2f}_{lon:.2f}_{start:%Y%m%d}_{end:%Y%m%d}.json"
+def vars_tag(names: list[str]) -> str:
+    """Return a short, order-independent hash of a variable list for cache file names.
+
+    Args:
+        names: Requested variable / parameter names.
+
+    Returns:
+        6-character hex digest; it changes whenever the set of variables changes.
+    """
+    return hashlib.sha1(",".join(sorted(names)).encode()).hexdigest()[:6]
+
+
+def _cache_name(
+    source: str, names: list[str], lat: float, lon: float, start: date, end: date
+) -> Path:
+    """Build the cache file path for one request chunk (includes a hash of ``names``)."""
+    return (
+        CACHE_DIR
+        / f"{source}_{vars_tag(names)}_{lat:.2f}_{lon:.2f}_{start:%Y%m%d}_{end:%Y%m%d}.json"
+    )
 
 
 def _concat(frames: list[pd.DataFrame]) -> pd.DataFrame:
@@ -231,7 +250,9 @@ def fetch_openmeteo_weather(
             "hourly": ",".join(WEATHER_VARS),
             "timezone": "GMT",
         }
-        payload = get_json(OPENMETEO_WEATHER_URL, params, _cache_name("om_weather", lat, lon, s, e))
+        payload = get_json(
+            OPENMETEO_WEATHER_URL, params, _cache_name("om_weather", WEATHER_VARS, lat, lon, s, e)
+        )
         frames.append(parse_openmeteo(payload))
     return _concat(frames)
 
@@ -262,7 +283,9 @@ def fetch_openmeteo_air_quality(
             "hourly": ",".join(AIR_VARS),
             "timezone": "GMT",
         }
-        payload = get_json(OPENMETEO_AIR_URL, params, _cache_name("om_air", lat, lon, s, e))
+        payload = get_json(
+            OPENMETEO_AIR_URL, params, _cache_name("om_air", AIR_VARS, lat, lon, s, e)
+        )
         frames.append(parse_openmeteo(payload))
     return _concat(frames)
 
@@ -298,7 +321,7 @@ def fetch_nasapower(
         payload = get_json(
             NASAPOWER_URL,
             params,
-            _cache_name(f"nasapower_{NASAPOWER_COMMUNITY.lower()}", lat, lon, s, e),
+            _cache_name(f"nasapower_{NASAPOWER_COMMUNITY.lower()}", NASAPOWER_VARS, lat, lon, s, e),
         )
         frames.append(parse_nasapower(payload))
         for name, meta in payload.get("parameters", {}).items():
