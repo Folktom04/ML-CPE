@@ -48,11 +48,14 @@
 → `source_code/src/physics.py`, `source_code/notebooks/03_clear_sky.ipynb`
 
 ### วัน 4 — UVA / UVB ฟ้าใส (spectrl2)
-- [ ] คำนวณสเปกตรัมด้วย `pvlib.spectrum.spectrl2`
-- [ ] อินทิเกรต UVB (300–315 nm) และ UVA (315–400 nm)
-- [ ] เทียบ UVA/UVB ฟ้าใสกับ NASA POWER ในวันที่ฟ้าเปิด (ตรวจหน่วย W/m² ให้ตรงกัน)
-- [ ] Unit test โมดูลฟิสิกส์
-→ `source_code/tests/test_physics.py`
+- [x] คำนวณสเปกตรัมด้วย `pvlib.spectrum.spectrl2` → `clear_sky_spectrum()`, `uva_uvb_clear_interval()` ใน `physics.py`
+  > **ตัดสินแล้ว (ผู้ใช้เลือกแบบ A):** ตัวหารของ CMF_A/CMF_B ใช้ **AOD = 0** เพื่อให้ CMF ทั้งสามตัวมีความหมายเดียวกันคือ "เมฆ + ฝุ่น" ร่วมกับ ozone climatology, ไอน้ำ 4 cm และค่าเฉลี่ยทั้งชั่วโมง (`CMF_SUBSTEPS`) แก้ rules แล้ว
+- [x] อินทิเกรต UVB (300–315 nm) และ UVA (315–400 nm)
+  > **ข้อจำกัด:** กริดของ SPECTRL2 เริ่มที่ 300 nm และช่วง UVB มี**แค่ 4 จุด** (300, 305, 310, 315 nm, ห่างกัน 5 nm) อินทิเกรตแบบ trapezoid ส่วน NASA POWER นิยาม UVB เป็น 280–315 nm อัตราส่วนในวันฟ้าเปิดของ UVB (0.85) ใกล้กับ UVA (0.87) แปลว่าส่วน 280–300 nm ที่ขาดไปมีผลน้อย แต่ความผิดพลาดจากกริดหยาบยังประเมินตรงไม่ได้ ต้องเขียนลงรายงาน
+- [x] เทียบ UVA/UVB ฟ้าใสกับ NASA POWER ในวันที่ฟ้าเปิด (ตรวจหน่วย W/m² ให้ตรงกัน)
+  > หน่วยตรงกัน: ชั่วโมงฟ้าเปิด (n=1,680) r 0.97; แบบ A: NASA/SPECTRL2 = 0.87 (UVA), 0.85 (UVB) และลดลงตาม AOD (0.93 → 0.80/0.77) เป็นแพทเทิร์นเดียวกับ CMF_UVI; แบบ B (AOD จริง) ได้ ≈ 1.10 และ**เพิ่มขึ้น**ตาม AOD แปลว่าลด UV มากเกินไปเมื่อฝุ่นหนา ส่วนไอน้ำไม่มีผล (0%) และ 300 DU ทำให้ UVB ต่ำ 14%
+- [x] Unit test โมดูลฟิสิกส์
+→ `source_code/tests/test_physics.py`, `source_code/notebooks/04_clear_sky_uva_uvb.ipynb`
 
 ### วัน 5 — Feature engineering + target
 - [ ] cos(SZA), sin/cos ชั่วโมงและเดือน

@@ -29,6 +29,15 @@ CLIMATOLOGY_PATH = ROOT / "source_code" / "models" / "ozone_climatology_v1.json"
 # uvi_clear_interval(end_times, substeps=CMF_SUBSTEPS). Decided on day 3.
 CMF_SUBSTEPS = 12
 
+# SPECTRL2 clear-sky UVA/UVB (day 4). The CMF_A / CMF_B denominators are aerosol-free
+# (AOD = 0) so all three CMFs mean "cloud + aerosol" modification, like the Madronich UVI.
+UVA_BAND = (315.0, 400.0)
+UVB_BAND = (300.0, 315.0)  # SPECTRL2 starts at 300 nm; formal UVB is 280-315 nm
+CLEAR_SKY_AOD500 = 0.0
+PW_DEFAULT_CM = 4.0  # tropical precipitable water; UV is almost insensitive to it
+GROUND_ALBEDO = 0.2
+SITE_ELEVATION_M = 5.0  # Pathum Thani
+
 ArrayLike = float | np.ndarray | pd.Series
 
 
@@ -227,16 +236,190 @@ def uvi_clear_interval(
     Returns:
         Clear-sky UVI per interval.
     """
-    if substeps < 1:
-        raise ValueError("substeps must be >= 1")
+    offsets = _substep_offsets(substeps)
     end = pd.DatetimeIndex(end_times)
-    if ozone_du is None:
-        mid = end - pd.Timedelta(minutes=30)
-        ozone_du = ozone_climatology(local_month(mid), climatology_path)
-    o3 = np.broadcast_to(np.asarray(ozone_du, dtype=float), (len(end),))
+    o3 = _interval_ozone(end, ozone_du, climatology_path)
 
     total = np.zeros(len(end))
-    for k in range(substeps):
-        offset = pd.Timedelta(minutes=-60 + (k + 0.5) * 60 / substeps)
+    for offset in offsets:
         total += uvi_clear(solar_zenith(end + offset, lat, lon), o3)
+    return total / substeps
+
+
+def _substep_offsets(substeps: int) -> list[pd.Timedelta]:
+    """Offsets from an end-of-hour label to ``substeps`` evenly spaced instants in the hour."""
+    if substeps < 1:
+        raise ValueError("substeps must be >= 1")
+    return [pd.Timedelta(minutes=-60 + (k + 0.5) * 60 / substeps) for k in range(substeps)]
+
+
+def _interval_ozone(
+    end: pd.DatetimeIndex, ozone_du: ArrayLike | None, climatology_path: Path
+) -> np.ndarray:
+    """Ozone (DU) per interval: the given values, or the climatology of the midpoint month."""
+    if ozone_du is None:
+        ozone_du = ozone_climatology(local_month(end - pd.Timedelta(minutes=30)), climatology_path)
+    return np.broadcast_to(np.asarray(ozone_du, dtype=float), (len(end),))
+
+
+@lru_cache(maxsize=1)
+def spectrl2_wavelengths() -> np.ndarray:
+    """Return the fixed SPECTRL2 wavelength grid (nm); it starts at 300 nm.
+
+    Returns:
+        Wavelengths in nm (UV part: 300-350 nm every 5 nm, then 360-400 nm every 10 nm).
+    """
+    r = pvlib.spectrum.spectrl2(30.0, 30.0, 0.0, 0.2, 101325.0, 1.15, 4.0, 0.27, 0.1, dayofyear=1)
+    return np.asarray(r["wavelength"], dtype=float)
+
+
+def clear_sky_spectrum(
+    times: pd.DatetimeIndex | pd.Series,
+    lat: float = LAT,
+    lon: float = LON,
+    ozone_du: ArrayLike = O3_REF_DU,
+    aod500: ArrayLike = CLEAR_SKY_AOD500,
+    pw_cm: ArrayLike = PW_DEFAULT_CM,
+    albedo: float = GROUND_ALBEDO,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Clear-sky global horizontal spectral irradiance from pvlib SPECTRL2.
+
+    Horizontal surface (tilt 0, angle of incidence = zenith), site pressure from
+    ``SITE_ELEVATION_M``, Kasten (1966) relative airmass. Night instants (zenith >= 90) are 0.
+
+    Args:
+        times: Timezone-aware instants.
+        lat: Latitude in degrees.
+        lon: Longitude in degrees.
+        ozone_du: Total column ozone in DU (converted to atm-cm for SPECTRL2).
+        aod500: Aerosol optical depth at 500 nm (0 = aerosol-free, the CMF convention).
+        pw_cm: Precipitable water in cm.
+        albedo: Ground albedo.
+
+    Returns:
+        ``(wavelength_nm, spectrum)``; ``spectrum`` has shape ``(len(times), n_wavelengths)``
+        in W/m²/nm.
+    """
+    idx = pd.DatetimeIndex(times)
+    n = len(idx)
+    wl = spectrl2_wavelengths()
+    zen = solar_zenith(idx, lat, lon)
+    o3 = np.broadcast_to(np.asarray(ozone_du, dtype=float), (n,))
+    aod = np.broadcast_to(np.asarray(aod500, dtype=float), (n,))
+    pw = np.broadcast_to(np.asarray(pw_cm, dtype=float), (n,))
+    if np.any(o3 <= 0) or np.any(aod < 0) or np.any(pw <= 0):
+        raise ValueError("ozone and precipitable water must be > 0, aod500 must be >= 0")
+
+    spec = np.zeros((n, len(wl)))
+    day = zen < 90.0
+    if day.any():
+        r = pvlib.spectrum.spectrl2(
+            apparent_zenith=zen[day],
+            aoi=zen[day],
+            surface_tilt=0.0,
+            ground_albedo=albedo,
+            surface_pressure=pvlib.atmosphere.alt2pres(SITE_ELEVATION_M),
+            relative_airmass=pvlib.atmosphere.get_relative_airmass(zen[day], model="kasten1966"),
+            precipitable_water=pw[day],
+            ozone=o3[day] / 1000.0,
+            aerosol_turbidity_500nm=aod[day],
+            dayofyear=idx.dayofyear.to_numpy()[day],
+        )
+        spec[day] = np.nan_to_num(np.asarray(r["poa_global"], dtype=float).T, nan=0.0)
+    return wl, np.clip(spec, 0.0, None)
+
+
+def integrate_band(
+    wavelength: np.ndarray, spectrum: np.ndarray, lo: float, hi: float
+) -> np.ndarray:
+    """Integrate spectral irradiance over ``[lo, hi]`` nm (trapezoid, linear at band edges).
+
+    Args:
+        wavelength: Increasing wavelengths in nm.
+        spectrum: Spectral irradiance, last axis matching ``wavelength`` (W/m²/nm).
+        lo: Lower band edge in nm (must lie inside the grid).
+        hi: Upper band edge in nm (must lie inside the grid).
+
+    Returns:
+        Band irradiance in W/m² (shape of ``spectrum`` without the last axis).
+    """
+    wl = np.asarray(wavelength, dtype=float)
+    if not (wl[0] <= lo < hi <= wl[-1]):
+        raise ValueError(f"band {lo}-{hi} nm is outside the grid {wl[0]}-{wl[-1]} nm")
+    grid = np.unique(np.concatenate([[lo, hi], wl[(wl > lo) & (wl < hi)]]))
+    i = np.clip(np.searchsorted(wl, grid) - 1, 0, len(wl) - 2)
+    w = (grid - wl[i]) / (wl[i + 1] - wl[i])
+    spec = np.asarray(spectrum, dtype=float)
+    values = spec[..., i] * (1 - w) + spec[..., i + 1] * w
+    return np.trapezoid(values, grid, axis=-1)
+
+
+def uva_uvb_clear(
+    times: pd.DatetimeIndex | pd.Series,
+    lat: float = LAT,
+    lon: float = LON,
+    ozone_du: ArrayLike = O3_REF_DU,
+    aod500: ArrayLike = CLEAR_SKY_AOD500,
+    pw_cm: ArrayLike = PW_DEFAULT_CM,
+) -> pd.DataFrame:
+    """Clear-sky UVA (315-400 nm) and UVB (300-315 nm) irradiance at the given instants.
+
+    UVB starts at 300 nm because SPECTRL2 does (formal UVB is 280-315 nm).
+
+    Args:
+        times: Timezone-aware instants.
+        lat: Latitude in degrees.
+        lon: Longitude in degrees.
+        ozone_du: Total column ozone in DU.
+        aod500: Aerosol optical depth at 500 nm.
+        pw_cm: Precipitable water in cm.
+
+    Returns:
+        DataFrame with ``uva_wm2`` and ``uvb_wm2`` (W/m²), one row per instant.
+    """
+    wl, spec = clear_sky_spectrum(times, lat, lon, ozone_du, aod500, pw_cm)
+    return pd.DataFrame(
+        {
+            "uva_wm2": integrate_band(wl, spec, *UVA_BAND),
+            "uvb_wm2": integrate_band(wl, spec, *UVB_BAND),
+        }
+    )
+
+
+def uva_uvb_clear_interval(
+    end_times: pd.Series | pd.DatetimeIndex,
+    lat: float = LAT,
+    lon: float = LON,
+    ozone_du: ArrayLike | None = None,
+    aod500: ArrayLike = CLEAR_SKY_AOD500,
+    pw_cm: ArrayLike = PW_DEFAULT_CM,
+    substeps: int = 1,
+    climatology_path: Path = CLIMATOLOGY_PATH,
+) -> pd.DataFrame:
+    """Clear-sky UVA/UVB for hourly intervals labelled at their END.
+
+    Same conventions as ``uvi_clear_interval``: ``substeps=1`` gives the midpoint value,
+    ``substeps=CMF_SUBSTEPS`` the hourly mean used for CMF_A / CMF_B denominators, and
+    ``ozone_du=None`` uses the monthly climatology. The default ``aod500=0`` makes the
+    denominator aerosol-free, like the Madronich UVI.
+
+    Args:
+        end_times: Timezone-aware end-of-hour labels.
+        lat: Latitude in degrees.
+        lon: Longitude in degrees.
+        ozone_du: Ozone in DU, or None for the climatology.
+        aod500: Aerosol optical depth at 500 nm (scalar or per interval).
+        pw_cm: Precipitable water in cm.
+        substeps: Number of instants averaged per hour.
+        climatology_path: Climatology JSON used when ``ozone_du`` is None.
+
+    Returns:
+        DataFrame with ``uva_wm2`` and ``uvb_wm2`` per interval (W/m²).
+    """
+    offsets = _substep_offsets(substeps)
+    end = pd.DatetimeIndex(end_times)
+    o3 = _interval_ozone(end, ozone_du, climatology_path)
+    total = pd.DataFrame(0.0, index=range(len(end)), columns=["uva_wm2", "uvb_wm2"])
+    for offset in offsets:
+        total += uva_uvb_clear(end + offset, lat, lon, o3, aod500, pw_cm).to_numpy()
     return total / substeps
