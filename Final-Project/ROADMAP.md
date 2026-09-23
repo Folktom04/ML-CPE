@@ -36,11 +36,16 @@
 → `source_code/notebooks/01_eda.ipynb`, `source_code/notebooks/02_source_selection.ipynb`
 
 ### วัน 3 — UVI ฟ้าใส (Madronich)
-- [ ] `source_code/src/physics.py`: มุมเซนิทด้วย pvlib
-- [ ] `uvi_clear()` ตามสูตรใน rules
-- [ ] เทียบกับ uv_index_clear_sky ของ Open-Meteo และ ALLSKY_SFC_UV_INDEX ของ NASA POWER ในชั่วโมงที่ฟ้าเปิด (ใช้ข้อมูลฝึกเท่านั้น ห้ามใช้ TEMIS/OMI)
+- [x] `source_code/src/physics.py`: มุมเซนิทด้วย pvlib
+- [x] `uvi_clear()` ตามสูตรใน rules
+- [x] ozone climatology รายเดือนจาก NASA POWER TO3 ปี 2023–2025 → `source_code/models/ozone_climatology_v1.json` (243–278 DU) ใช้เป็นค่าเริ่มต้นทั้งตอนฝึกและตอนใช้งาน และใช้เติม TO3 ที่ขาด
+  > เทียบกับ TO3 จริง: climatology ต่างเฉลี่ย 2.2% ของ UVI (p95 4.2%) ส่วน 300 DU ต่ำเป็นระบบ −15.2% (ถึง −23% ในเดือนหนาว)
+- [x] เทียบกับ uv_index_clear_sky ของ Open-Meteo และ ALLSKY_SFC_UV_INDEX ของ NASA POWER ในชั่วโมงที่ฟ้าเปิด (ใช้ข้อมูลฝึกเท่านั้น ห้ามใช้ TEMIS/OMI)
   > หมายเหตุ: `uvi_clear()` คือตัวหารของ CMF_UVI (ตัดสินในวัน 2)
-→ `source_code/src/physics.py`
+  > Open-Meteo clear-sky: bias −1.45 UVI, r 0.99 (รูปร่างตรง ระดับต่ำ); NASA POWER ชั่วโมงฟ้าเปิด (n=1,659): ได้ 0.72 เท่าของ Madronich (bias −1.9) และอัตราส่วนลดลงตาม AOD (0.80 → 0.66, r −0.47) → **CMF จะรวมผลของฝุ่นละอองด้วย ในวันฟ้าเปิดจึงอยู่ราว 0.7–0.8** วัน 5 ต้องใส่ AOD/PM2.5 เป็น feature
+- [x] เลือกว่าตัวหารของ CMF คำนวณที่จุดกึ่งกลางชั่วโมง หรือเป็นค่าเฉลี่ยทั้งชั่วโมง
+  > **ตัดสินแล้ว (ผู้ใช้ยืนยัน): ใช้ค่าเฉลี่ยทั้งชั่วโมง** `uvi_clear_interval(..., substeps=CMF_SUBSTEPS)` (= 12) เพราะ NASA POWER เป็นค่าเฉลี่ยรายชั่วโมง ถ้าใช้จุดกึ่งกลางจะต่างกัน < 1% ช่วงกลางวัน แต่ 6–10% (สูงสุด 13%) ในชั่วโมงแรกและสุดท้ายของวัน; แก้ rules แล้ว และ spectrl2 วัน 4 ต้องเฉลี่ยแบบเดียวกัน
+→ `source_code/src/physics.py`, `source_code/notebooks/03_clear_sky.ipynb`
 
 ### วัน 4 — UVA / UVB ฟ้าใส (spectrl2)
 - [ ] คำนวณสเปกตรัมด้วย `pvlib.spectrum.spectrl2`
@@ -51,8 +56,8 @@
 
 ### วัน 5 — Feature engineering + target
 - [ ] cos(SZA), sin/cos ชั่วโมงและเดือน
-- [ ] target CMF_UVI = NASA POWER ALLSKY_SFC_UV_INDEX / `uvi_clear()` (Madronich)
-- [ ] target CMF_A = UVA_POWER / UVA_ฟ้าใส และ CMF_B = UVB_POWER / UVB_ฟ้าใส (spectrl2)
+- [ ] target CMF_UVI = NASA POWER ALLSKY_SFC_UV_INDEX / `uvi_clear_interval(..., substeps=CMF_SUBSTEPS)` (Madronich เฉลี่ยทั้งชั่วโมง + ozone climatology)
+- [ ] target CMF_A = UVA_POWER / UVA_ฟ้าใส และ CMF_B = UVB_POWER / UVB_ฟ้าใส (spectrl2 เฉลี่ยทั้งชั่วโมง)
 - [ ] features จากทั้งสองแหล่ง: เมฆ Open-Meteo + CLOUD_AMT และ clear-sky index (ALLSKY / CLRSKY SW) ของ NASA POWER
 - [ ] บันทึก dataset
 → `dataset/processed/train.parquet`

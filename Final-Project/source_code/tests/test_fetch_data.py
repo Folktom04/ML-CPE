@@ -109,6 +109,24 @@ def test_fetch_nasapower_uses_re_community(monkeypatch):
     assert seen[0][1].startswith("nasapower_re_")
 
 
+def test_vars_tag_changes_with_variable_set_only():
+    assert fd.vars_tag(["a", "b"]) == fd.vars_tag(["b", "a"])
+    assert fd.vars_tag(["a", "b"]) != fd.vars_tag(["a", "b", "TO3"])
+    assert "TO3" in fd.NASAPOWER_VARS
+
+
+def test_nasapower_cache_name_includes_vars_tag(monkeypatch):
+    names = []
+
+    def fake_get_json(url, params, cache_path):
+        names.append(cache_path.name)
+        return power_payload({"2023010100": 1.0})
+
+    monkeypatch.setattr(fd, "get_json", fake_get_json)
+    fd.fetch_nasapower(date(2023, 1, 1), date(2023, 1, 1))
+    assert fd.vars_tag(fd.NASAPOWER_VARS) in names[0]
+
+
 def test_get_json_writes_cache_then_reuses_it(tmp_path):
     cache = tmp_path / "sub" / "x.json"
     session = FakeSession({"a": 1})

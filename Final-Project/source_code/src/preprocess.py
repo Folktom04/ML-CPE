@@ -19,6 +19,13 @@ import pandas as pd
 import pvlib
 
 from src.fetch_data import LAT, LON, RAW_DIR, ROOT, summarize
+from src.physics import (
+    CLIMATOLOGY_PATH,
+    build_ozone_climatology,
+    fill_ozone,
+    save_ozone_climatology,
+    solar_zenith,
+)
 
 PROCESSED_DIR = ROOT / "dataset" / "processed"
 
@@ -34,6 +41,7 @@ POWER_RENAME = {
     "CLRSKY_SFC_SW_DWN": "nasa_sw_clear_wm2",
     "ALLSKY_SFC_SW_DWN": "nasa_sw_all_wm2",
     "CLOUD_AMT": "nasa_cloud_pct",
+    "TO3": "nasa_ozone_du",
 }
 NON_NEGATIVE = [
     "uv_index",
@@ -102,14 +110,16 @@ def merge_sources(
     return df.sort_values("time_utc").reset_index(drop=True)
 
 
-def clean(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+def clean(df: pd.DataFrame, ozone_climatology_path: Path | None = None) -> tuple[pd.DataFrame, int]:
     """Mask implausible values, fill short gaps and drop rows that are still incomplete.
 
     Negative values of non-negative quantities and surface ozone above ``OZONE_MAX_UGM3``
-    become NaN; gaps of up to ``INTERP_LIMIT_HOURS`` are filled by time interpolation.
+    become NaN; gaps of up to ``INTERP_LIMIT_HOURS`` are filled by time interpolation. If a
+    climatology file is given, remaining ``nasa_ozone_du`` gaps are filled from it.
 
     Args:
         df: Merged table.
+        ozone_climatology_path: Optional monthly ozone climatology JSON.
 
     Returns:
         ``(clean_df, n_dropped)``.
@@ -124,6 +134,10 @@ def clean(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
     df = df.set_index("time_utc")
     df[num] = df[num].interpolate(method="time", limit=INTERP_LIMIT_HOURS, limit_area="inside")
     df = df.reset_index()
+    if ozone_climatology_path is not None and "nasa_ozone_du" in df:
+        df["nasa_ozone_du"] = fill_ozone(
+            df["time_utc"], df["nasa_ozone_du"], ozone_climatology_path
+        )
     before = len(df)
     df = df.dropna().reset_index(drop=True)
     return df, before - len(df)
@@ -140,10 +154,8 @@ def add_solar_zenith(df: pd.DataFrame, lat: float = LAT, lon: float = LON) -> pd
     Returns:
         Copy of ``df`` with a ``solar_zenith`` column.
     """
-    mid = pd.DatetimeIndex(df["time_utc"] + MIDPOINT_OFFSET)
-    sp = pvlib.solarposition.get_solarposition(mid, lat, lon)
     out = df.copy()
-    out["solar_zenith"] = sp["apparent_zenith"].to_numpy()
+    out["solar_zenith"] = solar_zenith(df["time_utc"] + MIDPOINT_OFFSET, lat, lon)
     return out
 
 
@@ -213,7 +225,23 @@ def main(argv: list[str] | None = None) -> None:
     print(f"best lag of raw NASA POWER vs Open-Meteo uv_index: {raw_lag:+d} h")
 
     df = merge_sources(weather, air, power)
-    df, dropped = clean(df)
+
+    o3 = df["nasa_ozone_du"].mask(df["nasa_ozone_du"] <= 0)
+    clim = build_ozone_climatology(df["time_utc"], o3)
+    years = df["time_utc"].dt.year
+    save_ozone_climatology(
+        clim,
+        {
+            "source": "NASA POWER hourly TO3 (community RE)",
+            "years": [int(years.min()), int(years.max())],
+            "lat": LAT,
+            "lon": LON,
+        },
+    )
+    print(f"ozone climatology -> {CLIMATOLOGY_PATH}")
+    print(clim.round(1).to_string())
+
+    df, dropped = clean(df, ozone_climatology_path=CLIMATOLOGY_PATH)
     df = drop_night(add_solar_zenith(df))
     print(f"rows dropped after cleaning: {dropped}; daytime rows kept: {len(df)}")
 

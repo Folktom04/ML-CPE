@@ -52,6 +52,24 @@ def test_clean_masks_ozone_outlier_interpolates_and_drops():
     assert not out.isna().any().any()
 
 
+def test_merge_renames_ozone_and_clean_fills_it_from_climatology(tmp_path):
+    from src import physics as ph
+
+    year = pd.date_range("2023-01-01", "2023-12-31 23:00", freq="h", tz="UTC")
+    clim = ph.build_ozone_climatology(year, pd.Series(np.full(len(year), 270.0)))
+    path = ph.save_ozone_climatology(clim, {"source": "test"}, tmp_path / "clim.json")
+
+    t = hourly(periods=10)
+    power = pd.DataFrame({"time_utc": t, "TO3": [260.0] + [np.nan] * 9})
+    df = pp.merge_sources(
+        pd.DataFrame({"time_utc": t}), pd.DataFrame({"time_utc": t}), power, power_shift_hours=0
+    )
+    assert "nasa_ozone_du" in df
+    out, dropped = pp.clean(df, ozone_climatology_path=path)
+    assert dropped == 0
+    assert out["nasa_ozone_du"].tolist() == [260.0] + [270.0] * 9
+
+
 def test_add_solar_zenith_and_drop_night():
     t = hourly(periods=24)
     df = pp.add_solar_zenith(pd.DataFrame({"time_utc": t}))
