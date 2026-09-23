@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Data & models
+dataset/raw/*
+dataset/processed/*
+dataset/validation/*
+dataset/sky/*
+!dataset/**/.gitkeep
+source_code/models/*.keras
+source_code/models/*.h5
+*.sqlite
+
+# Secrets
+.env
+
+# Claude Code personal settings
+.claude/settings.local.json
+
+# Expo / Node
+source_code/app/node_modules/
+source_code/app/.expo/
+source_code/app/dist/
+
+# OS
+.DS_Store
+Thumbs.db

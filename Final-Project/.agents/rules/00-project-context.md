@@ -1,0 +1,76 @@
+---
+trigger: always_on
+---
+
+# UV Guard — Project Context
+
+## What we are building
+A 30-day student ML project (Computer Engineering, RMUTT, Thailand). The system estimates UV Index (UVI), UVA and UVB at the user's location, turns them into a personal skin-damage risk (Fitzpatrick skin type I–VI), and warns the user through a mobile app with notifications.
+
+Pipeline:
+input (GPS, time, weather/air-quality API, phone lux sensor, sky photo)
+→ feature engineering
+→ physics clear-sky model (UVI, UVA, UVB)
+→ ML predicts Cloud Modification Factor (CMF, 0–1): XGBoost multi-output + CNN sky features → stacking ensemble
+→ UV = clear_sky × CMF, with a quantile range (q10–q90)
+→ Risk Engine (WHO level, minutes to sunburn, SPF/PA advice)
+→ FastAPI → Expo app + notifications. LSTM gives a 6–24 h forecast.
+
+The source of truth for scope and schedule is `ROADMAP.md`. Read it before starting any task and tick `[x]` items you finish.
+
+## Tech stack (do not swap without asking)
+- ML: Python 3.11, pandas, numpy, pvlib, xgboost, lightgbm, scikit-learn, optuna, tensorflow/keras
+- Backend: FastAPI, SQLAlchemy, PostgreSQL (SQLite allowed only as a fallback), APScheduler
+- Mobile: React Native with Expo (TypeScript), expo-notifications, expo-camera, expo-sensors, expo-location
+- Data: Open-Meteo APIs (no API key). Default location: Pathum Thani, lat 14.02, lon 100.52, timezone Asia/Bangkok
+- Smartphone only: NO external sensors or hardware modules. The only inputs are what a phone provides (GPS, clock, camera, ambient light sensor on Android, accelerometer/gyroscope) plus free web APIs. Do not suggest ESP32, VEML6075 or any add-on device.
+- Sky-image CNN is trained ONLY on public datasets — no photos taken by the user: CCSN (normal-camera cloud photos, 11 classes), SWIMCAT (5 sky classes), SWIMSEG (cloud masks), SKIPP'D or NREL CloudCV (sky images paired with PV power / irradiance). Most are fisheye whole-sky images, so reduce the domain gap with centre-crop + perspective transform + colour/brightness augmentation, and report the domain gap as a limitation. SKIPP'D/CloudCV targets are broadband, not UV — treat them as an approximate cloud-attenuation proxy. Check and cite each dataset's license. Photos taken in the app are used for inference/demo only, never for training.
+- Training data sources:
+  - Open-Meteo Weather/Historical (features + UVI and clear-sky UVI → CMF_UVI target)
+  - Open-Meteo Air Quality / CAMS (aerosol_optical_depth, dust, pm2_5, ozone)
+  - NASA POWER hourly API, community AG (ALLSKY_SFC_UVA, ALLSKY_SFC_UVB, ALLSKY_SFC_UV_INDEX, ALLSKY/CLRSKY_SFC_SW_DWN, CLOUD_AMT) → CMF_A / CMF_B targets. Coarse satellite grid — combine with physics, never replace it. Check units (W/m²) against the physics module.
+- Independent validation sources (NEVER use for training, feature selection or tuning — test only): TEMIS/KNMI daily noon UVI (clear-sky and cloudy), NASA OMI OMUVB daily overpass (UVI + irradiance at 305/310/324/380 nm; fetch with `earthaccess`, needs an Earthdata login in `.env`). Report error separately per source.
+- Store validation files in `dataset/validation/`.
+- Ground truth: Open-Meteo `uv_index` (model-based). State clearly in docs/report that no physical UV instrument was used; field validation compares phone-based estimates against the API at the same time and place.
+
+## Repository layout
+The project lives in `ML-CPE/Final-Project/`, a folder of the course repo `ML-CPE` (git root is the parent folder — do NOT run `git init` here). The course template requires `dataset/`, `source_code/`, `README.md` and `report.pdf` at this level; keep them.
+```
+Final-Project/                 # project root (open this folder in Antigravity / Claude Code)
+├── dataset/
+│   ├── raw/                   # API downloads (git-ignored)
+│   ├── processed/             # train.parquet etc. (git-ignored)
+│   ├── validation/            # TEMIS / OMI — test only (git-ignored)
+│   ├── field/                 # data collected with the phone app
+│   └── sky/                   # public sky-image datasets (git-ignored)
+├── source_code/
+│   ├── src/                   # importable Python package code (import as `from src.physics import ...`)
+│   ├── tests/                 # pytest
+│   ├── notebooks/             # numbered: 01_eda.ipynb, 02_baseline.ipynb ...
+│   ├── models/                # saved models
+│   ├── api/                   # FastAPI service
+│   └── app/                   # Expo app
+├── docs/                      # diagrams, figures, report assets
+├── README.md
+├── report.pdf                 # final report (course deliverable)
+└── ROADMAP.md
+```
+Run all commands from `Final-Project/`. `pytest.ini` sets `pythonpath = source_code`, so `pytest -q` works from here.
+
+## Domain constants (use exactly these)
+- 1 UVI = 0.025 W/m² erythemal irradiance
+- Clear-sky UVI (Madronich approx.): UVI = 12.5 · μ^2.42 · (O3/300)^-1.23, μ = cos(solar zenith), clipped at 0
+- MED (J/m²) by skin type: I 200, II 250, III 350, IV 450, V 600, VI 1000
+- Minutes to burn = MED / (UVI × 0.025 × 60); always use the UPPER quantile of UVI for warnings
+- WHO levels: 0–2 ต่ำ, 3–5 ปานกลาง, 6–7 สูง, 8–10 สูงมาก, 11+ รุนแรงมาก
+- UVB band 280–315 nm, UVA band 315–400 nm (pvlib spectrl2 starts at 300 nm — note this in docs)
+- CMF target = uv_index / uv_index_clear_sky (skip rows where clear-sky < 0.5 to avoid noise at dawn/dusk)
+
+## Working rules
+- Always make an implementation plan first and wait for approval on any task that touches more than 3 files.
+- Validation must be time-based (TimeSeriesSplit / chronological split). Never random-split time-series data.
+- Every function in `source_code/src/` gets a docstring and a pytest test. Run `pytest -q` before saying a task is done.
+- Never hard-code secrets; use `.env` + python-dotenv. Commit `.env.example`, never `.env`.
+- Keep notebooks for exploration only; reusable logic goes into `source_code/src/`.
+- Health wording: results are estimates for education and warning, not medical diagnosis. Keep that disclaimer in the app and README.
+- Explain plans, walkthroughs and summaries to the user in Thai. Code, identifiers and commit messages stay in English.
