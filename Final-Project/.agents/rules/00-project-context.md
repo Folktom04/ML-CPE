@@ -28,8 +28,10 @@ The source of truth for scope and schedule is `ROADMAP.md`. Read it before start
 - Training data sources:
   - Open-Meteo Weather/Historical (features + UVI and clear-sky UVI → CMF_UVI target)
   - Open-Meteo Air Quality / CAMS (aerosol_optical_depth, dust, pm2_5, ozone)
-  - NASA POWER hourly API, community AG (ALLSKY_SFC_UVA, ALLSKY_SFC_UVB, ALLSKY_SFC_UV_INDEX, ALLSKY/CLRSKY_SFC_SW_DWN, CLOUD_AMT) → CMF_A / CMF_B targets. Coarse satellite grid — combine with physics, never replace it. Check units (W/m²) against the physics module.
+  - NASA POWER hourly API, community RE — not AG, which rounds to 0.01 MJ/hr (2.78 W/m² steps) and erases UVB; RE hourly Wh/m² = mean W/m² (ALLSKY_SFC_UVA, ALLSKY_SFC_UVB, ALLSKY_SFC_UV_INDEX, ALLSKY/CLRSKY_SFC_SW_DWN, CLOUD_AMT) → CMF_A / CMF_B targets. Coarse satellite grid — combine with physics, never replace it. Check units (W/m²) against the physics module.
 - Independent validation sources (NEVER use for training, feature selection or tuning — test only): TEMIS/KNMI daily noon UVI (clear-sky and cloudy), NASA OMI OMUVB daily overpass (UVI + irradiance at 305/310/324/380 nm; fetch with `earthaccess`, needs an Earthdata login in `.env`). Report error separately per source.
+  - Validation split: TEMIS/OMI data from **2023 only** may be used, and only in `source_code/notebooks/02_source_selection.ipynb`, to choose the training target source (Open-Meteo vs NASA POWER uv_index). TEMIS/OMI **2024–2025 is the held-out test set**: do not download OMI for it, and do not load, plot, print statistics of or otherwise inspect it before day 10 (printing a row count is allowed). Code must read validation data through `src.fetch_validation.load_validation()`, which returns 2023 unless `split="test"` is passed.
+  - TEMIS Bangkok (13.667N, 100.612E) only has clear-sky UVI (cloud-modified columns are -1 outside the MSG area); cloudy validation UVI comes from OMI only.
 - Store validation files in `dataset/validation/`.
 - Ground truth: Open-Meteo `uv_index` (model-based). State clearly in docs/report that no physical UV instrument was used; field validation compares phone-based estimates against the API at the same time and place.
 
