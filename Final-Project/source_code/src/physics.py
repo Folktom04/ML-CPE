@@ -246,6 +246,37 @@ def uvi_clear_interval(
     return total / substeps
 
 
+def ghi_clear_interval(
+    end_times: pd.Series | pd.DatetimeIndex,
+    lat: float = LAT,
+    lon: float = LON,
+    substeps: int = CMF_SUBSTEPS,
+) -> np.ndarray:
+    """Clear-sky global horizontal irradiance (Haurwitz model) averaged over each hour.
+
+    Needs only solar geometry, so it is available at run time. Used as the denominator of
+    the Open-Meteo clear-sky index (Open-Meteo ``shortwave_radiation`` is an hourly mean
+    labelled at the end of the hour).
+
+    Args:
+        end_times: Timezone-aware end-of-hour labels.
+        lat: Latitude in degrees.
+        lon: Longitude in degrees.
+        substeps: Number of instants averaged per hour.
+
+    Returns:
+        Clear-sky GHI in W/m² per interval.
+    """
+    offsets = _substep_offsets(substeps)
+    end = pd.DatetimeIndex(end_times)
+    total = np.zeros(len(end))
+    for offset in offsets:
+        zen = solar_zenith(end + offset, lat, lon)
+        ghi = pvlib.clearsky.haurwitz(pd.Series(zen))["ghi"].to_numpy()
+        total += np.nan_to_num(ghi, nan=0.0)
+    return total / substeps
+
+
 def _substep_offsets(substeps: int) -> list[pd.Timedelta]:
     """Offsets from an end-of-hour label to ``substeps`` evenly spaced instants in the hour."""
     if substeps < 1:

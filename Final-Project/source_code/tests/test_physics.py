@@ -136,6 +136,15 @@ def test_uva_uvb_clear_interval_midpoint_mean_and_climatology(clim_path):
     assert clim.to_numpy() == pytest.approx(ref.to_numpy())
 
 
+def test_ghi_clear_interval_noon_night_and_midpoint():
+    end = pd.DatetimeIndex(["2024-04-15 06:00", "2024-04-15 14:00"], tz="UTC")
+    ghi = ph.ghi_clear_interval(end)
+    assert 900 < ghi[0] < 1150  # clear noon in the tropics
+    assert ghi[1] == 0.0  # 21:00 local
+    mid = ph.ghi_clear_interval(end, substeps=1)
+    assert mid[0] == pytest.approx(ghi[0], rel=0.02)
+
+
 def test_uvi_clear_interval_midpoint_and_mean(clim_path):
     end = pd.DatetimeIndex(["2024-03-01 06:00", "2024-03-01 12:00"], tz="UTC")
     mid = ph.uvi_clear(ph.solar_zenith(end - pd.Timedelta(minutes=30)), 300.0)
