@@ -26,14 +26,15 @@ The source of truth for scope and schedule is `ROADMAP.md`. Read it before start
 - Smartphone only: NO external sensors or hardware modules. The only inputs are what a phone provides (GPS, clock, camera, ambient light sensor on Android, accelerometer/gyroscope) plus free web APIs. Do not suggest ESP32, VEML6075 or any add-on device.
 - Sky-image CNN is trained ONLY on public datasets — no photos taken by the user: CCSN (normal-camera cloud photos, 11 classes), SWIMCAT (5 sky classes), SWIMSEG (cloud masks), SKIPP'D or NREL CloudCV (sky images paired with PV power / irradiance). Most are fisheye whole-sky images, so reduce the domain gap with centre-crop + perspective transform + colour/brightness augmentation, and report the domain gap as a limitation. SKIPP'D/CloudCV targets are broadband, not UV — treat them as an approximate cloud-attenuation proxy. Check and cite each dataset's license. Photos taken in the app are used for inference/demo only, never for training.
 - Training data sources:
-  - Open-Meteo Weather/Historical (features + UVI and clear-sky UVI → CMF_UVI target)
+  - Open-Meteo Weather/Historical (features only — its uv_index / uv_index_clear_sky may be used as input features but NOT as a target; see "Ground truth")
   - Open-Meteo Air Quality / CAMS (aerosol_optical_depth, dust, pm2_5, ozone)
-  - NASA POWER hourly API, community RE — not AG, which rounds to 0.01 MJ/hr (2.78 W/m² steps) and erases UVB; RE hourly Wh/m² = mean W/m² (ALLSKY_SFC_UVA, ALLSKY_SFC_UVB, ALLSKY_SFC_UV_INDEX, ALLSKY/CLRSKY_SFC_SW_DWN, CLOUD_AMT) → CMF_A / CMF_B targets. Coarse satellite grid — combine with physics, never replace it. Check units (W/m²) against the physics module.
+  - NASA POWER hourly API, community RE — not AG, which rounds to 0.01 MJ/hr (2.78 W/m² steps) and erases UVB; RE hourly Wh/m² = mean W/m² (ALLSKY_SFC_UVA, ALLSKY_SFC_UVB, ALLSKY_SFC_UV_INDEX, ALLSKY/CLRSKY_SFC_SW_DWN, CLOUD_AMT) → CMF_UVI / CMF_A / CMF_B targets (ground truth). Coarse satellite grid — combine with physics, never replace it. Check units (W/m²) against the physics module.
 - Independent validation sources (NEVER use for training, feature selection or tuning — test only): TEMIS/KNMI daily noon UVI (clear-sky and cloudy), NASA OMI OMUVB daily overpass (UVI + irradiance at 305/310/324/380 nm; fetch with `earthaccess`, needs an Earthdata login in `.env`). Report error separately per source.
-  - Validation split: TEMIS/OMI data from **2023 only** may be used, and only in `source_code/notebooks/02_source_selection.ipynb`, to choose the training target source (Open-Meteo vs NASA POWER uv_index). TEMIS/OMI **2024–2025 is the held-out test set**: do not download OMI for it, and do not load, plot, print statistics of or otherwise inspect it before day 10 (printing a row count is allowed). Code must read validation data through `src.fetch_validation.load_validation()`, which returns 2023 unless `split="test"` is passed.
+  - Validation split: TEMIS/OMI data from **2023 only** may be used, and only in `source_code/notebooks/02_source_selection.ipynb`, to choose the training target source (Open-Meteo vs NASA POWER uv_index) — done, see "Ground truth". TEMIS/OMI **2024–2025 is the held-out test set**: do not download OMI for it, and do not load, plot, print statistics of or otherwise inspect it before day 10 (printing a row count is allowed). Code must read validation data through `src.fetch_validation.load_validation()`, which returns 2023 unless `split="test"` is passed.
   - TEMIS Bangkok (13.667N, 100.612E) only has clear-sky UVI (cloud-modified columns are -1 outside the MSG area); cloudy validation UVI comes from OMI only.
 - Store validation files in `dataset/validation/`.
-- Ground truth: Open-Meteo `uv_index` (model-based). State clearly in docs/report that no physical UV instrument was used; field validation compares phone-based estimates against the API at the same time and place.
+- Ground truth: **NASA POWER** hourly `ALLSKY_SFC_UV_INDEX`, `ALLSKY_SFC_UVA`, `ALLSKY_SFC_UVB` (satellite/model-based). Decided on day 2 in `02_source_selection.ipynb` with a rule declared before looking at results (primary metric: MAE vs OMI all-sky noon UVI, 2023; pick NASA POWER only if its MAE is lower by more than 0.3 UVI, otherwise Open-Meteo). Result: NASA POWER 1.143 vs Open-Meteo 2.428 (n=275); Open-Meteo saturates near UVI 9.3 and its clear-sky UVI is ~3.5 below TEMIS. State clearly in docs/report that no physical UV instrument was used.
+  - NASA POWER is not real-time (months of latency), so it is used for training targets only. At inference the model runs on Open-Meteo / phone inputs. Field validation compares phone-based estimates with the Open-Meteo API at the same time and place; report Open-Meteo's known low bias alongside.
 
 ## Repository layout
 The project lives in `ML-CPE/Final-Project/`, a folder of the course repo `ML-CPE` (git root is the parent folder — do NOT run `git init` here). The course template requires `dataset/`, `source_code/`, `README.md` and `report.pdf` at this level; keep them.
@@ -66,7 +67,10 @@ Run all commands from `Final-Project/`. `pytest.ini` sets `pythonpath = source_c
 - Minutes to burn = MED / (UVI × 0.025 × 60); always use the UPPER quantile of UVI for warnings
 - WHO levels: 0–2 ต่ำ, 3–5 ปานกลาง, 6–7 สูง, 8–10 สูงมาก, 11+ รุนแรงมาก
 - UVB band 280–315 nm, UVA band 315–400 nm (pvlib spectrl2 starts at 300 nm — note this in docs)
-- CMF target = uv_index / uv_index_clear_sky (skip rows where clear-sky < 0.5 to avoid noise at dawn/dusk)
+- CMF targets (all from NASA POWER, skip rows where the clear-sky denominator is small — UVI < 0.5 — to avoid noise at dawn/dusk):
+  - CMF_UVI = nasa ALLSKY_SFC_UV_INDEX / `uvi_clear()` (Madronich, `src/physics.py`)
+  - CMF_A = nasa ALLSKY_SFC_UVA / clear-sky UVA (spectrl2); CMF_B = nasa ALLSKY_SFC_UVB / clear-sky UVB (spectrl2)
+  - Compute the clear-sky denominator at the hourly interval midpoint (POWER values are hourly means; see `src/preprocess.py`)
 
 ## Working rules
 - Always make an implementation plan first and wait for approval on any task that touches more than 3 files.
