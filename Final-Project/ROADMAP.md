@@ -30,14 +30,16 @@
 - [x] เทียบ UVI ของ Open-Meteo กับ NASA POWER (ดูว่าสองแหล่งต่างกันแค่ไหน)
   > รายชั่วโมง: MAE 1.09, bias −0.05, r 0.87
 - [x] `02_source_selection.ipynb` เลือกแหล่ง target (Open-Meteo vs NASA POWER) ด้วย TEMIS/OMI ปี 2023 เท่านั้น
-  > **ผล: NASA POWER** — MAE เทียบ OMI ฟ้ามีเมฆ (n=275): NASA 1.14 (bias −0.99, r 0.78) vs Open-Meteo 2.43 (bias −2.34, r 0.40) ต่างกันเกินเกณฑ์ 0.3 UVI; Open-Meteo อิ่มตัวที่ ~9.3 และ clear-sky ต่ำกว่า TEMIS 3.5 UVI → ตาราง `docs/source_selection_2023.csv`
-  > ต้องตัดสินใจ: rules ยังเขียนว่า ground truth / CMF_UVI target มาจาก Open-Meteo `uv_index` ต้องแก้ให้ตรงกับผลนี้ (รอผู้ใช้ยืนยัน)
+  > **เกณฑ์ที่ประกาศไว้ก่อนดูผล:** ตัวชี้วัดหลักคือ MAE ของ UVI ฟ้ามีเมฆเทียบ OMI `UVindex` ตอนเที่ยงสุริยะ ปี 2023 จะเลือก NASA POWER ก็ต่อเมื่อ MAE ต่ำกว่า Open-Meteo เกิน 0.3 UVI ไม่อย่างนั้นใช้ Open-Meteo
+  > **ผล: NASA POWER** — MAE (n=275): Open-Meteo **2.428** vs NASA POWER **1.143** (ต่างกัน 1.285 > 0.3) bias −2.34 vs −0.99, r 0.40 vs 0.78; Open-Meteo อิ่มตัวที่ ~9.3 และ clear-sky ต่ำกว่า TEMIS 3.5 UVI → ตาราง `docs/source_selection_2023.csv`
+  > **ตัดสินแล้ว (ผู้ใช้ยืนยัน):** ground truth และ target ทั้ง CMF_UVI, CMF_A, CMF_B มาจาก NASA POWER โดยตัวหารของ CMF_UVI คือ `uvi_clear()` (Madronich วัน 3) ส่วน Open-Meteo ใช้เป็น features ได้ และยังเป็นแหล่ง input ตอน inference / field validation เพราะ NASA POWER ไม่ใช่ข้อมูล real-time (แก้ใน `.agents/rules/00-project-context.md` แล้ว)
 → `source_code/notebooks/01_eda.ipynb`, `source_code/notebooks/02_source_selection.ipynb`
 
 ### วัน 3 — UVI ฟ้าใส (Madronich)
 - [ ] `source_code/src/physics.py`: มุมเซนิทด้วย pvlib
 - [ ] `uvi_clear()` ตามสูตรใน rules
-- [ ] เทียบกับ uv_index_clear_sky ของ Open-Meteo
+- [ ] เทียบกับ uv_index_clear_sky ของ Open-Meteo และ ALLSKY_SFC_UV_INDEX ของ NASA POWER ในชั่วโมงที่ฟ้าเปิด (ใช้ข้อมูลฝึกเท่านั้น ห้ามใช้ TEMIS/OMI)
+  > หมายเหตุ: `uvi_clear()` คือตัวหารของ CMF_UVI (ตัดสินในวัน 2)
 → `source_code/src/physics.py`
 
 ### วัน 4 — UVA / UVB ฟ้าใส (spectrl2)
@@ -49,8 +51,8 @@
 
 ### วัน 5 — Feature engineering + target
 - [ ] cos(SZA), sin/cos ชั่วโมงและเดือน
-- [ ] target CMF = uv_index / uv_index_clear_sky (Open-Meteo)
-- [ ] target CMF_A = UVA_POWER / UVA_ฟ้าใส และ CMF_B = UVB_POWER / UVB_ฟ้าใส
+- [ ] target CMF_UVI = NASA POWER ALLSKY_SFC_UV_INDEX / `uvi_clear()` (Madronich)
+- [ ] target CMF_A = UVA_POWER / UVA_ฟ้าใส และ CMF_B = UVB_POWER / UVB_ฟ้าใส (spectrl2)
 - [ ] features จากทั้งสองแหล่ง: เมฆ Open-Meteo + CLOUD_AMT และ clear-sky index (ALLSKY / CLRSKY SW) ของ NASA POWER
 - [ ] บันทึก dataset
 → `dataset/processed/train.parquet`
