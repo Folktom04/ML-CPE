@@ -5,6 +5,7 @@ from datetime import date
 
 import pandas as pd
 import pytest
+
 from src import fetch_data as fd
 
 
@@ -86,6 +87,26 @@ def test_convert_nasapower_units_mj_per_hr_to_wm2():
     assert out.loc[0, "CLOUD_AMT"] == 50.0
     assert units == {"ALLSKY_SFC_UVA": "W/m^2", "CLOUD_AMT": "%"}
     assert df.loc[0, "ALLSKY_SFC_UVA"] == 0.036  # input not mutated
+
+
+def test_convert_nasapower_units_hourly_wh_is_mean_wm2():
+    df = pd.DataFrame({"time_utc": [0], "ALLSKY_SFC_UVB": [1.58]})
+    out, units = fd.convert_nasapower_units(df, {"ALLSKY_SFC_UVB": "Wh/m^2"})
+    assert out.loc[0, "ALLSKY_SFC_UVB"] == pytest.approx(1.58)
+    assert units == {"ALLSKY_SFC_UVB": "W/m^2"}
+
+
+def test_fetch_nasapower_uses_re_community(monkeypatch):
+    seen = []
+
+    def fake_get_json(url, params, cache_path):
+        seen.append((params["community"], cache_path.name))
+        return power_payload({"2023010100": 1.0})
+
+    monkeypatch.setattr(fd, "get_json", fake_get_json)
+    fd.fetch_nasapower(date(2023, 1, 1), date(2023, 1, 1))
+    assert seen[0][0] == "RE"
+    assert seen[0][1].startswith("nasapower_re_")
 
 
 def test_get_json_writes_cache_then_reuses_it(tmp_path):

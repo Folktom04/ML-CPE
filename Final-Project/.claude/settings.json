@@ -8,8 +8,7 @@
       "Bash(git diff:*)"
     ],
     "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)"
+      "Read(./.env)"
     ]
   },
   "hooks": {
@@ -19,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python .claude/hooks/run_tests.py",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/run_tests.py\"",
             "timeout": 200
           }
         ]

@@ -3,10 +3,12 @@
 Sources (all requested in UTC):
 - Open-Meteo Historical Forecast API: UV index, clear-sky UV index and weather features.
 - Open-Meteo Air Quality API (CAMS): aerosol optical depth, dust, PM2.5, surface ozone.
-- NASA POWER hourly API (community AG): UVA/UVB irradiance, UV index, shortwave, cloud amount.
+- NASA POWER hourly API (community RE): UVA/UVB irradiance, UV index, shortwave, cloud amount.
+  Community RE reports hourly Wh/m² (= mean W/m²) at full precision; community AG rounds to
+  0.01 MJ/hr (= 2.78 W/m² steps), which erases UVB, so AG is not used.
 
 Raw JSON responses are cached in ``dataset/raw/cache/`` and never re-downloaded.
-Run from ``source_code/``: ``python -m src.fetch_data --start 2023-01-01 --end 2025-12-31``.
+Run from the project root: ``PYTHONPATH=source_code python -m src.fetch_data``.
 """
 
 from __future__ import annotations
@@ -52,6 +54,7 @@ NASAPOWER_VARS = [
     "CLOUD_AMT",
 ]
 NASAPOWER_FILL = -999.0
+NASAPOWER_COMMUNITY = "RE"
 
 log = logging.getLogger(__name__)
 
@@ -170,22 +173,25 @@ def parse_nasapower(payload: dict[str, Any]) -> pd.DataFrame:
 def convert_nasapower_units(
     df: pd.DataFrame, units: dict[str, str]
 ) -> tuple[pd.DataFrame, dict[str, str]]:
-    """Convert NASA POWER energy columns reported in ``MJ/hr`` (per m²) to W/m².
+    """Convert hourly NASA POWER energy columns to mean irradiance in W/m².
 
-    Community AG reports hourly irradiance as MJ/m²/hr; 1 MJ/m²/hr = 1e6 / 3600 W/m².
+    Community RE reports Wh/m² per hour (numerically equal to the mean W/m²);
+    community AG reports MJ/m²/hr (1 MJ/m²/hr = 1e6 / 3600 W/m²).
 
     Args:
-        df: DataFrame from ``parse_nasapower``.
+        df: DataFrame from ``parse_nasapower`` (hourly data).
         units: Parameter -> unit string from the API metadata.
 
     Returns:
         ``(converted_df, new_units)``; other columns are left unchanged.
     """
+    factors = {"mj/hr": 1e6 / 3600.0, "wh/m^2": 1.0}
     df = df.copy()
     new_units = dict(units)
     for col, unit in units.items():
-        if col in df and unit.replace(" ", "").lower() == "mj/hr":
-            df[col] = df[col] * 1e6 / 3600.0
+        factor = factors.get(unit.replace(" ", "").lower())
+        if col in df and factor is not None:
+            df[col] = df[col] * factor
             new_units[col] = "W/m^2"
     return df, new_units
 
@@ -264,7 +270,7 @@ def fetch_openmeteo_air_quality(
 def fetch_nasapower(
     start: date, end: date, lat: float = LAT, lon: float = LON
 ) -> tuple[pd.DataFrame, dict[str, str]]:
-    """Download hourly UV and radiation parameters from NASA POWER (community AG).
+    """Download hourly UV and radiation parameters from NASA POWER (community RE).
 
     Args:
         start: First day (inclusive, UTC).
@@ -281,7 +287,7 @@ def fetch_nasapower(
     for s, e in year_chunks(start, end):
         params = {
             "parameters": ",".join(NASAPOWER_VARS),
-            "community": "AG",
+            "community": NASAPOWER_COMMUNITY,
             "latitude": lat,
             "longitude": lon,
             "start": f"{s:%Y%m%d}",
@@ -289,7 +295,11 @@ def fetch_nasapower(
             "format": "JSON",
             "time-standard": "UTC",
         }
-        payload = get_json(NASAPOWER_URL, params, _cache_name("nasapower", lat, lon, s, e))
+        payload = get_json(
+            NASAPOWER_URL,
+            params,
+            _cache_name(f"nasapower_{NASAPOWER_COMMUNITY.lower()}", lat, lon, s, e),
+        )
         frames.append(parse_nasapower(payload))
         for name, meta in payload.get("parameters", {}).items():
             units[name] = meta.get("units", "")
