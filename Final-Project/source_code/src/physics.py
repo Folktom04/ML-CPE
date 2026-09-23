@@ -3,7 +3,8 @@
 - Solar zenith angle with pvlib.
 - Clear-sky UV index with the Madronich approximation (project domain constant):
   ``UVI = 12.5 * mu**2.42 * (O3 / 300)**-1.23``, ``mu = cos(zenith)`` clipped at 0.
-- Total column ozone: a monthly climatology built from NASA POWER ``TO3`` (2023-2025) is the
+- Total column ozone: a monthly climatology built from NASA POWER ``TO3`` (2023-2024 only; the
+  test year 2025 is excluded, see ``src/splits.py``) is the
   default ozone input for BOTH training targets and the running app (train-serve consistency);
   it is stored as a small JSON file in ``source_code/models/`` so the app needs no NASA POWER call.
 """
@@ -24,7 +25,8 @@ from src.fetch_data import LAT, LON, ROOT
 
 LOCAL_TZ = "Asia/Bangkok"
 O3_REF_DU = 300.0
-CLIMATOLOGY_PATH = ROOT / "source_code" / "models" / "ozone_climatology_v1.json"
+# v2 (day 6): built from 2023-2024 only. v1 also used 2025 (the test year) and was removed.
+CLIMATOLOGY_PATH = ROOT / "source_code" / "models" / "ozone_climatology_v2.json"
 # CMF denominators use the mean over the hour (NASA POWER values are hourly means):
 # uvi_clear_interval(end_times, substeps=CMF_SUBSTEPS). Decided on day 3.
 CMF_SUBSTEPS = 12

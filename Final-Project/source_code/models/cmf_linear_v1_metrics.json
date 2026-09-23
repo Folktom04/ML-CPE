@@ -1,0 +1,153 @@
+{
+  "model": "LinearRegression (standardised)",
+  "target": "cmf_uvi",
+  "created": "2026-09-23",
+  "features": [
+    "cos_sza",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "uv_index",
+    "uv_index_clear_sky",
+    "cloud_cover",
+    "cloud_cover_low",
+    "cloud_cover_mid",
+    "cloud_cover_high",
+    "relative_humidity_2m",
+    "temperature_2m",
+    "shortwave_radiation",
+    "direct_radiation",
+    "diffuse_radiation",
+    "precipitation",
+    "om_kt",
+    "om_diffuse_fraction",
+    "aerosol_optical_depth",
+    "dust",
+    "pm2_5",
+    "ozone"
+  ],
+  "params": {},
+  "split": {
+    "type": "chronological: train 2023, dev 2024 (TimeSeriesSplit on day 7); test 2025 untouched",
+    "train": [
+      "2023-01-01 02:00:00+00:00",
+      "2023-12-31 10:00:00+00:00",
+      3712
+    ],
+    "dev": [
+      "2024-01-01 02:00:00+00:00",
+      "2024-12-31 10:00:00+00:00",
+      3726
+    ]
+  },
+  "mae": 0.47255036618077473,
+  "rmse": 0.7274962667604885,
+  "r2": 0.9411135843960837,
+  "scale_of_headline_metrics": "UVI (uvi_clear * predicted CMF vs NASA POWER UVI)",
+  "fold_scores": [
+    {
+      "fold": "dev_2024",
+      "n": 3726,
+      "mae": 0.47255036618077473,
+      "rmse": 0.7274962667604885,
+      "r2": 0.9411135843960837,
+      "bias": 0.01376020721042945
+    }
+  ],
+  "dev": {
+    "cmf": {
+      "n": 3726,
+      "mae": 0.06725962522057483,
+      "rmse": 0.08785054468405396,
+      "r2": 0.5950142354210479,
+      "bias": 0.002682166700731841
+    },
+    "uvi": {
+      "n": 3726,
+      "mae": 0.47255036618077473,
+      "rmse": 0.7274962667604885,
+      "r2": 0.9411135843960837,
+      "bias": 0.01376020721042945
+    },
+    "who": {
+      "accuracy": 0.8255501878690285,
+      "recall": {
+        "Low": 0.9647611589663273,
+        "Moderate": 0.8157625383828045,
+        "High": 0.70703125,
+        "Very high": 0.7665130568356375,
+        "Extreme": 0.09433962264150944
+      },
+      "labels": [
+        "Low",
+        "Moderate",
+        "High",
+        "Very high",
+        "Extreme"
+      ],
+      "confusion": [
+        [
+          1232,
+          44,
+          1,
+          0,
+          0
+        ],
+        [
+          45,
+          797,
+          126,
+          9,
+          0
+        ],
+        [
+          0,
+          78,
+          543,
+          146,
+          1
+        ],
+        [
+          0,
+          0,
+          148,
+          499,
+          4
+        ],
+        [
+          0,
+          0,
+          0,
+          48,
+          5
+        ]
+      ]
+    }
+  },
+  "coefficients_standardised": {
+    "cos_sza": 0.15019053653110745,
+    "hour_sin": -0.034223939211486636,
+    "hour_cos": -0.1643232179733552,
+    "month_sin": -0.021584694451762823,
+    "month_cos": -0.023233489033171018,
+    "uv_index": 0.030186628414041176,
+    "uv_index_clear_sky": -0.2906757063756459,
+    "cloud_cover": 0.008470342967982864,
+    "cloud_cover_low": -0.005641822688623644,
+    "cloud_cover_mid": -0.009719614932113629,
+    "cloud_cover_high": -0.010638221952945772,
+    "relative_humidity_2m": -0.025591950483693532,
+    "temperature_2m": -0.013770485739706899,
+    "shortwave_radiation": 0.014874264556322318,
+    "direct_radiation": 0.016976902140654594,
+    "diffuse_radiation": -0.0038543509345980364,
+    "precipitation": 0.0018423016794395445,
+    "om_kt": -0.00046942088231171665,
+    "om_diffuse_fraction": -0.007966836321815786,
+    "aerosol_optical_depth": -0.04023922227758894,
+    "dust": 0.0010551886760665407,
+    "pm2_5": 0.0047752325676855036,
+    "ozone": 0.01564428529719031
+  }
+}

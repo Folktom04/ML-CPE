@@ -27,6 +27,7 @@ import pandas as pd
 
 from src.fetch_data import LAT, LON, ROOT, summarize
 from src.physics import (
+    CLIMATOLOGY_PATH,
     CMF_SUBSTEPS,
     cos_zenith,
     ghi_clear_interval,
@@ -36,6 +37,7 @@ from src.physics import (
     uva_uvb_clear_interval,
     uvi_clear_interval,
 )
+from src.splits import TEST_START
 
 PROCESSED_DIR = ROOT / "dataset" / "processed"
 SPEC_PATH = ROOT / "source_code" / "models" / "dataset_spec_v1.json"
@@ -247,14 +249,16 @@ def write_spec(df: pd.DataFrame, path: Path = SPEC_PATH, n_input: int | None = N
         "row_mask": f"uvi_clear >= {MIN_UVI_CLEAR}",
         "clear_sky": {
             "substeps": CMF_SUBSTEPS,
-            "ozone": "monthly climatology (models/ozone_climatology_v1.json)",
+            "ozone": f"monthly climatology (models/{CLIMATOLOGY_PATH.name}, 2023-2024)",
             "aod500": 0.0,
         },
         "feature_rule": "Open-Meteo or time/location only; no NASA POWER columns",
         "n_rows": int(len(df)),
         "n_input_rows": n_input,
+        "n_rows_test_2025": int((df["time_utc"] >= TEST_START).sum()),
         "time_range_utc": [str(df["time_utc"].min()), str(df["time_utc"].max())],
-        "target_stats": target_stats(df),
+        "target_stats_period": "2023-2024 only (test year 2025 excluded)",
+        "target_stats": target_stats(df.loc[df["time_utc"] < TEST_START]),
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(spec, indent=2), encoding="utf-8")
@@ -276,8 +280,10 @@ def main(argv: list[str] | None = None) -> None:
     df.to_parquet(out, index=False)
     write_spec(df, n_input=len(merged))
 
-    print(summarize("train", df[["time_utc", *FEATURES, *TARGETS]]))
-    print(json.dumps(target_stats(df), indent=2))
+    dev_part = df.loc[df["time_utc"] < TEST_START, ["time_utc", *FEATURES, *TARGETS]]
+    print(summarize("train+dev (2023-2024)", dev_part))
+    print(f"test 2025: {int((df['time_utc'] >= TEST_START).sum())} rows (not inspected)")
+    print(json.dumps(target_stats(dev_part), indent=2))
     print(f"-> {out}\n-> {SPEC_PATH}")
 
 

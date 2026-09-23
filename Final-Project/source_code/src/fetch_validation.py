@@ -2,8 +2,9 @@
 
 **TEST DATA ONLY. Never use these files for training, feature selection or tuning.**
 **2023 ("select" split) may only be used in notebooks/02_source_selection.ipynb to choose the**
-**target source. 2024-2025 ("test" split) is held out until day 10: do not inspect it; printing a**
-**row count is the only allowed output.** Always read these files via ``load_validation()``.
+**target source. 2025 ("test" split) is held out until day 10: do not inspect it; printing a**
+**row count is the only allowed output. 2024 is never written or used (it overlaps the model**
+**dev year, see src/splits.py).** Always read these files via ``load_validation()``.
 
 - TEMIS v2.0 overpass file for Bangkok (13.667N, 100.612E): daily clear-sky noon UVI + ozone.
   Cloud-modified columns are -1 outside the MSG area, so TEMIS gives clear-sky values only.
@@ -74,12 +75,14 @@ OMI_FIELDS = [
 ]
 OMI_FILE_DATE = re.compile(r"OMUVBd_(\d{4})m(\d{2})(\d{2})")
 
-SPLIT_YEARS = {"select": (2023, 2023), "test": (2024, 2025)}
+# 2024 is deliberately absent: it overlaps the model dev year (src/splits.py), so TEMIS/OMI 2024
+# is never written or used.
+SPLIT_YEARS = {"select": (2023, 2023), "test": (2025, 2025)}
 SPLIT_FILES = {
     ("temis", "select"): "temis_select_2023.csv",
-    ("temis", "test"): "temis_holdout_2024_2025.csv",
+    ("temis", "test"): "temis_holdout_2025.csv",
     ("omi", "select"): "omi_select_2023.csv",
-    ("omi", "test"): "omi_holdout_2024_2025.csv",
+    ("omi", "test"): "omi_holdout_2025.csv",
 }
 
 log = logging.getLogger(__name__)
@@ -89,7 +92,7 @@ def split_range(split: str) -> tuple[date, date]:
     """Return the inclusive date range of a validation split.
 
     Args:
-        split: ``"select"`` (2023) or ``"test"`` (2024-2025).
+        split: ``"select"`` (2023) or ``"test"`` (2025).
 
     Returns:
         ``(first_day, last_day)``.
@@ -142,7 +145,7 @@ def write_split(df: pd.DataFrame, source: str, split: str, out_dir: Path = VAL_D
 def load_validation(source: str, split: str = "select", val_dir: Path = VAL_DIR) -> pd.DataFrame:
     """Load a validation split. The default is the 2023 ``select`` split.
 
-    The held-out 2024-2025 data is returned only when ``split="test"`` is passed explicitly,
+    The held-out 2025 data is returned only when ``split="test"`` is passed explicitly,
     which is reserved for the day-10 final evaluation.
 
     Args:
@@ -293,7 +296,7 @@ def fetch_omi(
     The ``.he5`` files are deleted after extraction unless ``keep_he5`` is True.
 
     Args:
-        split: ``"select"`` (2023, day 2) or ``"test"`` (2024-2025, day 10 only).
+        split: ``"select"`` (2023, day 2) or ``"test"`` (2025, day 10 only).
         lat: Latitude in degrees.
         lon: Longitude in degrees.
         keep_he5: Keep the downloaded files in ``dataset/validation/raw/omi/``.
@@ -358,7 +361,7 @@ def main(argv: list[str] | None = None) -> None:
         "--split",
         choices=sorted(SPLIT_YEARS),
         default="select",
-        help="OMI split to download: select=2023 (day 2), test=2024-2025 (day 10 only)",
+        help="OMI split to download: select=2023 (day 2), test=2025 (day 10 only)",
     )
     parser.add_argument("--keep-he5", action="store_true", help="keep downloaded OMI files")
     parser.add_argument("--skip-omi", action="store_true")

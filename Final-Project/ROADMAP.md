@@ -20,10 +20,10 @@
 
 ### วัน 2 — ข้อมูลตรวจสอบ + ทำความสะอาด + EDA
 - [x] ดึง TEMIS UV index รายวัน (ฟ้าใส + มีเมฆ) ของจุดที่ใกล้ปทุมธานีที่สุด → `dataset/validation/temis_*.csv`
-  > หมายเหตุ: สถานี Bangkok (13.667N, 100.612E) มีเฉพาะ **ฟ้าใส** (คอลัมน์ฟ้ามีเมฆเป็น -1 เพราะอยู่นอกพื้นที่ MSG) ได้ `temis_select_2023.csv` (365 แถว) และ `temis_holdout_2024_2025.csv` (731 แถว ยังไม่ได้เปิดดู)
+  > หมายเหตุ: สถานี Bangkok (13.667N, 100.612E) มีเฉพาะ **ฟ้าใส** (คอลัมน์ฟ้ามีเมฆเป็น -1 เพราะอยู่นอกพื้นที่ MSG) ได้ `temis_select_2023.csv` (365 แถว) และ `temis_holdout_2025.csv` (ยังไม่ได้เปิดดู; ตั้งแต่วัน 6 ไม่เขียนปี 2024 แล้วเพราะซ้อนกับ dev)
 - [x] ดึง OMI OMUVB (UVI + irradiance 305/310/324/380 nm) ด้วย earthaccess → `dataset/validation/omi_*.csv`
-  > ดึงเฉพาะปี 2023 → `omi_select_2023.csv` (364 วัน, missing 24%) ตรวจพิกเซลแล้ว: CSUVindex เทียบ TEMIS ได้ MAE 0.97, r 0.86 ส่วน 2024–2025 ให้รัน `--split test` ในวัน 10
-- [x] **ห้ามใช้ TEMIS / OMI ในการฝึกหรือ tuning**: ปี 2023 ใช้ได้เฉพาะเลือกแหล่ง target ใน `02_source_selection.ipynb` ส่วนปี 2024–2025 เก็บไว้ทดสอบวัน 10 (กฎอยู่ใน `.agents/rules/00-project-context.md` และบังคับผ่าน `load_validation()`)
+  > ดึงเฉพาะปี 2023 → `omi_select_2023.csv` (364 วัน, missing 24%) ตรวจพิกเซลแล้ว: CSUVindex เทียบ TEMIS ได้ MAE 0.97, r 0.86 ส่วนปี 2025 ให้รัน `--split test` ในวัน 10 (ไม่ใช้ปี 2024)
+- [x] **ห้ามใช้ TEMIS / OMI ในการฝึกหรือ tuning**: ปี 2023 ใช้ได้เฉพาะเลือกแหล่ง target ใน `02_source_selection.ipynb` ส่วนปี 2025 เก็บไว้ทดสอบวัน 10 และไม่ใช้ปี 2024 (ซ้อนกับ dev) (กฎอยู่ใน `.agents/rules/00-project-context.md` และบังคับผ่าน `load_validation()`)
 - [x] รวมไฟล์ฝึก (Open-Meteo + NASA POWER) ตามเวลา UTC, จัดการ missing values, ตัดช่วงกลางคืน → `dataset/processed/train_merged.parquet` (13,280 ชม. กลางวัน)
 - [x] กราฟ UV ตามชั่วโมง / เดือน / ฤดูกาล
 - [x] Correlation heatmap
@@ -74,13 +74,17 @@
 ## Phase 2: ML หลัก (วัน 6–10)
 
 ### วัน 6 — Baseline + XGBoost
-- [ ] Linear Regression baseline
-- [ ] XGBoost ทำนาย CMF
-- [ ] วัด MAE / RMSE / R² บนสเกล UVI
+> **การแบ่งข้อมูล (ตัดสินวัน 6, `src/splits.py`):** Train = 2023, Dev = 2024 (ใช้เทียบโมเดล, Optuna และ TimeSeriesSplit วัน 6–9) ส่วน **Test = 2025 ห้ามโหลด ดู หรือคำนวณ metric จนถึงวัน 10** (ทั้ง NASA POWER และ TEMIS/OMI) และไม่ใช้ TEMIS/OMI ปี 2024 เพราะซ้อนกับ dev
+> **จุดที่เคยใช้ปี 2025 ก่อนวัน 6:** ozone climatology v1 สร้างจาก TO3 2023–2025 → **สร้างใหม่เป็น v2 จาก 2023–2024** แล้ว build `train.parquet` ใหม่; notebook EDA 01/03/04/05 และการประมาณ lag/เกณฑ์ ozone ใน `preprocess` เคยใช้ข้อมูลทั้ง 3 ปี (ไม่มีการเลือกโมเดลจากผลเหล่านั้น) ให้จดเป็นข้อจำกัดในรายงาน
+- [x] Linear Regression baseline
+- [x] XGBoost ทำนาย CMF → `source_code/models/cmf_xgb_v1.json` + `cmf_xgb_v1_metrics.json` (params คงที่ ยังไม่ tune)
+- [x] วัด MAE / RMSE / R² บนสเกล UVI → `docs/baseline_dev_2024.csv`, `source_code/notebooks/06_baseline.ipynb`
+  > **dev 2024 (สเกล UVI):** XGBoost MAE **0.462** / RMSE 0.718 / R² 0.943; Linear 0.473; CMF คงที่ 0.703; Open-Meteo `uv_index` ตรง ๆ 1.252 — ค่าที่ทำนาย clip CMF เป็น [0, 1] แต่ไม่ clip target
+  > ⚠️ recall ระดับ**สูงมาก** 0.79 แต่ระดับ**รุนแรงมาก**แค่ **0.11** (6/53 ชม.; โมเดลทำนาย CMF 0.71 ขณะที่ค่าจริง 0.81 ตอนเที่ยงวันฟ้าเปิด) → วัน 9 ต้องตรวจ recall ด้วย q90 ซึ่งเป็นค่าที่ใช้เตือนจริงตาม rules
 
 ### วัน 7 — Multi-Output + TimeSeriesSplit
 - [ ] MultiOutputRegressor ทำนาย [CMF_UVI, CMF_A, CMF_B] (target UVA/UVB จาก NASA POWER)
-- [ ] TimeSeriesSplit 5 folds
+- [ ] TimeSeriesSplit 5 folds (เฉพาะในช่วง 2023–2024 ห้ามรวมปี 2025)
 - [ ] ตรวจ data leakage
 
 ### วัน 8 — Optuna tuning
@@ -93,8 +97,9 @@
 - [ ] ตรวจ coverage ของช่วง (~80%)
 
 ### วัน 10 — ประเมินผล + Risk Engine
+- [ ] refit โมเดลที่เลือกบนข้อมูล 2023–2024 แล้วประเมินบน **test ปี 2025 ครั้งเดียว** (NASA POWER) รายงานแยกจากผล dev
 - [ ] Confusion matrix + Recall ระดับสูง
-- [ ] **ทดสอบอิสระ:** เทียบค่าช่วงเที่ยงวันกับ TEMIS (UVI) และ OMI (UVI, 305/310 nm ≈ UVB, 324/380 nm ≈ UVA) รายงาน MAE แยกตามแหล่ง
+- [ ] **ทดสอบอิสระ:** ดึง OMI ปี 2025 (`fetch_validation --split test`) แล้วเทียบค่าช่วงเที่ยงวันกับ TEMIS (UVI) และ OMI (UVI, 305/310 nm ≈ UVB, 324/380 nm ≈ UVA) **ปี 2025 เท่านั้น** รายงาน MAE แยกตามแหล่ง
 - [ ] `source_code/src/risk.py`: ระดับ WHO, MED, เวลาผิวไหม้, คำแนะนำ SPF/PA
 - [ ] บันทึกโมเดลทั้งหมด
 
