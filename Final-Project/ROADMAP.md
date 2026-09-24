@@ -153,10 +153,19 @@
 ## Phase 3: ML ขั้นสูง (วัน 11–15)
 
 ### วัน 11 — LSTM: เตรียมข้อมูล
-- [ ] sliding window 48 ชม. → 24 ชม.
-- [ ] scale + แบ่งตามเวลา
+- [x] sliding window 48 ชม. → 24 ชม. → `src/sequences.py`, `dataset/processed/seq_v1_{train,dev}.npz`, `source_code/notebooks/11_lstm_data.ipynb`
+  > grid รายชั่วโมงครบ (กลางวัน + กลางคืน) สร้างใหม่จากไฟล์ raw และกรองปี 2025 ออกตั้งแต่อ่าน ค่ากลางวันตรงกับ `train.parquet` ทุกค่า (7,438 แถว ต่างกัน 0.0) **Input มีเฉพาะที่หาได้ตอนใช้งานจริง:** features 23 ตัว (Open-Meteo + เวลา/ตำแหน่ง) ย้อนหลัง 48 ชม. + covariate 24 ชม. ข้างหน้าจากพยากรณ์ Open-Meteo **ไม่มี NASA POWER เป็น input** (`check_inputs()`) target = CMF_UVI t+1…t+24 (mask `uvi_clear < 0.5`); origin ทุกชั่วโมง
+- [x] scale + แบ่งตามเวลา → `source_code/models/seq_spec_v1.json`
+  > train = target ทั้งหมดในปี 2023 (8,540 window), dev = target ทั้งหมดในปี 2024 (8,761 window) ตัด window ที่คร่อมปีทิ้ง z-score ด้วยสถิติปี 2023 เท่านั้น **Baseline dev 2024** (`docs/lstm_baseline_dev_2024.csv`): B1 XGBoost (config วัน 10, fit 2023) + features Open-Meteo MAE **0.450** (recall ≥ สูงมาก 0.83); B2 Open-Meteo `uv_index` 1.162 ⚠️ covariate ย้อนหลังเป็นค่าวิเคราะห์ของ Open-Meteo ไม่ใช่พยากรณ์ที่ออกล่วงหน้าจริง ทุกโมเดลจึงได้พยากรณ์สมบูรณ์เหมือนกัน (ถ้าจะแก้ต้องใช้ Previous Runs API เป็นงานเสริม)
 
 ### วัน 12 — LSTM: ฝึกและเทียบผล
+> **ประกาศเกณฑ์ในวัน 11 (ก่อนฝึก LSTM):**
+> - **ตัดสินบน dev 2024 เท่านั้น** (LSTM ฝึกบน window ปี 2023 และใช้ `window_metrics()` ตัวเดียวกับ baseline บน window ชุดเดียวกัน) LSTM **ชนะ** baseline B1 (XGBoost + features Open-Meteo, MAE 0.450) ก็ต่อเมื่อ
+>   1. MAE ของ UVI (ทุก lead 1–24 ชม. เฉพาะชั่วโมงกลางวัน) **ต่ำกว่า B1 เกิน 0.02 UVI** และ
+>   2. recall ของการเตือน ≥ สูงมาก (ค่าเดี่ยว) **ลดลงจาก B1 ไม่เกิน 0.03**
+>
+>   ถ้าไม่ผ่านทั้งสองข้อ ให้รายงานตามจริงและ **ใช้ XGBoost ในแอป** (รวมพยากรณ์ 6–24 ชม.)
+> - **Test 2025 ประเมินครั้งเดียว** หลังตัดสินบน dev แล้ว (LSTM refit บน 2023–2024 เทียบ XGBoost final วัน 10 บน window ปี 2025 และ guard รันครั้งเดียวแบบวัน 10) ใช้รายงานเท่านั้น ไม่เปลี่ยนการตัดสินใจ: **L1** MAE ของ LSTM < 1.0 UVI; **L2** MAE ของ LSTM ต่ำกว่า XGBoost final เกิน 0.02 UVI
 - [ ] ฝึก LSTM/GRU พยากรณ์ 6–24 ชม.
 - [ ] เทียบกับพยากรณ์ Open-Meteo
 
