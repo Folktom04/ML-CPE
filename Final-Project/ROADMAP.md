@@ -104,8 +104,12 @@
 → `source_code/src/tune.py`, `source_code/notebooks/08_optuna.ipynb`, `docs/tuning_dev_2024.csv`, `docs/cv_folds_2023_2024_tuned.csv`, `docs/figures/optuna_*.png`
 
 ### วัน 9 — Quantile Regression
-- [ ] quantile 0.1 / 0.5 / 0.9
-- [ ] ตรวจ coverage ของช่วง (~80%)
+- [x] quantile 0.1 / 0.5 / 0.9 (+ 0.75 ไว้เทียบการเตือน) → XGBoost `reg:quantileerror` ทำนาย CMF_UVI (params วัน 8, weight `uvi_clear²`, เรียงลำดับ quantile ต่อแถว) → `source_code/models/cmf_uvi_quantile_xgb_v1.json` + metrics
+- [x] ตรวจ coverage ของช่วง (~80%) → `docs/quantile_cv_folds.csv`, `docs/quantile_dev_2024.csv`
+  > ช่วงดิบ [q10, q90] **แคบเกินไป**: coverage CV fold 3–5 = 0.593, dev 2024 = 0.578 → ใช้ **CQR** ตามกฎที่ประกาศไว้ (split conformal บนสเกล CMF) ตรวจ: Q จาก fold 3–4 ทำให้ coverage ของ fold 5 เป็น 0.863; dev 2024 (Q จากปี 2023 = +0.050) ได้ **0.837** แต่ช่วงกว้างขึ้นจาก 0.81 เป็น 1.50 UVI; Q ของโมเดลสุดท้าย = **+0.038** (fold 3–5) ข้อจำกัด: coverage ไม่สม่ำเสมอ ระดับสูงมาก 0.76, รุนแรงมาก 0.70 (n = 10), เดือน มี.ค./ก.ค. 0.73 เพราะใช้ Q ค่าเดียว
+- [x] เทียบการเตือนด้วย q50 / q75 / q90 (recall, precision, false alarm rate) บน dev 2024 และ CV fold 3–5 → `docs/quantile_alerts_*.csv`, `docs/figures/quantile_alerts.png`
+  > เกณฑ์ที่ประกาศก่อนดูผล: เลือก quantile ต่ำสุดที่ recall รุนแรงมาก ≥ 0.8 และ precision ≥ สูงมาก ≥ 0.5 (CV fold 3–5) → **ไม่มีตัวไหนผ่าน ใช้ q90 (หลัง CQR) ตาม rules** CV fold 3–5: q50 recall รุนแรงมาก 0.11, q75 0.13, **q90 0.62** (precision 0.33); เตือน ≥ สูงมากด้วย q90 ได้ recall 0.99, precision 0.60, false alarm rate 0.16 บน dev 2024 ชั่วโมงรุนแรงมากทั้ง 53 ชม. ได้รับการเตือนอย่างน้อยระดับสูงมาก → วัน 22 ต้องใช้ cooldown/hysteresis เพราะ false alarm สูง
+→ `source_code/src/quantile.py`, `source_code/notebooks/09_quantile.ipynb`, `docs/figures/quantile_*.png` (ตัวเลข dev 2024 ยังมี optimistic bias จากวัน 8)
 
 ### วัน 10 — ประเมินผล + Risk Engine
 - [ ] refit โมเดลที่เลือกบนข้อมูล 2023–2024 แล้วประเมินบน **test ปี 2025 ครั้งเดียว** (NASA POWER) รายงานแยกจากผล dev

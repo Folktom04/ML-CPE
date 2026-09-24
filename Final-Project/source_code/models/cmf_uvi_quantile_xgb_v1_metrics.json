@@ -1,0 +1,902 @@
+{
+  "model": "XGBRegressor reg:quantileerror (CMF_UVI)",
+  "quantiles": [
+    0.1,
+    0.5,
+    0.75,
+    0.9
+  ],
+  "created": "2026-09-24",
+  "features": [
+    "cos_sza",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "uv_index",
+    "uv_index_clear_sky",
+    "cloud_cover",
+    "cloud_cover_low",
+    "cloud_cover_mid",
+    "cloud_cover_high",
+    "relative_humidity_2m",
+    "temperature_2m",
+    "shortwave_radiation",
+    "direct_radiation",
+    "diffuse_radiation",
+    "precipitation",
+    "om_kt",
+    "om_diffuse_fraction",
+    "aerosol_optical_depth",
+    "dust",
+    "pm2_5",
+    "ozone"
+  ],
+  "params": {
+    "n_estimators": 850,
+    "learning_rate": 0.01092265347287312,
+    "max_depth": 10,
+    "subsample": 0.876321273972357,
+    "colsample_bytree": 0.5249129521941819,
+    "min_child_weight": 8.809610396480752,
+    "reg_lambda": 0.002463511356175994,
+    "random_state": 42,
+    "reg_alpha": 0.0003529861396838399,
+    "gamma": 1.991269195547748e-05,
+    "objective": "reg:quantileerror",
+    "quantile_alpha": [
+      0.1,
+      0.5,
+      0.75,
+      0.9
+    ]
+  },
+  "sample_weight": "uvi_clear^2",
+  "fit": "train 2023 (day 10 refits on 2023-2024)",
+  "coverage_rule": "[q10, q90] coverage on pooled CV folds 3-5 in [0.75, 0.85]",
+  "raw_cv_coverage": 0.5932203389830508,
+  "cqr": {
+    "applied": true,
+    "q_final_cmf": 0.037926810234673924,
+    "q_dev_cmf": 0.05033184396159335,
+    "check": {
+      "q_folds34": 0.04319968072636454,
+      "fold5_raw": {
+        "n": 1239,
+        "coverage": 0.6521388216303471,
+        "below": 0.1824051654560129,
+        "above": 0.16545601291364004,
+        "width": 0.7903301135054833
+      },
+      "fold5_cqr": {
+        "n": 1239,
+        "coverage": 0.8627925746569814,
+        "below": 0.09362389023405973,
+        "above": 0.043583535108958835,
+        "width": 1.3282264478399157
+      }
+    },
+    "note": "served interval = [q10 - Q, q90 + Q] on the CMF scale"
+  },
+  "alert_rule": "lowest of ['q50', 'q75', 'q90'] with Extreme recall >= 0.8 and >= Very high precision >= 0.5 on pooled CV folds 3-5, else q90",
+  "alert_quantile": "q90",
+  "alert_rule_passed": false,
+  "alert_reason": "q50: Extreme recall 0.113, >=Very high precision 0.765; q75: Extreme recall 0.132, >=Very high precision 0.732; q90: Extreme recall 0.623, >=Very high precision 0.596 -> none passes, fall back to q90 (project rule)",
+  "cv_folds_3_5": {
+    "raw": {
+      "interval": {
+        "n": 3717,
+        "coverage": 0.5932203389830508,
+        "below": 0.23432875975248857,
+        "above": 0.17245090126446058,
+        "width": 0.8423217826793368
+      },
+      "pinball": {
+        "q10": 0.14191016597028042,
+        "q50": 0.23294265878308604,
+        "q75": 0.17750236224319263,
+        "q90": 0.10629543309342307
+      },
+      "q50": {
+        "n": 3717,
+        "mae": 0.4658853175661721,
+        "rmse": 0.7321742118321057,
+        "r2": 0.9404018266979183,
+        "bias": 0.12504461719365842
+      },
+      "alerts": [
+        {
+          "quantile": "q50",
+          "level": "Very high",
+          "n_events": 704,
+          "n_alerts": 773,
+          "tp": 591,
+          "fp": 182,
+          "fn": 113,
+          "recall": 0.8394886363636364,
+          "precision": 0.7645536869340233,
+          "false_alarm_rate": 0.0604049120477929
+        },
+        {
+          "quantile": "q50",
+          "level": "Extreme",
+          "n_events": 53,
+          "n_alerts": 10,
+          "tp": 6,
+          "fp": 4,
+          "fn": 47,
+          "recall": 0.11320754716981132,
+          "precision": 0.6,
+          "false_alarm_rate": 0.001091703056768559
+        },
+        {
+          "quantile": "q75",
+          "level": "Very high",
+          "n_events": 704,
+          "n_alerts": 891,
+          "tp": 652,
+          "fp": 239,
+          "fn": 52,
+          "recall": 0.9261363636363636,
+          "precision": 0.7317620650953984,
+          "false_alarm_rate": 0.07932293395287089
+        },
+        {
+          "quantile": "q75",
+          "level": "Extreme",
+          "n_events": 53,
+          "n_alerts": 14,
+          "tp": 7,
+          "fp": 7,
+          "fn": 46,
+          "recall": 0.1320754716981132,
+          "precision": 0.5,
+          "false_alarm_rate": 0.001910480349344978
+        },
+        {
+          "quantile": "q90",
+          "level": "Very high",
+          "n_events": 704,
+          "n_alerts": 981,
+          "tp": 672,
+          "fp": 309,
+          "fn": 32,
+          "recall": 0.9545454545454546,
+          "precision": 0.6850152905198776,
+          "false_alarm_rate": 0.10255559243279123
+        },
+        {
+          "quantile": "q90",
+          "level": "Extreme",
+          "n_events": 53,
+          "n_alerts": 28,
+          "tp": 14,
+          "fp": 14,
+          "fn": 39,
+          "recall": 0.2641509433962264,
+          "precision": 0.5,
+          "false_alarm_rate": 0.003820960698689956
+        }
+      ],
+      "who_q50": {
+        "recall": {
+          "Low": 0.9560439560439561,
+          "Moderate": 0.7854209445585215,
+          "High": 0.7294117647058823,
+          "Very high": 0.8218125960061444,
+          "Extreme": 0.11320754716981132
+        },
+        "labels": [
+          "Low",
+          "Moderate",
+          "High",
+          "Very high",
+          "Extreme"
+        ],
+        "confusion": [
+          [
+            1218,
+            53,
+            3,
+            0,
+            0
+          ],
+          [
+            35,
+            765,
+            154,
+            20,
+            0
+          ],
+          [
+            0,
+            45,
+            558,
+            161,
+            1
+          ],
+          [
+            0,
+            0,
+            113,
+            535,
+            3
+          ],
+          [
+            0,
+            0,
+            0,
+            47,
+            6
+          ]
+        ]
+      },
+      "who_q90": {
+        "recall": {
+          "Low": 0.9175824175824175,
+          "Moderate": 0.7535934291581109,
+          "High": 0.6091503267973856,
+          "Very high": 0.9308755760368663,
+          "Extreme": 0.2641509433962264
+        },
+        "labels": [
+          "Low",
+          "Moderate",
+          "High",
+          "Very high",
+          "Extreme"
+        ],
+        "confusion": [
+          [
+            1169,
+            102,
+            2,
+            1,
+            0
+          ],
+          [
+            6,
+            734,
+            207,
+            27,
+            0
+          ],
+          [
+            0,
+            18,
+            466,
+            280,
+            1
+          ],
+          [
+            0,
+            0,
+            32,
+            606,
+            13
+          ],
+          [
+            0,
+            0,
+            0,
+            39,
+            14
+          ]
+        ]
+      }
+    },
+    "served": {
+      "interval": {
+        "n": 3717,
+        "coverage": 0.800376647834275,
+        "below": 0.13855259617971483,
+        "above": 0.06107075598601022,
+        "width": 1.3607755311203564
+      },
+      "pinball": {
+        "q10": 0.12081522395894641,
+        "q50": 0.23294265878308604,
+        "q75": 0.17750236224319263,
+        "q90": 0.0918389274239908
+      },
+      "q50": {
+        "n": 3717,
+        "mae": 0.4658853175661721,
+        "rmse": 0.7321742118321057,
+        "r2": 0.9404018266979183,
+        "bias": 0.12504461719365842
+      },
+      "alerts": [
+        {
+          "quantile": "q50",
+          "level": "Very high",
+          "n_events": 704,
+          "n_alerts": 773,
+          "tp": 591,
+          "fp": 182,
+          "fn": 113,
+          "recall": 0.8394886363636364,
+          "precision": 0.7645536869340233,
+          "false_alarm_rate": 0.0604049120477929
+        },
+        {
+          "quantile": "q50",
+          "level": "Extreme",
+          "n_events": 53,
+          "n_alerts": 10,
+          "tp": 6,
+          "fp": 4,
+          "fn": 47,
+          "recall": 0.11320754716981132,
+          "precision": 0.6,
+          "false_alarm_rate": 0.001091703056768559
+        },
+        {
+          "quantile": "q75",
+          "level": "Very high",
+          "n_events": 704,
+          "n_alerts": 891,
+          "tp": 652,
+          "fp": 239,
+          "fn": 52,
+          "recall": 0.9261363636363636,
+          "precision": 0.7317620650953984,
+          "false_alarm_rate": 0.07932293395287089
+        },
+        {
+          "quantile": "q75",
+          "level": "Extreme",
+          "n_events": 53,
+          "n_alerts": 14,
+          "tp": 7,
+          "fp": 7,
+          "fn": 46,
+          "recall": 0.1320754716981132,
+          "precision": 0.5,
+          "false_alarm_rate": 0.001910480349344978
+        },
+        {
+          "quantile": "q90",
+          "level": "Very high",
+          "n_events": 704,
+          "n_alerts": 1168,
+          "tp": 696,
+          "fp": 472,
+          "fn": 8,
+          "recall": 0.9886363636363636,
+          "precision": 0.5958904109589042,
+          "false_alarm_rate": 0.15665449717889146
+        },
+        {
+          "quantile": "q90",
+          "level": "Extreme",
+          "n_events": 53,
+          "n_alerts": 99,
+          "tp": 33,
+          "fp": 66,
+          "fn": 20,
+          "recall": 0.6226415094339622,
+          "precision": 0.3333333333333333,
+          "false_alarm_rate": 0.018013100436681223
+        }
+      ],
+      "who_q50": {
+        "recall": {
+          "Low": 0.9560439560439561,
+          "Moderate": 0.7854209445585215,
+          "High": 0.7294117647058823,
+          "Very high": 0.8218125960061444,
+          "Extreme": 0.11320754716981132
+        },
+        "labels": [
+          "Low",
+          "Moderate",
+          "High",
+          "Very high",
+          "Extreme"
+        ],
+        "confusion": [
+          [
+            1218,
+            53,
+            3,
+            0,
+            0
+          ],
+          [
+            35,
+            765,
+            154,
+            20,
+            0
+          ],
+          [
+            0,
+            45,
+            558,
+            161,
+            1
+          ],
+          [
+            0,
+            0,
+            113,
+            535,
+            3
+          ],
+          [
+            0,
+            0,
+            0,
+            47,
+            6
+          ]
+        ]
+      },
+      "who_q90": {
+        "recall": {
+          "Low": 0.8555729984301413,
+          "Moderate": 0.6950718685831622,
+          "High": 0.4444444444444444,
+          "Very high": 0.8894009216589862,
+          "Extreme": 0.6226415094339622
+        },
+        "labels": [
+          "Low",
+          "Moderate",
+          "High",
+          "Very high",
+          "Extreme"
+        ],
+        "confusion": [
+          [
+            1090,
+            180,
+            3,
+            1,
+            0
+          ],
+          [
+            0,
+            677,
+            246,
+            51,
+            0
+          ],
+          [
+            0,
+            5,
+            340,
+            418,
+            2
+          ],
+          [
+            0,
+            0,
+            8,
+            579,
+            64
+          ],
+          [
+            0,
+            0,
+            0,
+            20,
+            33
+          ]
+        ]
+      }
+    }
+  },
+  "dev_2024": {
+    "raw": {
+      "interval": {
+        "n": 3726,
+        "coverage": 0.5778314546430489,
+        "below": 0.24932903918411164,
+        "above": 0.1728395061728395,
+        "width": 0.8138791610300598
+      },
+      "pinball": {
+        "q10": 0.14662978071176974,
+        "q50": 0.23391687616876927,
+        "q75": 0.1780814201965145,
+        "q90": 0.10729464028059567
+      },
+      "q50": {
+        "n": 3726,
+        "mae": 0.46783375233753854,
+        "rmse": 0.7385023378687244,
+        "r2": 0.9393183570584956,
+        "bias": 0.13848940904626078
+      },
+      "alerts": [
+        {
+          "quantile": "q50",
+          "level": "Very high",
+          "n_events": 704,
+          "n_alerts": 778,
+          "tp": 595,
+          "fp": 183,
+          "fn": 109,
+          "recall": 0.8451704545454546,
+          "precision": 0.7647814910025706,
+          "false_alarm_rate": 0.06055592322964924
+        },
+        {
+          "quantile": "q50",
+          "level": "Extreme",
+          "n_events": 53,
+          "n_alerts": 10,
+          "tp": 6,
+          "fp": 4,
+          "fn": 47,
+          "recall": 0.11320754716981132,
+          "precision": 0.6,
+          "false_alarm_rate": 0.0010890280424720937
+        },
+        {
+          "quantile": "q75",
+          "level": "Very high",
+          "n_events": 704,
+          "n_alerts": 895,
+          "tp": 651,
+          "fp": 244,
+          "fn": 53,
+          "recall": 0.9247159090909091,
+          "precision": 0.7273743016759776,
+          "false_alarm_rate": 0.08074123097286565
+        },
+        {
+          "quantile": "q75",
+          "level": "Extreme",
+          "n_events": 53,
+          "n_alerts": 15,
+          "tp": 7,
+          "fp": 8,
+          "fn": 46,
+          "recall": 0.1320754716981132,
+          "precision": 0.4666666666666667,
+          "false_alarm_rate": 0.0021780560849441874
+        },
+        {
+          "quantile": "q90",
+          "level": "Very high",
+          "n_events": 704,
+          "n_alerts": 987,
+          "tp": 672,
+          "fp": 315,
+          "fn": 32,
+          "recall": 0.9545454545454546,
+          "precision": 0.6808510638297872,
+          "false_alarm_rate": 0.1042356055592323
+        },
+        {
+          "quantile": "q90",
+          "level": "Extreme",
+          "n_events": 53,
+          "n_alerts": 28,
+          "tp": 14,
+          "fp": 14,
+          "fn": 39,
+          "recall": 0.2641509433962264,
+          "precision": 0.5,
+          "false_alarm_rate": 0.0038115981486523277
+        }
+      ],
+      "who_q50": {
+        "recall": {
+          "Low": 0.9553641346906813,
+          "Moderate": 0.7768679631525077,
+          "High": 0.73046875,
+          "Very high": 0.8279569892473119,
+          "Extreme": 0.11320754716981132
+        },
+        "labels": [
+          "Low",
+          "Moderate",
+          "High",
+          "Very high",
+          "Extreme"
+        ],
+        "confusion": [
+          [
+            1220,
+            54,
+            3,
+            0,
+            0
+          ],
+          [
+            36,
+            759,
+            162,
+            20,
+            0
+          ],
+          [
+            0,
+            44,
+            561,
+            162,
+            1
+          ],
+          [
+            0,
+            0,
+            109,
+            539,
+            3
+          ],
+          [
+            0,
+            0,
+            0,
+            47,
+            6
+          ]
+        ]
+      },
+      "who_q90": {
+        "recall": {
+          "Low": 0.9146436961628818,
+          "Moderate": 0.7543500511770727,
+          "High": 0.6119791666666666,
+          "Very high": 0.9308755760368663,
+          "Extreme": 0.2641509433962264
+        },
+        "labels": [
+          "Low",
+          "Moderate",
+          "High",
+          "Very high",
+          "Extreme"
+        ],
+        "confusion": [
+          [
+            1168,
+            105,
+            3,
+            1,
+            0
+          ],
+          [
+            5,
+            737,
+            204,
+            31,
+            0
+          ],
+          [
+            0,
+            15,
+            470,
+            282,
+            1
+          ],
+          [
+            0,
+            0,
+            32,
+            606,
+            13
+          ],
+          [
+            0,
+            0,
+            0,
+            39,
+            14
+          ]
+        ]
+      }
+    },
+    "served": {
+      "interval": {
+        "n": 3726,
+        "coverage": 0.8368223295759528,
+        "below": 0.12130971551261406,
+        "above": 0.04186795491143317,
+        "width": 1.5015813291959657
+      },
+      "pinball": {
+        "q10": 0.12031136279803903,
+        "q50": 0.23391687616876927,
+        "q75": 0.1780814201965145,
+        "q90": 0.09446721243862805
+      },
+      "q50": {
+        "n": 3726,
+        "mae": 0.46783375233753854,
+        "rmse": 0.7385023378687244,
+        "r2": 0.9393183570584956,
+        "bias": 0.13848940904626078
+      },
+      "alerts": [
+        {
+          "quantile": "q50",
+          "level": "Very high",
+          "n_events": 704,
+          "n_alerts": 778,
+          "tp": 595,
+          "fp": 183,
+          "fn": 109,
+          "recall": 0.8451704545454546,
+          "precision": 0.7647814910025706,
+          "false_alarm_rate": 0.06055592322964924
+        },
+        {
+          "quantile": "q50",
+          "level": "Extreme",
+          "n_events": 53,
+          "n_alerts": 10,
+          "tp": 6,
+          "fp": 4,
+          "fn": 47,
+          "recall": 0.11320754716981132,
+          "precision": 0.6,
+          "false_alarm_rate": 0.0010890280424720937
+        },
+        {
+          "quantile": "q75",
+          "level": "Very high",
+          "n_events": 704,
+          "n_alerts": 895,
+          "tp": 651,
+          "fp": 244,
+          "fn": 53,
+          "recall": 0.9247159090909091,
+          "precision": 0.7273743016759776,
+          "false_alarm_rate": 0.08074123097286565
+        },
+        {
+          "quantile": "q75",
+          "level": "Extreme",
+          "n_events": 53,
+          "n_alerts": 15,
+          "tp": 7,
+          "fp": 8,
+          "fn": 46,
+          "recall": 0.1320754716981132,
+          "precision": 0.4666666666666667,
+          "false_alarm_rate": 0.0021780560849441874
+        },
+        {
+          "quantile": "q90",
+          "level": "Very high",
+          "n_events": 704,
+          "n_alerts": 1213,
+          "tp": 699,
+          "fp": 514,
+          "fn": 5,
+          "recall": 0.9928977272727273,
+          "precision": 0.5762572135201979,
+          "false_alarm_rate": 0.17008603573792191
+        },
+        {
+          "quantile": "q90",
+          "level": "Extreme",
+          "n_events": 53,
+          "n_alerts": 132,
+          "tp": 37,
+          "fp": 95,
+          "fn": 16,
+          "recall": 0.6981132075471698,
+          "precision": 0.2803030303030303,
+          "false_alarm_rate": 0.025864416008712223
+        }
+      ],
+      "who_q50": {
+        "recall": {
+          "Low": 0.9553641346906813,
+          "Moderate": 0.7768679631525077,
+          "High": 0.73046875,
+          "Very high": 0.8279569892473119,
+          "Extreme": 0.11320754716981132
+        },
+        "labels": [
+          "Low",
+          "Moderate",
+          "High",
+          "Very high",
+          "Extreme"
+        ],
+        "confusion": [
+          [
+            1220,
+            54,
+            3,
+            0,
+            0
+          ],
+          [
+            36,
+            759,
+            162,
+            20,
+            0
+          ],
+          [
+            0,
+            44,
+            561,
+            162,
+            1
+          ],
+          [
+            0,
+            0,
+            109,
+            539,
+            3
+          ],
+          [
+            0,
+            0,
+            0,
+            47,
+            6
+          ]
+        ]
+      },
+      "who_q90": {
+        "recall": {
+          "Low": 0.8425998433829287,
+          "Moderate": 0.6663254861821903,
+          "High": 0.4010416666666667,
+          "Very high": 0.8494623655913979,
+          "Extreme": 0.6981132075471698
+        },
+        "labels": [
+          "Low",
+          "Moderate",
+          "High",
+          "Very high",
+          "Extreme"
+        ],
+        "confusion": [
+          [
+            1076,
+            196,
+            4,
+            1,
+            0
+          ],
+          [
+            0,
+            651,
+            270,
+            56,
+            0
+          ],
+          [
+            0,
+            3,
+            308,
+            455,
+            2
+          ],
+          [
+            0,
+            0,
+            5,
+            553,
+            93
+          ],
+          [
+            0,
+            0,
+            0,
+            16,
+            37
+          ]
+        ]
+      }
+    }
+  },
+  "note": "dev 2024 is optimistic after day-8 tuning; test 2025 on day 10 is unbiased",
+  "mae": 0.46783375233753854,
+  "rmse": 0.7385023378687244,
+  "r2": 0.9393183570584956,
+  "coverage": 0.8368223295759528
+}
