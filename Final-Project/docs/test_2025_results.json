@@ -1,0 +1,382 @@
+{
+  "created": "2026-09-24",
+  "fit": "2023-2024 (refit), evaluated once on 2025",
+  "features": [
+    "cos_sza",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "uv_index",
+    "uv_index_clear_sky",
+    "cloud_cover",
+    "cloud_cover_low",
+    "cloud_cover_mid",
+    "cloud_cover_high",
+    "relative_humidity_2m",
+    "temperature_2m",
+    "shortwave_radiation",
+    "direct_radiation",
+    "diffuse_radiation",
+    "precipitation",
+    "om_kt",
+    "om_diffuse_fraction",
+    "aerosol_optical_depth",
+    "dust",
+    "pm2_5",
+    "ozone"
+  ],
+  "cqr_q_cmf": 0.037926810234673924,
+  "constant_cmf": 0.6212813384560849,
+  "n_test_rows": 3718,
+  "hourly_vs_nasa": {
+    "vs_nasa": {
+      "model": {
+        "n": 3718,
+        "mae": 0.4792695027210836,
+        "bias": 0.10619160040590624,
+        "rmse": 0.7516022980529706,
+        "r": 0.9674783984253763
+      },
+      "open_meteo": {
+        "n": 3718,
+        "mae": 1.2444163528778913,
+        "bias": 0.003851533082302311,
+        "rmse": 1.6785607259829074,
+        "r": 0.8205033738380841
+      },
+      "physics_clear": {
+        "n": 3718,
+        "mae": 2.4714360507793067,
+        "bias": 2.4714360507793067,
+        "rmse": 3.0524648999378776,
+        "r": 0.93879076707096
+      },
+      "physics_const_cmf": {
+        "n": 3718,
+        "mae": 0.7081455927246996,
+        "bias": -0.11646929278467807,
+        "rmse": 1.0226448567553923,
+        "r": 0.9387907670709597
+      }
+    },
+    "uva_vs_nasa": {
+      "n": 3718,
+      "mae": 2.909569252447997,
+      "bias": 0.7484730711935462,
+      "rmse": 4.283613912138701,
+      "r": 0.953157340566145
+    },
+    "uvb_vs_nasa": {
+      "n": 3718,
+      "mae": 0.0881376998134552,
+      "bias": 0.020496913199237646,
+      "rmse": 0.13808948431743606,
+      "r": 0.9693281211661713
+    },
+    "interval": {
+      "n": 3718,
+      "coverage": 0.8058095750403442,
+      "below": 0.13986013986013987,
+      "above": 0.05433028509951587,
+      "width": 1.4632440664080697
+    },
+    "alerts_q90": {
+      "Very high": {
+        "n_events": 654,
+        "n_alerts": 1144,
+        "tp": 645,
+        "fp": 499,
+        "fn": 9,
+        "recall": 0.9862385321100917,
+        "precision": 0.5638111888111889,
+        "false_alarm_rate": 0.16285900783289817
+      },
+      "Extreme": {
+        "n_events": 23,
+        "n_alerts": 110,
+        "tp": 19,
+        "fp": 91,
+        "fn": 4,
+        "recall": 0.8260869565217391,
+        "precision": 0.17272727272727273,
+        "false_alarm_rate": 0.02462787550744249
+      }
+    },
+    "who_q90": {
+      "labels": [
+        "Low",
+        "Moderate",
+        "High",
+        "Very high",
+        "Extreme"
+      ],
+      "confusion": [
+        [
+          1087,
+          201,
+          5,
+          3,
+          0
+        ],
+        [
+          0,
+          651,
+          297,
+          67,
+          0
+        ],
+        [
+          0,
+          5,
+          319,
+          425,
+          4
+        ],
+        [
+          0,
+          0,
+          9,
+          535,
+          87
+        ],
+        [
+          0,
+          0,
+          0,
+          4,
+          19
+        ]
+      ],
+      "recall": {
+        "Low": 0.8387345679012346,
+        "Moderate": 0.6413793103448275,
+        "High": 0.42363877822045154,
+        "Very high": 0.8478605388272583,
+        "Extreme": 0.8260869565217391
+      }
+    }
+  },
+  "validation": {
+    "omi": {
+      "model": {
+        "n": 269,
+        "mae": 1.320413001483193,
+        "bias": -0.8219733880086043,
+        "rmse": 1.6614328663488802,
+        "r": 0.6307937354959401
+      },
+      "open_meteo": {
+        "n": 269,
+        "mae": 2.3561118473649296,
+        "bias": -2.119619472551905,
+        "rmse": 2.9973291173024004,
+        "r": 0.33796205852436906
+      },
+      "physics_clear": {
+        "n": 269,
+        "mae": 3.214822854899252,
+        "bias": 3.214822854899252,
+        "rmse": 3.6620192687127076,
+        "r": 0.5047193031034652
+      },
+      "physics_const_cmf": {
+        "n": 269,
+        "mae": 1.9601066416422368,
+        "bias": -1.4898286550641773,
+        "rmse": 2.1889958250710633,
+        "r": 0.5047193031034655
+      },
+      "nasa_power": {
+        "n": 269,
+        "mae": 1.3297755985036583,
+        "bias": -0.966130608365091,
+        "rmse": 1.7095023844752313,
+        "r": 0.6616486844533794
+      }
+    },
+    "temis_all_days": {
+      "physics_clear": {
+        "n": 365,
+        "mae": 0.7635034189209574,
+        "bias": 0.6892940311791774,
+        "rmse": 0.8850600397499143,
+        "r": 0.9486149616523735
+      }
+    },
+    "temis_clear_days": {
+      "model": {
+        "n": 62,
+        "mae": 1.360178727371398,
+        "bias": -1.3589921646002792,
+        "rmse": 1.6390671129182701,
+        "r": 0.9029787941829737
+      },
+      "open_meteo": {
+        "n": 62,
+        "mae": 2.3096682406826257,
+        "bias": -2.3096682406826257,
+        "rmse": 2.4705579129109454,
+        "r": 0.9719986309778494
+      },
+      "physics_clear": {
+        "n": 62,
+        "mae": 0.8562520394039164,
+        "bias": 0.8310868605717046,
+        "rmse": 0.9420209078062981,
+        "r": 0.9664941625884345
+      },
+      "physics_const_cmf": {
+        "n": 62,
+        "mae": 3.240739724737155,
+        "bias": -3.240739724737155,
+        "rmse": 3.3067620387382566,
+        "r": 0.9664941625884338
+      },
+      "nasa_power": {
+        "n": 62,
+        "mae": 1.580356325128034,
+        "bias": -1.580356325128034,
+        "rmse": 1.9378945118312183,
+        "r": 0.7621492709872592
+      }
+    },
+    "irradiance": {
+      "uvb_vs_Irradiance305": {
+        "n": 269,
+        "pearson_model": 0.6455740571574081,
+        "spearman_model": 0.6374521444820507,
+        "pearson_physics_clear": 0.5246297789160328
+      },
+      "uvb_vs_Irradiance310": {
+        "n": 269,
+        "pearson_model": 0.6303605354896624,
+        "spearman_model": 0.6249378880072993,
+        "pearson_physics_clear": 0.435994705667469
+      },
+      "uva_vs_Irradiance324": {
+        "n": 269,
+        "pearson_model": 0.532616702929568,
+        "spearman_model": 0.4795896601256419,
+        "pearson_physics_clear": 0.3132290288161594
+      },
+      "uva_vs_Irradiance380": {
+        "n": 269,
+        "pearson_model": 0.5715766755018757,
+        "spearman_model": 0.527470454419353,
+        "pearson_physics_clear": 0.20320122748421657
+      }
+    }
+  },
+  "criteria": [
+    {
+      "id": "T1",
+      "desc": "model hourly UVI MAE vs NASA POWER 2025 (checkpoint)",
+      "value": 0.4792695027,
+      "threshold": "< 1.0",
+      "passed": true
+    },
+    {
+      "id": "T1b",
+      "desc": "model hourly MAE < every baseline's MAE vs NASA POWER 2025",
+      "value": 0.4792695027,
+      "threshold": "< min baseline 0.708",
+      "passed": true
+    },
+    {
+      "id": "T2a",
+      "desc": "model noon MAE vs OMI all-sky <= 1.5 UVI",
+      "value": 1.3204130015,
+      "threshold": "<= 1.5",
+      "passed": true
+    },
+    {
+      "id": "T2b",
+      "desc": "model noon MAE vs OMI <= NASA POWER noon MAE vs OMI + 0.3",
+      "value": 1.3204130015,
+      "threshold": "<= NASA 1.330 + 0.3",
+      "passed": true
+    },
+    {
+      "id": "T2c",
+      "desc": "model noon MAE vs OMI < every baseline's MAE vs OMI",
+      "value": 1.3204130015,
+      "threshold": "< min baseline 1.960",
+      "passed": true
+    },
+    {
+      "id": "T3a",
+      "desc": "physics clear-sky noon UVI vs TEMIS (all days) MAE <= 1.0",
+      "value": 0.7635034189,
+      "threshold": "<= 1.0",
+      "passed": true
+    },
+    {
+      "id": "T3b",
+      "desc": "model noon MAE vs TEMIS on clear days <= 1.5 UVI",
+      "value": 1.3601787274,
+      "threshold": "<= 1.5",
+      "passed": true
+    },
+    {
+      "id": "T3c",
+      "desc": "model noon MAE vs TEMIS on clear days <= NASA POWER's + 0.3",
+      "value": 1.3601787274,
+      "threshold": "<= NASA 1.580 + 0.3",
+      "passed": true
+    },
+    {
+      "id": "T4",
+      "desc": "Pearson r model UVB vs OMI 305/310 nm and UVA vs 324/380 nm >= 0.7",
+      "value": 0.5326167029,
+      "threshold": ">= 0.7 (all 4 pairs)",
+      "passed": false
+    },
+    {
+      "id": "T4b",
+      "desc": "each T4 r >= the physics clear-sky r for the same pair",
+      "value": 0.1209442782,
+      "threshold": ">= 0 (model r - physics r, all pairs)",
+      "passed": true
+    },
+    {
+      "id": "T5",
+      "desc": "coverage of served [q10-Q, q90+Q] vs NASA hourly in [0.75, 0.85]",
+      "value": 0.805809575,
+      "threshold": "in [0.75, 0.85]",
+      "passed": true
+    },
+    {
+      "id": "T6a",
+      "desc": "q90 alert >= Very high: recall >= 0.90",
+      "value": 0.9862385321,
+      "threshold": ">= 0.90",
+      "passed": true
+    },
+    {
+      "id": "T6b",
+      "desc": "q90 alert >= Very high: precision >= 0.50",
+      "value": 0.5638111888,
+      "threshold": ">= 0.50",
+      "passed": true
+    },
+    {
+      "id": "T6c",
+      "desc": "q90 alert >= Very high: false alarm rate <= 0.20",
+      "value": 0.1628590078,
+      "threshold": "<= 0.20",
+      "passed": true
+    },
+    {
+      "id": "T6d",
+      "desc": "q90 alert Extreme: recall >= 0.80",
+      "value": 0.8260869565,
+      "threshold": ">= 0.80",
+      "passed": true
+    }
+  ],
+  "models": {
+    "multi_output": "cmf_multi_xgb_final.joblib",
+    "quantile": "cmf_uvi_quantile_xgb_final.ubj.gz"
+  }
+}

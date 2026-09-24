@@ -1,0 +1,51 @@
+{
+  "model": "cmf_multi_xgb_final.joblib",
+  "created": "2026-09-24",
+  "features": [
+    "cos_sza",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "uv_index",
+    "uv_index_clear_sky",
+    "cloud_cover",
+    "cloud_cover_low",
+    "cloud_cover_mid",
+    "cloud_cover_high",
+    "relative_humidity_2m",
+    "temperature_2m",
+    "shortwave_radiation",
+    "direct_radiation",
+    "diffuse_radiation",
+    "precipitation",
+    "om_kt",
+    "om_diffuse_fraction",
+    "aerosol_optical_depth",
+    "dust",
+    "pm2_5",
+    "ozone"
+  ],
+  "fit": "2023-2024",
+  "evaluated": "test 2025 once (docs/test_2025_results.json)",
+  "fold_scores": "see cmf_multi_xgb_v2_metrics.json (CV 2023-2024)",
+  "scale": "UVI on test 2025 vs NASA POWER",
+  "mae": 0.4792695027210836,
+  "rmse": 0.7516022980529706,
+  "r2": 0.9341168310639808,
+  "bias": 0.10619160040590624,
+  "uva_vs_nasa": {
+    "n": 3718,
+    "mae": 2.909569252447997,
+    "bias": 0.7484730711935462,
+    "rmse": 4.283613912138701,
+    "r": 0.953157340566145
+  },
+  "uvb_vs_nasa": {
+    "n": 3718,
+    "mae": 0.0881376998134552,
+    "bias": 0.020496913199237646,
+    "rmse": 0.13808948431743606,
+    "r": 0.9693281211661713
+  }
+}
