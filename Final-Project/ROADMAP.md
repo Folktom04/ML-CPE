@@ -67,7 +67,7 @@
 - [x] บันทึก dataset → `dataset/processed/train.parquet` (11,173 ชม.) และสเปก `source_code/models/dataset_spec_v1.json` (รายการ feature/target สำหรับวัน 6 ขึ้นไปและ API)
 → `dataset/processed/train.parquet`, `source_code/src/features.py`, `source_code/notebooks/05_dataset.ipynb`
 
-**Checkpoint วัน 5: Dataset พร้อมฝึก**
+**Checkpoint วัน 5: Dataset พร้อมฝึก** → ✅ ตรวจแล้ว (`/checkpoint`): 11,156 แถว × 39 คอลัมน์ (2023: 3,712 / 2024: 3,726 / 2025: 3,718), features 23 ตัวครบ ไม่มีค่าหาย ไม่มี timestamp ซ้ำ ไม่มีคอลัมน์ NASA ใน features; CMF_UVI median 0.63 (5–95 %: 0.37–0.83)
 
 ---
 
@@ -146,7 +146,7 @@
   > ระดับที่แสดงมาจากค่าเดี่ยว ส่วนระดับเตือน เวลาผิวไหม้ (ปัดลง) และคำแนะนำมาจากขอบบน q90 พร้อม disclaimer ภาษาไทย → `assess()` ใช้ต่อใน `/predict` วัน 16
 - [x] บันทึกโมเดลทั้งหมด → `cmf_multi_xgb_final.joblib` (13.9 MB) และ `cmf_uvi_quantile_xgb_final.ubj.gz` (21.2 MB) พร้อม `*_final_metrics.json`, และ `cqr_q_final_v1.json`
 
-**Checkpoint วัน 10: MAE < 1.0 UVI** → ✅ **ผ่าน (test 2025: 0.479)**
+**Checkpoint วัน 10: MAE < 1.0 UVI** → ✅ **ผ่าน (test 2025: 0.479)** ตรวจซ้ำด้วย `/checkpoint` โดยโหลดโมเดลที่บันทึกไว้จากดิสก์: MAE 0.479, RMSE 0.752, R² 0.934 ตรงกับผลที่บันทึก; recall (q90) สูงมาก 0.848 / รุนแรงมาก 0.826
 
 ---
 
