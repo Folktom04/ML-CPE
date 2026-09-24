@@ -1,0 +1,35 @@
+{
+  "q": 0.037926810234673924,
+  "per_fold": {
+    "3": 0.038247578124689985,
+    "4": 0.046531710374544955,
+    "5": 0.027283861987795754
+  },
+  "n": 3717,
+  "folds": [
+    3,
+    4,
+    5
+  ],
+  "created": "2026-09-24",
+  "method": "split-conformal CQR, E = max(q10 - y, y - q90) on CMF, pooled OOF of TimeSeriesSplit folds 3-5 (2023-2024), coverage 0.8",
+  "params": {
+    "n_estimators": 850,
+    "learning_rate": 0.01092265347287312,
+    "max_depth": 10,
+    "subsample": 0.876321273972357,
+    "colsample_bytree": 0.5249129521941819,
+    "min_child_weight": 8.809610396480752,
+    "reg_lambda": 0.002463511356175994,
+    "random_state": 42,
+    "reg_alpha": 0.0003529861396838399,
+    "gamma": 1.991269195547748e-05,
+    "objective": "reg:quantileerror",
+    "quantile_alpha": [
+      0.1,
+      0.5,
+      0.75,
+      0.9
+    ]
+  }
+}
