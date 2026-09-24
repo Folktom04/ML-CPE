@@ -112,6 +112,30 @@
 → `source_code/src/quantile.py`, `source_code/notebooks/09_quantile.ipynb`, `docs/figures/quantile_*.png` (ตัวเลข dev 2024 ยังมี optimistic bias จากวัน 8)
 
 ### วัน 10 — ประเมินผล + Risk Engine
+> **ประกาศก่อนเปิดข้อมูล 2025 (pre-registration, commit ก่อนโหลด):** โค้ดประเมินคือ `src/evaluate_test.py` (`CRITERIA`) และรัน `--run` ได้**ครั้งเดียว** ถ้ามีไฟล์ผลอยู่แล้วจะไม่ยอมรันซ้ำ **หลังเห็นผลห้ามแก้โมเดล features params หรือ Q ถ้าผลไม่ดีให้รายงานตามจริง**
+> - **โมเดลที่ล็อกไว้ (refit บน 2023–2024):** UVI/UVA/UVB ค่าเดียวจาก MultiOutput XGBoost (params วัน 8, weight `uvi_clear²`); ช่วงและการเตือนจาก quantile XGBoost + CQR **Q = +0.0379** (CMF) คำนวณใหม่ในขั้นนี้ด้วย CV fold 3–5 ของ 2023–2024 → `models/cqr_q_final_v1.json` (รายต่อ fold 0.038 / 0.047 / 0.027 ไม่มีแนวโน้มตามความยาวข้อมูลฝึก); เตือนด้วย **q90 หลัง CQR**
+> - **Baseline บน 2025:** Open-Meteo `uv_index` ตรง ๆ, physics-only ฟ้าใส (Madronich, CMF = 1), physics × CMF คงที่ (ค่าเฉลี่ย CMF_UVI 2023–2024)
+> - **ค่าเที่ยงสุริยะ:** interpolate ค่ารายชั่วโมงแบบวัน 2 (`solar_noon_values`); ค่า OMI < 0 ถือว่าไม่มีข้อมูล; ทุก estimator เทียบบนวันชุดเดียวกัน; วันฟ้าเปิด = NASA cloud < 10 % ตอนเที่ยง (แบบวัน 2)
+>
+> | # | ตัวชี้วัด (2025) | เกณฑ์ผ่าน |
+> |---|---|---|
+> | T1 | MAE รายชั่วโมงของ UVI (โมเดล) เทียบ NASA POWER | **< 1.0** (checkpoint) |
+> | T1b | MAE เดียวกัน เทียบ baseline ทั้ง 3 | ต่ำกว่า baseline **ทุกตัว** |
+> | T2a | MAE ตอนเที่ยงของ UVI ที่ทำนาย เทียบ **OMI UVindex (ฟ้ามีเมฆ)** | **≤ 1.5** |
+> | T2b | MAE เดียวกัน เทียบกับ MAE ของ NASA POWER เทียบ OMI (วันเดียวกัน) | ≤ NASA + 0.3 |
+> | T2c | MAE เดียวกัน เทียบ baseline ทั้ง 3 (เทียบ OMI) | ต่ำกว่า baseline **ทุกตัว** |
+> | T3a | physics ฟ้าใส `uvi_clear` ตอนเที่ยง เทียบ **TEMIS ฟ้าใส** (ทุกวัน) | MAE **≤ 1.0** |
+> | T3b | UVI ที่ทำนาย เทียบ TEMIS **เฉพาะวันฟ้าเปิด** | MAE **≤ 1.5** |
+> | T3c | MAE เดียวกัน เทียบ NASA POWER เทียบ TEMIS (วันเดียวกัน) | ≤ NASA + 0.3 |
+> | T4 | Pearson r: UVB โมเดล กับ OMI 305/310 nm, UVA โมเดล กับ OMI 324/380 nm (หน่วยต่างกัน จึงใช้ r) | **≥ 0.7 ทั้ง 4 คู่** |
+> | T4b | r ของโมเดล เทียบ r ของ physics ฟ้าใส (คู่เดียวกัน) | ≥ physics **ทุกคู่** |
+> | T5 | coverage ของช่วง [q10 − Q, q90 + Q] เทียบ NASA รายชั่วโมง | **0.75–0.85** |
+> | T6a | เตือน ≥ สูงมาก ด้วย q90: recall | **≥ 0.90** |
+> | T6b | เตือน ≥ สูงมาก ด้วย q90: precision | **≥ 0.50** |
+> | T6c | เตือน ≥ สูงมาก ด้วย q90: false alarm rate (FP / ชม. ที่จริงต่ำกว่าสูงมาก) | **≤ 0.20** |
+> | T6d | เตือนรุนแรงมาก ด้วย q90: recall | **≥ 0.80** |
+>
+> รายงานแยกตามแหล่ง (NASA / OMI / TEMIS) และแยกจากผล dev รวม confusion matrix และ recall ระดับสูงมาก/รุนแรงมาก (exact level) ตาม rules อ้างอิงปี 2023 (notebook 02): NASA POWER เทียบ OMI MAE 1.14 และเทียบ TEMIS วันฟ้าเปิด MAE 2.68 (bias −2.68) ดังนั้น T3b อาจไม่ผ่านเพราะ bias ของ target เอง
 - [ ] refit โมเดลที่เลือกบนข้อมูล 2023–2024 แล้วประเมินบน **test ปี 2025 ครั้งเดียว** (NASA POWER) รายงานแยกจากผล dev
 - [ ] Confusion matrix + Recall ระดับสูง
 - [ ] **ทดสอบอิสระ:** ดึง OMI ปี 2025 (`fetch_validation --split test`) แล้วเทียบค่าช่วงเที่ยงวันกับ TEMIS (UVI) และ OMI (UVI, 305/310 nm ≈ UVB, 324/380 nm ≈ UVA) **ปี 2025 เท่านั้น** รายงาน MAE แยกตามแหล่ง

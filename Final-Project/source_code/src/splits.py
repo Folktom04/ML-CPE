@@ -48,6 +48,22 @@ def load_model_data(path: Path = DATA_PATH) -> pd.DataFrame:
     return df.sort_values("time_utc").reset_index(drop=True)
 
 
+def load_test_data(path: Path = DATA_PATH, confirm_day10: bool = False) -> pd.DataFrame:
+    """Read ONLY the held-out test year (2025) — day 10, once, after metrics are pre-registered.
+
+    Args:
+        path: Parquet file.
+        confirm_day10: Must be True; guards against loading the test year by accident.
+
+    Returns:
+        Rows from ``TEST_START`` on, sorted by time.
+    """
+    if not confirm_day10:
+        raise PermissionError("the test year is only loaded on day 10 (pass confirm_day10=True)")
+    df = pd.read_parquet(path, filters=[("time_utc", ">=", TEST_START)])
+    return df.sort_values("time_utc").reset_index(drop=True)
+
+
 def chronological_split(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Split into train (before ``DEV_START``) and dev (``DEV_START`` to ``TEST_START``).
 
