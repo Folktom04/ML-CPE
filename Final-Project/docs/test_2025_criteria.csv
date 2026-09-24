@@ -1,0 +1,16 @@
+id,desc,value,threshold,passed
+T1,model hourly UVI MAE vs NASA POWER 2025 (checkpoint),0.4792695027210836,< 1.0,True
+T1b,model hourly MAE < every baseline's MAE vs NASA POWER 2025,0.4792695027210836,< min baseline 0.708,True
+T2a,model noon MAE vs OMI all-sky <= 1.5 UVI,1.320413001483193,<= 1.5,True
+T2b,model noon MAE vs OMI <= NASA POWER noon MAE vs OMI + 0.3,1.320413001483193,<= NASA 1.330 + 0.3,True
+T2c,model noon MAE vs OMI < every baseline's MAE vs OMI,1.320413001483193,< min baseline 1.960,True
+T3a,physics clear-sky noon UVI vs TEMIS (all days) MAE <= 1.0,0.7635034189209574,<= 1.0,True
+T3b,model noon MAE vs TEMIS on clear days <= 1.5 UVI,1.360178727371398,<= 1.5,True
+T3c,model noon MAE vs TEMIS on clear days <= NASA POWER's + 0.3,1.360178727371398,<= NASA 1.580 + 0.3,True
+T4,Pearson r model UVB vs OMI 305/310 nm and UVA vs 324/380 nm >= 0.7,0.532616702929568,>= 0.7 (all 4 pairs),False
+T4b,each T4 r >= the physics clear-sky r for the same pair,0.12094427824137532,">= 0 (model r - physics r, all pairs)",True
+T5,"coverage of served [q10-Q, q90+Q] vs NASA hourly in [0.75, 0.85]",0.8058095750403442,"in [0.75, 0.85]",True
+T6a,q90 alert >= Very high: recall >= 0.90,0.9862385321100917,>= 0.90,True
+T6b,q90 alert >= Very high: precision >= 0.50,0.5638111888111889,>= 0.50,True
+T6c,q90 alert >= Very high: false alarm rate <= 0.20,0.16285900783289817,<= 0.20,True
+T6d,q90 alert Extreme: recall >= 0.80,0.8260869565217391,>= 0.80,True

@@ -1,0 +1,118 @@
+{
+  "model": "cmf_uvi_quantile_xgb_final.ubj.gz",
+  "created": "2026-09-24",
+  "features": [
+    "cos_sza",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "uv_index",
+    "uv_index_clear_sky",
+    "cloud_cover",
+    "cloud_cover_low",
+    "cloud_cover_mid",
+    "cloud_cover_high",
+    "relative_humidity_2m",
+    "temperature_2m",
+    "shortwave_radiation",
+    "direct_radiation",
+    "diffuse_radiation",
+    "precipitation",
+    "om_kt",
+    "om_diffuse_fraction",
+    "aerosol_optical_depth",
+    "dust",
+    "pm2_5",
+    "ozone"
+  ],
+  "fit": "2023-2024",
+  "evaluated": "test 2025 once (docs/test_2025_results.json)",
+  "fold_scores": "see cmf_multi_xgb_v2_metrics.json (CV 2023-2024)",
+  "cqr_q_cmf": 0.037926810234673924,
+  "interval": {
+    "n": 3718,
+    "coverage": 0.8058095750403442,
+    "below": 0.13986013986013987,
+    "above": 0.05433028509951587,
+    "width": 1.4632440664080697
+  },
+  "alerts_q90": {
+    "Very high": {
+      "n_events": 654,
+      "n_alerts": 1144,
+      "tp": 645,
+      "fp": 499,
+      "fn": 9,
+      "recall": 0.9862385321100917,
+      "precision": 0.5638111888111889,
+      "false_alarm_rate": 0.16285900783289817
+    },
+    "Extreme": {
+      "n_events": 23,
+      "n_alerts": 110,
+      "tp": 19,
+      "fp": 91,
+      "fn": 4,
+      "recall": 0.8260869565217391,
+      "precision": 0.17272727272727273,
+      "false_alarm_rate": 0.02462787550744249
+    }
+  },
+  "who_q90": {
+    "labels": [
+      "Low",
+      "Moderate",
+      "High",
+      "Very high",
+      "Extreme"
+    ],
+    "confusion": [
+      [
+        1087,
+        201,
+        5,
+        3,
+        0
+      ],
+      [
+        0,
+        651,
+        297,
+        67,
+        0
+      ],
+      [
+        0,
+        5,
+        319,
+        425,
+        4
+      ],
+      [
+        0,
+        0,
+        9,
+        535,
+        87
+      ],
+      [
+        0,
+        0,
+        0,
+        4,
+        19
+      ]
+    ],
+    "recall": {
+      "Low": 0.8387345679012346,
+      "Moderate": 0.6413793103448275,
+      "High": 0.42363877822045154,
+      "Very high": 0.8478605388272583,
+      "Extreme": 0.8260869565217391
+    }
+  },
+  "mae": 0.49261690687114257,
+  "rmse": 0.7751961710167355,
+  "r2": 0.9299155742080377
+}

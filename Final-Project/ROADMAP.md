@@ -136,13 +136,17 @@
 > | T6d | เตือนระดับรุนแรงมาก (UVI ≥ 11) ด้วย q90: recall | **≥ 0.80** (เกณฑ์เดียวกับวัน 9 ซึ่งไม่ผ่าน: CV fold 3–5 ได้ 0.62, dev 2024 ได้ 0.70 รายงานไว้เพื่อความโปร่งใส) |
 >
 > รายงานแยกตามแหล่ง (NASA / OMI / TEMIS) และแยกจากผล dev รวม confusion matrix และ recall ระดับสูงมาก/รุนแรงมาก (exact level) ตาม rules อ้างอิงปี 2023 (notebook 02): NASA POWER เทียบ OMI MAE 1.14 และเทียบ TEMIS วันฟ้าเปิด MAE 2.68 (bias −2.68) ดังนั้น T3b อาจไม่ผ่านเพราะ bias ของ target เอง
-- [ ] refit โมเดลที่เลือกบนข้อมูล 2023–2024 แล้วประเมินบน **test ปี 2025 ครั้งเดียว** (NASA POWER) รายงานแยกจากผล dev
-- [ ] Confusion matrix + Recall ระดับสูง
-- [ ] **ทดสอบอิสระ:** ดึง OMI ปี 2025 (`fetch_validation --split test`) แล้วเทียบค่าช่วงเที่ยงวันกับ TEMIS (UVI) และ OMI (UVI, 305/310 nm ≈ UVB, 324/380 nm ≈ UVA) **ปี 2025 เท่านั้น** รายงาน MAE แยกตามแหล่ง
-- [ ] `source_code/src/risk.py`: ระดับ WHO, MED, เวลาผิวไหม้, คำแนะนำ SPF/PA
-- [ ] บันทึกโมเดลทั้งหมด
+- [x] refit โมเดลที่เลือกบนข้อมูล 2023–2024 แล้วประเมินบน **test ปี 2025 ครั้งเดียว** (NASA POWER) รายงานแยกจากผล dev → `docs/test_2025_results.json`, `docs/test_2025_criteria.csv`, `source_code/notebooks/10_test_2025.ipynb`
+  > **ผ่าน 14/15 เกณฑ์ ไม่ผ่าน T4** หลังเห็นผลไม่ได้แก้อะไร MAE รายชั่วโมงเทียบ NASA **0.479** (dev 2024 0.450; R² 0.934) ต่ำกว่า baseline ทุกตัว (CMF คงที่ 0.708, Open-Meteo 1.244, physics ฟ้าใส 2.471) UVA 2.91 W/m², UVB 0.088 W/m²; coverage ของช่วง CQR **0.806**
+- [x] Confusion matrix + Recall ระดับสูง (q90 หลัง CQR)
+  > เตือน ≥ สูงมาก: recall **0.986**, precision 0.564, false alarm rate 0.163; รุนแรงมาก: recall **0.826** (19/23 ชม., 95 % CI 0.63–0.93) แต่ precision 0.17; recall แบบ exact level: สูงมาก 0.848, รุนแรงมาก 0.826
+- [x] **ทดสอบอิสระ:** ดึง OMI ปี 2025 (`fetch_validation --split test`, 365 วัน) แล้วเทียบค่าช่วงเที่ยงวันกับ TEMIS (UVI) และ OMI (UVI, 305/310 nm ≈ UVB, 324/380 nm ≈ UVA) **ปี 2025 เท่านั้น** รายงาน MAE แยกตามแหล่ง
+  > **OMI ฟ้ามีเมฆ:** MAE **1.32** (bias −0.82, n 269) เทียบกับ NASA POWER 1.33 และ Open-Meteo 2.36 **TEMIS ฟ้าใส:** physics `uvi_clear` MAE **0.76** (ทุกวัน); โมเดลในวันฟ้าเปิด MAE 1.36 (**bias −1.36**, NASA −1.58) → โมเดลรับ bias ต่ำของ NASA มา ค่าที่สูงกว่า ~11 จึงถูกประเมินต่ำ (ข้อจำกัดสำคัญของการเตือน ต้องเขียนในรายงาน) **Irradiance (T4 ไม่ผ่าน):** r 0.65 / 0.63 (UVB–305/310 nm), 0.53 / 0.57 (UVA–324/380 nm) ต่ำกว่า 0.7 แต่สูงกว่า physics ฟ้าใสทุกคู่
+- [x] `source_code/src/risk.py`: ระดับ WHO, MED, เวลาผิวไหม้, คำแนะนำ SPF/PA
+  > ระดับที่แสดงมาจากค่าเดี่ยว ส่วนระดับเตือน เวลาผิวไหม้ (ปัดลง) และคำแนะนำมาจากขอบบน q90 พร้อม disclaimer ภาษาไทย → `assess()` ใช้ต่อใน `/predict` วัน 16
+- [x] บันทึกโมเดลทั้งหมด → `cmf_multi_xgb_final.joblib` (13.9 MB) และ `cmf_uvi_quantile_xgb_final.ubj.gz` (21.2 MB) พร้อม `*_final_metrics.json`, และ `cqr_q_final_v1.json`
 
-**Checkpoint วัน 10: MAE < 1.0 UVI**
+**Checkpoint วัน 10: MAE < 1.0 UVI** → ✅ **ผ่าน (test 2025: 0.479)**
 
 ---
 
