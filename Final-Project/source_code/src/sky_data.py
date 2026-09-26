@@ -4,7 +4,8 @@ Datasets (licences checked on day 13, details in ``docs/datasets.md``):
 
 * CCSN (Harvard Dataverse doi:10.7910/DVN/CADDPD, CC0 1.0): 2,543 normal-camera cloud photos,
   11 cloud genera.
-* SWIMCAT-ext (Mendeley Data doi:10.17632/vwdd9grvdp.1, CC BY 4.0): 2,100 sky-camera patches,
+* SWIMCAT-ext (Mendeley Data doi:10.17632/vwdd9grvdp.1, CC BY 4.0): 2,100 sky/cloud images
+  "collected from Internet and labelled by technical expert" (Mendeley description),
   6 classes; used instead of SWIMCAT while the SWIMCAT/SWIMSEG request forms are pending.
 * SWIMSEG (CC BY-NC 4.0, request form): sky patches + binary cloud masks; indexed only when the
   archive has been placed in ``dataset/sky/raw/`` by hand.
@@ -283,7 +284,23 @@ def thumbnail(path: Path, size: int = THUMB_SIZE) -> np.ndarray:
     Returns:
         (size, size, 3) float32 array.
     """
-    img = Image.open(path).convert("RGB").resize((size, size), Image.BILINEAR)
+    return thumbnail_from_array(np.asarray(Image.open(path).convert("RGB")), size)
+
+
+def thumbnail_from_array(image: np.ndarray, size: int = THUMB_SIZE) -> np.ndarray:
+    """Thumbnail of an in-memory RGB image (uint8 0-255 or float 0-1).
+
+    Args:
+        image: (H, W, 3) array.
+        size: Thumbnail side.
+
+    Returns:
+        (size, size, 3) float32 array in [0, 1].
+    """
+    arr = np.asarray(image)
+    if arr.dtype.kind == "f":
+        arr = np.round(np.clip(arr, 0, 1) * 255)
+    img = Image.fromarray(arr.astype(np.uint8)).resize((size, size), Image.BILINEAR)
     return np.asarray(img, dtype=np.float32) / 255.0
 
 
@@ -334,6 +351,63 @@ def duplicate_groups(thumbs: np.ndarray, max_mad: float = DUP_MAX_MAD) -> np.nda
             if ri != rj:
                 parent[rj] = ri
     return np.array([find(i) for i in range(n)])
+
+
+def cross_duplicates(
+    thumbs_a: np.ndarray, thumbs_b: np.ndarray, max_mad: float = DUP_MAX_MAD
+) -> pd.DataFrame:
+    """Near-duplicate pairs between two datasets (same rule as ``duplicate_groups``).
+
+    Args:
+        thumbs_a: (n_a, s, s, 3) thumbnails of dataset A.
+        thumbs_b: (n_b, s, s, 3) thumbnails of dataset B.
+        max_mad: Largest thumbnail MAD (min over the 8 rotations/flips of B) for a duplicate.
+
+    Returns:
+        Table with ``i`` (row in A), ``j`` (row in B) and ``mad``, sorted by ``mad``.
+    """
+    flat_a = thumbs_a.reshape(len(thumbs_a), -1)
+    d8 = dihedral(thumbs_b).reshape(8, len(thumbs_b), -1)
+    rows = []
+    for i in range(len(flat_a)):
+        dist = np.abs(d8 - flat_a[i]).mean(axis=2).min(axis=0)
+        for j in np.nonzero(dist < max_mad)[0]:
+            rows.append((i, int(j), float(dist[j])))
+    return pd.DataFrame(rows, columns=["i", "j", "mad"]).sort_values("mad").reset_index(drop=True)
+
+
+def cross_dataset_table(split_dir: Path = SPLIT_DIR) -> pd.DataFrame:
+    """Near-duplicate pairs between CCSN and SWIMCAT-ext over all splits (day 15 check).
+
+    Args:
+        split_dir: Directory with the split tables.
+
+    Returns:
+        One row per pair with the path, split and label on each side and the ``mad``.
+    """
+    c = pd.read_csv(split_dir / "ccsn_split.csv")
+    s = pd.read_csv(split_dir / "swimcat_ext_split.csv")
+    tc = np.stack([thumbnail(resolve(p)) for p in c["path"]])
+    ts = np.stack([thumbnail(resolve(p)) for p in s["path"]])
+    pairs = cross_duplicates(tc, ts)
+    left = c.iloc[pairs["i"]][["path", "split", "label", "label_conflict"]].reset_index(drop=True)
+    right = s.iloc[pairs["j"]][["path", "split", "label"]].reset_index(drop=True)
+    return pd.concat([left.add_prefix("ccsn_"), right.add_prefix("swim_"), pairs[["mad"]]], axis=1)
+
+
+def leaked_test_paths(pairs: pd.DataFrame, dataset: str) -> set[str]:
+    """Test images of ``dataset`` that duplicate a TRAIN image of the other dataset.
+
+    Args:
+        pairs: Output of ``cross_dataset_table``.
+        dataset: ``"ccsn"`` or ``"swim"``.
+
+    Returns:
+        Set of paths to drop for the supplementary (deduplicated) test score.
+    """
+    other = "swim" if dataset == "ccsn" else "ccsn"
+    hit = (pairs[f"{dataset}_split"] == "test") & (pairs[f"{other}_split"] == "train")
+    return set(pairs.loc[hit, f"{dataset}_path"])
 
 
 def make_splits(

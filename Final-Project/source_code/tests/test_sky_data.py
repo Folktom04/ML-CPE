@@ -73,6 +73,32 @@ def test_duplicates_found_even_when_rotated(class_tree):
     assert groups.value_counts().max() == 2  # distinct images are not chained together
 
 
+def test_cross_duplicates_between_datasets():
+    a = np.stack([textured(1), textured(2), textured(3)]).astype(np.float32) / 255
+    b = (
+        np.stack([np.rot90(textured(2), 1), textured(9), textured(3)[:, ::-1]]).astype(np.float32)
+        / 255
+    )
+    small = lambda x: np.stack([sd.thumbnail_from_array(im) for im in x])  # noqa: E731
+    pairs = sd.cross_duplicates(small(a), small(b))
+    assert sorted(zip(pairs["i"], pairs["j"])) == [(1, 0), (2, 2)]  # rotated + flipped copies
+    assert (pairs["mad"] < sd.DUP_MAX_MAD).all()
+    assert sd.cross_duplicates(small(a[:1]), small(b[1:2])).empty
+
+
+def test_leaked_test_paths_only_train_to_test():
+    pairs = pd.DataFrame(
+        {
+            "ccsn_path": ["c1", "c2", "c3", "c4"],
+            "ccsn_split": ["test", "test", "train", "val"],
+            "swim_path": ["s1", "s2", "s3", "s4"],
+            "swim_split": ["train", "test", "test", "test"],
+        }
+    )
+    assert sd.leaked_test_paths(pairs, "ccsn") == {"c1"}  # c2 pairs with a test image only
+    assert sd.leaked_test_paths(pairs, "swim") == {"s3"}  # s4 pairs with a val image
+
+
 def test_splits_stratified_grouped_and_reproducible(class_tree):
     df = sd.index_classification(class_tree, "t")
     t1 = sd.build_split_table(df, df["label"])

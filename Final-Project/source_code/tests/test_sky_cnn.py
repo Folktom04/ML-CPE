@@ -161,6 +161,19 @@ def test_resume_or_train_reloads_finished_seed(tmp_path, monkeypatch):
     assert h2["best_val_loss"] == pytest.approx(float(m1.evaluate(va, verbose=0)[0]), rel=1e-4)
 
 
+def test_seed_test_scores_uses_saved_models_and_masks(tmp_path, monkeypatch):
+    model, _ = sc.build_model(SIZE, weights=None)
+    model.save(tmp_path / "m.keras")
+    monkeypatch.setattr(sc, "SEEDS", (1,))
+    monkeypatch.setattr(sc, "seed_paths", lambda seed: (tmp_path / "m.keras", None))
+    data = tiny_split()
+    keep_c = np.array([True, False, True, True, False, True])
+    full = sc.seed_test_scores(data, np.ones(6, bool), np.ones(6, bool))
+    sub = sc.seed_test_scores(data, keep_c, np.ones(6, bool))
+    assert full["n"]["ccsn"] == 6 and sub["n"]["ccsn"] == 4 and sub["n"]["swim_images"] == 6
+    assert set(sub["ccsn"]["mean"]["group_recall"]) == set(sc.UV_GROUPS)
+
+
 def test_run_test_refuses_second_run(tmp_path, monkeypatch):
     done = tmp_path / "t.json"
     done.write_text("{}")

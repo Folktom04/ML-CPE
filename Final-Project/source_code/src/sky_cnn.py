@@ -92,6 +92,7 @@ METRICS_PATH = MODEL_DIR / "sky_cnn_v1_metrics.json"
 TFLITE_PATH = MODEL_DIR / "sky_cnn_v1.tflite"
 LABELS_PATH = MODEL_DIR / "sky_cnn_v1_labels.json"
 TEST_PATH = DOCS_DIR / "sky_cnn_test.json"
+CROSSCHECK_PATH = DOCS_DIR / "sky_cnn_crosscheck.json"  # day 15, supplementary only
 LOG_DIR = ROOT / "dataset" / "processed" / "logs"  # per-seed training logs (git-ignored)
 DISCLAIMER_TH = "ผลจากภาพท้องฟ้าเป็นข้อมูลประกอบเท่านั้น ไม่ได้ใช้คำนวณค่า UV"
 
@@ -906,6 +907,100 @@ def run_test() -> dict[str, Any]:
     return payload
 
 
+def seed_test_scores(
+    test: dict[str, Any], keep_ccsn: np.ndarray, keep_swim: np.ndarray
+) -> dict[str, Any]:
+    """Score the 3 saved seed models on (a subset of) the test split; nothing is trained.
+
+    Args:
+        test: ``split_data("test", confirm_test=True)``.
+        keep_ccsn: Boolean mask of CCSN test rows to score.
+        keep_swim: Boolean mask of SWIMCAT-ext test rows to score.
+
+    Returns:
+        ``{"ccsn": mean/sd, "swim": mean/sd, "n": {...}}``.
+    """
+    c_runs, s_runs = [], []
+    for seed in SEEDS:
+        model = tf.keras.models.load_model(seed_paths(seed)[0])
+        pc = predict_probs(model, test["ccsn"]["x"][keep_ccsn])["ccsn"]
+        ps = predict_probs(model, test["swim"]["x"][keep_swim])["swim"]
+        c_runs.append(ccsn_scores(pc, test["ccsn"]["y"][keep_ccsn]))
+        s_runs.append(
+            swim_scores(ps, test["swim"]["y"][keep_swim], test["swim"]["groups"][keep_swim])
+        )
+    ccsn = _mean_sd(c_runs, ["accuracy", "macro_f1", "group_accuracy"])
+    ccsn["mean"]["group_recall"] = {
+        g: float(np.nanmean([r["group_recall"][g] for r in c_runs])) for g in UV_GROUPS
+    }
+    return {
+        "ccsn": ccsn,
+        "swim": _mean_sd(s_runs, ["accuracy", "group_accuracy"]),
+        "n": {
+            "ccsn": int(keep_ccsn.sum()),
+            "swim_images": int(keep_swim.sum()),
+            "swim_groups": s_runs[0]["n_groups"],
+        },
+    }
+
+
+def run_crosscheck() -> dict[str, Any]:
+    """Day 15: cross-dataset duplicates + supplementary deduplicated test score.
+
+    The main results in ``TEST_PATH`` are not changed. The full-test numbers are recomputed from
+    the saved models only to confirm they reproduce ``TEST_PATH`` (checkpoint).
+
+    Returns:
+        Payload written to ``CROSSCHECK_PATH``.
+    """
+    from src.sky_data import cross_dataset_table, leaked_test_paths
+
+    pairs = cross_dataset_table()
+    pairs.to_csv(DOCS_DIR / "sky_crossdataset_duplicates.csv", index=False)
+    combos = pairs.groupby(["ccsn_split", "swim_split"]).size().rename("pairs")
+    test = split_data("test", confirm_test=True)
+    drop_c = leaked_test_paths(pairs, "ccsn")
+    drop_s = leaked_test_paths(pairs, "swim")
+    all_c = np.ones(len(test["ccsn"]["y"]), bool)
+    all_s = np.ones(len(test["swim"]["y"]), bool)
+    keep_c = ~test["ccsn"]["table"]["path"].isin(drop_c).to_numpy()
+    keep_s = ~test["swim"]["table"]["path"].isin(drop_s).to_numpy()
+    full = seed_test_scores(test, all_c, all_s)
+    dedup = seed_test_scores(test, keep_c, keep_s) if (~keep_c).any() or (~keep_s).any() else full
+    saved = json.loads(TEST_PATH.read_text(encoding="utf-8"))
+    reproduced = {
+        f"{d}.{k}": bool(np.isclose(full[d]["mean"][k], saved[d]["mean"][k], atol=1e-6))
+        for d, ks in (
+            ("ccsn", ["accuracy", "macro_f1", "group_accuracy"]),
+            ("swim", ["accuracy", "group_accuracy"]),
+        )
+        for k in ks
+    }
+    payload = {
+        "created": date.today().isoformat(),
+        "method": "16x16 thumbnail MAD < 0.03, best of 8 rotations/flips (day-13 rule), CCSN x SWIMCAT-ext",
+        "n_pairs": int(len(pairs)),
+        "pairs_by_split": {f"ccsn_{a}/swim_{b}": int(v) for (a, b), v in combos.items()},
+        "ccsn_pairs_with_label_conflict": (
+            int(pairs["ccsn_label_conflict"].sum()) if len(pairs) else 0
+        ),
+        "dropped_test": {
+            "ccsn_main": int((~keep_c).sum()),
+            "swim": int((~keep_s).sum()),
+            "ccsn_paths": sorted(drop_c),
+            "swim_paths": sorted(drop_s),
+        },
+        "checkpoint_full_test_reproduced": reproduced,
+        "full_test": full,
+        "dedup_test_supplementary": dedup,
+        "note": "supplementary only; the pre-registered result stays docs/sky_cnn_test.json",
+    }
+    CROSSCHECK_PATH.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False, default=float), encoding="utf-8"
+    )
+    return payload
+
+
 def main(argv: list[str] | None = None) -> None:
     """Command line: ``--train`` or ``--test`` (once).
 
@@ -916,7 +1011,25 @@ def main(argv: list[str] | None = None) -> None:
     g = parser.add_mutually_exclusive_group(required=True)
     g.add_argument("--train", action="store_true")
     g.add_argument("--test", action="store_true")
+    g.add_argument("--crosscheck", action="store_true", help="day 15: cross-dataset duplicates")
     args = parser.parse_args(argv)
+    if args.crosscheck:
+        p = run_crosscheck()
+        print(
+            json.dumps(
+                {
+                    k: p[k]
+                    for k in (
+                        "n_pairs",
+                        "pairs_by_split",
+                        "dropped_test",
+                        "checkpoint_full_test_reproduced",
+                    )
+                },
+                indent=1,
+            )[:3000]
+        )
+        return
     if args.train:
         p = run_train()
         print(pd.DataFrame(p["val_runs"]).to_string(index=False, float_format="%.3f"))
