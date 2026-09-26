@@ -171,21 +171,27 @@
 - [x] เทียบกับพยากรณ์ Open-Meteo และ baseline XGBoost → `docs/lstm_dev_2024.csv`, `docs/lstm_test_2025.json`
   > **dev 2024 (3 seeds): LSTM MAE 0.463 ± 0.008** เทียบกับ B1 XGBoost + Open-Meteo 0.450 และ B2 Open-Meteo `uv_index` 1.162; recall ≥ สูงมาก 0.873 (B1 0.831) **→ ไม่ผ่านเกณฑ์ (ต้อง < 0.430) ใช้ XGBoost ในแอปรวมพยากรณ์ 6–24 ชม. และไม่ปรับ LSTM ต่อ** LSTM มี bias +0.17 และแย่กว่า B1 ทุก lead **Test 2025 (ครั้งเดียว, ใช้รายงานเท่านั้น):** LSTM refit 0.497 ± 0.004 เทียบกับ XGBoost final 0.480 และ Open-Meteo 1.164 → L1 ผ่าน, L2 ไม่ผ่าน; recall รุนแรงมาก LSTM 0.06 เทียบกับ XGBoost 0.22; early stopping ตอน refit หยุดที่ epoch 5 / 1 / 1 ข้อจำกัด: covariate เป็นค่าวิเคราะห์ ไม่ใช่พยากรณ์ที่ออกล่วงหน้าจริง
 
+> **ปรับขอบเขต Phase 3 (วัน 13):** CNN เป็น**โมดูลแยก** ไม่นำไป stack กับ XGBoost เพราะไม่มีภาพท้องฟ้าของปทุมธานีที่จับคู่กับ target ของ NASA POWER ได้ CNN ทำ 2 งาน: (1) จำแนกสภาพท้องฟ้า (CCSN + SWIMCAT-ext แต่ละ dataset ใช้ label และ head ของตัวเอง) (2) ประมาณสัดส่วนเมฆ (baseline red/blue ratio ก่อน แล้วเพิ่ม head CNN เมื่อได้ SWIMSEG) วัดผลบน test split ของแต่ละ dataset แยกกัน **แอปใช้ผลเป็นข้อมูลประกอบเท่านั้น ไม่เปลี่ยนค่า UVI** ตัด stacking และ SKIPP'D/CloudCV ออก วัน 15 เป็นวันสำรอง (แก้ `.agents/rules/00-project-context.md` และ `.agents/workflows/checkpoint.md` ให้ตรงกัน)
+
 ### วัน 13 — CNN: เตรียม dataset (ไม่ใช้ภาพถ่ายเอง)
-- [ ] ดาวน์โหลด CCSN, SWIMCAT, SWIMSEG, SKIPP'D (หรือ CloudCV) + ตรวจ license
-- [ ] แปลงภาพ fisheye ให้ใกล้ภาพมือถือ (crop กลางภาพ, perspective transform)
-- [ ] augmentation (ความสว่าง, white balance, blur, หมุน) + แบ่ง train/val/test
+- [x] ดาวน์โหลด CCSN (CC0) และ SWIMCAT-ext (CC BY 4.0, ใช้แทน SWIMCAT) + ตรวจ license/checksum → `src/sky_data.py`, `docs/datasets.md`
+  > CCSN 2,543 ภาพ 11 ชนิด (md5 ตรง), SWIMCAT-ext 2,100 ภาพ 6 คลาส × 350 (sha256 ตรง) SWIMCAT-ext ขยายมาจาก SWIMCAT (CC BY-NC) จึงถือว่าใช้เพื่อการศึกษา/ไม่ใช่เชิงพาณิชย์
+- [ ] SWIMCAT / SWIMSEG (CC BY-NC 4.0) ต้องกรอกฟอร์มก่อน
+  > ค้าง: รอลิงก์จากแบบฟอร์ม เมื่อได้แล้วให้วางไฟล์ไว้ที่ `dataset/sky/raw/` แตกไฟล์เป็น `dataset/sky/swimseg/` แล้วรัน `python -m src.sky_data --index` (`index_swimseg()` มีพร้อมแล้ว) สัดส่วนเมฆใช้ baseline red/blue ratio ไปก่อน
+- [x] index + ตรวจภาพซ้ำ + แบ่ง train/val/test ของแต่ละ dataset (70/15/15, stratified, ภาพซ้ำอยู่ split เดียวกัน) → `docs/sky_splits/*.csv`, `source_code/notebooks/13_sky_data.ipynb`
+  > CCSN 1,785 / 383 / 375, SWIMCAT-ext 1,472 / 317 / 311, 0 กลุ่มซ้ำที่คร่อม split **เปลี่ยนจาก dHash เป็นเทียบ thumbnail 16×16 ที่หมุน/พลิกได้ 8 แบบ (MAD < 0.03)** เพราะ dHash โยงภาพที่ texture น้อยเป็นกลุ่มผิด ๆ ~50 ภาพ และจับภาพที่หมุนไม่ได้ **พบ CCSN 263 ภาพ (124 กลุ่ม) เป็นรูปเดียวกันแต่อยู่คนละชนิดเมฆ** (label noise ใน dataset) ติด flag `label_conflict` ไว้ → **เสนอให้ตัดทิ้งจากทุก split ก่อนฝึกในวัน 14**; SWIMCAT-ext มี 1,470 ภาพอยู่ในกลุ่มซ้ำ
+- [x] preprocessing (crop กลาง + resize 224) + augmentation (flip, หมุน ±15°, perspective, ความสว่าง, contrast, white balance, saturation, blur) ลด domain gap จากภาพกล้องท้องฟ้าสู่ภาพมือถือ → `load_image()`, `augmenter()`, `docs/figures/sky_*.png`
+  > test split อ่านได้เฉพาะเมื่อส่ง `load_split(..., confirm_test=True)`; domain gap จดไว้ใน `docs/datasets.md`
 
-### วัน 14 — CNN: Transfer Learning
-- [ ] MobileNetV3 pre-train ด้วย CCSN + SWIMCAT (สภาพท้องฟ้า)
-- [ ] head สัดส่วนเมฆจาก SWIMSEG + baseline red/blue ratio
-- [ ] head ค่าการลดแสงจาก SKIPP'D / CloudCV + ประเมินผลบน test split
+### วัน 14 — CNN: Transfer Learning (โมดูลแยก)
+- [ ] MobileNetV3 backbone ร่วม + head จำแนกแยกตาม dataset (CCSN 11 คลาส, SWIMCAT-ext 6 คลาส) ใช้ train/val เท่านั้น
+- [ ] baseline สัดส่วนเมฆด้วย red/blue ratio (+ head CNN จาก SWIMSEG ถ้าได้ข้อมูลแล้ว)
+- [ ] ประกาศเกณฑ์ก่อน แล้วประเมินบน test split ของแต่ละ dataset ครั้งเดียว + export ให้ `/sky-image`
 
-### วัน 15 — Ensemble (Stacking)
-- [ ] CNN features → XGBoost
-- [ ] meta-model + เทียบกับโมเดลเดี่ยว
+### วัน 15 — วันสำรอง
+- [ ] เก็บงานค้างของวัน 11–14 (เช่น head สัดส่วนเมฆเมื่อได้ SWIMSEG)
 
-**Checkpoint วัน 15: LSTM + CNN + Ensemble ทำงาน**
+**Checkpoint วัน 15: ผล LSTM ตัดสินแล้ว (ใช้ XGBoost) + CNN ทำงานบน test split ของแต่ละ dataset**
 
 ---
 
@@ -274,6 +280,6 @@
 - [ ] ติดต่อขอข้อมูลวัด UV ภาคพื้นดินที่นครปฐม (ม.ศิลปากร) ใช้เป็น ground truth
 
 ## ถ้าช้ากว่าแผน ตัดตามลำดับนี้
-1. CNN ภาพท้องฟ้า (วัน 13–15)
+1. CNN ภาพท้องฟ้า (วัน 13–14; วัน 15 สำรอง)
 2. เซนเซอร์แสงมือถือ + calibrate
 3. การเก็บข้อมูลภาคสนาม (วัน 25) เหลือแค่ทดสอบในที่เดียว
