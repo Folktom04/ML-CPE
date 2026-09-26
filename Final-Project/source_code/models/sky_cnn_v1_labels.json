@@ -1,0 +1,51 @@
+{
+  "ccsn": [
+    "Ac",
+    "As",
+    "Cb",
+    "Cc",
+    "Ci",
+    "Cs",
+    "Ct",
+    "Cu",
+    "Ns",
+    "Sc",
+    "St"
+  ],
+  "swim": [
+    "clear_sky",
+    "patterned_clouds",
+    "thick_dark_clouds",
+    "thick_white_clouds",
+    "thin_white_clouds",
+    "veil_clouds"
+  ],
+  "uv_groups": {
+    "high_thin": [
+      "Ci",
+      "Cs",
+      "Cc",
+      "Ct"
+    ],
+    "mid": [
+      "Ac",
+      "As"
+    ],
+    "low_thick": [
+      "St",
+      "Sc",
+      "Ns",
+      "Cb"
+    ],
+    "cumulus": [
+      "Cu"
+    ]
+  },
+  "uv_groups_th": {
+    "high_thin": "เมฆบางระดับสูง",
+    "mid": "เมฆระดับกลาง",
+    "low_thick": "เมฆหนาระดับต่ำ",
+    "cumulus": "เมฆก้อน"
+  },
+  "input": "float32 RGB [0, 1], centre-crop, 224x224"
+}
