@@ -184,6 +184,26 @@
   > test split อ่านได้เฉพาะเมื่อส่ง `load_split(..., confirm_test=True)`; domain gap จดไว้ใน `docs/datasets.md`
 
 ### วัน 14 — CNN: Transfer Learning (โมดูลแยก)
+> **ประกาศก่อนเปิด test split (commit ก่อนฝึกและก่อนอ่าน test)** โค้ดคือ `src/sky_cnn.py` (`CRITERIA`, `judge()`) และ `--test` รันได้ครั้งเดียว (guard) **หลังเห็นผลห้ามแก้โมเดล ข้อมูล หรือ config ถ้าไม่ผ่านให้รายงานตามจริง**
+> - **Input contract:** ภาพ float RGB **[0, 1]** (`load_image` / `augmenter`) ภายในโมเดลมี `Rescaling(255)` ก่อนเข้า MobileNetV3Small (`include_preprocessing=True` ซึ่งรับ 0–255) และมี `check_unit_range()` กันไม่ให้ scale ซ้ำ พร้อม test ตรวจว่า backbone ได้ค่า 0–255 และหลัง preprocessing ได้ [−1, 1]
+> - **โมเดล:** MobileNetV3Small (ImageNet) backbone ร่วม + head CCSN 11 คลาส และ SWIMCAT-ext 6 คลาส (loss ของ dataset อื่นมีน้ำหนัก 0) ฝึก 2 ขั้น: freeze backbone lr 1e-3 ≤ 15 epochs แล้ว unfreeze 30 % บน (BatchNorm ยัง freeze) lr 1e-4 ≤ 30 epochs, early stopping บน **val** (patience 5), augmentation วัน 13, **3 seeds** (42/43/44) รายงาน mean ± SD, โมเดลที่ export (TFLite float16) เลือกจาก val loss
+> - **ข้อมูล:** ตัดกลุ่ม `label_conflict` ของ CCSN ออกจาก train, val และ test หลัก และรายงาน test แบบรวมกลุ่มนี้ไว้เทียบ (ไม่มีเกณฑ์)
+> - **CCSN 4 กลุ่ม UV** (สิ่งที่แอปจะแสดง): เมฆบางระดับสูง Ci/Cs/Cc/Ct, เมฆระดับกลาง Ac/As, เมฆหนาระดับต่ำ St/Sc/Ns/Cb, เมฆก้อน Cu ความน่าจะเป็นของกลุ่ม = ผลรวมของชนิดในกลุ่ม
+> - **SWIMCAT-ext:** รายงานจำนวนภาพและจำนวนกลุ่มภาพไม่ซ้ำ + accuracy รายกลุ่ม (เฉลี่ยความน่าจะเป็นในกลุ่ม 1 กลุ่ม = 1 คะแนน)
+> - **Baseline อ้างอิง:** logistic regression บนสถิติสี (RGB/HSV/NRBR) **สัดส่วนเมฆ:** red/blue ratio `NRBR = (B−R)/(B+R) < 0.25` (ค่าจากงานวิจัย ไม่ได้ปรับ) ยังไม่มี SWIMSEG จึงตรวจแบบ proxy กับคลาสของ SWIMCAT-ext เท่านั้น
+>
+> | # | ตัวชี้วัด (test, ค่าเฉลี่ย 3 seeds) | เกณฑ์ผ่าน |
+> |---|---|---|
+> | K1 | CCSN 11 คลาส (ตัด conflict) accuracy | **≥ 0.60** |
+> | K2 | CCSN 11 คลาส macro-F1 | **≥ 0.55** |
+> | K3 | CCSN 4 กลุ่ม UV accuracy | **≥ 0.75** |
+> | K4 | CCSN กลุ่ม UV: recall ของ "เมฆบางระดับสูง" | **≥ 0.70** |
+> | K5 | CCSN 11 คลาส accuracy − baseline สี | **≥ 0.10** |
+> | S1 | SWIMCAT-ext accuracy รายภาพ | **≥ 0.85** |
+> | S2 | SWIMCAT-ext accuracy รายกลุ่มภาพไม่ซ้ำ | **≥ 0.80** |
+> | S3 | SWIMCAT-ext accuracy รายกลุ่ม − baseline สี | **≥ 0.05** |
+> | R1 | red/blue proxy: median สัดส่วนเมฆของ clear_sky | **< 0.20** |
+> | R2 | red/blue proxy: median ของ thick_white, thick_dark, veil | **> 0.60 ทุกคลาส** |
 - [ ] MobileNetV3 backbone ร่วม + head จำแนกแยกตาม dataset (CCSN 11 คลาส, SWIMCAT-ext 6 คลาส) ใช้ train/val เท่านั้น
 - [ ] baseline สัดส่วนเมฆด้วย red/blue ratio (+ head CNN จาก SWIMSEG ถ้าได้ข้อมูลแล้ว)
 - [ ] ประกาศเกณฑ์ก่อน แล้วประเมินบน test split ของแต่ละ dataset ครั้งเดียว + export ให้ `/sky-image`
