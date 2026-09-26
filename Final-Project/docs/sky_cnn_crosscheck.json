@@ -1,0 +1,98 @@
+{
+  "created": "2026-09-27",
+  "method": "16x16 thumbnail MAD < 0.03, best of 8 rotations/flips (day-13 rule), CCSN x SWIMCAT-ext",
+  "n_pairs": 11,
+  "pairs_by_split": {
+    "ccsn_train/swim_test": 1,
+    "ccsn_train/swim_train": 7,
+    "ccsn_train/swim_val": 2,
+    "ccsn_val/swim_val": 1
+  },
+  "ccsn_pairs_with_label_conflict": 0,
+  "dropped_test": {
+    "ccsn_main": 0,
+    "swim": 1,
+    "ccsn_paths": [],
+    "swim_paths": [
+      "swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img51.png"
+    ]
+  },
+  "checkpoint_full_test_reproduced": {
+    "ccsn.accuracy": true,
+    "ccsn.macro_f1": true,
+    "ccsn.group_accuracy": true,
+    "swim.accuracy": true,
+    "swim.group_accuracy": true
+  },
+  "full_test": {
+    "ccsn": {
+      "mean": {
+        "accuracy": 0.48568507157464214,
+        "macro_f1": 0.45181860526531326,
+        "group_accuracy": 0.6850715746421269,
+        "group_recall": {
+          "high_thin": 0.7065527065527065,
+          "mid": 0.366120218579235,
+          "low_thick": 0.863517060367454,
+          "cumulus": 0.41269841269841273
+        }
+      },
+      "sd": {
+        "accuracy": 0.009860583600197302,
+        "macro_f1": 0.02254787843780422,
+        "group_accuracy": 0.009371320439582501
+      }
+    },
+    "swim": {
+      "mean": {
+        "accuracy": 0.9753483386923901,
+        "group_accuracy": 0.9668508287292817
+      },
+      "sd": {
+        "accuracy": 0.006693459805357335,
+        "group_accuracy": 0.009569341478281064
+      }
+    },
+    "n": {
+      "ccsn": 326,
+      "swim_images": 311,
+      "swim_groups": 181
+    }
+  },
+  "dedup_test_supplementary": {
+    "ccsn": {
+      "mean": {
+        "accuracy": 0.48568507157464214,
+        "macro_f1": 0.45181860526531326,
+        "group_accuracy": 0.6850715746421269,
+        "group_recall": {
+          "high_thin": 0.7065527065527065,
+          "mid": 0.366120218579235,
+          "low_thick": 0.863517060367454,
+          "cumulus": 0.41269841269841273
+        }
+      },
+      "sd": {
+        "accuracy": 0.009860583600197302,
+        "macro_f1": 0.02254787843780422,
+        "group_accuracy": 0.009371320439582501
+      }
+    },
+    "swim": {
+      "mean": {
+        "accuracy": 0.975268817204301,
+        "group_accuracy": 0.9666666666666667
+      },
+      "sd": {
+        "accuracy": 0.006715051611181037,
+        "group_accuracy": 0.00962250448649373
+      }
+    },
+    "n": {
+      "ccsn": 326,
+      "swim_images": 310,
+      "swim_groups": 180
+    }
+  },
+  "note": "supplementary only; the pre-registered result stays docs/sky_cnn_test.json"
+}

@@ -176,8 +176,8 @@
 ### วัน 13 — CNN: เตรียม dataset (ไม่ใช้ภาพถ่ายเอง)
 - [x] ดาวน์โหลด CCSN (CC0) และ SWIMCAT-ext (CC BY 4.0, ใช้แทน SWIMCAT) + ตรวจ license/checksum → `src/sky_data.py`, `docs/datasets.md`
   > CCSN 2,543 ภาพ 11 ชนิด (md5 ตรง), SWIMCAT-ext 2,100 ภาพ 6 คลาส × 350 (sha256 ตรง) SWIMCAT-ext ขยายมาจาก SWIMCAT (CC BY-NC) จึงถือว่าใช้เพื่อการศึกษา/ไม่ใช่เชิงพาณิชย์
-- [ ] SWIMCAT / SWIMSEG (CC BY-NC 4.0) ต้องกรอกฟอร์มก่อน
-  > ค้าง: รอลิงก์จากแบบฟอร์ม เมื่อได้แล้วให้วางไฟล์ไว้ที่ `dataset/sky/raw/` แตกไฟล์เป็น `dataset/sky/swimseg/` แล้วรัน `python -m src.sky_data --index` (`index_swimseg()` มีพร้อมแล้ว) สัดส่วนเมฆใช้ baseline red/blue ratio ไปก่อน
+- SWIMCAT / SWIMSEG (CC BY-NC 4.0) ต้องกรอกฟอร์มก่อน
+  > **ย้ายไป future work (ตัดสินวัน 15) ไม่ใช่งานค้าง:** ยกเลิก head CNN สัดส่วนเมฆ และใช้ red/blue proxy แทน ถ้าได้ SWIMSEG ภายหลังค่อยทำ (ดู "ส่วนเสริม" ท้ายไฟล์; `index_swimseg()` มีพร้อมแล้ว)
 - [x] index + ตรวจภาพซ้ำ + แบ่ง train/val/test ของแต่ละ dataset (70/15/15, stratified, ภาพซ้ำอยู่ split เดียวกัน) → `docs/sky_splits/*.csv`, `source_code/notebooks/13_sky_data.ipynb`
   > CCSN 1,785 / 383 / 375, SWIMCAT-ext 1,472 / 317 / 311, 0 กลุ่มซ้ำที่คร่อม split **เปลี่ยนจาก dHash เป็นเทียบ thumbnail 16×16 ที่หมุน/พลิกได้ 8 แบบ (MAD < 0.03)** เพราะ dHash โยงภาพที่ texture น้อยเป็นกลุ่มผิด ๆ ~50 ภาพ และจับภาพที่หมุนไม่ได้ **พบ CCSN 263 ภาพ (124 กลุ่ม) เป็นรูปเดียวกันแต่อยู่คนละชนิดเมฆ** (label noise ใน dataset) ติด flag `label_conflict` ไว้ → **เสนอให้ตัดทิ้งจากทุก split ก่อนฝึกในวัน 14**; SWIMCAT-ext มี 1,470 ภาพอยู่ในกลุ่มซ้ำ
 - [x] preprocessing (crop กลาง + resize 224) + augmentation (flip, หมุน ±15°, perspective, ความสว่าง, contrast, white balance, saturation, blur) ลด domain gap จากภาพกล้องท้องฟ้าสู่ภาพมือถือ → `load_image()`, `augmenter()`, `docs/figures/sky_*.png`
@@ -208,16 +208,22 @@
   > ครบ 3 seeds: val loss 0.763 / 0.751 / 0.759, CCSN acc 0.521 / 0.518 / 0.516, กลุ่ม UV 0.717 / 0.708 / 0.703, SWIMCAT-ext 0.991 / 0.984 / 0.987; baseline สี (val) CCSN 0.31, SWIMCAT-ext รายกลุ่ม 0.80 export seed 43 (val loss ต่ำสุด) → `models/sky_cnn_v1.tflite` (float16, 1.96 MB) + `sky_cnn_v1_labels.json`; seed 44 ฝึกใหม่ใน process แยก (27 ก.ย. 02:19–02:51, stage2 หยุดที่ epoch 11) ส่วน seed 42/43 โหลดจากไฟล์
   > ประวัติ: seed 42 (val loss 0.763, CCSN acc 0.521, UV-group 0.717, SWIMCAT-ext 0.991) และ seed 43 (0.751, 0.518, 0.708, 0.984) บันทึกไว้เท่านั้น **ไม่ได้ปรับโมเดลตามผล val** seed 44 หยุดเพราะ**เครื่อง sleep** (26 ก.ย. 16:08) แล้ว python.exe crash `0xC0000409` (ucrtbase.dll) ประมาณ 1 นาทีหลังตื่น (27 ก.ย. 01:12) ไม่มี Traceback และไม่ใช่ OOM (ภาพเก็บเป็น uint8 ใช้ RAM ราว 3–4 GB จาก 30 GB และไม่มีเหตุการณ์หน่วยความจำต่ำ) แก้เฉพาะการรัน: `resume_or_train()` โหลด seed ที่มีโมเดลแล้วแทนการฝึกใหม่ และ log ทุก epoch ลง `dataset/processed/logs/sky_cnn_seed<N>.log` สถาปัตยกรรม, stage, hyperparameter, split, seed และเกณฑ์ไม่เปลี่ยน history ราย epoch ของ seed 42/43 หายไปกับ process ที่ crash **ห้ามรัน `--test` จนกว่าจะครบ 3 seeds**
 - [x] baseline สัดส่วนเมฆด้วย red/blue ratio (+ head CNN จาก SWIMSEG ถ้าได้ข้อมูลแล้ว) → `rb_cloud_fraction()`, `docs/figures/sky_rb_cloud_fraction.png`
-  > ค้าง: head CNN สัดส่วนเมฆยังรอ SWIMSEG (ย้ายไปวัน 15) ตอนนี้มีเพียง proxy บน SWIMCAT-ext test: median clear_sky 0.001, thin_white 0.42, patterned 0.69, thick_white 0.66, thick_dark 0.97, veil 1.00
+  > head CNN สัดส่วนเมฆ**ย้ายไป future work (ตัดสินวัน 15)** แอปใช้ red/blue proxy ซึ่งตรวจบน SWIMCAT-ext test ได้: median clear_sky 0.001, thin_white 0.42, patterned 0.69, thick_white 0.66, thick_dark 0.97, veil 1.00
 - [x] ประกาศเกณฑ์ก่อน (commit `12c1828`) แล้วประเมินบน test split ของแต่ละ dataset ครั้งเดียว + export ให้ `/sky-image` → `docs/sky_cnn_test.json`, `source_code/notebooks/14_sky_cnn.ipynb`
   > **ผ่าน 7 / 10 ไม่ผ่าน K1, K2, K3** (ค่าเฉลี่ย 3 seeds, หลังเห็นผลไม่ได้แก้อะไร) **CCSN** (ตัด conflict, 326 ภาพ): 11 คลาส accuracy **0.486 ± 0.010 ❌** (≥ 0.60), macro-F1 **0.452 ± 0.023 ❌** (≥ 0.55), 4 กลุ่ม UV **0.685 ± 0.009 ❌** (≥ 0.75), recall เมฆบางระดับสูง 0.707 ✅ (≥ 0.70, เฉียดฉิว), เหนือ baseline สี +0.243 ✅; recall เมฆระดับกลาง 0.37 และเมฆก้อน 0.41 ต่ำ; แบบรวม conflict (375 ภาพ) 0.462 / 0.438 / 0.692 **SWIMCAT-ext** (311 ภาพ = 181 กลุ่มภาพไม่ซ้ำ): รายภาพ 0.975 ± 0.007 ✅, รายกลุ่ม 0.967 ± 0.010 ✅, เหนือ baseline สี +0.149 ✅ **red/blue proxy:** R1 0.001 ✅, R2 ต่ำสุด 0.656 (thick_white) ✅ → จำแนกสภาพท้องฟ้าใช้ได้ แต่จำแนกชนิดเมฆ/กลุ่ม UV ไม่ถึงเกณฑ์ ในแอปต้องแสดงผลกลุ่มเมฆพร้อมความไม่แน่นอน หรือแสดงเฉพาะสภาพท้องฟ้า (ตัดสินวัน 16–20) หมายเหตุ: `tf.lite.Interpreter` ถูกประกาศเลิกใช้ ให้ย้ายไป `ai_edge_litert` ตอนทำ API
   > **TFLite float16 (seed 43) เทียบกับ .keras** ตรวจบน **val** (ไม่อ่าน test ซ้ำ, notebook 14 ข้อ 5): คลาสตรงกัน 99.3 % (CCSN) / 99.4 % (SWIMCAT-ext) / 99.7 % (กลุ่ม UV) ความน่าจะเป็นต่างกันสูงสุด 0.057 ตัวชี้วัด val เท่ากัน (macro-F1 0.4796 → 0.4794)
-  > **ข้อจำกัด (ต้องเขียนในรายงาน):** (1) history ราย epoch ของ seed 42/43 หาย มี learning curve แค่ seed 44 (2) CCSN มี label ขัดกัน 263 ภาพ (124 กลุ่ม) ถูกตัดออก ข้อมูลน้อยลงและ label ที่เหลืออาจมี noise อีก (3) domain gap: SWIMCAT-ext เป็นภาพจากกล้องท้องฟ้า (fisheye) แต่แอปใช้ภาพกล้องมือถือ ยังไม่ได้วัดผลบนภาพมือถือ (4) SWIMCAT-ext ขยายจาก SWIMCAT (CC BY-NC) จึงใช้เพื่อการศึกษาเท่านั้น ไม่ใช่เชิงพาณิชย์
+  > **ข้อจำกัด (ต้องเขียนในรายงาน):** (1) history ราย epoch ของ seed 42/43 หาย มี learning curve แค่ seed 44 (2) CCSN มี label ขัดกัน 263 ภาพ (124 กลุ่ม) ถูกตัดออก ข้อมูลน้อยลงและ label ที่เหลืออาจมี noise อีก (3) domain gap: ตามคำอธิบายบน Mendeley (doi:10.17632/vwdd9grvdp.1) ภาพ SWIMCAT-ext ทั้งหมด "collected from Internet and labelled by technical expert" (ไม่ใช่ภาพ fisheye จากกล้องท้องฟ้าตามที่เขียนไว้ก่อนหน้า แก้วัน 15) ส่วน CCSN เป็นภาพจากกล้องธรรมดา ทั้งสองชุดไม่ใช่ภาพจากมือถือที่ปทุมธานี และยังไม่ได้วัดผลบนภาพมือถือ (4) SWIMCAT-ext ขยายจาก SWIMCAT (CC BY-NC) และภาพมาจากอินเทอร์เน็ตซึ่งไม่ทราบสิทธิ์ของภาพต้นฉบับ จึงใช้เพื่อการศึกษาเท่านั้น ไม่ใช่เชิงพาณิชย์
 
 ### วัน 15 — วันสำรอง
-- [ ] เก็บงานค้างของวัน 11–14 (เช่น head สัดส่วนเมฆเมื่อได้ SWIMSEG)
+> ห้ามฝึกโมเดลใหม่และห้ามรัน `--test` ใหม่ในวันนี้ head CNN สัดส่วนเมฆ (SWIMSEG) ย้ายไป future work และใช้ red/blue proxy แทน
+- [x] ตรวจ commit `2f260a3` (TFLite float16 บน val) → มาจาก session ก่อนหน้าของ Claude Code (author Folktom04 + `Co-Authored-By: Claude Opus 5.5` เหมือนทุก commit) ตัวเลขตรงกับไฟล์ผล (val macro-F1 ของ seed 43 = 0.4796 ตรงกับ `sky_cnn_v1_metrics.json`) และอ่านเฉพาะ val ไม่ได้อ่าน test ซ้ำ
+- [x] แก้แหล่งที่มาของ SWIMCAT-ext ตามคำอธิบายบน Mendeley (doi:10.17632/vwdd9grvdp.1, ยืนยันทั้งจากหน้าเว็บและ public API): "an extension of SWIMCAT dataset … All images were collected from Internet and labelled by technical expert." ในไฟล์ไม่มีเอกสารแนบ และไม่ได้บอกว่ารวมภาพ SWIMCAT ต้นฉบับหรือไม่ → แก้ ROADMAP, `docs/datasets.md`, `src/sky_data.py` และ rules ที่เคยเขียนว่าเป็น fisheye/sky-camera
+- [x] ตรวจภาพซ้ำข้าม dataset (CCSN × SWIMCAT-ext ทุก split, วิธีเดียวกับวัน 13) → `cross_duplicates()`, `python -m src.sky_cnn --crosscheck`, `docs/sky_crossdataset_duplicates.csv`, `docs/sky_cnn_crosscheck.json`
+  > กฎวัน 13 จับได้ **11 คู่**: CCSN-train/SWIM-test 1, train/train 7, train/val 2, val/val 1 **แต่เมื่อดูภาพจริงไม่มีคู่ไหนเป็นภาพเดียวกัน** (เป็นภาพ texture น้อยที่หน้าตาคล้ายกัน เช่น ฟ้าสีฟ้าที่มีเส้น contrail กับฟ้าเปล่า หรือ Ac/As/Cc กับ veil สีเทา) ข้อจำกัดคือกฎ thumbnail 16×16 มี false positive กับภาพเรียบ ๆ ผลประกอบ (โมเดลเดิม ไม่ได้ฝึกใหม่) เมื่อตัดภาพ test 1 ภาพที่ถูกจับ (SWIMCAT-ext `F_img51.png`, veil) ออก: รายภาพ 0.975 → 0.975, รายกลุ่ม 0.967 → 0.967 (310 ภาพ / 180 กลุ่ม) ส่วน CCSN ไม่มีภาพถูกตัด **ผลหลักใน `sky_cnn_test.json` ไม่เปลี่ยน**
+- [x] ใส่ cell id ให้ notebook (nbformat) → มีแค่ notebook 14 ที่ขาด (3 cell ที่เพิ่มใน `2f260a3`) เพิ่ม id อย่างเดียว เนื้อหา/ผลไม่เปลี่ยน และไม่ได้รันใหม่ ส่วน notebook 01–13 มี id อยู่แล้ว
+- [x] สรุปผลวัน 1–14 สำหรับรายงาน → `docs/results_summary.md` (ทุกตัวเลขมีไฟล์ต้นทางกำกับ, ตารางเกณฑ์ที่ประกาศก่อนเทียบผ่าน/ไม่ผ่าน, หัวข้อข้อจำกัด)
 
-**Checkpoint วัน 15: ผล LSTM ตัดสินแล้ว (ใช้ XGBoost) + CNN ทำงานบน test split ของแต่ละ dataset**
+**Checkpoint วัน 15: ผล LSTM ตัดสินแล้ว (ใช้ XGBoost) + CNN ทำงานบน test split ของแต่ละ dataset** → ✅ ตรวจแล้ว: `lstm_v1_metrics.json` บันทึกว่า `rnn_wins: false`, `app_model: XGBoost` และโหลด sky CNN 3 seeds จากดิสก์มาคำนวณ test ซ้ำได้**ตรงกับ `sky_cnn_test.json` ทุกค่า** (`checkpoint_full_test_reproduced` ใน `docs/sky_cnn_crosscheck.json`) CNN ทำงานและประเมินแล้ว แต่ผลยังเป็นตามที่รายงานไว้ (ผ่าน 7/10, CCSN K1–K3 ไม่ผ่าน)
 
 ---
 
@@ -302,6 +308,7 @@
 ---
 
 ## ส่วนเสริม (ทำเมื่อมีเวลาเหลือ)
+- [ ] (future work, ย้ายมาวัน 15) SWIMCAT / SWIMSEG จากแบบฟอร์ม (CC BY-NC 4.0) + head CNN สัดส่วนเมฆจาก mask ของ SWIMSEG แทน red/blue proxy (ต้องประกาศเกณฑ์ก่อนเปิด test เหมือนวัน 14)
 - [ ] Himawari cloud products (JAXA P-Tree) เป็น features ความหนาเมฆ
 - [ ] ติดต่อขอข้อมูลวัด UV ภาคพื้นดินที่นครปฐม (ม.ศิลปากร) ใช้เป็น ground truth
 

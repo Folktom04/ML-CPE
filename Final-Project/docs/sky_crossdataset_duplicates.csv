@@ -1,0 +1,12 @@
+ccsn_path,ccsn_split,ccsn_label,ccsn_label_conflict,swim_path,swim_split,swim_label,mad
+ccsn/CCSN_v2/Ct/Ct-N190.jpg,val,Ct,False,swimcat_ext/Swimcat-extend/A-Clear Sky/A_img57.png,val,clear_sky,0.017371322959661484
+ccsn/CCSN_v2/Ct/Ct-N160.jpg,train,Ct,False,swimcat_ext/Swimcat-extend/A-Clear Sky/A_img37.png,train,clear_sky,0.018101511523127556
+ccsn/CCSN_v2/Ct/Ct-N160.jpg,train,Ct,False,swimcat_ext/Swimcat-extend/A-Clear Sky/A_img170.png,train,clear_sky,0.01987847499549389
+ccsn/CCSN_v2/Ct/Ct-N158.jpg,train,Ct,False,swimcat_ext/Swimcat-extend/A-Clear Sky/A_img167.png,val,clear_sky,0.023999178782105446
+ccsn/CCSN_v2/Ct/Ct-N158.jpg,train,Ct,False,swimcat_ext/Swimcat-extend/A-Clear Sky/A_img169.png,val,clear_sky,0.024152368307113647
+ccsn/CCSN_v2/Cc/Cc-N104.jpg,train,Cc,False,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img51.png,test,veil_clouds,0.02684844844043255
+ccsn/CCSN_v2/Ac/Ac-N100.jpg,train,Ac,False,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img251.png,train,veil_clouds,0.02729269117116928
+ccsn/CCSN_v2/Ac/Ac-N100.jpg,train,Ac,False,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img252.png,train,veil_clouds,0.027512257918715477
+ccsn/CCSN_v2/Cc/Cc-N076.jpg,train,Cc,False,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img104.png,train,veil_clouds,0.028809234499931335
+ccsn/CCSN_v2/As/As-N060.jpg,train,As,False,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img301.png,train,veil_clouds,0.029799839481711388
+ccsn/CCSN_v2/As/As-N060.jpg,train,As,False,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img302.png,train,veil_clouds,0.029876431450247765
