@@ -136,6 +136,31 @@ def test_train_export_and_predict_sky_match(tmp_path):
         sc.predict_sky(img * 255, tflite_path=path)
 
 
+def test_resume_or_train_reloads_finished_seed(tmp_path, monkeypatch):
+    data = tiny_split()
+    va = sc.make_dataset(sc.combine(data["ccsn"], data["swim"]), False, seed=1)
+    logs = tmp_path / "logs"
+    kw = dict(weights=None, stage1=TINY, stage2={**TINY, "unfreeze_from": 0.7}, log_dir=logs)
+    m1, h1 = sc.resume_or_train(data, data, va, seed=5, model_dir=tmp_path, **kw)
+    assert sc.seed_paths(5, tmp_path)[0].exists() and sc.seed_paths(5, tmp_path)[1].exists()
+    assert "resumed" not in h1
+    text = sc.seed_log_path(5, logs).read_text(encoding="utf-8")
+    for stage in ("stage1", "stage2"):
+        assert f"seed 5 {stage} epoch 1/1" in text and f"seed 5 {stage} end" in text
+    assert "val_loss" in text
+
+    def boom(*a, **k):
+        raise AssertionError("a finished seed must not be retrained")
+
+    monkeypatch.setattr(sc, "train_seed", boom)
+    m2, h2 = sc.resume_or_train(data, data, va, seed=5, model_dir=tmp_path, **kw)
+    assert h2["resumed"] and h2["stage1"] == h1["stage1"]
+    assert "reloaded from sky_cnn_v1_seed5.keras (not retrained)" in sc.seed_log_path(
+        5, logs
+    ).read_text(encoding="utf-8")
+    assert h2["best_val_loss"] == pytest.approx(float(m1.evaluate(va, verbose=0)[0]), rel=1e-4)
+
+
 def test_run_test_refuses_second_run(tmp_path, monkeypatch):
     done = tmp_path / "t.json"
     done.write_text("{}")

@@ -30,7 +30,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -44,6 +44,7 @@ from sklearn.metrics import f1_score  # noqa: E402
 from sklearn.pipeline import make_pipeline  # noqa: E402
 from sklearn.preprocessing import StandardScaler  # noqa: E402
 
+from src.fetch_data import ROOT  # noqa: E402
 from src.sky_data import IMAGE_SIZE, augmenter, load_image, load_split, resolve  # noqa: E402
 from src.train_cmf import DOCS_DIR, MODEL_DIR  # noqa: E402
 
@@ -91,6 +92,7 @@ METRICS_PATH = MODEL_DIR / "sky_cnn_v1_metrics.json"
 TFLITE_PATH = MODEL_DIR / "sky_cnn_v1.tflite"
 LABELS_PATH = MODEL_DIR / "sky_cnn_v1_labels.json"
 TEST_PATH = DOCS_DIR / "sky_cnn_test.json"
+LOG_DIR = ROOT / "dataset" / "processed" / "logs"  # per-seed training logs (git-ignored)
 DISCLAIMER_TH = "ผลจากภาพท้องฟ้าเป็นข้อมูลประกอบเท่านั้น ไม่ได้ใช้คำนวณค่า UV"
 
 
@@ -496,6 +498,118 @@ def split_data(
     }
 
 
+def seed_paths(seed: int, model_dir: Path = MODEL_DIR) -> tuple[Path, Path]:
+    """Model and history files of one seed.
+
+    Args:
+        seed: Random seed.
+        model_dir: Directory.
+
+    Returns:
+        ``(model_path, history_path)``.
+    """
+    path = model_dir / f"sky_cnn_v1_seed{seed}.keras"
+    return path, path.with_name(path.stem + "_history.json")
+
+
+def resume_or_train(
+    train: dict[str, Any],
+    val: dict[str, Any],
+    val_ds: tf.data.Dataset,
+    seed: int,
+    model_dir: Path = MODEL_DIR,
+    **kw: Any,
+) -> tuple[tf.keras.Model, dict[str, Any]]:
+    """Reload a seed that already finished (same config), otherwise train and save it.
+
+    The reloaded model holds the restored best weights, so its val loss from ``evaluate``
+    equals the best val loss of that run. A history file is written after each run so a
+    crash later in the loop does not lose it.
+
+    Args:
+        train: Train split data.
+        val: Val split data.
+        val_ds: Val dataset (``make_dataset(..., training=False)``).
+        seed: Random seed.
+        model_dir: Directory of the seed files.
+        **kw: Passed to ``train_seed``.
+
+    Returns:
+        ``(model, history)``.
+    """
+    path, hpath = seed_paths(seed, model_dir)
+    if path.exists():
+        model = tf.keras.models.load_model(path)
+        hist = (
+            json.loads(hpath.read_text(encoding="utf-8"))
+            if hpath.exists()
+            else {
+                "stage1": None,
+                "stage2": None,
+                "note": "history lost in a process crash; model reloaded",
+            }
+        )
+        hist["best_val_loss"] = float(model.evaluate(val_ds, verbose=0)[0])
+        hist["resumed"] = True
+        if kw.get("log_dir") is not None:
+            log_line(
+                seed_log_path(seed, kw["log_dir"]),
+                f"seed {seed} reloaded from {path.name} (not retrained), "
+                f"val_loss {hist['best_val_loss']:.4f}",
+            )
+        return model, hist
+    model, hist = train_seed(train, val, seed, **kw)
+    model.save(path)
+    hpath.write_text(json.dumps(hist), encoding="utf-8")
+    return model, hist
+
+
+def seed_log_path(seed: int, log_dir: Path = LOG_DIR) -> Path:
+    """Per-seed text log file.
+
+    Args:
+        seed: Random seed.
+        log_dir: Directory (created if missing).
+
+    Returns:
+        ``<log_dir>/sky_cnn_seed<seed>.log``.
+    """
+    log_dir.mkdir(parents=True, exist_ok=True)
+    return log_dir / f"sky_cnn_seed{seed}.log"
+
+
+def log_line(path: Path, text: str) -> None:
+    """Append one time-stamped line to a log file and flush it (readable live).
+
+    Args:
+        path: Log file.
+        text: Message.
+    """
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(f"{datetime.now():%Y-%m-%d %H:%M:%S} {text}\n")
+
+
+class EpochFileLogger(tf.keras.callbacks.Callback):
+    """Write one line per epoch (all logged metrics) to a per-seed log file."""
+
+    def __init__(self, path: Path, seed: int, stage: str, epochs: int) -> None:
+        super().__init__()
+        self.path, self.seed, self.stage, self.epochs = path, seed, stage, epochs
+
+    def on_train_begin(self, logs: dict[str, Any] | None = None) -> None:
+        """Mark the start of a stage."""
+        log_line(self.path, f"seed {self.seed} {self.stage} start (max {self.epochs} epochs)")
+
+    def on_epoch_end(self, epoch: int, logs: dict[str, Any] | None = None) -> None:
+        """Log the epoch number and every metric Keras reports."""
+        vals = " ".join(f"{k} {float(v):.4f}" for k, v in sorted((logs or {}).items()))
+        log_line(self.path, f"seed {self.seed} {self.stage} epoch {epoch + 1}/{self.epochs} {vals}")
+
+    def on_train_end(self, logs: dict[str, Any] | None = None) -> None:
+        """Mark the end of a stage (early stopping may end it before ``epochs``)."""
+        log_line(self.path, f"seed {self.seed} {self.stage} end")
+
+
 def train_seed(
     train: dict[str, Any],
     val: dict[str, Any],
@@ -504,6 +618,7 @@ def train_seed(
     verbose: int = 0,
     stage1: dict[str, Any] = STAGE1,
     stage2: dict[str, Any] = STAGE2,
+    log_dir: Path | None = None,
 ) -> tuple[tf.keras.Model, dict[str, Any]]:
     """Two-stage training with early stopping on val.
 
@@ -515,6 +630,8 @@ def train_seed(
         verbose: Keras verbosity.
         stage1: Frozen-backbone settings.
         stage2: Fine-tuning settings.
+        log_dir: If given, one line per epoch is appended to ``<log_dir>/sky_cnn_seed<seed>.log``
+            (logging only; it does not change training).
 
     Returns:
         ``(model, history)`` with per-stage histories and the best val loss.
@@ -534,8 +651,13 @@ def train_seed(
         stop = tf.keras.callbacks.EarlyStopping(
             monitor="val_loss", patience=PATIENCE, restore_best_weights=True
         )
+        callbacks: list[Any] = [stop]
+        if log_dir is not None:
+            callbacks.append(
+                EpochFileLogger(seed_log_path(seed, log_dir), seed, name, cfg["epochs"])
+            )
         h = model.fit(
-            tr, validation_data=va, epochs=cfg["epochs"], callbacks=[stop], verbose=verbose
+            tr, validation_data=va, epochs=cfg["epochs"], callbacks=callbacks, verbose=verbose
         )
         hist[name] = {k: [float(x) for x in v] for k, v in h.history.items()}
     hist["best_val_loss"] = float(min(hist["stage2"]["val_loss"]))
@@ -616,8 +738,9 @@ def run_train() -> dict[str, Any]:
     base_s = color_baseline(train["swim"]["x"], train["swim"]["y"])
     runs, hists = [], {}
     best = (np.inf, None, None)
+    va = make_dataset(combine(val["ccsn"], val["swim"]), False, SEEDS[0])
     for seed in SEEDS:
-        model, hist = train_seed(train, val, seed)
+        model, hist = resume_or_train(train, val, va, seed, verbose=2, log_dir=LOG_DIR)
         p = predict_probs(model, np.concatenate([val["ccsn"]["x"], val["swim"]["x"]]))
         n1 = len(val["ccsn"]["y"])
         c = ccsn_scores(p["ccsn"][:n1], val["ccsn"]["y"])
@@ -634,7 +757,6 @@ def run_train() -> dict[str, Any]:
             }
         )
         hists[str(seed)] = hist
-        model.save(MODEL_DIR / f"sky_cnn_v1_seed{seed}.keras")
         print(
             f"seed {seed}: val loss {hist['best_val_loss']:.4f}, CCSN acc {c['accuracy']:.3f}, "
             f"UV-group {c['group_accuracy']:.3f}, SWIM acc {s['accuracy']:.3f}"

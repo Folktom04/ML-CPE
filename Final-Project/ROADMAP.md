@@ -205,6 +205,7 @@
 > | R1 | red/blue proxy: median สัดส่วนเมฆของ clear_sky | **< 0.20** |
 > | R2 | red/blue proxy: median ของ thick_white, thick_dark, veil | **> 0.60 ทุกคลาส** |
 - [ ] MobileNetV3 backbone ร่วม + head จำแนกแยกตาม dataset (CCSN 11 คลาส, SWIMCAT-ext 6 คลาส) ใช้ train/val เท่านั้น
+  > ค้าง: ฝึกครบแล้ว 2/3 seeds — seed 42 (val loss 0.763, CCSN acc 0.521, UV-group 0.717, SWIMCAT-ext 0.991) และ seed 43 (0.751, 0.518, 0.708, 0.984) บันทึกไว้เท่านั้น **ไม่ได้ปรับโมเดลตามผล val** seed 44 หยุดเพราะ**เครื่อง sleep** (26 ก.ย. 16:08) แล้ว python.exe crash `0xC0000409` (ucrtbase.dll) ประมาณ 1 นาทีหลังตื่น (27 ก.ย. 01:12) ไม่มี Traceback และไม่ใช่ OOM (ภาพเก็บเป็น uint8 ใช้ RAM ราว 3–4 GB จาก 30 GB และไม่มีเหตุการณ์หน่วยความจำต่ำ) แก้เฉพาะการรัน: `resume_or_train()` โหลด seed ที่มีโมเดลแล้วแทนการฝึกใหม่ และ log ทุก epoch ลง `dataset/processed/logs/sky_cnn_seed<N>.log` สถาปัตยกรรม, stage, hyperparameter, split, seed และเกณฑ์ไม่เปลี่ยน history ราย epoch ของ seed 42/43 หายไปกับ process ที่ crash **ห้ามรัน `--test` จนกว่าจะครบ 3 seeds**
 - [ ] baseline สัดส่วนเมฆด้วย red/blue ratio (+ head CNN จาก SWIMSEG ถ้าได้ข้อมูลแล้ว)
 - [ ] ประกาศเกณฑ์ก่อน แล้วประเมินบน test split ของแต่ละ dataset ครั้งเดียว + export ให้ `/sky-image`
 
