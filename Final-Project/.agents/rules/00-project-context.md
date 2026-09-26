@@ -11,10 +11,11 @@ Pipeline:
 input (GPS, time, weather/air-quality API, phone lux sensor, sky photo)
 → feature engineering
 → physics clear-sky model (UVI, UVA, UVB)
-→ ML predicts Cloud Modification Factor (CMF, 0–1): XGBoost multi-output + CNN sky features → stacking ensemble
-→ UV = clear_sky × CMF, with a quantile range (q10–q90)
+→ ML predicts Cloud Modification Factor (CMF, 0–1): XGBoost multi-output on Open-Meteo + time/location features
+→ UV = clear_sky × CMF, with a quantile range (q10–q90, CQR-calibrated)
 → Risk Engine (WHO level, minutes to sunburn, SPF/PA advice)
-→ FastAPI → Expo app + notifications. LSTM gives a 6–24 h forecast.
+→ FastAPI → Expo app + notifications. The 6–24 h forecast is the same XGBoost on Open-Meteo forecast features (an LSTM was tested on day 12 and did not beat it).
+Sky-image CNN (Phase 3, decided day 13) is a SEPARATE module, not stacked with XGBoost: no Pathum Thani sky photos are paired with NASA POWER targets. It classifies the sky condition and estimates cloud fraction; the app shows it as supporting information only and it never changes the UVI.
 
 The source of truth for scope and schedule is `ROADMAP.md`. Read it before starting any task and tick `[x]` items you finish.
 
@@ -24,7 +25,7 @@ The source of truth for scope and schedule is `ROADMAP.md`. Read it before start
 - Mobile: React Native with Expo (TypeScript), expo-notifications, expo-camera, expo-sensors, expo-location
 - Data: Open-Meteo APIs (no API key). Default location: Pathum Thani, lat 14.02, lon 100.52, timezone Asia/Bangkok
 - Smartphone only: NO external sensors or hardware modules. The only inputs are what a phone provides (GPS, clock, camera, ambient light sensor on Android, accelerometer/gyroscope) plus free web APIs. Do not suggest ESP32, VEML6075 or any add-on device.
-- Sky-image CNN is trained ONLY on public datasets — no photos taken by the user: CCSN (normal-camera cloud photos, 11 classes), SWIMCAT (5 sky classes), SWIMSEG (cloud masks), SKIPP'D or NREL CloudCV (sky images paired with PV power / irradiance). Most are fisheye whole-sky images, so reduce the domain gap with centre-crop + perspective transform + colour/brightness augmentation, and report the domain gap as a limitation. SKIPP'D/CloudCV targets are broadband, not UV — treat them as an approximate cloud-attenuation proxy. Check and cite each dataset's license. Photos taken in the app are used for inference/demo only, never for training.
+- Sky-image CNN is trained ONLY on public datasets — no photos taken by the user: CCSN (normal-camera cloud photos, 11 genera, CC0), SWIMCAT-ext (6 sky classes, CC BY 4.0; used instead of SWIMCAT while the SWIMCAT/SWIMSEG forms are pending), SWIMSEG (cloud masks, CC BY-NC 4.0, only once received). Sky-camera patches differ from phone photos, so use centre-crop + perspective/colour/brightness augmentation and report the domain gap as a limitation. Each dataset keeps its own labels and its own test split (no merged taxonomy); report each test split separately. Cloud fraction starts with a red/blue-ratio baseline; a CNN cloud-fraction head is added only if SWIMSEG arrives. SKIPP'D/CloudCV are not used (no attenuation head). Check and cite each dataset's license. Photos taken in the app are used for inference/demo only, never for training.
 - Training data sources:
   - Open-Meteo Weather/Historical (features only — its uv_index / uv_index_clear_sky may be used as input features but NOT as a target; see "Ground truth")
   - Open-Meteo Air Quality / CAMS (aerosol_optical_depth, dust, pm2_5, ozone)
