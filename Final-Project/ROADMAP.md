@@ -166,8 +166,10 @@
 >
 >   ถ้าไม่ผ่านทั้งสองข้อ ให้รายงานตามจริงและ **ใช้ XGBoost ในแอป** (รวมพยากรณ์ 6–24 ชม.)
 > - **Test 2025 ประเมินครั้งเดียว** หลังตัดสินบน dev แล้ว (LSTM refit บน 2023–2024 เทียบ XGBoost final วัน 10 บน window ปี 2025 และ guard รันครั้งเดียวแบบวัน 10) ใช้รายงานเท่านั้น ไม่เปลี่ยนการตัดสินใจ: **L1** MAE ของ LSTM < 1.0 UVI; **L2** MAE ของ LSTM ต่ำกว่า XGBoost final เกิน 0.02 UVI
-- [ ] ฝึก LSTM/GRU พยากรณ์ 6–24 ชม.
-- [ ] เทียบกับพยากรณ์ Open-Meteo
+- [x] ฝึก LSTM/GRU พยากรณ์ 6–24 ชม. → `src/lstm.py`, `source_code/notebooks/12_lstm.ipynb`, `models/lstm_v1_metrics.json`
+  > encoder–decoder (units 64, dropout 0.2, loss = MSE ถ่วง `uvi_clear²`, `enable_op_determinism`) config คงที่ไม่ได้ tune early stopping ใช้ window ที่ target อยู่ใน **พ.ย.–ธ.ค. 2023** (ไม่ใช้ dev 2024) เลือก **LSTM** แทน GRU ด้วย validation loss ช่วงเดียวกัน (0.00426 เทียบกับ 0.00477 เฉลี่ย 3 seeds)
+- [x] เทียบกับพยากรณ์ Open-Meteo และ baseline XGBoost → `docs/lstm_dev_2024.csv`, `docs/lstm_test_2025.json`
+  > **dev 2024 (3 seeds): LSTM MAE 0.463 ± 0.008** เทียบกับ B1 XGBoost + Open-Meteo 0.450 และ B2 Open-Meteo `uv_index` 1.162; recall ≥ สูงมาก 0.873 (B1 0.831) **→ ไม่ผ่านเกณฑ์ (ต้อง < 0.430) ใช้ XGBoost ในแอปรวมพยากรณ์ 6–24 ชม. และไม่ปรับ LSTM ต่อ** LSTM มี bias +0.17 และแย่กว่า B1 ทุก lead **Test 2025 (ครั้งเดียว, ใช้รายงานเท่านั้น):** LSTM refit 0.497 ± 0.004 เทียบกับ XGBoost final 0.480 และ Open-Meteo 1.164 → L1 ผ่าน, L2 ไม่ผ่าน; recall รุนแรงมาก LSTM 0.06 เทียบกับ XGBoost 0.22; early stopping ตอน refit หยุดที่ epoch 5 / 1 / 1 ข้อจำกัด: covariate เป็นค่าวิเคราะห์ ไม่ใช่พยากรณ์ที่ออกล่วงหน้าจริง
 
 ### วัน 13 — CNN: เตรียม dataset (ไม่ใช้ภาพถ่ายเอง)
 - [ ] ดาวน์โหลด CCSN, SWIMCAT, SWIMSEG, SKIPP'D (หรือ CloudCV) + ตรวจ license
