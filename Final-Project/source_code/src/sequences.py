@@ -68,18 +68,20 @@ def check_inputs(features: list[str]) -> None:
         raise ValueError(f"inputs not available at run time: {bad}")
 
 
-def hourly_grid(merged: pd.DataFrame) -> pd.DataFrame:
+def hourly_grid(merged: pd.DataFrame, allow_test: bool = False) -> pd.DataFrame:
     """Full hourly table (day and night) with features, target and scoring columns.
 
     Args:
-        merged: Output of ``merge_sources`` + ``clean`` (any hours, no test year).
+        merged: Output of ``merge_sources`` + ``clean`` (any hours).
+        allow_test: Accept test-year rows (only via ``load_grid(include_test=True)``).
 
     Returns:
         One row per hour between the first and last timestamp (gaps become NaN rows), with
         ``FEATURES``, ``cmf_uvi`` (NaN when ``uvi_clear < MIN_UVI_CLEAR``), ``uvi_clear``,
         ``nasa_uvi`` and ``is_target``.
     """
-    assert_no_test_rows(merged)
+    if not allow_test:
+        assert_no_test_rows(merged)
     full = pd.date_range(merged["time_utc"].min(), merged["time_utc"].max(), freq="h")
     df = merged.set_index("time_utc").reindex(full).rename_axis("time_utc").reset_index()
     df = add_openmeteo_ratios(add_clear_sky(add_time_features(df)))
@@ -92,18 +94,25 @@ def hourly_grid(merged: pd.DataFrame) -> pd.DataFrame:
     return df[cols]
 
 
-def load_grid(tag: str = "2023_2025") -> pd.DataFrame:
+def load_grid(
+    tag: str = "2023_2025", include_test: bool = False, confirm_day12: bool = False
+) -> pd.DataFrame:
     """Read the raw files, drop the test year at once, clean and build the hourly grid.
 
     Args:
         tag: Year tag of the raw file names.
+        include_test: Keep 2025 (day-12 one-time LSTM test only).
+        confirm_day12: Must be True together with ``include_test``.
 
     Returns:
-        Output of ``hourly_grid`` for 2023-2024.
+        Output of ``hourly_grid`` for 2023-2024 (or 2023-2025 with ``include_test``).
     """
-    weather, air, power = (t.loc[t["time_utc"] < TEST_START] for t in load_raw(tag))
+    if include_test and not confirm_day12:
+        raise PermissionError("2025 windows are only built for the day-12 one-time test")
+    raw = load_raw(tag)
+    weather, air, power = raw if include_test else (t.loc[t["time_utc"] < TEST_START] for t in raw)
     merged, _ = clean(merge_sources(weather, air, power), ozone_climatology_path=CLIMATOLOGY_PATH)
-    return hourly_grid(merged)
+    return hourly_grid(merged, allow_test=include_test)
 
 
 def make_windows(
@@ -181,17 +190,20 @@ def split_windows(
     return ({k: v[tr] for k, v in w.items()}, {k: v[dv] for k, v in w.items()})
 
 
-def fit_scaler(grid: pd.DataFrame, features: list[str] = FEATURES) -> dict[str, list[float]]:
-    """Per-feature mean/std from the training period only (rows before 2024).
+def fit_scaler(
+    grid: pd.DataFrame, features: list[str] = FEATURES, end: pd.Timestamp = DEV_START
+) -> dict[str, list[float]]:
+    """Per-feature mean/std from the training period only (rows before ``end``).
 
     Args:
         grid: Hourly grid.
         features: Input columns.
+        end: First timestamp not used (2024-01-01 for dev, 2025-01-01 for the refit).
 
     Returns:
         ``{"features", "mean", "std"}`` (std 0 replaced by 1).
     """
-    train = grid.loc[grid["time_utc"] < DEV_START, features]
+    train = grid.loc[grid["time_utc"] < end, features]
     std = train.std().replace(0, 1.0).fillna(1.0)
     return {"features": list(features), "mean": train.mean().tolist(), "std": std.tolist()}
 
