@@ -42,6 +42,8 @@ The migration file does not import `src.db` on purpose, so later model changes n
 
 `source_code/tests/test_db.py` runs every test on a temporary SQLite file. **If `TEST_DATABASE_URL` is set** (in the environment or `.env`), every test also runs on that PostgreSQL database. The database name must contain `test`, because the tests drop and recreate all tables. Without it, the PostgreSQL cases show as *skipped*.
 
+**Tested on a real PostgreSQL 18.6 server (2026-09-27):** `alembic upgrade head` → `0001 (head)`, all 7 time columns are `timestamptz`, and `pytest` gives 221 passed, 0 skipped (the 23 `[postgresql]` cases pass). No behaviour differed from SQLite. The install steps below name version 16; 18 works the same way (service `postgresql-x64-18`, `bin` under `PostgreSQL8`).
+
 ## Installing PostgreSQL 16 on Windows (do this by hand)
 
 1. Install PostgreSQL 16 with **one** of these:

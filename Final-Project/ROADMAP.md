@@ -239,7 +239,9 @@
   > เวลาทุกคอลัมน์เป็น `DateTime(timezone=True)` (`UTCDateTime`: ไม่รับ naive, อ่านกลับเป็น UTC-aware ทั้ง PostgreSQL และ SQLite) `users.alert_burn_minutes` (ค่าเริ่มต้น 30), `measurements.sky_confidence` / `interval_adjusted` / `data_imputed` ความเป็นส่วนตัว: ไม่มีชื่อ/อีเมล/ภาพ, พิกัดปัดเหลือ 0.01° (~1 กม.), ลบ user แล้ว push_tokens, notifications_log และ **measurements ถูกลบด้วย CASCADE** (ไม่ใช้ SET NULL เพราะชุดเวลา+ตำแหน่งยังระบุตัวคนได้ ดูเหตุผลใน `docs/db.md`) `purge_old_rows(days=90)` ลบ measurements (ยกเว้น `source='field'`) และ notifications_log ที่เก่ากว่า 90 วัน SQLite ใช้เป็น fallback เมื่อไม่ได้ตั้ง `DATABASE_URL` เท่านั้น (log WARNING) และ `/health` บอก `db_backend`, `db_fallback`, `db_ok` ส่วนเรื่อง PDPA (เก็บอะไร/ไม่เก็บอะไร/เก็บนานเท่าไร/ลบยังไง) อยู่ใน `docs/db.md`
 - [x] SQLAlchemy models + migration → Alembic `alembic.ini`, `source_code/migrations/versions/0001_initial_schema.py`, `source_code/tests/test_db.py`
   > migration ไม่ import `src.db` เทสตรวจว่า migration ตรงกับ models (`compare_metadata` ไม่มี diff), upgrade/downgrade ได้ และ DDL ของ PostgreSQL แบบ offline มี `TIMESTAMP WITH TIME ZONE` 7 คอลัมน์, CASCADE 3, SET NULL 1 ผล pytest ทั้งหมด 199 passed, 22 skipped (ทั้ง 22 ข้อคือ PostgreSQL) บน SQLite ผ่านครบ
-  > ค้าง: ยังไม่ได้รันกับ PostgreSQL จริงเพราะในเครื่องยังไม่มี ให้ติดตั้ง PostgreSQL 16 ตาม `docs/db.md` แล้วตั้ง `TEST_DATABASE_URL` จากนั้นรัน `alembic upgrade head` และ `pytest -rs source_code/tests/test_db.py` (เทส `[postgresql]` ต้องผ่านและไม่ถูก skip)
+  > ~~ค้าง: ยังไม่ได้รันกับ PostgreSQL จริง~~ แก้แล้ว
+- [x] ทดสอบบน PostgreSQL 18 จริงแล้ว (18.6, 27 ก.ย. 2026)
+  > `alembic upgrade head` กับ `DATABASE_URL` → `0001 (head)` ตาราง users, push_tokens, measurements, notifications_log, alembic_version ครบ คอลัมน์เวลา 7 คอลัมน์เป็น `timestamptz` ทั้งหมด `pytest -q` ทั้งชุด **221 passed, 0 skipped** (เทส `[postgresql]` 23 ข้อผ่านหมด ไม่มีข้อที่ skip) ผลบน PostgreSQL ไม่ต่างจาก SQLite จึงไม่ต้องแก้โค้ด tests อ่าน `TEST_DATABASE_URL` จาก `.env` ผ่าน `load_dotenv` และไม่ log ค่า URL
 
 ### วัน 18 — Expo: หน้าหลัก
 - [ ] สร้างโปรเจกต์ Expo + Expo Router
