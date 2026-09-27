@@ -24,10 +24,22 @@ it('loads /predict for Pathum Thani, skin type III, and shows both cards', async
 });
 
 it('shows the Thai error, keeps the disclaimer and retries', async () => {
-  mockFetch.mockRejectedValueOnce(new ApiError('ข้อมูลสภาพอากาศของชั่วโมงนี้ยังไม่มา', 503));
+  mockFetch.mockRejectedValueOnce(
+    new ApiError('ข้อมูลสภาพอากาศของชั่วโมงนี้ยังไม่มา', {
+      status: 503,
+      url: 'http://192.168.1.48:8000/predict',
+      detail: 'HTTP 503: Open-Meteo data for the current hour is missing',
+    }),
+  );
   await render(<HomeScreen />);
   expect(await screen.findByTestId('error-message', {}, { timeout: 5000 })).toHaveTextContent(
     'ข้อมูลสภาพอากาศของชั่วโมงนี้ยังไม่มา',
+  );
+  expect(screen.getByTestId('error-url')).toHaveTextContent(
+    'ที่อยู่ที่เรียก: http://192.168.1.48:8000/predict',
+  );
+  expect(screen.getByTestId('error-detail')).toHaveTextContent(
+    'รายละเอียด: HTTP 503: Open-Meteo data for the current hour is missing',
   );
   expect(screen.getByTestId('disclaimer')).toHaveTextContent(DISCLAIMER_TH);
   mockFetch.mockResolvedValueOnce(samplePredict());
