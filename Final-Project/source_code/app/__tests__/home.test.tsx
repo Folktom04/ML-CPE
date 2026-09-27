@@ -1,18 +1,22 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
-import { ApiError, fetchPredict } from '@/api/client';
+import { ApiError, fetchForecast, fetchPredict } from '@/api/client';
 import HomeScreen from '@/app/index';
 import { DISCLAIMER_TH } from '@/config';
 
-import { samplePredict } from './fixtures';
+import { sampleHours, sampleNight, samplePredict } from './fixtures';
 
 jest.mock('@/api/client', () => {
   const actual = jest.requireActual('@/api/client');
-  return { ...actual, fetchPredict: jest.fn() };
+  return { ...actual, fetchPredict: jest.fn(), fetchForecast: jest.fn() };
 });
 const mockFetch = fetchPredict as jest.MockedFunction<typeof fetchPredict>;
+const mockForecast = fetchForecast as jest.MockedFunction<typeof fetchForecast>;
 
-beforeEach(() => mockFetch.mockReset());
+beforeEach(() => {
+  mockFetch.mockReset();
+  mockForecast.mockReset();
+});
 
 it('loads /predict for Pathum Thani, skin type III, and shows both cards', async () => {
   mockFetch.mockResolvedValue(samplePredict());
@@ -21,6 +25,7 @@ it('loads /predict for Pathum Thani, skin type III, and shows both cards', async
   expect(screen.getByTestId('burn-value')).toHaveTextContent('35 นาที');
   expect(mockFetch).toHaveBeenCalledWith({ lat: 14.02, lon: 100.52, skin_type: 'III' });
   expect(screen.getByTestId('disclaimer')).toHaveTextContent(samplePredict().disclaimer);
+  expect(mockForecast).not.toHaveBeenCalled(); // daytime: no extra request
 });
 
 it('shows the Thai error, keeps the disclaimer and retries', async () => {
@@ -46,4 +51,31 @@ it('shows the Thai error, keeps the disclaimer and retries', async () => {
   await fireEvent.press(screen.getByText('ลองใหม่'));
   expect(await screen.findByTestId('uvi-value')).toBeTruthy();
   expect(mockFetch).toHaveBeenCalledTimes(2);
+});
+
+it("at night fetches /forecast and shows tomorrow's peak instead of the advice", async () => {
+  mockFetch.mockResolvedValue(sampleNight());
+  // 20:00 tonight: 14 dark hours, then 10:00-12:00 tomorrow (peak 7.8 at 11:00)
+  const hours = sampleHours('2026-09-27T20:00:00+07:00', [...Array(14).fill(0), 3.1, 7.8, 5.2, 0]);
+  mockForecast.mockResolvedValue({ lat: 14.02, lon: 100.52, hours, note: null, disclaimer: 'd' });
+  await render(<HomeScreen />);
+  const box = await screen.findByTestId('next-peak', {}, { timeout: 5000 });
+  expect(box).toHaveTextContent(/พรุ่งนี้ UV สูงสุดประมาณ/);
+  expect(box).toHaveTextContent(/7\.8/);
+  expect(box).toHaveTextContent(/ราว 11:00 น\./);
+  expect(mockForecast).toHaveBeenCalledWith(14.02, 100.52, 36);
+  expect(screen.queryByText(/แว่นกันแดด/)).toBeNull();
+});
+
+it('at night a failed /forecast does not break the page', async () => {
+  mockFetch.mockResolvedValue(sampleNight());
+  mockForecast.mockRejectedValue(
+    new ApiError('ดึงข้อมูลสภาพอากาศจาก Open-Meteo ไม่ได้', { status: 502 }),
+  );
+  await render(<HomeScreen />);
+  expect(await screen.findByTestId('next-peak', {}, { timeout: 5000 })).toHaveTextContent(
+    'ยังไม่มีข้อมูลพยากรณ์ของวันถัดไป',
+  );
+  expect(screen.getByTestId('uvi-value')).toBeTruthy();
+  expect(screen.queryByTestId('error-message')).toBeNull();
 });

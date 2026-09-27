@@ -10,17 +10,28 @@ import {
   View,
 } from 'react-native';
 
-import { ApiError, describeError, fetchPredict } from '@/api/client';
+import { ApiError, describeError, fetchForecast, fetchPredict } from '@/api/client';
 import type { PredictResponse } from '@/api/types';
 import { Card, colors } from '@/components/Card';
 import { UVCard } from '@/components/UVCard';
 import { UvaUvbCard } from '@/components/UvaUvbCard';
 import { API_URL, DEFAULT_LOCATION, DEFAULT_SKIN_TYPE, DISCLAIMER_TH } from '@/config';
+import { nextDaytimePeak, type DayPeak } from '@/lib/uv';
 
 type State =
   | { kind: 'loading' }
-  | { kind: 'ok'; data: PredictResponse }
+  | { kind: 'ok'; data: PredictResponse; nextPeak: DayPeak | null }
   | { kind: 'error'; message: string; url: string; detail: string };
+
+/** At night: peak of the next daytime period from /forecast (null if unavailable). */
+async function loadNextPeak(data: PredictResponse): Promise<DayPeak | null> {
+  try {
+    const fc = await fetchForecast(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lon, 36);
+    return nextDaytimePeak(fc.hours, data.time);
+  } catch {
+    return null; // the forecast is extra information; the page still works without it
+  }
+}
 
 /** Fetch /predict for the default location and skin type, as a screen state. */
 async function loadState(): Promise<State> {
@@ -30,7 +41,7 @@ async function loadState(): Promise<State> {
       lon: DEFAULT_LOCATION.lon,
       skin_type: DEFAULT_SKIN_TYPE,
     });
-    return { kind: 'ok', data };
+    return { kind: 'ok', data, nextPeak: data.is_daylight ? null : await loadNextPeak(data) };
   } catch (err) {
     if (err instanceof ApiError) {
       return {
@@ -113,7 +124,7 @@ export default function HomeScreen() {
       {state.kind === 'ok' ? (
         <>
           <UVCard data={state.data} />
-          <UvaUvbCard data={state.data} />
+          <UvaUvbCard data={state.data} nextPeak={state.nextPeak} />
         </>
       ) : null}
 

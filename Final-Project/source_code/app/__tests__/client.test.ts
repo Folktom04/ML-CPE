@@ -1,6 +1,6 @@
-import { ApiError, fetchPredict, messageForStatus } from '@/api/client';
+import { ApiError, fetchForecast, fetchPredict, messageForStatus } from '@/api/client';
 
-import { samplePredict } from './fixtures';
+import { sampleHours, samplePredict } from './fixtures';
 
 const BODY = { lat: 14.02, lon: 100.52, skin_type: 'III' };
 
@@ -75,4 +75,25 @@ describe('API_URL from EXPO_PUBLIC_API_URL', () => {
       expect(require('@/config').API_URL).toBe('http://localhost:8000');
     });
   });
+});
+
+it('GETs /forecast with lat, lon and hours', async () => {
+  const hours = sampleHours('2026-09-27T20:00:00+07:00', [0, 1, 2]);
+  const f = fakeFetch(200, { lat: 14.02, lon: 100.52, hours, note: null, disclaimer: 'd' });
+  const fc = await fetchForecast(14.02, 100.52, 36, { baseUrl: 'http://api.test', fetchImpl: f });
+  expect(fc.hours).toHaveLength(3);
+  const [url, init] = f.mock.calls[0];
+  expect(url).toBe('http://api.test/forecast?lat=14.02&lon=100.52&hours=36');
+  expect(init.method).toBe('GET');
+});
+
+it('forecast errors carry the URL and the API detail', async () => {
+  const f = fakeFetch(502, { detail: 'Open-Meteo unavailable: ConnectionError' });
+  const err = await fetchForecast(14.02, 100.52, 36, {
+    baseUrl: 'http://api.test',
+    fetchImpl: f,
+  }).catch((e) => e);
+  expect(err).toBeInstanceOf(ApiError);
+  expect(err.url).toBe('http://api.test/forecast?lat=14.02&lon=100.52&hours=36');
+  expect(err.detail).toBe('HTTP 502: Open-Meteo unavailable: ConnectionError');
 });
