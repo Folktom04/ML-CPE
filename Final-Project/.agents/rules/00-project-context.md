@@ -15,19 +15,19 @@ input (GPS, time, weather/air-quality API, phone lux sensor, sky photo)
 → UV = clear_sky × CMF, with a quantile range (q10–q90, CQR-calibrated)
 → Risk Engine (WHO level, minutes to sunburn, SPF/PA advice)
 → FastAPI → Expo app + notifications. The 6–24 h forecast is the same XGBoost on Open-Meteo forecast features (an LSTM was tested on day 12 and did not beat it).
-Sky-image CNN (Phase 3, decided day 13) is a SEPARATE module, not stacked with XGBoost: no Pathum Thani sky photos are paired with NASA POWER targets. It classifies the sky condition and estimates cloud fraction; the app shows it as supporting information only and it never changes the UVI.
+Sky-image CNN (Phase 3, decided day 13) is a SEPARATE module, not stacked with XGBoost: no Pathum Thani sky photos are paired with NASA POWER targets. It classifies the sky condition and estimates cloud fraction; the app shows it as supporting information only and it never changes the UVI. `/sky-image` returns only the SWIMCAT-ext sky class (+ Thai name and confidence) and the red/blue cloud fraction; the CCSN head (genus / UV cloud group) missed its day-14 criteria and is not shown in the app (decided day 18).
 
 The source of truth for scope and schedule is `ROADMAP.md`. Read it before starting any task and tick `[x]` items you finish.
 
 ## Tech stack (do not swap without asking)
-- ML: Python 3.11, pandas, numpy, pvlib, xgboost, lightgbm, scikit-learn, optuna, tensorflow/keras
+- ML: Python 3.12 (project venv: 3.12.10), pandas, numpy, pvlib, xgboost, lightgbm, scikit-learn, optuna, tensorflow/keras
 - Backend: FastAPI, SQLAlchemy, PostgreSQL (SQLite allowed only as a fallback), APScheduler
 - Mobile: React Native with Expo (TypeScript), expo-notifications, expo-camera, expo-sensors, expo-location
 - Data: Open-Meteo APIs (no API key). Default location: Pathum Thani, lat 14.02, lon 100.52, timezone Asia/Bangkok
 - Smartphone only: NO external sensors or hardware modules. The only inputs are what a phone provides (GPS, clock, camera, ambient light sensor on Android, accelerometer/gyroscope) plus free web APIs. Do not suggest ESP32, VEML6075 or any add-on device.
 - Sky-image CNN is trained ONLY on public datasets — no photos taken by the user: CCSN (normal-camera cloud photos, 11 genera, CC0), SWIMCAT-ext (6 sky classes, CC BY 4.0; used instead of SWIMCAT while the SWIMCAT/SWIMSEG forms are pending), SWIMSEG (cloud masks, CC BY-NC 4.0; moved to future work on day 15). Dataset photos (CCSN normal cameras, SWIMCAT-ext images collected from the Internet per its Mendeley description, SWIMSEG whole-sky imager) differ from phone photos, so use centre-crop + perspective/colour/brightness augmentation and report the domain gap as a limitation. Each dataset keeps its own labels and its own test split (no merged taxonomy); report each test split separately. Cloud fraction uses the red/blue-ratio proxy (NRBR < 0.25); a CNN cloud-fraction head from SWIMSEG is future work, not a pending task (decided day 15). SKIPP'D/CloudCV are not used (no attenuation head). Check and cite each dataset's license. Photos taken in the app are used for inference/demo only, never for training.
 - Training data sources:
-  - Open-Meteo Weather/Historical (features only — its uv_index / uv_index_clear_sky may be used as input features but NOT as a target; see "Ground truth")
+  - Open-Meteo **Historical Forecast API** (`historical-forecast-api.open-meteo.com`, training features) and the Forecast API (same variables, run time) — not the ERA5 Historical/Archive API (features only — its uv_index / uv_index_clear_sky may be used as input features but NOT as a target; see "Ground truth")
   - Open-Meteo Air Quality / CAMS (aerosol_optical_depth, dust, pm2_5, ozone)
   - NASA POWER hourly API, community RE — not AG, which rounds to 0.01 MJ/hr (2.78 W/m² steps) and erases UVB; RE hourly Wh/m² = mean W/m² (ALLSKY_SFC_UVA, ALLSKY_SFC_UVB, ALLSKY_SFC_UV_INDEX, ALLSKY/CLRSKY_SFC_SW_DWN, CLOUD_AMT) → CMF_UVI / CMF_A / CMF_B targets (ground truth). Coarse satellite grid — combine with physics, never replace it. Check units (W/m²) against the physics module.
 - Independent validation sources (NEVER use for training, feature selection or tuning — test only): TEMIS/KNMI daily noon UVI (clear-sky and cloudy), NASA OMI OMUVB daily overpass (UVI + irradiance at 305/310/324/380 nm; fetch with `earthaccess`, needs an Earthdata login in `.env`). Report error separately per source.

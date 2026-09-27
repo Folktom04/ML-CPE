@@ -6,6 +6,7 @@ import pytest
 import tensorflow as tf
 
 from src import sky_cnn as sc
+from src.sky_infer import SWIM_CLASS_TH, predict_heads
 
 SIZE = 64
 TINY = {"lr": 1e-3, "epochs": 1}
@@ -127,11 +128,16 @@ def test_train_export_and_predict_sky_match(tmp_path):
     path = sc.export_tflite(model, tmp_path / "m.tflite")
     img = data["swim"]["x"][0].astype(np.float32) / 255.0
     res = sc.predict_sky(img, tflite_path=path)
+    heads = predict_heads(img, tflite_path=path)
     keras_probs = model.predict(img[None], verbose=0)
-    kg = np.asarray(keras_probs["ccsn"])[0] @ sc.group_matrix()
-    got = np.array([res["cloud_group_probs"][g] for g in sc.UV_GROUPS])
-    np.testing.assert_allclose(got, kg, atol=2e-2)  # float16 export
-    assert res["cloud_group_th"] in sc.UV_GROUP_TH.values() and 0 <= res["cloud_fraction_rb"] <= 1
+    for head in ("ccsn", "swim"):  # float16 export
+        np.testing.assert_allclose(heads[head], np.asarray(keras_probs[head])[0], atol=2e-2)
+    got = np.array([res["sky_class_probs"][c] for c in sc.SWIM_CLASSES])
+    np.testing.assert_allclose(got, heads["swim"], atol=1e-6)
+    assert res["sky_class"] == sc.SWIM_CLASSES[int(heads["swim"].argmax())]
+    assert res["sky_class_th"] == SWIM_CLASS_TH[res["sky_class"]]
+    assert res["sky_confidence"] == pytest.approx(float(heads["swim"].max()))
+    assert "cloud_group" not in res and "genus" not in res and 0 <= res["cloud_fraction_rb"] <= 1
     with pytest.raises(ValueError):
         sc.predict_sky(img * 255, tflite_path=path)
 
@@ -180,3 +186,12 @@ def test_run_test_refuses_second_run(tmp_path, monkeypatch):
     monkeypatch.setattr(sc, "TEST_PATH", done)
     with pytest.raises(FileExistsError):
         sc.run_test()
+
+
+def test_nrbr_map_blue_red_and_black_pixels():
+    from src.sky_infer import nrbr_map
+
+    x = np.array([[[0, 0, 1], [1, 0, 0], [0, 0, 0], [0.5, 0.5, 0.5]]], dtype=np.float32)
+    np.testing.assert_allclose(nrbr_map(x), [[1.0, -1.0, 0.0, 0.0]], atol=1e-6)
+    with pytest.raises(ValueError):
+        nrbr_map(x * 255)

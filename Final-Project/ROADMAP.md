@@ -61,7 +61,7 @@
 - [x] cos(SZA), sin/cos ชั่วโมงและเดือน
 - [x] target CMF_UVI = NASA POWER ALLSKY_SFC_UV_INDEX / `uvi_clear_interval(..., substeps=CMF_SUBSTEPS)` (Madronich เฉลี่ยทั้งชั่วโมง + ozone climatology)
 - [x] target CMF_A = UVA_POWER / UVA_ฟ้าใส และ CMF_B = UVB_POWER / UVB_ฟ้าใส (spectrl2 เฉลี่ยทั้งชั่วโมง)
-  > CMF (p01–p99): UVI 0.25–0.88 (ค่ามัธยฐาน 0.63), A 0.31–0.96 (0.74), B 0.33–1.00 (0.75) มีแค่ `cmf_b` ~1% ที่เกิน 1 ยังไม่ clip เรื่องนี้จะตัดสินในวัน 6; CMF ลดลงตอนดวงอาทิตย์ต่ำ (UVI ~0.4 ที่ 17:30) จึงยังขึ้นกับเรขาคณิตด้วย
+  > CMF (p01–p99): UVI 0.25–0.88 (ค่ามัธยฐาน 0.63), A 0.31–0.96 (0.74), B 0.33–1.00 (0.75) มีแค่ `cmf_b` ~1% ที่เกิน 1 ยังไม่ clip เรื่องนี้จะตัดสินในวัน 6 (ตัดสินแล้ว: clip เฉพาะค่าทำนาย CMF เป็น [0, 1] ไม่ clip target ดูวัน 6 และ `train_cmf.py` `CMF_MIN`/`CMF_MAX`); CMF ลดลงตอนดวงอาทิตย์ต่ำ (UVI ~0.4 ที่ 17:30) จึงยังขึ้นกับเรขาคณิตด้วย
 - [x] ~~features จากทั้งสองแหล่ง: เมฆ Open-Meteo + CLOUD_AMT และ clear-sky index (ALLSKY / CLRSKY SW) ของ NASA POWER~~ → **features มาจาก Open-Meteo หรือคำนวณจากเวลา/ตำแหน่งเท่านั้น** (ผู้ใช้ตัดสินในวัน 5 และเขียนลง rules แล้ว)
   > ตัด feature ทุกตัวที่มาจาก NASA POWER ออก (CLOUD_AMT, ALLSKY/CLRSKY SW, clear-sky index, TO3) เพราะไม่มีตอนใช้งานจริง และเป็น target leakage (แหล่งเดียวกับ target) แทนด้วย Open-Meteo `cloud_cover_low/mid/high`, `shortwave/direct/diffuse_radiation`, `precipitation` และ `om_kt` = shortwave / GHI ฟ้าใส (Haurwitz) รวม 23 features; `om_kt` สัมพันธ์กับ CMF_UVI +0.65 ซึ่งใกล้กับ clear-sky index ของ NASA ที่ตัดออก (+0.59)
 - [x] บันทึก dataset → `dataset/processed/train.parquet` (11,173 ชม.) และสเปก `source_code/models/dataset_spec_v1.json` (รายการ feature/target สำหรับวัน 6 ขึ้นไปและ API)
@@ -244,6 +244,7 @@
   > `alembic upgrade head` กับ `DATABASE_URL` → `0001 (head)` ตาราง users, push_tokens, measurements, notifications_log, alembic_version ครบ คอลัมน์เวลา 7 คอลัมน์เป็น `timestamptz` ทั้งหมด `pytest -q` ทั้งชุด **221 passed, 0 skipped** (เทส `[postgresql]` 23 ข้อผ่านหมด ไม่มีข้อที่ skip) ผลบน PostgreSQL ไม่ต่างจาก SQLite จึงไม่ต้องแก้โค้ด tests อ่าน `TEST_DATABASE_URL` จาก `.env` ผ่าน `load_dotenv` และไม่ log ค่า URL
 
 ### วัน 18 — Expo: หน้าหลัก
+> **แก้ก่อนเริ่มวัน 18 (ตรวจทั้งโปรเจกต์):** (1) `/sky-image` ตอบ **SWIMCAT-ext 6 คลาสเป็นผลหลัก** (`sky_class`, `sky_class_th`, `sky_confidence`, `sky_class_probs`) + `cloud_fraction_rb` และเลิกส่ง `genus` / `cloud_group` ของ CCSN (ไม่ผ่านเกณฑ์ K1–K3) ใช้ TFLite ตัวเดิม ไม่ได้ฝึกใหม่ ผลดิบของทั้งสอง head ยังเรียกได้ด้วย `predict_heads()` (2) เอกสาร: README (สถาปัตยกรรมไม่มี stacking, ground truth คือ NASA POWER RE, disclaimer ครอบคลุมทุกค่า, วิธีติดตั้ง/รัน), rules (Python 3.12, Historical Forecast API, `/sky-image`), `checkpoint.md` (ห้ามรัน `--test` ซ้ำ), `START_HERE.md` (prompt วัน 13), `docs/api.md` (3) docstring ครบทุกฟังก์ชันใน `src/` และเพิ่มเทสตรง 8 ข้อ (`request_params`, `hour_start_local`, `mask_implausible`, `assert_no_test_rows`, `load_ozone_climatology`, `add_clear_sky`, `fetch_temis`, `nrbr_map`) ผล pytest **229 passed, 0 skipped** ไม่มีตัวเลขผลใดเปลี่ยน
 - [ ] สร้างโปรเจกต์ Expo + Expo Router
 - [ ] การ์ด UV + ระดับสี
 - [ ] การ์ด UVA / UVB + เวลาผิวไหม้

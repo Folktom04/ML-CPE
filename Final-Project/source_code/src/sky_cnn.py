@@ -524,6 +524,7 @@ class EpochFileLogger(tf.keras.callbacks.Callback):
     """Write one line per epoch (all logged metrics) to a per-seed log file."""
 
     def __init__(self, path: Path, seed: int, stage: str, epochs: int) -> None:
+        """Store the log path, seed, stage name and maximum epochs."""
         super().__init__()
         self.path, self.seed, self.stage, self.epochs = path, seed, stage, epochs
 
@@ -741,6 +742,7 @@ def run_test() -> dict[str, Any]:
         s_runs.append(swim_scores(ps, test["swim"]["y"], test["swim"]["groups"]))
 
     def mean_of(runs: list[dict[str, Any]], keys: list[str]) -> dict[str, Any]:
+        """Mean/SD over seeds, plus the mean per-UV-group recall when present."""
         out = _mean_sd(runs, keys)
         if "group_recall" in runs[0]:
             out["mean"]["group_recall"] = {

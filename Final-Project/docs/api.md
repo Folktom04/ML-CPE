@@ -28,11 +28,11 @@ Interactive docs: http://127.0.0.1:8000/docs
 | GET | `/health` | — | `status`, model files, `sky_backend` (`ai_edge_litert` or fallback `tf.lite`), `cqr_q`, `db_backend` (`postgresql` or `sqlite`), `db_fallback`, `db_ok` (day 17) |
 | POST | `/predict` | `{lat, lon, skin_type}` (skin type I–VI or 1–6) | `uvi, uvi_range, uva_wm2, uvb_wm2, level, skin_type, burn_minutes, cmf, advice, forecast[{time, uvi, …}], next_safe_time` + `uvi_q90_cqr, alert_uvi, alert_level, interval_adjusted, data_imputed, level_color, time, is_daylight, note, disclaimer` |
 | GET | `/forecast?lat&lon&hours=1..36` | — | hourly `{time, uvi, uvi_range, uva_wm2, uvb_wm2, level, interval_adjusted, data_imputed}` |
-| POST | `/sky-image` | multipart `file` (≤ 10 MB) | `cloud_group` (+ Thai, probabilities), `genus`, `sky_class` (+ probabilities), `cloud_fraction_rb`, `reliability`, `stored: false` |
+| POST | `/sky-image` | multipart `file` (≤ 10 MB) | `sky_class` (SWIMCAT-ext, 6 classes) + `sky_class_th`, `sky_confidence`, `sky_class_probs`, `cloud_fraction_rb` (red/blue proxy), `reliability`, `stored: false` |
 
 `next_safe_time` is the first hour, starting now, whose `alert_uvi` is at WHO level "ต่ำ", or `null` if there is none in the forecast.
 
-**Sky image:** processed in memory only and never written to disk or a database. The result is **supporting information only and never changes the UVI** (`/predict` takes no image). `reliability` states plainly that the cloud-group output missed its test criterion (UV-group accuracy 0.685 < 0.75) and that the sky-class output passed (0.967). Neither has been tested on phone photos.
+**Sky image:** processed in memory only and never written to disk or a database. The result is **supporting information only and never changes the UVI** (`/predict` takes no image). **The main result is the SWIMCAT-ext head** (6 sky classes, Thai name and `sky_confidence` = softmax probability of the chosen class), which passed its test criteria (0.967). The CCSN head (11 genera and the 4 UV cloud groups) missed its criteria (UV-group accuracy 0.685 < 0.75), so since day 18 `/sky-image` no longer returns `genus` or `cloud_group`; the app does not show them. The raw outputs of both heads are still available in Python through `src.sky_infer.predict_heads()`. `reliability` describes `sky_class` and `cloud_fraction_rb`. Neither has been tested on phone photos.
 
 Errors: 422 (validation), 413 (image too large), 415 (not an image), 502 (Open-Meteo unavailable), 503 (current hour missing from Open-Meteo), 500 — all carry `disclaimer`.
 

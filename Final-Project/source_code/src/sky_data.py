@@ -337,6 +337,7 @@ def duplicate_groups(thumbs: np.ndarray, max_mad: float = DUP_MAX_MAD) -> np.nda
     parent = list(range(n))
 
     def find(i: int) -> int:
+        """Union-find root of ``i`` with path halving."""
         while parent[i] != i:
             parent[i] = parent[parent[i]]
             i = parent[i]
@@ -528,11 +529,13 @@ def augmenter(seed: int = SEED) -> Any:
         """Multiply each RGB channel by a random gain in [1 - delta, 1 + delta]."""
 
         def __init__(self, delta: float = 0.12, seed: int | None = None, **kw: Any) -> None:
+            """Set the maximum relative gain ``delta`` and the random seed."""
             super().__init__(**kw)
             self.delta = delta
             self.gen = keras.random.SeedGenerator(seed)
 
         def call(self, x: Any, training: bool | None = None) -> Any:
+            """Apply random per-channel gains while training; identity at inference."""
             if not training:
                 return x
             n = keras.ops.shape(x)[0]

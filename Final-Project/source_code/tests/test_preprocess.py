@@ -96,3 +96,20 @@ def test_solar_noon_values_interpolates_to_transit():
     # x equals the hour count at each end-of-hour label, i.e. (hours since start) at midpoint + 0.5
     hours = (noon - t[0]).total_seconds() / 3600
     assert out.loc[0, "x"] == pytest.approx(hours + 0.5)
+
+
+def test_mask_implausible_masks_negatives_and_high_ozone_only():
+    df = pd.DataFrame(
+        {
+            "uv_index": [-0.1, 2.0],
+            "pm2_5": [5.0, -3.0],
+            "ozone": [pp.OZONE_MAX_UGM3 + 1, 50.0],
+            "temperature_2m": [-5.0, 30.0],  # may be negative, left alone
+        }
+    )
+    out = pp.mask_implausible(df)
+    assert out["uv_index"].isna().tolist() == [True, False]
+    assert out["pm2_5"].isna().tolist() == [False, True]
+    assert out["ozone"].isna().tolist() == [True, False]
+    assert out["temperature_2m"].tolist() == [-5.0, 30.0]
+    assert df["uv_index"].iloc[0] == -0.1  # input not modified

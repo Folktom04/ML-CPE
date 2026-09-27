@@ -83,11 +83,9 @@ class ForecastResponse(Disclaimed):
 class SkyImageResponse(Disclaimed):
     """Response of ``POST /sky-image`` (supporting information only, never changes the UVI)."""
 
-    cloud_group: str
-    cloud_group_th: str
-    cloud_group_probs: dict[str, float]
-    genus: str
-    sky_class: str
+    sky_class: str = Field(description="SWIMCAT-ext class (6 classes); the main result")
+    sky_class_th: str
+    sky_confidence: float = Field(ge=0, le=1, description="softmax probability of sky_class")
     sky_class_probs: dict[str, float]
     cloud_fraction_rb: float
     reliability: dict[str, str]

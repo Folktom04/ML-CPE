@@ -150,3 +150,26 @@ def test_fetch_omi_requires_credentials(monkeypatch):
     monkeypatch.delenv("EARTHDATA_PASSWORD", raising=False)
     with pytest.raises(RuntimeError):
         fv.fetch_omi("select")
+
+
+def test_fetch_temis_uses_cache_and_downloads_once(tmp_path, monkeypatch):
+    calls = []
+
+    class FakeResp:
+        content = TEMIS_SAMPLE.encode("utf-8")
+
+        def raise_for_status(self):
+            pass
+
+    class FakeSession:
+        def get(self, url, timeout):
+            calls.append(url)
+            return FakeResp()
+
+    monkeypatch.setattr(fv, "make_session", lambda: FakeSession())
+    path = tmp_path / "raw" / "temis.dat"
+    first = fv.fetch_temis(path)
+    second = fv.fetch_temis(path)  # cache hit: no second download
+    assert calls == [fv.TEMIS_URL] and path.exists()
+    pd.testing.assert_frame_equal(first, second)
+    pd.testing.assert_frame_equal(first, fv.parse_temis(TEMIS_SAMPLE))
