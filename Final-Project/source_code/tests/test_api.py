@@ -9,10 +9,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from api import main
 from fastapi.testclient import TestClient
 from PIL import Image
-
-from api import main
+from src import db
 from src import inference as inf
 from src.fetch_data import ROOT
 from src.metrics import WHO_LEVELS, who_level
@@ -46,6 +46,8 @@ def client(real_bundle, monkeypatch):
     monkeypatch.setattr(inf, "fetch_live", lambda lat, lon: synthetic_raw())
     monkeypatch.setattr(inf, "utc_now", lambda: NOW)
     main.app.state.bundle = real_bundle
+    main.app.state.db_engine = db.make_engine("sqlite://")
+    main.app.state.db_fallback = False
     with TestClient(main.app) as c:
         yield c
 
@@ -66,6 +68,31 @@ def test_models_loaded_once_and_health(client, real_bundle, monkeypatch):
     assert r["status"] == "ok" and r["disclaimer"] == DISCLAIMER
     assert r["sky_backend"] in ("ai_edge_litert", "tf.lite")
     assert r["cqr_q"] == pytest.approx(0.0379, abs=1e-4)
+    assert (r["db_backend"], r["db_ok"], r["db_fallback"]) == ("sqlite", True, False)
+
+
+def test_health_reports_sqlite_fallback_and_unreachable_postgres(
+    real_bundle, monkeypatch, caplog, tmp_path
+):
+    monkeypatch.setattr(inf, "fetch_live", lambda lat, lon: synthetic_raw())
+    main.app.state.bundle = real_bundle
+    main.app.state.db_engine = None
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: False)
+    monkeypatch.setattr(db, "SQLITE_FALLBACK_PATH", tmp_path / "fallback.sqlite")
+    with caplog.at_level("WARNING", logger="src.db"), TestClient(main.app) as c:
+        r = c.get("/health").json()
+    assert (r["db_backend"], r["db_fallback"], r["db_ok"]) == ("sqlite", True, True)
+    assert any("FALLBACK" in m for m in caplog.messages)
+    main.app.state.db_engine.dispose()
+    main.app.state.db_engine = db.make_engine("postgresql+psycopg://u:p@127.0.0.1:1/x")
+    main.app.state.db_fallback = False
+    with TestClient(main.app) as c:
+        r = c.get("/health")
+    assert r.status_code == 200
+    assert (r.json()["db_backend"], r.json()["db_ok"]) == ("postgresql", False)
+    main.app.state.db_engine.dispose()
+    main.app.state.db_engine = None
 
 
 def test_predict_matches_rule_schema(client):

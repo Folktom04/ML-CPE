@@ -34,7 +34,6 @@ import joblib
 import numpy as np
 import pandas as pd
 import requests
-
 from src.evaluate_test import CQR_Q_PATH, MULTI_PATH, QUANT_PATH, load_xgb_gz
 from src.features import (
     FEATURES,
