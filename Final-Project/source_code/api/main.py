@@ -15,6 +15,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -31,6 +32,7 @@ from api.schemas import (
 )
 from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from PIL import Image, UnidentifiedImageError
 from src import db
@@ -39,9 +41,11 @@ from src.metrics import WHO_LEVELS, who_level
 from src.risk import DISCLAIMER, assess
 from src.sky_data import load_image
 from src.sky_infer import predict_sky
+from src.fetch_data import ROOT
 from src.train_cmf import DOCS_DIR
 
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
+DEFAULT_CORS_ORIGINS = ["http://localhost:8081", "http://127.0.0.1:8081"]  # npx expo start --web
 OUTSIDE_NOTE = "ตำแหน่งอยู่นอกประเทศไทย โมเดลฝึกด้วยข้อมูลของปทุมธานีเท่านั้น ค่าอาจคลาดเคลื่อนมาก"
 log = logging.getLogger("uvguard.api")
 
@@ -81,7 +85,33 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="UV Guard API", version="0.17.0", lifespan=lifespan)
+def cors_origins(env: dict[str, str] | None = None) -> list[str]:
+    """Browser origins allowed to call the API (the Expo web dev server by default).
+
+    Args:
+        env: Mapping to read instead of the process environment (tests). When None,
+            ``.env`` at the project root is loaded first (existing variables win).
+
+    Returns:
+        Origins from comma-separated ``CORS_ORIGINS``, or ``DEFAULT_CORS_ORIGINS``.
+    """
+    if env is None:
+        from dotenv import load_dotenv
+
+        load_dotenv(ROOT / ".env")
+        env = dict(os.environ)
+    raw = (env.get("CORS_ORIGINS") or "").strip()
+    return [o.strip().rstrip("/") for o in raw.split(",") if o.strip()] or DEFAULT_CORS_ORIGINS
+
+
+app = FastAPI(title="UV Guard API", version="0.18.0", lifespan=lifespan)
+# Native apps do not send an Origin header; CORS only matters for the Expo web build.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins(),
+    allow_methods=["GET", "POST", "PUT"],
+    allow_headers=["Content-Type"],
+)
 
 
 def _error(status: int, detail: Any) -> JSONResponse:

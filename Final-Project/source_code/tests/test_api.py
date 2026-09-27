@@ -188,34 +188,49 @@ def test_outside_thailand_note(client):
 
 @pytest.mark.parametrize("fmt", ["PNG", "JPEG"])
 def test_sky_image_result_and_nothing_stored(client, fmt):
-    watched = [ROOT / "source_code", ROOT / "docs", ROOT / "dataset", Path(tempfile.gettempdir())]
+    project = [ROOT / "source_code", ROOT / "docs", ROOT / "dataset"]
+    temp = Path(tempfile.gettempdir())
+    skip_dirs = {"node_modules", ".expo", "dist", "__pycache__", ".pytest_cache"}
 
-    def snapshot():
+    def snapshot(dirs):
         files = set()
-        for d in watched:
-            for dirpath, _, names in os.walk(d):
-                if "__pycache__" in dirpath or ".pytest_cache" in dirpath or "pytest-of" in dirpath:
-                    continue
+        for d in dirs:
+            for dirpath, subdirs, names in os.walk(d):
+                subdirs[:] = [s for s in subdirs if s not in skip_dirs and "pytest-of" not in s]
                 files.update(os.path.join(dirpath, n) for n in names)
         return files
 
-    before = snapshot()
-    r = client.post(
-        "/sky-image", files={"file": (f"sky.{fmt.lower()}", png_bytes(fmt=fmt), "image/*")}
-    )
-    after = snapshot()
+    def is_upload(path, upload):
+        """Image file or a copy of the uploaded bytes (other programs also write to Temp)."""
+        try:
+            head = Path(path).read_bytes()
+        except OSError:
+            return False
+        return head[:4] in (b"\x89PNG", b"\xff\xd8\xff\xe0", b"\xff\xd8\xff\xdb") or (
+            upload[:64] in head
+        )
+
+    upload = png_bytes(fmt=fmt)
+    before_project, before_temp = snapshot(project), snapshot([temp])
+    r = client.post("/sky-image", files={"file": (f"sky.{fmt.lower()}", upload, "image/*")})
+    new_project = snapshot(project) - before_project
+    new_temp = {p for p in snapshot([temp]) - before_temp if is_upload(p, upload)}
     assert r.status_code == 200
     body = r.json()
     assert body["stored"] is False and body["disclaimer"] == DISCLAIMER
     assert abs(sum(body["sky_class_probs"].values()) - 1) < 0.02
-    assert body["sky_class"] in SWIM_CLASS_TH and body["sky_class_th"] == SWIM_CLASS_TH[body["sky_class"]]
+    assert (
+        body["sky_class"] in SWIM_CLASS_TH
+        and body["sky_class_th"] == SWIM_CLASS_TH[body["sky_class"]]
+    )
     assert body["sky_confidence"] == pytest.approx(max(body["sky_class_probs"].values()))
     assert body["sky_confidence"] == pytest.approx(body["sky_class_probs"][body["sky_class"]])
     # the CCSN head (genus / UV cloud group) missed its criteria and is not shown in the app
     assert not {"genus", "cloud_group", "cloud_group_th", "cloud_group_probs"} & set(body)
     assert 0 <= body["cloud_fraction_rb"] <= 1
     assert set(body["reliability"]) == {"sky_class", "cloud_fraction_rb"}
-    assert after - before == set(), f"files written: {sorted(after - before)[:5]}"
+    assert new_project == set(), f"files written: {sorted(new_project)[:5]}"
+    assert new_temp == set(), f"image files written to Temp: {sorted(new_temp)[:5]}"
 
 
 def test_sky_image_never_changes_uvi(client):
@@ -225,3 +240,28 @@ def test_sky_image_never_changes_uvi(client):
     second = client.post("/predict", json=PAYLOAD).json()
     assert first == second
     assert "sky" not in main.PredictRequest.model_fields  # /predict takes no image input
+
+
+def test_cors_origins_from_env_or_expo_web_default():
+    assert main.cors_origins({}) == main.DEFAULT_CORS_ORIGINS
+    assert main.cors_origins({"CORS_ORIGINS": "  "}) == main.DEFAULT_CORS_ORIGINS
+    got = main.cors_origins({"CORS_ORIGINS": "http://a.test:8081/, http://b.test ,"})
+    assert got == ["http://a.test:8081", "http://b.test"]
+
+
+def test_cors_allows_expo_web_origin_only(client):
+    ok = main.cors_origins()[0]  # the default Expo web origin unless .env sets CORS_ORIGINS
+    pre = client.options(
+        "/predict",
+        headers={
+            "Origin": ok,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+    assert pre.status_code == 200 and pre.headers["access-control-allow-origin"] == ok
+    r = client.post("/predict", json=PAYLOAD, headers={"Origin": ok})
+    assert r.status_code == 200 and r.headers["access-control-allow-origin"] == ok
+    evil = client.post("/predict", json=PAYLOAD, headers={"Origin": "http://evil.test"})
+    assert "access-control-allow-origin" not in evil.headers
+    assert "access-control-allow-origin" not in client.get("/health").headers  # no Origin
