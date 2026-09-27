@@ -12,6 +12,8 @@ xgboost
 lightgbm
 optuna
 tensorflow
+ai-edge-litert==2.2.0  # TFLite runtime for the API (day 16); falls back to tf.lite if it cannot load
+backports.strenum==1.2.8  # dependency of ai-edge-litert
 matplotlib
 seaborn
 jupyter

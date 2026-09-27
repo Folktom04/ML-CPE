@@ -107,24 +107,33 @@ def advice(uvi_upper: float, skin_type: str | int) -> list[str]:
     return lines
 
 
-def assess(uvi: float, uvi_range: tuple[float, float], skin_type: str | int) -> dict[str, Any]:
+def assess(
+    uvi: float,
+    uvi_range: tuple[float, float],
+    skin_type: str | int,
+    alert_uvi: float | None = None,
+) -> dict[str, Any]:
     """Full risk assessment for one moment.
 
     Args:
         uvi: Point estimate of UVI.
-        uvi_range: ``(lower, upper)``; the upper bound drives warnings.
+        uvi_range: ``(lower, upper)`` shown to the user.
         skin_type: Fitzpatrick type.
+        alert_uvi: UVI that drives the alert level, burn time and advice. The API passes the
+            q90 after CQR here so warnings never depend on how the displayed range was widened.
+            When None, the upper bound of ``uvi_range`` (at least ``uvi``) is used.
 
     Returns:
         Dict with ``uvi``, ``uvi_range``, ``level`` (Thai, point estimate), ``level_en``,
-        ``level_index``, ``color``, ``alert_level`` / ``alert_level_index`` (upper bound),
+        ``level_index``, ``color``, ``alert_uvi``, ``alert_level`` / ``alert_level_index``,
         ``skin_type``, ``burn_minutes``, ``advice`` and ``disclaimer``.
     """
     lo, hi = float(uvi_range[0]), float(uvi_range[1])
     if lo > hi:
         raise ValueError("uvi_range must be (lower, upper)")
     hi = max(hi, float(uvi))
-    i, j = level_index(uvi), level_index(hi)
+    warn = hi if alert_uvi is None else float(alert_uvi)
+    i, j = level_index(uvi), level_index(warn)
     st = normalize_skin_type(skin_type)
     return {
         "uvi": float(uvi),
@@ -133,10 +142,11 @@ def assess(uvi: float, uvi_range: tuple[float, float], skin_type: str | int) -> 
         "level_en": WHO_LEVELS_EN[i],
         "level_index": i,
         "color": WHO_COLORS[i],
+        "alert_uvi": warn,
         "alert_level": WHO_LEVELS[j],
         "alert_level_index": j,
         "skin_type": st,
-        "burn_minutes": burn_minutes(hi, st),
-        "advice": advice(hi, st),
+        "burn_minutes": burn_minutes(warn, st),
+        "advice": advice(warn, st),
         "disclaimer": DISCLAIMER,
     }
