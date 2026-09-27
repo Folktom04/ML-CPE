@@ -118,7 +118,26 @@ def merge_sources(
     return df.sort_values("time_utc").reset_index(drop=True)
 
 
-def clean(df: pd.DataFrame, ozone_climatology_path: Path | None = None) -> tuple[pd.DataFrame, int]:
+def mask_implausible(df: pd.DataFrame) -> pd.DataFrame:
+    """Set implausible values to NaN (negative non-negative quantities, ozone > max).
+
+    Args:
+        df: Merged table.
+
+    Returns:
+        Copy of ``df`` with implausible values replaced by NaN.
+    """
+    df = df.copy()
+    cols = [c for c in NON_NEGATIVE if c in df]
+    df[cols] = df[cols].mask(df[cols] < 0)
+    if "ozone" in df:
+        df.loc[df["ozone"] > OZONE_MAX_UGM3, "ozone"] = np.nan
+    return df
+
+
+def clean(
+    df: pd.DataFrame, ozone_climatology_path: Path | None = None, dropna: bool = True
+) -> tuple[pd.DataFrame, int]:
     """Mask implausible values, fill short gaps and drop rows that are still incomplete.
 
     Negative values of non-negative quantities and surface ozone above ``OZONE_MAX_UGM3``
@@ -128,15 +147,13 @@ def clean(df: pd.DataFrame, ozone_climatology_path: Path | None = None) -> tuple
     Args:
         df: Merged table.
         ozone_climatology_path: Optional monthly ozone climatology JSON.
+        dropna: Drop rows that are still incomplete (training). The API passes False and
+            handles the remaining gaps itself (``inference.build_features``).
 
     Returns:
         ``(clean_df, n_dropped)``.
     """
-    df = df.copy()
-    cols = [c for c in NON_NEGATIVE if c in df]
-    df[cols] = df[cols].mask(df[cols] < 0)
-    if "ozone" in df:
-        df.loc[df["ozone"] > OZONE_MAX_UGM3, "ozone"] = np.nan
+    df = mask_implausible(df)
 
     num = df.columns.drop("time_utc")
     df = df.set_index("time_utc")
@@ -146,6 +163,8 @@ def clean(df: pd.DataFrame, ozone_climatology_path: Path | None = None) -> tuple
         df["nasa_ozone_du"] = fill_ozone(
             df["time_utc"], df["nasa_ozone_du"], ozone_climatology_path
         )
+    if not dropna:
+        return df, 0
     before = len(df)
     df = df.dropna().reset_index(drop=True)
     return df, before - len(df)

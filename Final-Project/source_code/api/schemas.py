@@ -43,6 +43,7 @@ class HourUV(BaseModel):
     uvb_wm2: float
     level: str
     interval_adjusted: bool
+    data_imputed: bool = Field(False, description="some Open-Meteo input was missing and filled")
 
 
 class PredictResponse(Disclaimed):
@@ -63,9 +64,11 @@ class PredictResponse(Disclaimed):
     is_daylight: bool
     level_en: str
     level_color: str
-    uvi_q90_cqr: float = Field(description="q90 after CQR; drives alerts, burn time and advice")
+    uvi_q90_cqr: float = Field(description="upper quantile q90 after CQR")
+    alert_uvi: float = Field(description="max(q90 after CQR, uvi); drives alerts, burn, advice")
     alert_level: str
     interval_adjusted: bool = Field(description="point UVI was outside [q10, q90]; range widened")
+    data_imputed: bool = Field(description="some Open-Meteo input of this hour was filled")
     note: str | None = None
 
 

@@ -10,7 +10,13 @@
 * Point UVI/UVA/UVB: multi-output XGBoost (day 10 final). Range: quantile XGBoost q10/q90 with
   the CQR correction frozen on day 10. The point value is never clipped: if it falls outside
   [q10, q90] the displayed range is widened to include it and ``interval_adjusted`` is set.
-  Alerts, burn time and advice always use q90 after CQR (``alert_uvi``).
+  Alerts, burn time and advice use ``alert_uvi = max(q90 after CQR, point UVI)``, so a
+  warning is never lower than the value shown.
+* Missing live data: missing hours are re-inserted as NaN, implausible values masked, gaps of
+  up to ``INTERP_LIMIT_HOURS`` interpolated (as in training) and edge gaps of up to
+  ``EDGE_FILL_HOURS`` filled from the nearest hour. Such hours carry ``data_imputed``; hours
+  that are still incomplete are dropped and logged, and if the current hour is one of them
+  the API answers 503 instead of silently using another hour.
 """
 
 from __future__ import annotations
@@ -40,7 +46,7 @@ from src.features import (
 )
 from src.fetch_data import AIR_VARS, OPENMETEO_AIR_URL, WEATHER_VARS, make_session, parse_openmeteo
 from src.metrics import who_level
-from src.preprocess import clean
+from src.preprocess import INTERP_LIMIT_HOURS, clean, mask_implausible
 from src.quantile import QCOLS, apply_cqr, predict_quantiles
 from src.sky_infer import TFLITE_PATH, make_interpreter
 from src.train_multi import predict_multi
@@ -53,6 +59,8 @@ LOCAL_TZ = "Asia/Bangkok"
 SAFE_LEVEL = 0  # WHO level index "ต่ำ" (UVI < 2.5 after rounding)
 THAILAND_BBOX = (5.5, 20.5, 97.3, 105.7)  # lat_min, lat_max, lon_min, lon_max
 NIGHT_ZERO = ["om_kt", "om_diffuse_fraction"]
+EDGE_FILL_HOURS = INTERP_LIMIT_HOURS
+INPUT_VARS = [*WEATHER_VARS, *AIR_VARS]
 
 log = logging.getLogger(__name__)
 _cache: dict[tuple[float, float], tuple[float, pd.DataFrame]] = {}
@@ -95,7 +103,8 @@ def fetch_live(
         now: Clock value for the cache (tests).
 
     Returns:
-        Inner join of weather and air quality on ``time_utc``.
+        Weather left-joined with air quality on ``time_utc`` (missing air hours stay NaN and
+        are handled in ``build_features``).
     """
     key = (round(lat, 2), round(lon, 2))
     now = time.time() if now is None else now
@@ -108,7 +117,7 @@ def fetch_live(
     w.raise_for_status()
     a = s.get(OPENMETEO_AIR_URL, params=request_params(lat, lon, AIR_VARS), timeout=30)
     a.raise_for_status()
-    df = parse_openmeteo(w.json()).merge(parse_openmeteo(a.json()), on="time_utc", how="inner")
+    df = parse_openmeteo(w.json()).merge(parse_openmeteo(a.json()), on="time_utc", how="left")
     with _cache_lock:
         _cache[key] = (now, df)
     return df.copy()
@@ -123,15 +132,33 @@ def build_features(raw: pd.DataFrame, lat: float, lon: float) -> pd.DataFrame:
         lon: Longitude.
 
     Returns:
-        Rows with ``time_utc``, ``FEATURES``, ``uvi_clear``, ``uva_clear``, ``uvb_clear`` and
-        ``is_day`` (``uvi_clear >= MIN_UVI_CLEAR``).
+        Rows with ``time_utc``, ``FEATURES``, ``uvi_clear``, ``uva_clear``, ``uvb_clear``,
+        ``is_day`` (``uvi_clear >= MIN_UVI_CLEAR``) and ``data_imputed`` (some input of that
+        hour was missing or implausible and was filled). Hours still incomplete after filling
+        are dropped.
     """
-    df, _ = clean(raw)
+    raw = raw.sort_values("time_utc").drop_duplicates("time_utc")
+    full = pd.date_range(raw["time_utc"].iloc[0], raw["time_utc"].iloc[-1], freq="h")
+    raw = raw.set_index("time_utc").reindex(full).rename_axis("time_utc").reset_index()
+    cols = [c for c in INPUT_VARS if c in raw]
+    imputed = mask_implausible(raw)[cols].isna().any(axis=1).to_numpy()
+    df, _ = clean(raw, dropna=False)
+    edge = {"limit": EDGE_FILL_HOURS, "limit_area": "outside"}  # interior gaps: interpolation only
+    df[cols] = df[cols].ffill(**edge).bfill(**edge)
+    complete = df[cols].notna().all(axis=1).to_numpy()
+    if not complete.all():
+        log.warning("dropped %d hour(s) with inputs still missing", int((~complete).sum()))
+    df = df.loc[complete].reset_index(drop=True)
+    df["data_imputed"] = imputed[complete]
+    if df["data_imputed"].any():
+        log.info("%d hour(s) use filled inputs", int(df["data_imputed"].sum()))
     df = add_openmeteo_ratios(add_clear_sky(add_time_features(df, lat, lon), lat, lon))
     night = df["ghi_clear"] < MIN_GHI_CLEAR_WM2
     df.loc[night, NIGHT_ZERO] = 0.0
     df["is_day"] = df["uvi_clear"] >= MIN_UVI_CLEAR
-    return df[["time_utc", *FEATURES, "uvi_clear", "uva_clear", "uvb_clear", "is_day"]]
+    return df[
+        ["time_utc", *FEATURES, "uvi_clear", "uva_clear", "uvb_clear", "is_day", "data_imputed"]
+    ]
 
 
 @dataclass
@@ -185,9 +212,11 @@ def predict_hours(feat: pd.DataFrame, bundle: ModelBundle) -> pd.DataFrame:
     Returns:
         ``time_utc``, ``is_day``, ``uvi``, ``uva_wm2``, ``uvb_wm2``, ``cmf``, ``q10``, ``q50``,
         ``q90`` (UVI after CQR), ``uvi_lo`` / ``uvi_hi`` (range shown, widened to include the
-        point) and ``interval_adjusted``.
+        point), ``interval_adjusted``, ``alert_uvi`` (``max(q90, uvi)``: drives alerts, burn
+        time, advice and the next safe time) and ``data_imputed``.
     """
     out = feat[["time_utc", "is_day"]].copy()
+    out["data_imputed"] = feat["data_imputed"] if "data_imputed" in feat else False
     X = feat[FEATURES]
     cmf = predict_multi(bundle.multi, X)
     cmf_q = apply_cqr(predict_quantiles(bundle.quant, X), bundle.cqr_q)
@@ -201,24 +230,36 @@ def predict_hours(feat: pd.DataFrame, bundle: ModelBundle) -> pd.DataFrame:
     out["interval_adjusted"] = (out["uvi"] < out["q10"]) | (out["uvi"] > out["q90"])
     out["uvi_lo"] = np.minimum(out["q10"], out["uvi"])
     out["uvi_hi"] = np.maximum(out["q90"], out["uvi"])
+    out["alert_uvi"] = np.maximum(out["q90"], out["uvi"])
     n_adj = int(out["interval_adjusted"].sum())
     if n_adj:
         log.info("point UVI outside [q10, q90] in %d hour(s); displayed range widened", n_adj)
     return out.reset_index(drop=True)
 
 
-def current_index(pred: pd.DataFrame, now: datetime) -> int:
+class NoCurrentHourError(LookupError):
+    """The hour that contains ``now`` is missing from the live data."""
+
+
+def current_index(pred: pd.DataFrame, now: datetime, strict: bool = True) -> int:
     """Row of the hour that contains ``now`` (labels are hour ends: 10:20 -> 11:00 row).
 
     Args:
         pred: Output of ``predict_hours``.
         now: Aware datetime.
+        strict: Raise ``NoCurrentHourError`` if that hour is missing (dropped for missing
+            data or outside the data). If False, return the first later hour instead.
 
     Returns:
-        Positional index (last row if ``now`` is after the data).
+        Positional index (last row if ``now`` is after the data and ``strict`` is False).
     """
-    later = np.nonzero((pred["time_utc"] > pd.Timestamp(now)).to_numpy())[0]
-    return int(later[0]) if len(later) else len(pred) - 1
+    now = pd.Timestamp(now)
+    later = np.nonzero((pred["time_utc"] > now).to_numpy())[0]
+    i = int(later[0]) if len(later) else len(pred) - 1
+    end = pred["time_utc"].iloc[i]
+    if strict and not (end - pd.Timedelta(hours=1) <= now < end):
+        raise NoCurrentHourError(f"no live data for the hour containing {now.isoformat()}")
+    return i
 
 
 def hour_start_local(t: pd.Timestamp) -> str:
@@ -234,7 +275,7 @@ def hour_start_local(t: pd.Timestamp) -> str:
 
 
 def next_safe_time(pred: pd.DataFrame, now: datetime) -> str | None:
-    """First hour from now whose alert UVI (q90 after CQR) is at WHO level "ต่ำ".
+    """First hour from now whose alert UVI (``max(q90, uvi)``) is at WHO level "ต่ำ".
 
     Args:
         pred: Output of ``predict_hours``.
@@ -244,8 +285,8 @@ def next_safe_time(pred: pd.DataFrame, now: datetime) -> str | None:
         ``now`` (local ISO) if the current hour is already low, else the local start of the
         first low hour, or None if none within the forecast.
     """
-    i = current_index(pred, now)
-    low = who_level(pred["q90"].to_numpy()) <= SAFE_LEVEL
+    i = current_index(pred, now, strict=False)
+    low = who_level(pred["alert_uvi"].to_numpy()) <= SAFE_LEVEL
     if low[i]:
         return pd.Timestamp(now).tz_convert(LOCAL_TZ).isoformat()
     later = np.nonzero(low[i + 1 :])[0]
