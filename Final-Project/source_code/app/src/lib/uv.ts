@@ -4,6 +4,8 @@
  * 0-2 ต่ำ, 3-5 ปานกลาง, 6-7 สูง, 8-10 สูงมาก, 11+ รุนแรงมาก.
  */
 
+import type { HourUV } from '@/api/types';
+
 export const WHO_LEVELS = ['ต่ำ', 'ปานกลาง', 'สูง', 'สูงมาก', 'รุนแรงมาก'] as const;
 export const WHO_COLORS = ['#3E9B4F', '#D9A400', '#E36B12', '#D22F3A', '#8A3FC2'] as const;
 const WHO_LOWER_BOUNDS = [0, 3, 6, 8, 11];
@@ -71,4 +73,38 @@ export function formatHourInterval(iso: string): string {
 /** "lo–hi" with one decimal. */
 export function formatRange([lo, hi]: [number, number]): string {
   return `${lo.toFixed(1)}–${hi.toFixed(1)}`;
+}
+
+/** Peak hour of the next daytime period, from the hourly forecast. */
+export type DayPeak = {
+  time: string;
+  uvi: number;
+  uvi_range: [number, number];
+  level: string;
+  /** true when the peak is on a later local date than `nowIso`. */
+  isTomorrow: boolean;
+};
+
+/**
+ * Peak of the next daytime period after `nowIso`: the first run of forecast hours with
+ * UVI > 0 that starts after now, and its highest hour. Null if the forecast has none.
+ * Times are compared as the API's Asia/Bangkok local ISO strings.
+ */
+export function nextDaytimePeak(hours: HourUV[], nowIso: string): DayPeak | null {
+  const now = nowIso.slice(0, 16);
+  const future = hours.filter((h) => h.time.slice(0, 16) > now);
+  const start = future.findIndex((h) => h.uvi > 0);
+  if (start < 0) return null;
+  let end = start;
+  while (end + 1 < future.length && future[end + 1].uvi > 0) end += 1;
+  const peak = future
+    .slice(start, end + 1)
+    .reduce((best, h) => (h.uvi > best.uvi ? h : best));
+  return {
+    time: peak.time,
+    uvi: peak.uvi,
+    uvi_range: peak.uvi_range,
+    level: peak.level,
+    isTomorrow: peak.time.slice(0, 10) !== nowIso.slice(0, 10),
+  };
 }

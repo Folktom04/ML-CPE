@@ -46,3 +46,11 @@ export type PredictResponse = {
   note: string | null;
   disclaimer: string;
 };
+
+export type ForecastResponse = {
+  lat: number;
+  lon: number;
+  hours: HourUV[];
+  note: string | null;
+  disclaimer: string;
+};

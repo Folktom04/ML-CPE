@@ -4,7 +4,7 @@ import { StyleSheet } from 'react-native';
 import { UVCard } from '@/components/UVCard';
 import { UvaUvbCard } from '@/components/UvaUvbCard';
 
-import { samplePredict } from './fixtures';
+import { sampleNight, samplePredict } from './fixtures';
 
 const bg = (id: string) => StyleSheet.flatten(screen.getByTestId(id).props.style).backgroundColor;
 
@@ -58,10 +58,35 @@ describe('UvaUvbCard', () => {
     expect(screen.getByText('• ทาครีมกันแดด SPF 30+ PA+++')).toBeTruthy();
   });
 
-  it('shows no burn minutes at night', async () => {
-    await render(
-      <UvaUvbCard data={samplePredict({ burn_minutes: null, is_daylight: false, advice: [] })} />,
-    );
+  it('at night: no burn minutes, no advice, and the next daytime peak instead', async () => {
+    const peak = {
+      time: '2026-09-28T12:00:00+07:00',
+      uvi: 9.6,
+      uvi_range: [8.9, 10.4] as [number, number],
+      level: 'สูงมาก',
+      isTomorrow: true,
+    };
+    await render(<UvaUvbCard data={sampleNight()} nextPeak={peak} />);
     expect(screen.getByTestId('burn-value')).toHaveTextContent('ไม่มีความเสี่ยง (กลางคืน)');
+    expect(screen.queryByText(/แว่นกันแดด/)).toBeNull();
+    expect(screen.queryByText(/ออกกลางแจ้งได้ตามปกติ/)).toBeNull();
+    const box = screen.getByTestId('next-peak');
+    expect(box).toHaveTextContent(/พรุ่งนี้ UV สูงสุดประมาณ/);
+    expect(box).toHaveTextContent(/9\.6/);
+    expect(box).toHaveTextContent(/ราว 12:00 น\./);
+    expect(box).toHaveTextContent(/8\.9–10\.4/);
+    expect(bg('next-peak-badge')).toBe('#D22F3A');
+  });
+
+  it('at night without a forecast: says so, still no advice', async () => {
+    await render(<UvaUvbCard data={sampleNight()} nextPeak={null} />);
+    expect(screen.getByTestId('next-peak')).toHaveTextContent('ยังไม่มีข้อมูลพยากรณ์ของวันถัดไป');
+    expect(screen.queryByText(/แว่นกันแดด/)).toBeNull();
+  });
+
+  it('in daytime the advice is shown and there is no next-peak box', async () => {
+    await render(<UvaUvbCard data={samplePredict()} />);
+    expect(screen.getByText('• สวมหมวกและแว่นกันแดด')).toBeTruthy();
+    expect(screen.queryByTestId('next-peak')).toBeNull();
   });
 });

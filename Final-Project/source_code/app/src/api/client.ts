@@ -1,10 +1,10 @@
 /**
- * Minimal client for the UV Guard API (day 18: POST /predict only).
+ * Minimal client for the UV Guard API (day 18: POST /predict, GET /forecast).
  */
 
 import { API_URL, REQUEST_TIMEOUT_MS } from '@/config';
 
-import type { PredictRequest, PredictResponse } from './types';
+import type { ForecastResponse, PredictRequest, PredictResponse } from './types';
 
 /**
  * Error with a Thai message that can be shown to the user as-is, plus debug details:
@@ -61,22 +61,17 @@ type FetchOptions = {
   fetchImpl?: typeof fetch;
 };
 
-/** Current UV estimate, range, risk and forecast for one location and skin type. */
-export async function fetchPredict(
-  body: PredictRequest,
-  { baseUrl = API_URL, timeoutMs = REQUEST_TIMEOUT_MS, fetchImpl = fetch }: FetchOptions = {},
-): Promise<PredictResponse> {
-  const url = `${baseUrl}/predict`;
+/** fetch with timeout; errors become ApiError with the URL and the original error text. */
+async function request(
+  url: string,
+  init: RequestInit,
+  { timeoutMs = REQUEST_TIMEOUT_MS, fetchImpl = fetch }: FetchOptions,
+): Promise<unknown> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   let res: Response;
   try {
-    res = await fetchImpl(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
+    res = await fetchImpl(url, { ...init, signal: controller.signal });
   } catch (err) {
     if (controller.signal.aborted) {
       throw new ApiError('เซิร์ฟเวอร์ตอบช้าเกินไป ลองใหม่อีกครั้ง', {
@@ -99,11 +94,46 @@ export async function fetchPredict(
       detail: `HTTP ${res.status}${detail ? `: ${detail}` : ''}`,
     });
   }
-  const data = (await res.json()) as PredictResponse;
+  return res.json();
+}
+
+/** Current UV estimate, range, risk and forecast for one location and skin type. */
+export async function fetchPredict(
+  body: PredictRequest,
+  { baseUrl = API_URL, ...opts }: FetchOptions = {},
+): Promise<PredictResponse> {
+  const url = `${baseUrl}/predict`;
+  const data = (await request(
+    url,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+    opts,
+  )) as PredictResponse;
   if (typeof data?.uvi !== 'number' || !Array.isArray(data?.uvi_range)) {
     throw new ApiError('รูปแบบข้อมูลจากเซิร์ฟเวอร์ไม่ถูกต้อง', {
       url,
       detail: 'response has no uvi / uvi_range',
+    });
+  }
+  return data;
+}
+
+/** Hourly forecast from now (1-36 h; Asia/Bangkok local start of each hour). */
+export async function fetchForecast(
+  lat: number,
+  lon: number,
+  hours = 36,
+  { baseUrl = API_URL, ...opts }: FetchOptions = {},
+): Promise<ForecastResponse> {
+  const url = `${baseUrl}/forecast?lat=${lat}&lon=${lon}&hours=${hours}`;
+  const data = (await request(url, { method: 'GET' }, opts)) as ForecastResponse;
+  if (!Array.isArray(data?.hours)) {
+    throw new ApiError('รูปแบบข้อมูลจากเซิร์ฟเวอร์ไม่ถูกต้อง', {
+      url,
+      detail: 'response has no hours',
     });
   }
   return data;
