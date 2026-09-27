@@ -5,8 +5,9 @@ quality + time and location terms). The past window t-47..t uses Open-Meteo valu
 (``past_days`` at run time); the future window t+1..t+24 uses the same columns as known future
 covariates (Open-Meteo forecast at run time). NASA POWER is never an input: it only gives the
 target CMF_UVI (and ``nasa_uvi`` for scoring). In the historical data the "forecast"
-covariates are archived analysis values, so every model compared on these windows gets a
-perfect-prognosis forecast (limitation, see ROADMAP day 11).
+covariates come from the Open-Meteo Historical Forecast API (the first hours of each forecast
+run stitched together), not real 24-h-ahead forecasts, so real forecasting may do worse than
+measured (limitation, see ROADMAP day 11; wording corrected on day 16).
 
 Night hours are kept so windows are contiguous: ``om_kt`` / ``om_diffuse_fraction`` are 0 when
 the sun is down, and target hours with ``uvi_clear < MIN_UVI_CLEAR`` are masked. Test-year

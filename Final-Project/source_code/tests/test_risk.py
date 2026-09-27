@@ -46,6 +46,16 @@ def test_assess_uses_upper_bound_for_warnings():
     assert "ไม่ใช่การวินิจฉัยทางการแพทย์" in r["disclaimer"]
 
 
+def test_assess_alerts_follow_alert_uvi_not_the_displayed_range():
+    # point 9.5 above q90 8.0: the displayed range is widened, warnings still use q90
+    r = risk.assess(9.5, (6.0, 9.5), "II", alert_uvi=8.0)
+    assert r["uvi_range"] == [6.0, 9.5]
+    assert r["alert_uvi"] == 8.0 and r["alert_level_index"] == risk.level_index(8.0)
+    assert r["burn_minutes"] == risk.burn_minutes(8.0, "II")
+    assert r["advice"] == risk.advice(8.0, "II")
+    assert risk.assess(7.0, (5.5, 9.0), "II")["alert_uvi"] == 9.0  # default: upper bound
+
+
 def test_assess_low_uv_and_bad_range():
     r = risk.assess(0.1, (0.0, 0.3), 3)
     assert r["burn_minutes"] is None and r["level"] == "ต่ำ"

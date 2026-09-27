@@ -46,6 +46,20 @@ from sklearn.preprocessing import StandardScaler  # noqa: E402
 
 from src.fetch_data import ROOT  # noqa: E402
 from src.sky_data import IMAGE_SIZE, augmenter, load_image, load_split, resolve  # noqa: E402
+from src.sky_infer import (  # noqa: E402,F401  (re-exported: training and inference share them)
+    CCSN_CLASSES,
+    DISCLAIMER_TH,
+    NRBR_CLOUD,
+    SWIM_CLASSES,
+    TFLITE_PATH,
+    UV_GROUP_TH,
+    UV_GROUPS,
+    check_unit_range,
+    group_matrix,
+    nrbr_map,
+    predict_sky,
+    rb_cloud_fraction,
+)
 from src.train_cmf import DOCS_DIR, MODEL_DIR  # noqa: E402
 
 SEEDS = (42, 43, 44)
@@ -54,28 +68,6 @@ STAGE1 = {"lr": 1e-3, "epochs": 15}
 STAGE2 = {"lr": 1e-4, "epochs": 30, "unfreeze_from": 0.7}  # top 30 % of backbone layers
 PATIENCE = 5
 DROPOUT = 0.2
-NRBR_CLOUD = 0.25
-CCSN_CLASSES = ["Ac", "As", "Cb", "Cc", "Ci", "Cs", "Ct", "Cu", "Ns", "Sc", "St"]
-SWIM_CLASSES = [
-    "clear_sky",
-    "patterned_clouds",
-    "thick_dark_clouds",
-    "thick_white_clouds",
-    "thin_white_clouds",
-    "veil_clouds",
-]
-UV_GROUPS = {
-    "high_thin": ["Ci", "Cs", "Cc", "Ct"],
-    "mid": ["Ac", "As"],
-    "low_thick": ["St", "Sc", "Ns", "Cb"],
-    "cumulus": ["Cu"],
-}
-UV_GROUP_TH = {
-    "high_thin": "เมฆบางระดับสูง",
-    "mid": "เมฆระดับกลาง",
-    "low_thick": "เมฆหนาระดับต่ำ",
-    "cumulus": "เมฆก้อน",
-}
 CRITERIA = {
     "K1": "CCSN 11-class accuracy (conflicts removed) >= 0.60",
     "K2": "CCSN 11-class macro-F1 >= 0.55",
@@ -89,43 +81,10 @@ CRITERIA = {
     "R2": "red/blue proxy: median of thick_white, thick_dark, veil > 0.60 each",
 }
 METRICS_PATH = MODEL_DIR / "sky_cnn_v1_metrics.json"
-TFLITE_PATH = MODEL_DIR / "sky_cnn_v1.tflite"
 LABELS_PATH = MODEL_DIR / "sky_cnn_v1_labels.json"
 TEST_PATH = DOCS_DIR / "sky_cnn_test.json"
 CROSSCHECK_PATH = DOCS_DIR / "sky_cnn_crosscheck.json"  # day 15, supplementary only
 LOG_DIR = ROOT / "dataset" / "processed" / "logs"  # per-seed training logs (git-ignored)
-DISCLAIMER_TH = "ผลจากภาพท้องฟ้าเป็นข้อมูลประกอบเท่านั้น ไม่ได้ใช้คำนวณค่า UV"
-
-
-def check_unit_range(x: np.ndarray) -> np.ndarray:
-    """Raise if images are not float RGB in [0, 1] (catches 0-255 input scaled twice).
-
-    Args:
-        x: Image or batch.
-
-    Returns:
-        ``x`` unchanged.
-    """
-    x = np.asarray(x)
-    if x.dtype.kind not in "f":
-        raise TypeError(f"images must be float in [0, 1], got dtype {x.dtype}")
-    if x.size and (x.min() < -1e-6 or x.max() > 1.0 + 1e-6):
-        raise ValueError(f"images must be in [0, 1], got [{x.min():.3f}, {x.max():.3f}]")
-    return x
-
-
-def group_matrix() -> np.ndarray:
-    """(11, 4) membership matrix from ``CCSN_CLASSES`` to ``UV_GROUPS``.
-
-    Returns:
-        0/1 float matrix.
-    """
-    m = np.zeros((len(CCSN_CLASSES), len(UV_GROUPS)), dtype=np.float32)
-    for j, members in enumerate(UV_GROUPS.values()):
-        for c in members:
-            m[CCSN_CLASSES.index(c), j] = 1.0
-    assert (m.sum(axis=1) == 1).all(), "every genus must belong to exactly one UV group"
-    return m
 
 
 def build_model(
@@ -395,35 +354,6 @@ def color_baseline(x_train: np.ndarray, y_train: np.ndarray) -> Any:
     return clf.fit(color_features(x_train), y_train)
 
 
-def nrbr_map(x: np.ndarray) -> np.ndarray:
-    """Normalised blue-red ratio ``(B - R) / (B + R)`` per pixel for [0, 1] images.
-
-    Args:
-        x: (..., H, W, 3) float images in [0, 1].
-
-    Returns:
-        (..., H, W) array; 0 where B + R is 0.
-    """
-    x = check_unit_range(np.asarray(x, dtype=np.float32))
-    r, b = x[..., 0], x[..., 2]
-    s = r + b
-    return np.where(s > 1e-6, (b - r) / np.maximum(s, 1e-6), 0.0)
-
-
-def rb_cloud_fraction(x: np.ndarray, threshold: float = NRBR_CLOUD) -> np.ndarray | float:
-    """Red/blue-ratio cloud fraction: share of pixels with ``nrbr < threshold``.
-
-    Args:
-        x: One image (H, W, 3) or a batch, float in [0, 1].
-        threshold: NRBR below which a pixel counts as cloud (literature value, not tuned).
-
-    Returns:
-        Fraction (float for one image, array for a batch).
-    """
-    frac = (nrbr_map(x) < threshold).mean(axis=(-2, -1))
-    return float(frac) if np.ndim(frac) == 0 else frac
-
-
 def judge(res: dict[str, Any]) -> pd.DataFrame:
     """Apply the pre-registered criteria to the test results (means over seeds).
 
@@ -680,43 +610,6 @@ def export_tflite(model: tf.keras.Model, path: Path = TFLITE_PATH) -> Path:
     conv.target_spec.supported_types = [tf.float16]
     path.write_bytes(conv.convert())
     return path
-
-
-def predict_sky(
-    image: np.ndarray, interpreter: Any | None = None, tflite_path: Path = TFLITE_PATH
-) -> dict[str, Any]:
-    """App-facing prediction for one [0, 1] image (supporting information only).
-
-    Args:
-        image: (H, W, 3) float in [0, 1], already centre-cropped/resized (``load_image``).
-        interpreter: Optional loaded ``tf.lite.Interpreter``.
-        tflite_path: Model file when no interpreter is given.
-
-    Returns:
-        UV cloud group (id, Thai name, probabilities), SWIMCAT-ext class, red/blue cloud fraction
-        and the disclaimer.
-    """
-    x = check_unit_range(np.asarray(image, dtype=np.float32))[None]
-    if interpreter is None:
-        interpreter = tf.lite.Interpreter(model_path=str(tflite_path))
-    interpreter.allocate_tensors()
-    interpreter.set_tensor(interpreter.get_input_details()[0]["index"], x)
-    interpreter.invoke()
-    outs = {}
-    for d in interpreter.get_output_details():
-        arr = interpreter.get_tensor(d["index"])[0]
-        outs["ccsn" if arr.shape[-1] == len(CCSN_CLASSES) else "swim"] = arr
-    gp = outs["ccsn"] @ group_matrix()
-    g = list(UV_GROUPS)[int(gp.argmax())]
-    return {
-        "cloud_group": g,
-        "cloud_group_th": UV_GROUP_TH[g],
-        "cloud_group_probs": {k: float(v) for k, v in zip(UV_GROUPS, gp)},
-        "genus": CCSN_CLASSES[int(outs["ccsn"].argmax())],
-        "sky_class": SWIM_CLASSES[int(outs["swim"].argmax())],
-        "cloud_fraction_rb": rb_cloud_fraction(x[0]),
-        "note": DISCLAIMER_TH,
-    }
 
 
 def _mean_sd(runs: list[dict[str, Any]], keys: list[str]) -> dict[str, dict[str, float]]:
