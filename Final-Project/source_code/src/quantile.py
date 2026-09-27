@@ -405,6 +405,7 @@ def main(argv: list[str] | None = None) -> None:
     print(f"raw [q10, q90] coverage, CV folds 3-5 pooled: {cov:.3f} (ok {COVERAGE_OK})")
 
     def cmf_interval(mask: pd.Series) -> tuple[pd.Series, pd.Series, pd.Series]:
+        """Target CMF and out-of-fold q10/q90 for the masked rows (CQR inputs)."""
         return rows.loc[mask, "cmf_uvi"], oof.loc[mask, "q10"], oof.loc[mask, "q90"]
 
     q_final = q_dev = 0.0

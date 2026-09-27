@@ -157,3 +157,13 @@ def test_uvi_clear_interval_midpoint_and_mean(clim_path):
     assert default[0] == pytest.approx(ph.uvi_clear_interval(end, ozone_du=253.0)[0])
     with pytest.raises(ValueError):
         ph.uvi_clear_interval(end, ozone_du=300.0, substeps=0)
+
+
+def test_load_ozone_climatology_indexed_by_month(tmp_path):
+    arr = ph.load_ozone_climatology()
+    assert arr.shape == (13,) and np.isnan(arr[0]) and np.isfinite(arr[1:]).all()
+    assert (arr[1:] > 200).all() and (arr[1:] < 350).all()  # tropical total column, DU
+    part = tmp_path / "part.json"
+    part.write_text(json.dumps({"monthly_mean_du": {"1": 250.0}}), encoding="utf-8")
+    with pytest.raises(ValueError, match="all 12 months"):
+        ph.load_ozone_climatology(part)

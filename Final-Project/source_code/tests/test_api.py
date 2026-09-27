@@ -17,6 +17,7 @@ from src import inference as inf
 from src.fetch_data import ROOT
 from src.metrics import WHO_LEVELS, who_level
 from src.risk import DISCLAIMER, burn_minutes
+from src.sky_infer import SWIM_CLASS_TH
 from tests.test_inference import fake_bundle, synthetic_raw
 
 NOW = datetime(2026, 9, 27, 5, 20, tzinfo=timezone.utc)  # 12:20 in Bangkok
@@ -206,9 +207,14 @@ def test_sky_image_result_and_nothing_stored(client, fmt):
     assert r.status_code == 200
     body = r.json()
     assert body["stored"] is False and body["disclaimer"] == DISCLAIMER
-    assert abs(sum(body["cloud_group_probs"].values()) - 1) < 0.02
+    assert abs(sum(body["sky_class_probs"].values()) - 1) < 0.02
+    assert body["sky_class"] in SWIM_CLASS_TH and body["sky_class_th"] == SWIM_CLASS_TH[body["sky_class"]]
+    assert body["sky_confidence"] == pytest.approx(max(body["sky_class_probs"].values()))
+    assert body["sky_confidence"] == pytest.approx(body["sky_class_probs"][body["sky_class"]])
+    # the CCSN head (genus / UV cloud group) missed its criteria and is not shown in the app
+    assert not {"genus", "cloud_group", "cloud_group_th", "cloud_group_probs"} & set(body)
     assert 0 <= body["cloud_fraction_rb"] <= 1
-    assert set(body["reliability"]) == {"cloud_group", "sky_class"}
+    assert set(body["reliability"]) == {"sky_class", "cloud_fraction_rb"}
     assert after - before == set(), f"files written: {sorted(after - before)[:5]}"
 
 

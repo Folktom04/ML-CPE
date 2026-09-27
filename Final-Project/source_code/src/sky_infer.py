@@ -38,6 +38,14 @@ UV_GROUP_TH = {
     "low_thick": "เมฆหนาระดับต่ำ",
     "cumulus": "เมฆก้อน",
 }
+SWIM_CLASS_TH = {
+    "clear_sky": "ท้องฟ้าแจ่มใส",
+    "patterned_clouds": "เมฆเป็นลวดลาย",
+    "thick_dark_clouds": "เมฆหนาสีเข้ม",
+    "thick_white_clouds": "เมฆหนาสีขาว",
+    "thin_white_clouds": "เมฆบางสีขาว",
+    "veil_clouds": "เมฆบางคลุมทั่วฟ้า",
+}
 DISCLAIMER_TH = "ผลจากภาพท้องฟ้าเป็นข้อมูลประกอบเท่านั้น ไม่ได้ใช้คำนวณค่า UV"
 
 
@@ -126,14 +134,44 @@ def predict_sky(
 ) -> dict[str, Any]:
     """App-facing prediction for one [0, 1] image (supporting information only).
 
+    Only the SWIMCAT-ext head (6 sky classes, passed its test criteria) is returned. The CCSN
+    head (11 genera / UV cloud groups) missed its criteria on day 14 and is not shown in the
+    app; use :func:`predict_heads` for the raw outputs of both heads.
+
     Args:
         image: (H, W, 3) float in [0, 1], already centre-cropped/resized (``load_image``).
         interpreter: Optional loaded TFLite interpreter.
         tflite_path: Model file when no interpreter is given.
 
     Returns:
-        UV cloud group (id, Thai name, probabilities), SWIMCAT-ext class and probabilities,
-        red/blue cloud fraction and the note that it is supporting information only.
+        SWIMCAT-ext class (id, Thai name, confidence, probabilities), red/blue cloud fraction
+        and the note that it is supporting information only.
+    """
+    x = check_unit_range(np.asarray(image, dtype=np.float32))[None]
+    swim = predict_heads(x[0], interpreter=interpreter, tflite_path=tflite_path)["swim"]
+    k = int(swim.argmax())
+    return {
+        "sky_class": SWIM_CLASSES[k],
+        "sky_class_th": SWIM_CLASS_TH[SWIM_CLASSES[k]],
+        "sky_confidence": float(swim[k]),
+        "sky_class_probs": {c: float(v) for c, v in zip(SWIM_CLASSES, swim)},
+        "cloud_fraction_rb": rb_cloud_fraction(x[0]),
+        "note": DISCLAIMER_TH,
+    }
+
+
+def predict_heads(
+    image: np.ndarray, interpreter: Any | None = None, tflite_path: Path = TFLITE_PATH
+) -> dict[str, np.ndarray]:
+    """Raw softmax outputs of both TFLite heads for one [0, 1] image.
+
+    Args:
+        image: (H, W, 3) float in [0, 1].
+        interpreter: Optional loaded TFLite interpreter.
+        tflite_path: Model file when no interpreter is given.
+
+    Returns:
+        ``{"ccsn": (11,), "swim": (6,)}`` probabilities.
     """
     x = check_unit_range(np.asarray(image, dtype=np.float32))[None]
     if interpreter is None:
@@ -145,15 +183,4 @@ def predict_sky(
     for d in interpreter.get_output_details():
         arr = interpreter.get_tensor(d["index"])[0]
         outs["ccsn" if arr.shape[-1] == len(CCSN_CLASSES) else "swim"] = arr
-    gp = outs["ccsn"] @ group_matrix()
-    g = list(UV_GROUPS)[int(gp.argmax())]
-    return {
-        "cloud_group": g,
-        "cloud_group_th": UV_GROUP_TH[g],
-        "cloud_group_probs": {k: float(v) for k, v in zip(UV_GROUPS, gp)},
-        "genus": CCSN_CLASSES[int(outs["ccsn"].argmax())],
-        "sky_class": SWIM_CLASSES[int(outs["swim"].argmax())],
-        "sky_class_probs": {k: float(v) for k, v in zip(SWIM_CLASSES, outs["swim"])},
-        "cloud_fraction_rb": rb_cloud_fraction(x[0]),
-        "note": DISCLAIMER_TH,
-    }
+    return outs

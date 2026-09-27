@@ -39,3 +39,11 @@ def test_split_refuses_test_rows_and_empty_parts():
         sp.chronological_split(frame("2023-01-01", "2025-02-01"))
     with pytest.raises(ValueError):
         sp.chronological_split(frame("2024-01-01", "2024-12-31"))
+
+
+def test_assert_no_test_rows_raises_only_for_test_period():
+    ok = pd.DataFrame({"time_utc": pd.to_datetime(["2023-06-01 00:00", "2024-12-31 23:00"], utc=True)})
+    sp.assert_no_test_rows(ok)
+    bad = pd.DataFrame({"t": pd.to_datetime(["2024-12-31 23:00", "2025-01-01 00:00"], utc=True)})
+    with pytest.raises(AssertionError, match="1 rows"):
+        sp.assert_no_test_rows(bad, col="t")

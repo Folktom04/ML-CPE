@@ -95,3 +95,16 @@ def test_write_spec_roundtrip(tmp_path):
     assert spec["n_rows"] == len(df) and spec["n_input_rows"] == 24
     assert set(spec["target_stats"]) == set(ft.TARGETS)
     assert "nasa_cloud_pct" in spec["diagnostic_not_features"]
+
+
+def test_add_clear_sky_adds_denominators_day_and_night():
+    t = pd.Series(pd.to_datetime(["2023-03-21 06:00", "2023-03-21 18:00"], utc=True))
+    df = pd.DataFrame({"time_utc": t, "x": [1, 2]})
+    out = ft.add_clear_sky(df, substeps=4)
+    for c in ("uvi_clear", "uva_clear", "uvb_clear", "ozone_clim_du", "ghi_clear"):
+        assert c in out and c not in df
+    noon, night = out.iloc[0], out.iloc[1]  # 12-13 and 00-01 Bangkok
+    assert noon["uvi_clear"] > 8 and noon["uva_clear"] > noon["uvb_clear"] > 0
+    assert noon["ghi_clear"] > 800
+    assert night[["uvi_clear", "uva_clear", "uvb_clear", "ghi_clear"]].max() < 1e-6
+    assert 200 < noon["ozone_clim_du"] < 350

@@ -267,3 +267,16 @@ def test_make_interpreter_falls_back_to_tf_lite(monkeypatch):
     assert backend == "tf.lite"
     interp.allocate_tensors()
     assert interp.get_input_details()[0]["shape"][-1] == 3
+
+
+def test_request_params_uses_training_variables_and_no_model_override():
+    p = inf.request_params(14.02, 100.52, ["cloud_cover", "pm2_5"])
+    assert p["hourly"] == "cloud_cover,pm2_5" and p["timezone"] == "GMT"
+    assert (p["latitude"], p["longitude"]) == (14.02, 100.52)
+    assert p["past_days"] == inf.PAST_DAYS and p["forecast_days"] == inf.FORECAST_DAYS
+    assert "models" not in p and "domains" not in p
+
+
+def test_hour_start_local_is_start_of_interval_in_bangkok():
+    t = pd.Timestamp("2026-09-27T07:00:00Z")  # end of 13:00-14:00 Bangkok
+    assert inf.hour_start_local(t) == "2026-09-27T13:00:00+07:00"

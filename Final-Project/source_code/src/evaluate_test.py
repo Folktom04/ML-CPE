@@ -298,6 +298,7 @@ def validation_results(noon: pd.DataFrame) -> dict[str, Any]:
     est = {**ESTIMATORS, "nasa_power": "nasa_uvi"}
 
     def block(ref: str, mask: pd.Series, names: dict[str, str]) -> dict[str, Any]:
+        """Error metrics of each estimate column against ``ref`` on the masked noon rows."""
         sub = noon.loc[mask].dropna(subset=[ref, *names.values()])
         return {name: error_metrics(sub[col], sub[ref]) for name, col in names.items()}
 
@@ -338,6 +339,7 @@ def judge(hourly: dict[str, Any], val: dict[str, Any]) -> pd.DataFrame:
     rows = []
 
     def add(cid: str, value: Any, threshold: Any, passed: bool) -> None:
+        """Append one criterion row (id, description, value, threshold, pass/fail)."""
         rows.append(
             {
                 "id": cid,

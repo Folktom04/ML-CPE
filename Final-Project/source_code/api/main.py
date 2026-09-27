@@ -49,19 +49,22 @@ log = logging.getLogger("uvguard.api")
 def sky_reliability() -> dict[str, str]:
     """Plain statement of how reliable each sky-CNN output was on its test split (day 14).
 
+    Only the outputs the app shows are described: the SWIMCAT-ext sky class and the red/blue
+    cloud fraction. The CCSN head missed its criteria and is not returned by ``/sky-image``.
+
     Returns:
-        ``{"cloud_group": ..., "sky_class": ...}`` (Thai text with the test numbers).
+        ``{"sky_class": ..., "cloud_fraction_rb": ...}`` (Thai text with the test numbers).
     """
+    rb = "ประมาณจากอัตราส่วนสีแดง/น้ำเงิน (ไม่ใช่โมเดล) ยังไม่ได้ทดสอบกับภาพจากมือถือ"
     try:
         t = json.loads((DOCS_DIR / "sky_cnn_test.json").read_text(encoding="utf-8"))
-        g = t["ccsn"]["mean"]["group_accuracy"]
         s = t["swim"]["mean"]["group_accuracy"]
         return {
-            "cloud_group": f"ไม่ผ่านเกณฑ์ที่ตั้งไว้ (ความแม่นบนชุดทดสอบ {g:.0%} เกณฑ์ 75%) ใช้ประกอบเท่านั้น",
             "sky_class": f"ผ่านเกณฑ์ (ความแม่นบนชุดทดสอบ {s:.0%}) แต่ยังไม่ได้ทดสอบกับภาพจากมือถือ",
+            "cloud_fraction_rb": rb,
         }
     except (OSError, KeyError, ValueError):
-        return {"cloud_group": "ไม่มีข้อมูลผลทดสอบ", "sky_class": "ไม่มีข้อมูลผลทดสอบ"}
+        return {"sky_class": "ไม่มีข้อมูลผลทดสอบ", "cloud_fraction_rb": rb}
 
 
 @asynccontextmanager
@@ -213,7 +216,7 @@ def forecast(
 
 @app.post("/sky-image", response_model=SkyImageResponse)
 async def sky_image(file: UploadFile = File(...)) -> SkyImageResponse:
-    """Sky photo -> cloud group / sky class / red-blue cloud fraction (in memory only).
+    """Sky photo -> SWIMCAT-ext sky class + confidence and red-blue cloud fraction (in memory).
 
     The bytes are never written to disk or a database; the result never changes the UVI.
     """

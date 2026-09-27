@@ -262,6 +262,7 @@ def extract_omuvbd_pixel(h5_path: Path, lat: float = LAT, lon: float = LON) -> d
     found: dict[str, h5py.Dataset] = {}
 
     def visit(name: str, obj: Any) -> None:
+        """h5py visitor: keep the first dataset whose leaf name is a wanted OMI field."""
         leaf = name.rsplit("/", 1)[-1]
         if isinstance(obj, h5py.Dataset) and leaf in OMI_FIELDS and leaf not in found:
             found[leaf] = obj
