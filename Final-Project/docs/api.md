@@ -12,6 +12,8 @@ $env:PYTHONPATH = "source_code"
 
 Interactive docs: http://127.0.0.1:8000/docs
 
+**CORS (day 18):** browsers may call the API only from the origins in `CORS_ORIGINS` (`.env`, comma-separated); the default is the Expo web dev server `http://localhost:8081` and `http://127.0.0.1:8081`. Methods GET/POST/PUT, header `Content-Type`. Native apps send no `Origin` header, so CORS does not affect them.
+
 ## Data flow
 - **Run-time inputs:** Open-Meteo Forecast API (`api.open-meteo.com/v1/forecast`) and Air Quality API. They use the same 12 weather and 4 air-quality variables as training, with no `models=`/`domains=` (Open-Meteo defaults, as in training), `past_days=1` and `forecast_days=2`. Responses are cached in memory for 10 min per location (rounded to 0.01°). **NASA POWER is never called by the API.**
 - **Train/serve consistency (day 16):** for the same hours, the Historical Forecast API (used for training) and the Forecast API returned identical values (16/16 variables, 72/72 h). `build_features()` reproduces the 23 training features exactly (7,394 rows compared, max difference 0, tolerance 1e-6).

@@ -245,9 +245,14 @@
 
 ### วัน 18 — Expo: หน้าหลัก
 > **แก้ก่อนเริ่มวัน 18 (ตรวจทั้งโปรเจกต์):** (1) `/sky-image` ตอบ **SWIMCAT-ext 6 คลาสเป็นผลหลัก** (`sky_class`, `sky_class_th`, `sky_confidence`, `sky_class_probs`) + `cloud_fraction_rb` และเลิกส่ง `genus` / `cloud_group` ของ CCSN (ไม่ผ่านเกณฑ์ K1–K3) ใช้ TFLite ตัวเดิม ไม่ได้ฝึกใหม่ ผลดิบของทั้งสอง head ยังเรียกได้ด้วย `predict_heads()` (2) เอกสาร: README (สถาปัตยกรรมไม่มี stacking, ground truth คือ NASA POWER RE, disclaimer ครอบคลุมทุกค่า, วิธีติดตั้ง/รัน), rules (Python 3.12, Historical Forecast API, `/sky-image`), `checkpoint.md` (ห้ามรัน `--test` ซ้ำ), `START_HERE.md` (prompt วัน 13), `docs/api.md` (3) docstring ครบทุกฟังก์ชันใน `src/` และเพิ่มเทสตรง 8 ข้อ (`request_params`, `hour_start_local`, `mask_implausible`, `assert_no_test_rows`, `load_ozone_climatology`, `add_clear_sky`, `fetch_temis`, `nrbr_map`) ผล pytest **229 passed, 0 skipped** ไม่มีตัวเลขผลใดเปลี่ยน
-- [ ] สร้างโปรเจกต์ Expo + Expo Router
-- [ ] การ์ด UV + ระดับสี
-- [ ] การ์ด UVA / UVB + เวลาผิวไหม้
+- [x] สร้างโปรเจกต์ Expo + Expo Router → `source_code/app/` (Expo SDK 57, React Native 0.86, TypeScript, `src/app/_layout.tsx`, `src/app/index.tsx`, `src/api/`, `src/config.ts`, `README.md`)
+  > template `default` ตัดหน้าตัวอย่างออก และลบ `CLAUDE.md` / `AGENTS.md` / `.claude` / `.vscode` ที่ template สร้างมา (กันกฎชนกับ `.agents/rules/`) หน้าหลักเรียก `POST /predict` ที่ปทุมธานี ผิวประเภท III (ค่าเริ่มต้นชั่วคราว: แบบสอบถามผิววัน 19, GPS/จังหวัดวัน 21) มีสถานะโหลด / error ภาษาไทย (502, 503, 422, เครือข่าย, timeout) / ลากลงเพื่อโหลดใหม่ และ disclaimer ท้ายหน้าเสมอ API เพิ่ม CORS (`CORS_ORIGINS`, ค่าเริ่มต้น Expo web `localhost:8081`) + เทส 2 ข้อ ตรวจกับ API จริง: preflight ได้ header, origin อื่นไม่ได้, key ของ response จริงตรงกับ `types.ts` ครบ (ไม่ขาดไม่เกิน)
+- [x] การ์ด UV + ระดับสี → `src/components/UVCard.tsx`, `src/lib/uv.ts`
+  > UVI ตัวใหญ่, ช่วง q10–q90, ป้ายระดับไทยสี WHO (ตัวอักษรเข้มบนสีเหลือง), แถบ "เตือนตามค่าบน (q90)" เมื่อ `alert_level` สูงกว่า `level`, เวลาที่ UV กลับสู่ระดับต่ำ, ป้าย `data_imputed` / `interval_adjusted` / `note` การ map ระดับใช้กฎเดียวกับ `who_level()` (ปัด x.5 ขึ้น)
+- [x] การ์ด UVA / UVB + เวลาผิวไหม้ → `src/components/UvaUvbCard.tsx`
+  > UVA/UVB เป็น W/m², เวลาก่อนผิวไหม้จาก `burn_minutes` ของ API (คิดจาก `alert_uvi` = ค่าบน), กลางคืนแสดง "ไม่มีความเสี่ยง (กลางคืน)", คำแนะนำ SPF/PA จาก `advice`
+  > ทดสอบ: Jest 40 passed (`__tests__/uv`, `client`, `cards`, `home`), `tsc --noEmit` ผ่าน, `expo lint` ผ่าน, `expo export --platform web` build ผ่าน, pytest **231 passed, 0 skipped** (`test_sky_image_result_and_nothing_stored` เคย fail เป็นบางครั้ง เพราะโปรแกรมอื่นเขียนไฟล์ลงโฟลเดอร์ Temp ระหว่างที่เทสไล่ดูไฟล์ ซึ่งช้าลงหลังมี `app/node_modules` ตอนนี้โฟลเดอร์โปรเจกต์ยังต้องไม่มีไฟล์ใหม่เลย ส่วนใน Temp นับเฉพาะไฟล์ภาพหรือไฟล์ที่มีข้อมูลที่อัปโหลด และข้าม `node_modules` ทดลองให้ endpoint แอบเขียนไฟล์แล้ว เทสยังจับได้)
+  > ค้าง: ตรวจหน้าจอบนเว็บด้วย browser agent ของ Antigravity ตามรายการใน `source_code/app/README.md` และเปิดบนมือถือจริงผ่าน Expo Go (ต้องตั้ง `EXPO_PUBLIC_API_URL` เป็น IP ใน LAN)
 
 ### วัน 19 — Expo: กราฟ + ตั้งค่า
 - [ ] กราฟพยากรณ์รายชั่วโมง
