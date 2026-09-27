@@ -21,6 +21,7 @@ python-dotenv
 fastapi
 uvicorn[standard]
 sqlalchemy
+alembic  # DB migrations (day 17): alembic upgrade head
 psycopg[binary]
 apscheduler
 python-multipart

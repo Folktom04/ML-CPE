@@ -6,7 +6,6 @@ Every response carries ``disclaimer`` (estimates for education and warning, not 
 from __future__ import annotations
 
 from pydantic import BaseModel, Field, field_validator
-
 from src.risk import DISCLAIMER, normalize_skin_type
 
 
@@ -103,6 +102,9 @@ class HealthResponse(Disclaimed):
     models: dict[str, str]
     sky_backend: str
     cqr_q: float
+    db_backend: str = Field(description="postgresql (target) or sqlite (fallback only)")
+    db_fallback: bool = Field(description="true when DATABASE_URL is unset and SQLite is used")
+    db_ok: bool = Field(description="database answered SELECT 1")
 
 
 class ErrorResponse(Disclaimed):

@@ -20,11 +20,6 @@ from typing import Any
 
 import numpy as np
 import requests
-from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
-from PIL import Image, UnidentifiedImageError
-
 from api.schemas import (
     ErrorResponse,
     ForecastResponse,
@@ -34,6 +29,11 @@ from api.schemas import (
     PredictResponse,
     SkyImageResponse,
 )
+from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from PIL import Image, UnidentifiedImageError
+from src import db
 from src import inference as inf
 from src.metrics import WHO_LEVELS, who_level
 from src.risk import DISCLAIMER, assess
@@ -66,15 +66,19 @@ def sky_reliability() -> dict[str, str]:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load models once at start-up (tests may pre-set ``app.state.bundle``)."""
+    """Load models and create the DB engine once at start-up (tests may pre-set both)."""
     if getattr(app.state, "bundle", None) is None:
         app.state.bundle = inf.ModelBundle.load()
+    if getattr(app.state, "db_engine", None) is None:
+        url, app.state.db_fallback = db.database_url()  # logs a WARNING on the SQLite fallback
+        app.state.db_engine = db.make_engine(url)
+    log.info("database backend: %s", db.backend_name(app.state.db_engine))
     app.state.sky_reliability = sky_reliability()
     log.info("models loaded (sky backend: %s)", app.state.bundle.sky_backend)
     yield
 
 
-app = FastAPI(title="UV Guard API", version="0.16.0", lifespan=lifespan)
+app = FastAPI(title="UV Guard API", version="0.17.0", lifespan=lifespan)
 
 
 def _error(status: int, detail: Any) -> JSONResponse:
@@ -129,9 +133,17 @@ def _hour(row: Any) -> HourUV:
 
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
-    """Service status and the loaded model files."""
-    b = app.state.bundle
-    return HealthResponse(status="ok", models=b.files, sky_backend=b.sky_backend, cqr_q=b.cqr_q)
+    """Service status, the loaded model files and which database backend is in use."""
+    b, engine = app.state.bundle, app.state.db_engine
+    return HealthResponse(
+        status="ok",
+        models=b.files,
+        sky_backend=b.sky_backend,
+        cqr_q=b.cqr_q,
+        db_backend=db.backend_name(engine),
+        db_fallback=bool(getattr(app.state, "db_fallback", False)),
+        db_ok=db.ping(engine),
+    )
 
 
 @app.post("/predict", response_model=PredictResponse)

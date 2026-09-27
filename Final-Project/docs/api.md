@@ -25,7 +25,7 @@ Interactive docs: http://127.0.0.1:8000/docs
 
 | Method | Path | Input | Output |
 |---|---|---|---|
-| GET | `/health` | — | `status`, model files, `sky_backend` (`ai_edge_litert` or fallback `tf.lite`), `cqr_q` |
+| GET | `/health` | — | `status`, model files, `sky_backend` (`ai_edge_litert` or fallback `tf.lite`), `cqr_q`, `db_backend` (`postgresql` or `sqlite`), `db_fallback`, `db_ok` (day 17) |
 | POST | `/predict` | `{lat, lon, skin_type}` (skin type I–VI or 1–6) | `uvi, uvi_range, uva_wm2, uvb_wm2, level, skin_type, burn_minutes, cmf, advice, forecast[{time, uvi, …}], next_safe_time` + `uvi_q90_cqr, alert_uvi, alert_level, interval_adjusted, data_imputed, level_color, time, is_daylight, note, disclaimer` |
 | GET | `/forecast?lat&lon&hours=1..36` | — | hourly `{time, uvi, uvi_range, uva_wm2, uvb_wm2, level, interval_adjusted, data_imputed}` |
 | POST | `/sky-image` | multipart `file` (≤ 10 MB) | `cloud_group` (+ Thai, probabilities), `genus`, `sky_class` (+ probabilities), `cloud_fraction_rb`, `reliability`, `stored: false` |

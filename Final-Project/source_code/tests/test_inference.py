@@ -6,7 +6,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-
 from src import inference as inf
 from src.features import FEATURES
 from src.fetch_data import AIR_VARS, LAT, LON, RAW_DIR, ROOT, WEATHER_VARS
