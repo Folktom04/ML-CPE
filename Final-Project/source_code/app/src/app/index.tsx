@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -9,17 +10,17 @@ import {
   View,
 } from 'react-native';
 
-import { ApiError, fetchPredict } from '@/api/client';
+import { ApiError, describeError, fetchPredict } from '@/api/client';
 import type { PredictResponse } from '@/api/types';
 import { Card, colors } from '@/components/Card';
 import { UVCard } from '@/components/UVCard';
 import { UvaUvbCard } from '@/components/UvaUvbCard';
-import { DEFAULT_LOCATION, DEFAULT_SKIN_TYPE, DISCLAIMER_TH } from '@/config';
+import { API_URL, DEFAULT_LOCATION, DEFAULT_SKIN_TYPE, DISCLAIMER_TH } from '@/config';
 
 type State =
   | { kind: 'loading' }
   | { kind: 'ok'; data: PredictResponse }
-  | { kind: 'error'; message: string };
+  | { kind: 'error'; message: string; url: string; detail: string };
 
 /** Fetch /predict for the default location and skin type, as a screen state. */
 async function loadState(): Promise<State> {
@@ -31,8 +32,20 @@ async function loadState(): Promise<State> {
     });
     return { kind: 'ok', data };
   } catch (err) {
-    const message = err instanceof ApiError ? err.message : 'เกิดข้อผิดพลาดที่ไม่คาดคิด';
-    return { kind: 'error', message };
+    if (err instanceof ApiError) {
+      return {
+        kind: 'error',
+        message: err.message,
+        url: err.url ?? `${API_URL}/predict`,
+        detail: err.detail ?? '',
+      };
+    }
+    return {
+      kind: 'error',
+      message: 'เกิดข้อผิดพลาดที่ไม่คาดคิด',
+      url: `${API_URL}/predict`,
+      detail: describeError(err),
+    };
   }
 }
 
@@ -83,6 +96,14 @@ export default function HomeScreen() {
           <Text style={styles.error} testID="error-message">
             {state.message}
           </Text>
+          <Text style={styles.debug} testID="error-url" selectable>
+            ที่อยู่ที่เรียก: {state.url}
+          </Text>
+          {state.detail ? (
+            <Text style={styles.debug} testID="error-detail" selectable>
+              รายละเอียด: {state.detail}
+            </Text>
+          ) : null}
           <Pressable style={styles.button} onPress={retry} accessibilityRole="button">
             <Text style={styles.buttonText}>ลองใหม่</Text>
           </Pressable>
@@ -110,6 +131,11 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', gap: 8, paddingVertical: 48 },
   muted: { color: colors.muted },
   error: { color: colors.text, fontSize: 15 },
+  debug: {
+    color: colors.muted,
+    fontSize: 12,
+    fontFamily: Platform.select({ ios: 'Menlo', default: 'monospace' }),
+  },
   button: {
     alignSelf: 'flex-start',
     backgroundColor: colors.text,
