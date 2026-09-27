@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
@@ -81,21 +82,47 @@ def test_predict_matches_rule_schema(client):
     assert body["note"] is None  # Pathum Thani is inside Thailand
 
 
-def test_alerts_and_burn_time_use_q90_after_cqr(client):
+def test_alerts_and_burn_time_use_alert_uvi(client):
     body = client.post("/predict", json=PAYLOAD).json()
-    q90 = body["uvi_q90_cqr"]
-    assert body["burn_minutes"] == burn_minutes(q90, "III")
-    assert body["alert_level"] == WHO_LEVELS[int(who_level(q90))]
+    alert = body["alert_uvi"]
+    assert alert == pytest.approx(max(body["uvi_q90_cqr"], body["uvi"]), abs=0.01)
+    assert body["burn_minutes"] == burn_minutes(alert, "III")
+    assert body["alert_level"] == WHO_LEVELS[int(who_level(alert))]
 
 
-def test_point_outside_interval_flagged_and_alerts_still_q90(client):
+def test_point_above_q90_alert_uses_point_not_q90(client):
+    # item A: q90 below the point value must not lower the warning
     main.app.state.bundle = fake_bundle(cmf=(0.95, 0.7, 0.7), q=(0.3, 0.4, 0.45, 0.5))
     body = client.post("/predict", json=PAYLOAD).json()
     assert body["interval_adjusted"] is True
     assert body["uvi_range"][1] == pytest.approx(body["uvi"], abs=0.01)  # widened, not clipped
     assert body["uvi_q90_cqr"] < body["uvi"]
-    assert body["burn_minutes"] == burn_minutes(body["uvi_q90_cqr"], "III")
-    assert body["alert_level"] == WHO_LEVELS[int(who_level(body["uvi_q90_cqr"]))]
+    assert body["alert_uvi"] == pytest.approx(body["uvi"], abs=0.01)
+    assert body["burn_minutes"] == burn_minutes(body["alert_uvi"], "III")
+    assert body["burn_minutes"] < burn_minutes(body["uvi_q90_cqr"], "III")
+    assert body["alert_level"] == WHO_LEVELS[int(who_level(body["uvi"]))]
+
+
+def test_missing_live_data_flagged_or_503(client, monkeypatch):
+    # item B: a short gap in the current hour is filled and flagged
+    raw = synthetic_raw()
+    now_row = raw["time_utc"] == pd.Timestamp("2026-09-27 06:00", tz="UTC")  # 12:00-13:00 local
+    raw.loc[now_row, ["cloud_cover", "pm2_5"]] = np.nan
+    monkeypatch.setattr(inf, "fetch_live", lambda lat, lon: raw)
+    body = client.post("/predict", json=PAYLOAD).json()
+    assert body["data_imputed"] is True and body["time"] == "2026-09-27T12:00:00+07:00"
+    assert not all(h["data_imputed"] for h in body["forecast"])
+    # a long gap covering the current hour: 503, never another hour
+    gap = raw["time_utc"].between(
+        pd.Timestamp("2026-09-27 01:00", tz="UTC"), pd.Timestamp("2026-09-27 10:00", tz="UTC")
+    )
+    raw2 = synthetic_raw()
+    raw2.loc[gap, "temperature_2m"] = np.nan
+    monkeypatch.setattr(inf, "fetch_live", lambda lat, lon: raw2)
+    r = client.post("/predict", json=PAYLOAD)
+    assert r.status_code == 503 and r.json()["disclaimer"] == DISCLAIMER
+    fc = client.get("/forecast", params={"lat": 14.02, "lon": 100.52, "hours": 6})
+    assert fc.status_code == 200  # forecast still lists the later hours that exist
 
 
 def test_forecast_endpoint(client):

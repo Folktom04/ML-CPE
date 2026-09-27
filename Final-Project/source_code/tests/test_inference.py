@@ -131,27 +131,29 @@ def test_cqr_correction_is_applied():
 
 def test_current_index_and_next_safe_time():
     t = pd.date_range("2026-09-27 00:00", periods=6, freq="h", tz="UTC")
-    pred = pd.DataFrame({"time_utc": t, "q90": [9.0, 9.0, 5.0, 1.0, 1.0, 1.0]})
+    pred = pd.DataFrame({"time_utc": t, "alert_uvi": [9.0, 9.0, 5.0, 1.0, 1.0, 1.0]})
     now = datetime(2026, 9, 27, 0, 20, tzinfo=timezone.utc)
     assert inf.current_index(pred, now) == 1  # 00:20 lies in the hour ending 01:00
     # first low hour ends 03:00 -> starts 02:00 UTC = 09:00 Bangkok
     assert inf.next_safe_time(pred, now) == "2026-09-27T09:00:00+07:00"
     later = datetime(2026, 9, 27, 3, 30, tzinfo=timezone.utc)
     assert inf.next_safe_time(pred, later).startswith("2026-09-27T10:30")  # already low: now
-    assert inf.next_safe_time(pred.assign(q90=9.0), now) is None
+    assert inf.next_safe_time(pred.assign(alert_uvi=9.0), now) is None
 
 
 class RecordingSession:
     """Fake HTTP session: records every URL and returns Open-Meteo-shaped JSON."""
 
-    def __init__(self):
+    def __init__(self, air_hours=48):
         self.urls, self.params = [], []
+        self.air_hours = air_hours
 
     def get(self, url, params=None, timeout=None):
         self.urls.append(url)
         self.params.append(params)
-        raw = synthetic_raw(hours=48)
-        names = WEATHER_VARS if "air-quality" not in url else AIR_VARS
+        air = "air-quality" in url
+        raw = synthetic_raw(hours=self.air_hours if air else 48)
+        names = AIR_VARS if air else WEATHER_VARS
 
         class R:
             def raise_for_status(self):
@@ -193,3 +195,76 @@ def test_api_code_never_references_nasa_power():
 def test_in_thailand():
     assert inf.in_thailand(14.02, 100.52) and inf.in_thailand(18.79, 98.98)
     assert not inf.in_thailand(35.68, 139.69)
+
+
+def test_alert_uvi_is_max_of_q90_and_point():
+    feat = inf.build_features(synthetic_raw(), LAT, LON)
+    low_q = inf.predict_hours(feat, fake_bundle(cmf=(0.95, 0.7, 0.7), q=(0.3, 0.4, 0.45, 0.5)))
+    high_q = inf.predict_hours(feat, fake_bundle(cmf=(0.5, 0.7, 0.7), q=(0.4, 0.5, 0.6, 0.8)))
+    for p in (low_q, high_q):
+        assert np.allclose(p["alert_uvi"], np.maximum(p["q90"], p["uvi"]))
+    day = low_q["is_day"]
+    assert (low_q.loc[day, "alert_uvi"] == low_q.loc[day, "uvi"]).all()  # point above q90
+    assert (high_q.loc[day, "alert_uvi"] == high_q.loc[day, "q90"]).all()
+
+
+def test_build_features_missing_data_filled_flagged_or_dropped():
+    raw = synthetic_raw()
+    t = raw["time_utc"]
+    raw.loc[t == t.iloc[10], "cloud_cover"] = np.nan  # short interior gap -> interpolated
+    raw.loc[t == t.iloc[20], "pm2_5"] = -5.0  # implausible -> masked, interpolated
+    raw.loc[t >= t.iloc[-2], "dust"] = np.nan  # air-quality tail -> edge fill
+    raw.loc[t.between(t.iloc[40], t.iloc[49]), "temperature_2m"] = np.nan  # 10 h -> dropped
+    raw = raw.drop(index=30)  # missing hour -> re-inserted and interpolated
+    feat = inf.build_features(raw, LAT, LON)
+    by_t = feat.set_index("time_utc")
+    for k in (10, 20, 30, 70, 71):
+        assert by_t.loc[t.iloc[k], "data_imputed"], k
+    assert not by_t.loc[t.iloc[5], "data_imputed"]
+    assert by_t.loc[t.iloc[10], "cloud_cover"] == pytest.approx(30.0)
+    kept = set(feat["time_utc"])
+    assert {t.iloc[k] for k in (40, 41, 42)} <= kept  # first 3 h interpolated, as in training
+    assert not {t.iloc[k] for k in range(43, 50)} & kept
+    assert feat[FEATURES].notna().all().all()
+    assert feat["time_utc"].is_monotonic_increasing
+
+
+def test_current_index_strict_when_current_hour_missing():
+    feat = inf.build_features(synthetic_raw(), LAT, LON)
+    pred = inf.predict_hours(feat, fake_bundle())
+    now = datetime(2026, 9, 27, 5, 20, tzinfo=timezone.utc)
+    gap = pred[pred["time_utc"] != pd.Timestamp("2026-09-27 06:00", tz="UTC")]
+    with pytest.raises(inf.NoCurrentHourError):
+        inf.current_index(gap.reset_index(drop=True), now)
+    i = inf.current_index(gap.reset_index(drop=True), now, strict=False)
+    assert gap["time_utc"].iloc[i] == pd.Timestamp("2026-09-27 07:00", tz="UTC")
+    late = datetime(2026, 10, 5, tzinfo=timezone.utc)
+    with pytest.raises(inf.NoCurrentHourError):
+        inf.current_index(pred, late)
+
+
+def test_fetch_live_keeps_hours_missing_air_quality():
+    inf._cache.clear()
+    s = RecordingSession(air_hours=40)
+    df = inf.fetch_live(14.02, 100.52, session=s, now=5000.0)
+    assert len(df) == 48 and df["pm2_5"].isna().sum() == 8
+    inf._cache.clear()
+
+
+def test_make_interpreter_falls_back_to_tf_lite(monkeypatch):
+    import builtins
+
+    from src import sky_infer
+
+    real_import = builtins.__import__
+
+    def blocked(name, *a, **k):
+        if name.startswith("ai_edge_litert"):
+            raise ImportError("blocked for the test")
+        return real_import(name, *a, **k)
+
+    monkeypatch.setattr(builtins, "__import__", blocked)
+    interp, backend = sky_infer.make_interpreter()
+    assert backend == "tf.lite"
+    interp.allocate_tensors()
+    assert interp.get_input_details()[0]["shape"][-1] == 3

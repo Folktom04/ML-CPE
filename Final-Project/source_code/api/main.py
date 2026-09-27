@@ -123,6 +123,7 @@ def _hour(row: Any) -> HourUV:
         uvb_wm2=round(float(row.uvb_wm2), 4),
         level=WHO_LEVELS[int(who_level(row.uvi))],
         interval_adjusted=bool(row.interval_adjusted),
+        data_imputed=bool(row.data_imputed),
     )
 
 
@@ -137,18 +138,22 @@ def health() -> HealthResponse:
 def predict(req: PredictRequest) -> PredictResponse:
     """UV now + risk for the user's skin type + hourly forecast.
 
-    The displayed level follows the point UVI; alert level, burn time and advice follow the
-    q90 after CQR (``uvi_q90_cqr``), never the widened display range.
+    The displayed level follows the point UVI; alert level, burn time and advice follow
+    ``alert_uvi = max(q90 after CQR, point UVI)``, so a warning is never below the value shown.
+    If the current hour is missing from the live data the answer is 503 (never another hour).
     """
     pred = _live_predictions(req.lat, req.lon)
     now = inf.utc_now()
-    i = inf.current_index(pred, now)
+    try:
+        i = inf.current_index(pred, now)
+    except inf.NoCurrentHourError as exc:
+        raise HTTPException(503, "Open-Meteo data for the current hour is missing") from exc
     row = pred.iloc[i]
     r = assess(
         float(row.uvi),
         (float(row.uvi_lo), float(row.uvi_hi)),
         req.skin_type,
-        alert_uvi=float(row.q90),
+        alert_uvi=float(row.alert_uvi),
     )
     upcoming = [_hour(x) for x in pred.iloc[i + 1 : i + 25].itertuples()]
     return PredictResponse(
@@ -168,8 +173,10 @@ def predict(req: PredictRequest) -> PredictResponse:
         level_en=r["level_en"],
         level_color=r["color"],
         uvi_q90_cqr=round(float(row.q90), 2),
+        alert_uvi=round(float(row.alert_uvi), 2),
         alert_level=r["alert_level"],
         interval_adjusted=bool(row.interval_adjusted),
+        data_imputed=bool(row.data_imputed),
         note=None if inf.in_thailand(req.lat, req.lon) else OUTSIDE_NOTE,
         disclaimer=DISCLAIMER,
     )
@@ -183,7 +190,7 @@ def forecast(
 ) -> ForecastResponse:
     """Hourly UVI/UVA/UVB forecast (same XGBoost on Open-Meteo forecast features)."""
     pred = _live_predictions(lat, lon)
-    i = inf.current_index(pred, inf.utc_now())
+    i = inf.current_index(pred, inf.utc_now(), strict=False)
     return ForecastResponse(
         lat=lat,
         lon=lon,
