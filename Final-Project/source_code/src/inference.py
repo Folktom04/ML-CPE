@@ -43,7 +43,7 @@ from src.features import (
     add_openmeteo_ratios,
     add_time_features,
 )
-from src.fetch_data import AIR_VARS, OPENMETEO_AIR_URL, WEATHER_VARS, make_session, parse_openmeteo
+from src.fetch_data import AIR_VARS, OPENMETEO_AIR_URL, WEATHER_VARS, parse_openmeteo
 from src.metrics import who_level
 from src.preprocess import INTERP_LIMIT_HOURS, clean, mask_implausible
 from src.quantile import QCOLS, apply_cqr, predict_quantiles
@@ -54,6 +54,15 @@ FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 PAST_DAYS = 1
 FORECAST_DAYS = 2
 CACHE_TTL_S = 600
+# Live fetch budget (day 19): answer (or fail with 502) before the app's 20 s timeout. The
+# training downloads in ``src.fetch_data`` keep their long retries (5 x backoff 2 s, 30 s).
+LIVE_RETRIES = 2
+LIVE_TIMEOUT_S = 5.0
+LIVE_BUDGET_S = 15.0
+LIVE_BACKOFF_S = 0.5
+RETRY_STATUS = (429, 500, 502, 503, 504)
+_monotonic = time.monotonic  # replaced in tests
+_sleep = time.sleep
 LOCAL_TZ = "Asia/Bangkok"
 SAFE_LEVEL = 0  # WHO level index "ต่ำ" (UVI < 2.5 after rounding)
 THAILAND_BBOX = (5.5, 20.5, 97.3, 105.7)  # lat_min, lat_max, lon_min, lon_max
@@ -87,6 +96,57 @@ def request_params(lat: float, lon: float, variables: list[str]) -> dict[str, An
     }
 
 
+def get_live(
+    session: requests.Session,
+    url: str,
+    params: dict[str, Any],
+    deadline: float,
+    clock: Any = None,
+    sleep: Any = None,
+) -> requests.Response:
+    """GET with a few short retries that never run past ``deadline`` (live requests only).
+
+    Retries ``LIVE_RETRIES`` times on connection errors, timeouts and ``RETRY_STATUS``, with
+    ``LIVE_BACKOFF_S * 2**k`` pauses. Each attempt gets ``min(LIVE_TIMEOUT_S, time left)``
+    (a requests timeout is per connect/read, so an attempt can overrun it only slightly).
+
+    Args:
+        session: HTTP session.
+        url: Request URL.
+        params: Query parameters.
+        deadline: ``clock()`` value after which no new attempt is started.
+        clock: Monotonic clock (default ``_monotonic``).
+        sleep: Sleep function (default ``_sleep``).
+
+    Returns:
+        The successful response.
+
+    Raises:
+        requests.RequestException: The last error, or ``requests.Timeout`` when the budget
+            is used up before an attempt can start.
+    """
+    clock, sleep = clock or _monotonic, sleep or _sleep
+    last: requests.RequestException | None = None
+    for attempt in range(LIVE_RETRIES + 1):
+        left = deadline - clock()
+        if left <= 0:
+            break
+        try:
+            resp = session.get(url, params=params, timeout=min(LIVE_TIMEOUT_S, left))
+            if resp.status_code not in RETRY_STATUS:
+                resp.raise_for_status()
+                return resp
+            last = requests.HTTPError(f"HTTP {resp.status_code}", response=resp)
+        except (requests.ConnectionError, requests.Timeout) as exc:
+            last = exc
+        if attempt < LIVE_RETRIES:
+            pause = LIVE_BACKOFF_S * 2**attempt
+            if clock() + pause >= deadline:
+                break
+            sleep(pause)
+    raise last or requests.Timeout(f"live fetch budget of {LIVE_BUDGET_S:.0f} s used up")
+
+
 def fetch_live(
     lat: float,
     lon: float,
@@ -98,8 +158,11 @@ def fetch_live(
     Args:
         lat: Latitude.
         lon: Longitude.
-        session: HTTP session (retries/backoff from ``fetch_data.make_session`` by default).
+        session: HTTP session without adapter retries (default: a plain ``requests.Session``).
         now: Clock value for the cache (tests).
+
+    Both requests share one ``LIVE_BUDGET_S`` deadline (see ``get_live``), so the API answers
+    or fails with 502 before the app gives up at 20 s.
 
     Returns:
         Weather left-joined with air quality on ``time_utc`` (missing air hours stay NaN and
@@ -111,11 +174,10 @@ def fetch_live(
         hit = _cache.get(key)
         if hit and now - hit[0] < CACHE_TTL_S:
             return hit[1].copy()
-    s = session or make_session()
-    w = s.get(FORECAST_URL, params=request_params(lat, lon, WEATHER_VARS), timeout=30)
-    w.raise_for_status()
-    a = s.get(OPENMETEO_AIR_URL, params=request_params(lat, lon, AIR_VARS), timeout=30)
-    a.raise_for_status()
+    s = session or requests.Session()  # no adapter retries: ``get_live`` owns the budget
+    deadline = _monotonic() + LIVE_BUDGET_S
+    w = get_live(s, FORECAST_URL, request_params(lat, lon, WEATHER_VARS), deadline)
+    a = get_live(s, OPENMETEO_AIR_URL, request_params(lat, lon, AIR_VARS), deadline)
     df = parse_openmeteo(w.json()).merge(parse_openmeteo(a.json()), on="time_utc", how="left")
     with _cache_lock:
         _cache[key] = (now, df)

@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+import requests
 from src import inference as inf
 from src.features import FEATURES
 from src.fetch_data import AIR_VARS, LAT, LON, RAW_DIR, ROOT, WEATHER_VARS
@@ -155,6 +156,8 @@ class RecordingSession:
         names = AIR_VARS if air else WEATHER_VARS
 
         class R:
+            status_code = 200
+
             def raise_for_status(self):
                 pass
 
@@ -280,3 +283,83 @@ def test_request_params_uses_training_variables_and_no_model_override():
 def test_hour_start_local_is_start_of_interval_in_bangkok():
     t = pd.Timestamp("2026-09-27T07:00:00Z")  # end of 13:00-14:00 Bangkok
     assert inf.hour_start_local(t) == "2026-09-27T13:00:00+07:00"
+
+
+class FlakySession:
+    """Fake session that plays back a script of exceptions / status codes, one per GET."""
+
+    def __init__(self, script, clock=None, cost=0.0):
+        self.script, self.timeouts = list(script), []
+        self.clock, self.cost = clock, cost
+
+    def get(self, url, params=None, timeout=None):
+        self.timeouts.append(timeout)
+        if self.clock is not None:
+            self.clock.t += self.cost  # each attempt takes `cost` seconds
+        item = self.script.pop(0)
+        if isinstance(item, Exception):
+            raise item
+
+        class R:
+            status_code = item
+
+            def raise_for_status(self):
+                if self.status_code >= 400:
+                    raise requests.HTTPError(f"HTTP {self.status_code}")
+
+        return R()
+
+
+class FakeClock:
+    def __init__(self):
+        self.t = 0.0
+
+    def __call__(self):
+        return self.t
+
+    def sleep(self, s):
+        self.t += s
+
+
+def test_get_live_retries_short_then_succeeds():
+    clock = FakeClock()
+    s = FlakySession([requests.ConnectionError("down"), 503, 200], clock)
+    r = inf.get_live(s, "u", {}, deadline=inf.LIVE_BUDGET_S, clock=clock, sleep=clock.sleep)
+    assert r.status_code == 200
+    assert len(s.timeouts) == inf.LIVE_RETRIES + 1 == 3
+    assert max(s.timeouts) <= inf.LIVE_TIMEOUT_S == 5.0
+    assert clock.t == pytest.approx(0.5 + 1.0)  # backoff 0.5 s, 1 s
+
+
+def test_get_live_gives_up_after_retries_and_on_client_errors():
+    clock = FakeClock()
+    s = FlakySession([requests.Timeout("t")] * 5, clock)
+    with pytest.raises(requests.Timeout):
+        inf.get_live(s, "u", {}, deadline=100.0, clock=clock, sleep=clock.sleep)
+    assert len(s.timeouts) == 3  # 1 try + 2 retries, not the training session's 5
+    s = FlakySession([404, 200], clock)
+    with pytest.raises(requests.HTTPError):
+        inf.get_live(s, "u", {}, deadline=100.0, clock=clock, sleep=clock.sleep)
+    assert len(s.timeouts) == 1  # 4xx (not 429) is not retried
+
+
+def test_fetch_live_worst_case_stays_inside_budget(monkeypatch):
+    """Every attempt hangs for its full timeout: both requests together stop by ~15 s."""
+    inf._cache.clear()
+    clock = FakeClock()
+
+    class Hanging:
+        calls = 0
+
+        def get(self, url, params=None, timeout=None):
+            Hanging.calls += 1
+            clock.t += timeout
+            raise requests.Timeout("read timed out")
+
+    monkeypatch.setattr(inf, "_monotonic", clock)
+    monkeypatch.setattr(inf, "_sleep", clock.sleep)
+    with pytest.raises(requests.RequestException):
+        inf.fetch_live(14.02, 100.52, session=Hanging(), now=9000.0)
+    assert clock.t <= inf.LIVE_BUDGET_S + 1e-9 < 20.0  # app timeout is 20 s
+    assert Hanging.calls == 3  # 5 s + 0.5 + 5 s + 1 + 3.5 s (last attempt trimmed)
+    inf._cache.clear()

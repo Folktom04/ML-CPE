@@ -5,7 +5,7 @@ Every response carries ``disclaimer`` (estimates for education and warning, not 
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from src.risk import DISCLAIMER, normalize_skin_type
 
 
@@ -13,6 +13,11 @@ class Disclaimed(BaseModel):
     """Base for every response: always includes the Thai disclaimer."""
 
     disclaimer: str = DISCLAIMER
+
+
+def _skin_value(v: object) -> str:
+    """Normalise I-VI or 1-6 to the Roman numeral (ValueError for anything else)."""
+    return normalize_skin_type(int(v) if str(v).isdigit() else str(v))
 
 
 class PredictRequest(BaseModel):
@@ -26,10 +31,7 @@ class PredictRequest(BaseModel):
     @classmethod
     def _skin(cls, v: object) -> str:
         """Accept I-VI or 1-6 and store the Roman numeral."""
-        try:
-            return normalize_skin_type(int(v) if str(v).isdigit() else str(v))
-        except ValueError as exc:
-            raise ValueError(str(exc)) from exc
+        return _skin_value(v)
 
 
 class HourUV(BaseModel):
@@ -109,3 +111,43 @@ class ErrorResponse(Disclaimed):
     """Error body (validation errors, upstream failures)."""
 
     detail: object
+
+
+class UserSettingsUpdate(BaseModel):
+    """Body of ``PUT /users/{id}/settings`` (only the fields sent are changed).
+
+    ``safe_threshold`` is not accepted: the server derives it as ``alert_threshold - 2``.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    skin_type: str | None = Field(None, description="Fitzpatrick type I-VI (or 1-6)")
+    notify_enabled: bool | None = None
+    alert_threshold: float | None = Field(None, ge=3, le=11, description="alert at UVI >= this")
+    alert_burn_minutes: int | None = Field(None, ge=5, le=240)
+    province: str | None = Field(None, max_length=64)
+
+    @field_validator("skin_type", mode="before")
+    @classmethod
+    def _skin(cls, v: object) -> str | None:
+        """Accept I-VI or 1-6 (or nothing)."""
+        return None if v is None else _skin_value(v)
+
+
+class UserCreate(UserSettingsUpdate):
+    """Body of ``POST /users``; the device id goes in the ``X-Device-Id`` header."""
+
+    skin_type: str = Field(description="Fitzpatrick type I-VI (or 1-6)")
+
+
+class UserResponse(Disclaimed):
+    """A user's settings (the device id is never returned)."""
+
+    id: int
+    skin_type: str
+    province: str | None
+    notify_enabled: bool
+    alert_threshold: float
+    safe_threshold: float = Field(description="'safe again' UVI = alert_threshold - 2")
+    alert_burn_minutes: int
+    updated_at: str = Field(description="UTC, ISO 8601")

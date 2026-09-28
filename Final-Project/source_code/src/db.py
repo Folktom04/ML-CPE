@@ -304,6 +304,8 @@ def _sqlite_foreign_keys(dbapi_conn: Any, _record: Any) -> None:
 def make_engine(url: str | None = None, echo: bool = False) -> Engine:
     """Create an engine; SQLite gets foreign keys on, PostgreSQL a short connect timeout.
 
+    Bound parameters are hidden from error messages and logs (``hide_parameters``).
+
     Args:
         url: Database URL (default: ``database_url()``).
         echo: Log SQL.
@@ -313,7 +315,8 @@ def make_engine(url: str | None = None, echo: bool = False) -> Engine:
     """
     url = url or database_url()[0]
     backend = make_url(url).get_backend_name()
-    kwargs: dict[str, Any] = {"echo": echo, "pool_pre_ping": True}
+    # hide_parameters: errors and logs never show bound values (device ids, coordinates)
+    kwargs: dict[str, Any] = {"echo": echo, "pool_pre_ping": True, "hide_parameters": True}
     if backend == "postgresql":
         kwargs["connect_args"] = {"connect_timeout": 5}
     engine = create_engine(url, **kwargs)
