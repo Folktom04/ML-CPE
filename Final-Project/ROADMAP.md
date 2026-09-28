@@ -255,7 +255,7 @@
 - [x] ทดสอบบนมือถือจริง (Samsung, Android, Expo Go, 28 ก.ย. 2026)
   > หน้าหลักแสดง UVI, ช่วง q10–q90, UVA/UVB, เวลาผิวไหม้ และ disclaimer ถูกต้อง ครั้งแรกขึ้น "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" ทั้งที่ Chrome บนมือถือเปิด `/health` ได้ สาเหตุคือ Expo Go แคช bundle เก่า แก้ด้วย Force stop + Clear cache ตรวจแล้วว่าโค้ดอ่าน URL ถูก (Metro ใส่ `EXPO_PUBLIC_API_URL` ลงใน dev bundle จริง) ผลจากการดีบัก: หน้าจอ error แสดง "ที่อยู่ที่เรียก" และ "รายละเอียด" (ข้อความ error ดิบ) ขั้นตอนทดสอบบนมือถือและวิธีแก้ bundle เก่าอยู่ใน `source_code/app/README.md` timeout 20 วินาที (วัด `/predict` ครั้งแรกได้ ~2 วินาที ส่วนเรื่อง retry ฝั่ง API ไว้คุยวัน 19) root `.gitignore` เพิ่ม `.env*.local`
   > กลางคืน (`is_daylight` false): API ยังส่งคำแนะนำระดับ "ต่ำ" ซึ่งมี "…ควรใส่แว่นกันแดด" แอปจึงซ่อนคำแนะนำ แล้วแสดง UV สูงสุดของช่วงกลางวันถัดไปจาก `/forecast?hours=36` แทน (`nextDaytimePeak()`, "พรุ่งนี้" หรือ "วันนี้" หลังเที่ยงคืน, พร้อมช่วง q10–q90) ถ้า `/forecast` ล้มเหลว หน้าจอยังใช้ได้และขึ้น "ยังไม่มีข้อมูลพยากรณ์ของวันถัดไป" ตรวจกับ API จริงตอน 03:00: ได้ "วันนี้" สูงสุด 7.35 (สูง) ราว 12:00 ช่วง 6.03–8.71 Jest **51 passed**
-  > ค้าง: ตรวจหน้าจอบนเว็บด้วย browser agent ของ Antigravity ตามรายการใน `source_code/app/README.md` (ยังไม่ได้รับผล)
+  > ~~ค้าง: ตรวจหน้าจอบนเว็บด้วย browser agent ของ Antigravity ตามรายการใน `source_code/app/README.md` (ยังไม่ได้รับผล)~~ **แทนด้วยการทดสอบบนมือถือจริง (Samsung, Expo Go) + Jest** (ตัดสิน 29 ก.ย. 2026)
 
 ### วัน 19 — Expo: กราฟ + ตั้งค่า
 - [x] กราฟพยากรณ์รายชั่วโมง → `src/components/HourlyChart.tsx`, `src/lib/chart.ts`
@@ -274,7 +274,7 @@
   > **ใช้กติกาปัดค่าเดียวกันทุกที่:** `round_uvi()` (ปัดเป็นจำนวนเต็ม x.5 ปัดขึ้น) ใน `src/metrics.py` เป็นฐานของ `who_level` (ระดับของชั่วโมงในกราฟ), `risk.assess` (การ์ดหลัก) และฟังก์ชันใหม่ `risk.reaches_alert` / `risk.is_safe_again` ที่งานแจ้งเตือนวัน 23 ต้องใช้ ถ้าเทียบค่าดิบ `7.8 >= 8` จะไม่เตือน ทั้งที่การ์ดแสดง "สูงมาก" ฝั่งแอปมี `roundUvi` / `reachesAlert` / `isSafeAgain` ที่ทำแบบเดียวกัน เทสทั้ง pytest และ Jest อ่านกรณีจากไฟล์เดียวกัน `source_code/tests/who_rounding_cases.json` (2.49/2.5, 5.49/5.5, 7.49/7.5, 7.8, 10.49/10.5 ฯลฯ) และมีเทสว่าแท่ง 7.8 ในกราฟเป็นสีแดง (สูงมาก)
   > ทดสอบ: Jest **127 passed**, `tsc` / `expo lint` / `expo export --platform web` ผ่าน pytest **294 passed, 0 skipped** (PostgreSQL 41 ข้อ)
   > **กติกาเตือนเทียบกับผล test วัน 10:** ตอนใช้งานจริง ปัด UVI ก่อนแล้วค่อยเทียบกับเกณฑ์ (7.5 → 8 จึงเตือนที่เกณฑ์ 8, 7.49 ไม่เตือน) ตรวจโค้ดแล้วพบว่า T6a–T6d ของวัน 10 วัดด้วยกติกาเดียวกัน คือ `evaluate_test.py` เรียก `quantile.alert_report()` ซึ่งแปลงทั้ง NASA POWER และ q90 เป็นระดับด้วย `who_level()` → `round_uvi()` การปัดจึงไม่ต่างกัน ไม่ต้องคำนวณใหม่ และไม่ได้รัน test 2025 ใหม่ มีจุดต่างที่ไม่ใช่เรื่องการปัดอยู่ข้อเดียว: T6 ใช้ q90 (CQR) อย่างเดียว ส่วนตอนใช้งานใช้ `max(q90, ค่าจุด)` บน dev 2024 สองค่านี้เท่ากันทุกชั่วโมง (ค่าจุดไม่เกิน q90 เลยใน 3,726 ชม.) รายละเอียดอยู่ใน `docs/results_summary.md`
-  > ค้าง: ตรวจหน้าจอข้อ 7–10 ใน `source_code/app/README.md` ด้วย browser agent ของ Antigravity (ยังไม่ได้รับผล)
+  > ~~ค้าง: ตรวจหน้าจอข้อ 7–10 ใน `source_code/app/README.md` ด้วย browser agent ของ Antigravity (ยังไม่ได้รับผล)~~ **แทนด้วยการทดสอบบนมือถือจริง (Samsung, Expo Go) + Jest** (ตัดสิน 29 ก.ย. 2026)
 
 ### วัน 20 — กล้อง + เซนเซอร์แสง
 - [x] expo-camera ส่งภาพไป `/sky-image` → `src/app/camera.tsx`, `src/lib/sky.ts`, `src/lib/skyPhoto.ts`, `uploadSkyImage()` ใน `src/api/client.ts`
