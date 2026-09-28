@@ -142,7 +142,11 @@ it('shows the model cloud fraction (in the image, not the whole sky) only when t
   });
   await renderWithSettings(<CameraScreen />, acked());
   await act(async () => fireEvent.press(await screen.findByTestId('camera-shoot')));
-  expect(await screen.findByTestId('sky-cloud-cnn')).toHaveTextContent('55%', { exact: false });
+  expect(await screen.findByTestId('sky-cloud-cnn')).toHaveTextContent('เมฆในภาพ (โมเดล): ปานกลาง');
+  expect(screen.getByTestId('sky-cloud-cnn')).not.toHaveTextContent('55%', { exact: false });
+  expect(screen.getByTestId('sky-cloud-cnn-clear-note')).toHaveTextContent(
+    'หมายเหตุ: ภาพท้องฟ้าใสอาจแสดงเป็นเมฆน้อย',
+  );
   expect(screen.getByTestId('sky-cloud-cnn-note')).toHaveTextContent(
     'สัดส่วนเมฆในภาพ ไม่ใช่ทั้งท้องฟ้า',
   );
@@ -158,4 +162,5 @@ it('without cloud_fraction_cnn only the red/blue line is shown', async () => {
   await act(async () => fireEvent.press(await screen.findByTestId('camera-shoot')));
   expect(await screen.findByTestId('sky-cloud')).toBeTruthy();
   expect(screen.queryByTestId('sky-cloud-cnn')).toBeNull();
+  expect(screen.queryByTestId('sky-cloud-cnn-clear-note')).toBeNull();
 });

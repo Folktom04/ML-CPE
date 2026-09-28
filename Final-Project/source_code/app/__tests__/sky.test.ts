@@ -1,5 +1,5 @@
 import { ApiError, messageForStatus, skyImageForm, uploadSkyImage } from '@/api/client';
-import { LOW_CONFIDENCE, pct, rankedClasses, skyView } from '@/lib/sky';
+import { cloudLevelTh, LOW_CONFIDENCE, pct, rankedClasses, skyView } from '@/lib/sky';
 import { analyzeSkyPhoto, reencodePhoto, removeTempFile, type SkyPhotoDeps } from '@/lib/skyPhoto';
 
 import { sampleSky, unsureSky } from './fixtures_sky';
@@ -158,5 +158,20 @@ describe('analyzeSkyPhoto (EXIF removal + temp files)', () => {
     });
     expect(removeTempFile('file:///x.jpg')).toBe(false);
     spy.mockRestore();
+  });
+});
+
+describe('cloudLevelTh (SWIMSEG head shown as a level, not a percentage)', () => {
+  it.each([
+    [0, 'น้อย'],
+    [0.15, 'น้อย'], // what a clear photo typically gets from the head
+    [0.2999, 'น้อย'],
+    [0.3, 'ปานกลาง'],
+    [0.55, 'ปานกลาง'],
+    [0.7, 'ปานกลาง'],
+    [0.7001, 'มาก'],
+    [1, 'มาก'],
+  ])('%p → %p', (f, level) => {
+    expect(cloudLevelTh(f)).toBe(level);
   });
 });

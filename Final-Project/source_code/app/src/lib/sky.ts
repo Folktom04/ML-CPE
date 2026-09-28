@@ -62,6 +62,25 @@ export const RELIABILITY_LABEL_TH: Record<string, string> = {
 
 export const CLOUD_IN_IMAGE_TH = 'สัดส่วนเมฆในภาพ ไม่ใช่ทั้งท้องฟ้า';
 
+/**
+ * The SWIMSEG head shrinks towards mid values (test: it rarely predicts below ~15 %), so a clear
+ * photo may read as "น้อย" rather than 0 %; the app shows a level, not a percentage.
+ */
+export const CLOUD_CLEAR_NOTE_TH = 'ภาพท้องฟ้าใสอาจแสดงเป็นเมฆน้อย';
+
+/** Upper bounds of the levels: น้อย < 0.30 ≤ ปานกลาง ≤ 0.70 < มาก. */
+export const CLOUD_LEVEL_LOW_MAX = 0.3;
+export const CLOUD_LEVEL_MID_MAX = 0.7;
+
+export type CloudLevel = 'น้อย' | 'ปานกลาง' | 'มาก';
+
+/** Level of the model's cloud fraction: < 30 % น้อย, 30–70 % ปานกลาง, > 70 % มาก. */
+export function cloudLevelTh(fraction: number): CloudLevel {
+  if (fraction < CLOUD_LEVEL_LOW_MAX) return 'น้อย';
+  if (fraction <= CLOUD_LEVEL_MID_MAX) return 'ปานกลาง';
+  return 'มาก';
+}
+
 /** What the result card shows: the class, or "ไม่แน่ใจ" + top 2 when confidence < 0.5. */
 export function skyView(r: SkyImageResponse): SkyView {
   const cloud: CloudParts = {

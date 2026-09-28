@@ -139,7 +139,7 @@ UV-group recall: high thin 0.707, mid 0.366, low thick 0.864, cumulus 0.413. CCS
 | C1 | mean test MAE of 3 seeds ≤ 0.10 | 0.084 ± 0.0015 | ✅ |
 | C2 | red/blue MAE (0.145) − CNN MAE ≥ 0.03 | +0.061 | ✅ |
 
-RMSE 0.103 (red/blue 0.188); CNN bias −0.012. Per test day, CNN MAE 0.041–0.097 vs red/blue 0.117–0.209 (CNN better on all 5 days). The CNN shrinks towards the middle (over-predicts clear patches, under-predicts overcast ones; it rarely predicts below ~15 %), and the test split has only 7 patches below 20 % and 9 above 80 % cloud. → `/sky-image` returns `cloud_fraction_cnn` and the app shows it as "cloud fraction in the image, not the whole sky" (supporting information; never changes the UVI).
+RMSE 0.103 (red/blue 0.188); CNN bias −0.012. Per test day, CNN MAE 0.041–0.097 vs red/blue 0.117–0.209 (CNN better on all 5 days). The CNN shrinks towards the middle (over-predicts clear patches, under-predicts overcast ones; it rarely predicts below ~15 %), and the test split has only 7 patches below 20 % and 9 above 80 % cloud. → `/sky-image` returns `cloud_fraction_cnn` and the app shows it as a level — น้อย < 30 %, ปานกลาง 30–70 %, มาก > 70 % — with "cloud fraction in the image, not the whole sky" and "a clear-sky photo may read as น้อย" (supporting information; never changes the UVI). The images and masks used were checked SHA-256-identical to the official SWIMSEG zip from the creators.
 
 ## 6. Limitations
 
