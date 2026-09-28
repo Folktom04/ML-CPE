@@ -17,7 +17,9 @@ import { DISCLAIMER_TH } from '@/config';
 import { cameraAimHint, cameraElevationDeg } from '@/lib/orientation';
 import { useSettings } from '@/lib/SettingsContext';
 import {
+  CLOUD_CLEAR_NOTE_TH,
   CLOUD_IN_IMAGE_TH,
+  cloudLevelTh,
   pct,
   RELIABILITY_LABEL_TH,
   SKY_DOMAIN_GAP_TH,
@@ -59,10 +61,13 @@ function SkyResult({ data }: { data: SkyImageResponse }) {
       {v.cloudFractionCnn !== null ? (
         <View style={styles.gap4}>
           <Text style={styles.text} testID="sky-cloud-cnn">
-            สัดส่วนเมฆในภาพ (โมเดล): {pct(v.cloudFractionCnn)}
+            เมฆในภาพ (โมเดล): {cloudLevelTh(v.cloudFractionCnn)}
           </Text>
           <Text style={styles.small} testID="sky-cloud-cnn-note">
             {CLOUD_IN_IMAGE_TH}
+          </Text>
+          <Text style={styles.small} testID="sky-cloud-cnn-clear-note">
+            หมายเหตุ: {CLOUD_CLEAR_NOTE_TH}
           </Text>
         </View>
       ) : null}

@@ -6,7 +6,7 @@ Datasets (licences checked on day 13, details in ``docs/datasets.md``):
   11 cloud genera.
 * SWIMCAT-ext (Mendeley Data doi:10.17632/vwdd9grvdp.1, CC BY 4.0): 2,100 sky/cloud images
   "collected from Internet and labelled by technical expert" (Mendeley description),
-  6 classes; used instead of SWIMCAT while the SWIMCAT/SWIMSEG request forms are pending.
+  6 classes; used instead of SWIMCAT (the official SWIMCAT zip arrived after day 20; not used).
 * SWIMSEG (CC BY-NC 4.0, Dev, Lee & Winkler 2017): 1,013 sky patches (600x600, undistorted from a
   whole-sky imager to a ~62 deg normal-lens view) + binary cloud masks, placed by hand in
   ``dataset/sky/raw/swimseg`` (a repack with train/val/test folders, whose own split is NOT used:
@@ -762,7 +762,7 @@ def main(argv: list[str] | None = None) -> None:
             t.to_csv(SPLIT_DIR / "swimseg_split.csv", index=False)
             print(f"\nswimseg: {len(t)} images")
         else:
-            print("\nswimseg: not available yet (request form pending)")
+            print("\nswimseg: original layout not under dataset/sky/swimseg; use --index-swimseg")
 
 
 if __name__ == "__main__":
