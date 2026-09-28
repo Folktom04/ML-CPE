@@ -89,7 +89,7 @@ def test_health_reports_sqlite_fallback_and_unreachable_postgres(
     assert (r["db_backend"], r["db_fallback"], r["db_ok"]) == ("sqlite", True, True)
     assert any("FALLBACK" in m for m in caplog.messages)
     main.app.state.db_engine.dispose()
-    main.app.state.db_engine = db.make_engine("postgresql+psycopg://u:p@127.0.0.1:1/x")
+    main.app.state.db_engine = db.make_engine("postgresql+psycopg://u:p@127.0.0.1:1/x_test")
     main.app.state.db_fallback = False
     with TestClient(main.app) as c:
         r = c.get("/health")
