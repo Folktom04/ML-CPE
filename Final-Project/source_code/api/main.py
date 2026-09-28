@@ -57,7 +57,7 @@ from src.fetch_data import ROOT
 from src.metrics import WHO_LEVELS, who_level
 from src.risk import DISCLAIMER, assess
 from src.sky_data import load_image
-from src.sky_infer import has_exif, predict_sky
+from src.sky_infer import cloud_head_result, has_exif, predict_cloud_fraction, predict_sky
 from src.train_cmf import DOCS_DIR
 
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
@@ -83,25 +83,37 @@ def configure_logging(logger: logging.Logger = log) -> None:
     logger.setLevel(logging.INFO)
 
 
-def sky_reliability() -> dict[str, str]:
-    """Plain statement of how reliable each sky-CNN output was on its test split (day 14).
+def sky_reliability(with_cnn: bool = False) -> dict[str, str]:
+    """Plain statement of how reliable each sky output was on its test split.
 
-    Only the outputs the app shows are described: the SWIMCAT-ext sky class and the red/blue
-    cloud fraction. The CCSN head missed its criteria and is not returned by ``/sky-image``.
+    Only the outputs the app shows are described: the SWIMCAT-ext sky class, the red/blue cloud
+    fraction and, when it is loaded, the SWIMSEG cloud-fraction head. The CCSN head missed its
+    criteria and is not returned by ``/sky-image``.
+
+    Args:
+        with_cnn: Also describe ``cloud_fraction_cnn`` (the head is loaded because it passed).
 
     Returns:
-        ``{"sky_class": ..., "cloud_fraction_rb": ...}`` (Thai text with the test numbers).
+        ``{"sky_class", "cloud_fraction_rb"[, "cloud_fraction_cnn"]}`` Thai text with test numbers.
     """
     rb = "ประมาณจากอัตราส่วนสีแดง/น้ำเงิน (ไม่ใช่โมเดล) ยังไม่ได้ทดสอบกับภาพจากมือถือ"
     try:
         t = json.loads((DOCS_DIR / "sky_cnn_test.json").read_text(encoding="utf-8"))
         s = t["swim"]["mean"]["group_accuracy"]
-        return {
+        out = {
             "sky_class": f"ผ่านเกณฑ์ (ความแม่นบนชุดทดสอบ {s:.0%}) แต่ยังไม่ได้ทดสอบกับภาพจากมือถือ",
             "cloud_fraction_rb": rb,
         }
     except (OSError, KeyError, ValueError):
-        return {"sky_class": "ไม่มีข้อมูลผลทดสอบ", "cloud_fraction_rb": rb}
+        out = {"sky_class": "ไม่มีข้อมูลผลทดสอบ", "cloud_fraction_rb": rb}
+    res = cloud_head_result() if with_cnn else None
+    if res is not None:
+        cnn, rbm = res["cnn"]["mae_mean"], res["red_blue"]["mae"]
+        out["cloud_fraction_cnn"] = (
+            f"ผ่านเกณฑ์ (คลาดเคลื่อนเฉลี่ย {cnn:.0%} บนชุดทดสอบ SWIMSEG เทียบกับวิธีสี {rbm:.0%}) "
+            "เป็นสัดส่วนเมฆในภาพ ไม่ใช่ทั้งท้องฟ้า และยังไม่ได้ทดสอบกับภาพจากมือถือ"
+        )
+    return out
 
 
 @asynccontextmanager
@@ -114,7 +126,7 @@ async def lifespan(app: FastAPI):
         url, app.state.db_fallback = db.database_url()  # logs a WARNING on the SQLite fallback
         app.state.db_engine = db.make_engine(url)
     log.info("database backend: %s", db.backend_name(app.state.db_engine))
-    app.state.sky_reliability = sky_reliability()
+    app.state.sky_reliability = sky_reliability(app.state.bundle.sky_cloud is not None)
     log.info("models loaded (sky backend: %s)", app.state.bundle.sky_backend)
     yield
 
@@ -293,7 +305,7 @@ def forecast(
     )
 
 
-@app.post("/sky-image", response_model=SkyImageResponse)
+@app.post("/sky-image", response_model=SkyImageResponse, response_model_exclude_none=True)
 async def sky_image(file: UploadFile = File(...)) -> SkyImageResponse:
     """Sky photo -> SWIMCAT-ext sky class + confidence and red-blue cloud fraction (in memory).
 
@@ -310,6 +322,10 @@ async def sky_image(file: UploadFile = File(...)) -> SkyImageResponse:
     except (UnidentifiedImageError, OSError, ValueError) as exc:
         raise HTTPException(415, "not a readable image") from exc
     res = predict_sky(img, interpreter=app.state.bundle.sky)
+    if app.state.bundle.sky_cloud is not None:  # loaded only when the SWIMSEG head passed C1/C2
+        res["cloud_fraction_cnn"] = predict_cloud_fraction(
+            img, interpreter=app.state.bundle.sky_cloud
+        )
     return SkyImageResponse(**res, reliability=app.state.sky_reliability, stored=False)
 
 

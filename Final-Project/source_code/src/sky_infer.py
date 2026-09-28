@@ -9,6 +9,7 @@ never used to change the UVI.
 from __future__ import annotations
 
 import io
+import json
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,9 @@ from PIL import Image
 from src.fetch_data import ROOT
 
 TFLITE_PATH = ROOT / "source_code" / "models" / "sky_cnn_v1.tflite"
+# SWIMSEG cloud-fraction head (after day 20): separate file, returned only if it passed C1/C2.
+CLOUD_TFLITE_PATH = ROOT / "source_code" / "models" / "sky_cloud_v1.tflite"
+CLOUD_TEST_PATH = ROOT / "docs" / "sky_cloud_test.json"
 NRBR_CLOUD = 0.25
 CCSN_CLASSES = ["Ac", "As", "Cb", "Cc", "Ci", "Cs", "Ct", "Cu", "Ns", "Sc", "St"]
 SWIM_CLASSES = [
@@ -178,6 +182,46 @@ def predict_sky(
         "cloud_fraction_rb": rb_cloud_fraction(x[0]),
         "note": DISCLAIMER_TH,
     }
+
+
+def cloud_head_result(test_path: Path = CLOUD_TEST_PATH) -> dict[str, Any] | None:
+    """The one-time SWIMSEG test result, if the cloud-fraction head passed C1 and C2.
+
+    Args:
+        test_path: ``docs/sky_cloud_test.json`` written by ``python -m src.sky_cloud --test``.
+
+    Returns:
+        The parsed result when it exists and ``ships`` is true; otherwise None (not tested yet,
+        or failed: then the API does not return ``cloud_fraction_cnn``).
+    """
+    try:
+        res = json.loads(Path(test_path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return res if res.get("ships") is True else None
+
+
+def predict_cloud_fraction(
+    image: np.ndarray, interpreter: Any | None = None, tflite_path: Path = CLOUD_TFLITE_PATH
+) -> float:
+    """Cloud fraction IN THE IMAGE from the SWIMSEG head (not the whole sky; never changes UVI).
+
+    Args:
+        image: (H, W, 3) float in [0, 1], centre-cropped/resized (``load_image``).
+        interpreter: Optional loaded TFLite interpreter of ``sky_cloud_v1.tflite``.
+        tflite_path: Model file when no interpreter is given.
+
+    Returns:
+        Fraction in [0, 1].
+    """
+    x = check_unit_range(np.asarray(image, dtype=np.float32))[None]
+    if interpreter is None:
+        interpreter, _ = make_interpreter(tflite_path)
+    interpreter.allocate_tensors()
+    interpreter.set_tensor(interpreter.get_input_details()[0]["index"], x)
+    interpreter.invoke()
+    out = interpreter.get_tensor(interpreter.get_output_details()[0]["index"])
+    return float(np.clip(np.asarray(out).reshape(-1)[0], 0.0, 1.0))
 
 
 def predict_heads(

@@ -28,7 +28,9 @@ describe('skyView', () => {
       nameTh: 'เมฆหนาสีขาว',
       confidence: 0.87,
       cloudFraction: 0.62,
+      cloudFractionCnn: null, // the API did not send the SWIMSEG head
     });
+    expect(skyView({ ...sampleSky(0.87), cloud_fraction_cnn: 0.55 }).cloudFractionCnn).toBe(0.55);
     expect(skyView(sampleSky(LOW_CONFIDENCE)).kind).toBe('sure'); // 0.5 itself is not "unsure"
   });
 

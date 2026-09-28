@@ -16,7 +16,15 @@ import { Card, colors, Note } from '@/components/Card';
 import { DISCLAIMER_TH } from '@/config';
 import { cameraAimHint, cameraElevationDeg } from '@/lib/orientation';
 import { useSettings } from '@/lib/SettingsContext';
-import { pct, SKY_DOMAIN_GAP_TH, SKY_NOTICE_TH, SKY_SUPPORTING_TH, skyView } from '@/lib/sky';
+import {
+  CLOUD_IN_IMAGE_TH,
+  pct,
+  RELIABILITY_LABEL_TH,
+  SKY_DOMAIN_GAP_TH,
+  SKY_NOTICE_TH,
+  SKY_SUPPORTING_TH,
+  skyView,
+} from '@/lib/sky';
 import { analyzeSkyPhoto } from '@/lib/skyPhoto';
 import { useGravity } from '@/lib/useGravity';
 
@@ -48,6 +56,16 @@ function SkyResult({ data }: { data: SkyImageResponse }) {
       <Text style={styles.text} testID="sky-confidence">
         ความมั่นใจของโมเดล: {pct(v.confidence)}
       </Text>
+      {v.cloudFractionCnn !== null ? (
+        <View style={styles.gap4}>
+          <Text style={styles.text} testID="sky-cloud-cnn">
+            สัดส่วนเมฆในภาพ (โมเดล): {pct(v.cloudFractionCnn)}
+          </Text>
+          <Text style={styles.small} testID="sky-cloud-cnn-note">
+            {CLOUD_IN_IMAGE_TH}
+          </Text>
+        </View>
+      ) : null}
       <Text style={styles.text} testID="sky-cloud">
         สัดส่วนเมฆ (ประมาณจากสีแดง/น้ำเงิน): {pct(v.cloudFraction)}
       </Text>
@@ -57,7 +75,7 @@ function SkyResult({ data }: { data: SkyImageResponse }) {
       </Text>
       {Object.entries(data.reliability).map(([k, t]) => (
         <Text key={k} style={styles.small}>
-          {k === 'sky_class' ? 'สภาพท้องฟ้า' : 'สัดส่วนเมฆ'}: {t}
+          {RELIABILITY_LABEL_TH[k] ?? k}: {t}
         </Text>
       ))}
     </Card>
