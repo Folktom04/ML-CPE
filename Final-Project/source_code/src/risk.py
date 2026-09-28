@@ -11,7 +11,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from src.metrics import WHO_LEVELS, WHO_LEVELS_EN, who_level
+from src.metrics import WHO_LEVELS, WHO_LEVELS_EN, round_uvi, who_level
 
 ERYTHEMAL_WM2_PER_UVI = 0.025
 MED_J_M2 = {"I": 200, "II": 250, "III": 350, "IV": 450, "V": 600, "VI": 1000}
@@ -71,6 +71,36 @@ def level_index(uvi: float) -> int:
         0 = ต่ำ … 4 = รุนแรงมาก.
     """
     return int(who_level(uvi))
+
+
+def reaches_alert(uvi: float, alert_threshold: float) -> bool:
+    """Whether a UVI triggers the high-UV alert, with the same rounding as the WHO levels.
+
+    Compare the WHO-rounded UVI, not the raw value: 7.8 is shown as สูงมาก, so it must also
+    reach an alert threshold of 8 (a raw ``7.8 >= 8`` would stay silent). For notifications
+    pass the upper value (``alert_uvi``), as for every warning.
+
+    Args:
+        uvi: UV index (use ``alert_uvi`` for warnings).
+        alert_threshold: Alert UVI from the user's settings (6, 8 or 11 in the app).
+
+    Returns:
+        True when ``round_uvi(uvi) >= alert_threshold``.
+    """
+    return bool(round_uvi(uvi) >= alert_threshold)
+
+
+def is_safe_again(uvi: float, safe_threshold: float) -> bool:
+    """Whether a UVI is low enough for the "safe again" message (hysteresis, same rounding).
+
+    Args:
+        uvi: UV index (use ``alert_uvi``).
+        safe_threshold: ``alert_threshold - 2`` from the user's settings.
+
+    Returns:
+        True when ``round_uvi(uvi) < safe_threshold``.
+    """
+    return bool(round_uvi(uvi) < safe_threshold)
 
 
 def burn_minutes(uvi_upper: float, skin_type: str | int) -> int | None:

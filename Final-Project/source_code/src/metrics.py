@@ -40,6 +40,22 @@ def regression_metrics(y_true: np.ndarray | pd.Series, y_pred: np.ndarray | pd.S
     }
 
 
+def round_uvi(uvi: float | np.ndarray | pd.Series) -> np.ndarray:
+    """UVI rounded the WHO way: to the nearest integer, x.5 up, negative values to 0.
+
+    This is the ONE rounding rule for levels, colours and alert thresholds (``who_level``,
+    ``risk.reaches_alert``, ``risk.is_safe_again`` and the app's ``roundUvi``), so e.g. 7.8
+    is level สูงมาก everywhere and also reaches an alert threshold of 8.
+
+    Args:
+        uvi: UV index value(s).
+
+    Returns:
+        Float array of whole numbers.
+    """
+    return np.floor(np.clip(np.asarray(uvi, dtype=float), 0.0, None) + 0.5)
+
+
 def who_level(uvi: float | np.ndarray | pd.Series) -> np.ndarray:
     """Map UV index to the WHO level index 0-4 (ต่ำ … รุนแรงมาก).
 
@@ -52,8 +68,7 @@ def who_level(uvi: float | np.ndarray | pd.Series) -> np.ndarray:
     Returns:
         Integer array of level indices.
     """
-    rounded = np.floor(np.clip(np.asarray(uvi, dtype=float), 0.0, None) + 0.5)
-    return np.searchsorted(WHO_LOWER_BOUNDS, rounded, side="right") - 1
+    return np.searchsorted(WHO_LOWER_BOUNDS, round_uvi(uvi), side="right") - 1
 
 
 def who_level_report(uvi_true: np.ndarray | pd.Series, uvi_pred: np.ndarray | pd.Series) -> dict:

@@ -55,3 +55,30 @@ export function hourTick(iso: string, index: number, step = 3): string | null {
   if (!m) return null;
   return index === 0 || Number(m[1]) % step === 0 ? m[1] : null;
 }
+
+/**
+ * Column the chart opens on: the current hour in daytime; at night the peak of the next
+ * daytime run (first run of hours with UVI > 0), so the chart does not open on dark hours.
+ */
+export function initialFocusIndex(hours: HourUV[], isDaylight: boolean): number {
+  if (isDaylight || hours.length === 0) return 0;
+  const start = hours.findIndex((h, i) => i > 0 && h.uvi > 0);
+  if (start < 0) return 0;
+  let best = start;
+  for (let i = start + 1; i < hours.length && hours[i].uvi > 0; i += 1) {
+    if (hours[i].uvi > hours[best].uvi) best = i;
+  }
+  return best;
+}
+
+/** Horizontal scroll offset that centres column `index` (clamped to the content). */
+export function scrollOffsetFor(
+  index: number,
+  slotWidth: number,
+  viewWidth: number,
+  count: number,
+): number {
+  const content = slotWidth * count;
+  const centre = index * slotWidth + slotWidth / 2 - viewWidth / 2;
+  return Math.max(0, Math.min(centre, Math.max(0, content - viewWidth)));
+}

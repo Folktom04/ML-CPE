@@ -1,5 +1,8 @@
 """Tests for src.risk."""
 
+import json
+from pathlib import Path
+
 import pytest
 
 from src import risk
@@ -64,3 +67,29 @@ def test_assess_low_uv_and_bad_range():
         risk.assess(5, (6, 4), "I")
     # the upper bound is never below the point estimate
     assert risk.assess(8, (6, 7.5), "I")["uvi_range"][1] == 8
+
+
+CASES = json.loads((Path(__file__).parent / "who_rounding_cases.json").read_text(encoding="utf-8"))
+LEVEL_OF_THRESHOLD = {6: 2, 8: 3, 11: 4}  # app alert choices = lower bound of สูง/สูงมาก/รุนแรงมาก
+
+
+@pytest.mark.parametrize("uvi,level", CASES["cases"])
+def test_one_rounding_rule_for_levels_card_and_alerts(uvi, level):
+    """who_level (chart hours, API), assess (main card) and the alert checks agree."""
+    from src.metrics import who_level
+
+    assert int(who_level(uvi)) == level
+    r = risk.assess(uvi, (max(uvi, 0), max(uvi, 0)), "III", alert_uvi=uvi)
+    assert r["level_index"] == level and r["alert_level_index"] == level
+    assert r["level"] == risk.WHO_LEVELS[level]
+    for threshold, lvl in LEVEL_OF_THRESHOLD.items():
+        # an alert fires exactly when the shown level is at or above the threshold's level
+        assert risk.reaches_alert(uvi, threshold) == (level >= lvl)
+        # "safe again" (alert - 2) is never true while the alert would still fire
+        assert not (risk.is_safe_again(uvi, threshold - 2) and risk.reaches_alert(uvi, threshold))
+
+
+def test_7_8_is_very_high_and_reaches_alert_8():
+    assert risk.assess(7.8, (7.0, 8.2), "III")["level"] == "สูงมาก"
+    assert risk.reaches_alert(7.8, 8) and not risk.reaches_alert(7.49, 8)
+    assert risk.is_safe_again(5.49, 6) and not risk.is_safe_again(5.5, 6)

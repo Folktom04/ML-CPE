@@ -113,15 +113,41 @@ export default function SettingsScreen() {
         </Pressable>
       </Card>
 
-      <Card title="แจ้งเตือนเมื่อ UV สูง">
-        <Row label="เปิดการแจ้งเตือน" hint="ส่งจากเซิร์ฟเวอร์ ต้องยินยอมให้ส่งข้อมูล (ด้านล่าง)">
+      <Card title="ส่งข้อมูลไปเซิร์ฟเวอร์">
+        <Row
+          label="ยินยอมให้ส่งประเภทผิวและการตั้งค่าการแจ้งเตือน"
+          hint="ใช้เพื่อคำนวณเวลาก่อนผิวไหม้และส่งการแจ้งเตือนเท่านั้น ไม่มีชื่อ อีเมล หรือรูปภาพ ปิดได้ทุกเมื่อ และเมื่อปิด ระบบจะลบข้อมูลของคุณบนเซิร์ฟเวอร์">
           <Switch
-            value={s.notifyEnabled}
+            value={s.serverConsent}
+            onValueChange={(v) => update({ serverConsent: v })}
+            accessibilityLabel="ยินยอมให้ส่งข้อมูลไปเซิร์ฟเวอร์"
+            testID="consent-switch"
+          />
+        </Row>
+        {!s.skinType && s.serverConsent ? (
+          <Text style={styles.hint}>จะส่งเมื่อระบุประเภทผิวแล้ว</Text>
+        ) : null}
+      </Card>
+
+      <Card title="แจ้งเตือนเมื่อ UV สูง">
+        <Row
+          label="เปิดการแจ้งเตือน"
+          hint={
+            s.serverConsent
+              ? 'ส่งจากเซิร์ฟเวอร์'
+              : 'ส่งจากเซิร์ฟเวอร์ จึงยังใช้ไม่ได้จนกว่าจะยินยอมให้ส่งข้อมูล (ด้านบน)'
+          }>
+          <Switch
+            value={s.serverConsent && s.notifyEnabled}
+            disabled={!s.serverConsent}
             onValueChange={(v) => update({ notifyEnabled: v })}
             accessibilityLabel="เปิดการแจ้งเตือนเมื่อ UV สูง"
             testID="notify-switch"
           />
         </Row>
+        {!s.serverConsent ? (
+          <Note testID="notify-inactive">ยังไม่ทำงาน ต้องยินยอมให้ส่งข้อมูลก่อน</Note>
+        ) : null}
         <Text style={styles.label}>เตือนเมื่อ UV ถึงระดับ</Text>
         <Segments
           values={ALERT_THRESHOLDS}
@@ -132,7 +158,8 @@ export default function SettingsScreen() {
         />
         <Text style={styles.hint} testID="threshold-hint">
           เตือนเมื่อ UVI ตั้งแต่ {s.alertThreshold} ขึ้นไป และแจ้งว่า &quot;ปลอดภัยแล้ว&quot; เมื่อต่ำกว่า{' '}
-          {safe} · เตือนประเภทเดียวกันไม่เกิน 1 ครั้งใน 3 ชม. และไม่เตือนหลังพระอาทิตย์ตก
+          {safe} (ปัดเศษแบบเดียวกับระดับ WHO เช่น 7.8 นับเป็น 8) · เตือนประเภทเดียวกันไม่เกิน 1 ครั้งใน 3
+          ชม. และไม่เตือนหลังพระอาทิตย์ตก
         </Text>
         <Text style={styles.label}>เตือนก่อนผิวไหม้</Text>
         <Segments
@@ -168,22 +195,6 @@ export default function SettingsScreen() {
         <Text style={styles.hint}>
           ตอนนี้ใช้ปทุมธานีเป็นตำแหน่งเริ่มต้น การใช้ GPS และการเลือกจังหวัดเองจะมาในเวอร์ชันถัดไป
         </Text>
-      </Card>
-
-      <Card title="ส่งข้อมูลไปเซิร์ฟเวอร์">
-        <Row
-          label="ยินยอมให้ส่งประเภทผิวและการตั้งค่าการแจ้งเตือน"
-          hint="ใช้เพื่อคำนวณเวลาก่อนผิวไหม้และส่งการแจ้งเตือนเท่านั้น ไม่มีชื่อ อีเมล หรือรูปภาพ ปิดได้ทุกเมื่อ และเมื่อปิด ระบบจะลบข้อมูลของคุณบนเซิร์ฟเวอร์">
-          <Switch
-            value={s.serverConsent}
-            onValueChange={(v) => update({ serverConsent: v })}
-            accessibilityLabel="ยินยอมให้ส่งข้อมูลไปเซิร์ฟเวอร์"
-            testID="consent-switch"
-          />
-        </Row>
-        {!s.skinType && s.serverConsent ? (
-          <Text style={styles.hint}>จะส่งเมื่อระบุประเภทผิวแล้ว</Text>
-        ) : null}
       </Card>
 
       <Text style={styles.sync} testID="sync-state">

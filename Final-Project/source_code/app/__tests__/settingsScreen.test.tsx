@@ -275,3 +275,19 @@ it("if the server delete fails on withdrawal, consent stays on and an error is s
   );
   expect(storage.stored()).toMatchObject({ serverConsent: true, userId: 7 });
 });
+
+it('the server alert switch is disabled and marked inactive until consent is given', async () => {
+  const storage = new MemoryStorage({ skinType: 'III', notifyEnabled: true });
+  await open(storage);
+  const sw = screen.getByTestId('notify-switch');
+  expect(sw.props.disabled).toBe(true);
+  expect(sw.props.value).toBe(false); // not shown as "on" while it cannot work
+  expect(screen.getByTestId('notify-inactive')).toHaveTextContent(
+    'ยังไม่ทำงาน ต้องยินยอมให้ส่งข้อมูลก่อน',
+  );
+  mockCreate.mockResolvedValue(user(5));
+  await fireEvent(screen.getByTestId('consent-switch'), 'valueChange', true);
+  await waitFor(() => expect(screen.getByTestId('notify-switch').props.disabled).toBe(false));
+  expect(screen.getByTestId('notify-switch').props.value).toBe(true);
+  expect(screen.queryByTestId('notify-inactive')).toBeNull();
+});
