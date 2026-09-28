@@ -1,0 +1,12 @@
+swimseg_path,swimseg_split,other,other_path,other_split,other_label,mad
+raw/swimseg/test/0961.png,val,swimcat_ext,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img302.png,train,veil_clouds,0.026501229032874107
+raw/swimseg/test/0961.png,val,swimcat_ext,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img301.png,train,veil_clouds,0.026669731363654137
+raw/swimseg/val/0982.png,train,swimcat_ext,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img266.png,train,veil_clouds,0.02780330739915371
+raw/swimseg/val/0982.png,train,swimcat_ext,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img268.png,train,veil_clouds,0.02782883681356907
+raw/swimseg/test/0963.png,val,swimcat_ext,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img269.png,train,veil_clouds,0.02876327931880951
+raw/swimseg/test/0960.png,val,swimcat_ext,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img302.png,train,veil_clouds,0.029013484716415405
+raw/swimseg/test/0960.png,val,swimcat_ext,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img147.png,test,veil_clouds,0.029207518324255943
+raw/swimseg/test/0960.png,val,swimcat_ext,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img301.png,train,veil_clouds,0.029263688251376152
+raw/swimseg/test/0961.png,val,swimcat_ext,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img209.png,train,veil_clouds,0.029411768540740013
+raw/swimseg/val/0983.png,train,swimcat_ext,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img54.png,train,veil_clouds,0.02968749962747097
+raw/swimseg/train/0481.png,val,swimcat_ext,swimcat_ext/Swimcat-extend/F-Veil Clouds/F_img227.png,train,veil_clouds,0.02974366955459118
