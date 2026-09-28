@@ -45,6 +45,8 @@ class HourUV(BaseModel):
     level: str
     interval_adjusted: bool
     data_imputed: bool = Field(False, description="some Open-Meteo input was missing and filled")
+    alert_uvi: float = Field(description="max(q90 after CQR, uvi): drives alerts and burn dose")
+    is_daylight: bool = Field(description="clear-sky UVI >= 0.5 (no alerts at night)")
 
 
 class PredictResponse(Disclaimed):

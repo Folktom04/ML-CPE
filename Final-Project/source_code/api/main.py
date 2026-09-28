@@ -228,6 +228,8 @@ def _hour(row: Any) -> HourUV:
         level=WHO_LEVELS[int(who_level(row.uvi))],
         interval_adjusted=bool(row.interval_adjusted),
         data_imputed=bool(row.data_imputed),
+        alert_uvi=round(float(row.alert_uvi), 2),
+        is_daylight=bool(row.is_day),
     )
 
 

@@ -60,5 +60,28 @@ export function sampleHours(startIso: string, uvis: number[]): HourUV[] {
     level: WHO_LEVELS[levelIndex(uvi)],
     interval_adjusted: false,
     data_imputed: false,
+    alert_uvi: uvi > 0 ? uvi + 0.8 : 0, // = uvi_range[1], as in the API
+    is_daylight: uvi > 0,
   }));
+}
+
+/** Hours from `startIso` (Bangkok, +07:00) with the given alert_uvi; daylight when > 0. */
+export function mkHours(startIso: string, alerts: number[], daylight?: boolean[]): HourUV[] {
+  const start = Date.parse(startIso);
+  return alerts.map((a, i) => {
+    const local = new Date(start + i * 3600e3 + 7 * 3600e3).toISOString().slice(0, 19);
+    const uvi = Math.max(0, a - 0.5);
+    return {
+      time: `${local}+07:00`,
+      uvi,
+      uvi_range: [Math.max(0, uvi - 1), a] as [number, number],
+      uva_wm2: uvi * 5,
+      uvb_wm2: uvi * 0.15,
+      level: WHO_LEVELS[levelIndex(uvi)],
+      interval_adjusted: false,
+      data_imputed: false,
+      alert_uvi: a,
+      is_daylight: daylight ? daylight[i] : a > 0,
+    };
+  });
 }

@@ -99,3 +99,17 @@ it('province search shows a message when nothing matches', async () => {
   await fireEvent.changeText(screen.getByTestId('province-search'), 'zzz');
   expect(screen.getByText('ไม่พบจังหวัดที่ค้นหา')).toBeTruthy();
 });
+
+it('day 22: notification permission can be asked in the location step (optional)', async () => {
+  const N = jest.requireMock('expo-notifications');
+  N.getPermissionsAsync.mockResolvedValue({ granted: false, canAskAgain: true });
+  N.requestPermissionsAsync.mockResolvedValueOnce({ granted: false });
+  await renderWithSettings(<OnboardingScreen />, new MemoryStorage({ locationMode: 'gps' }));
+  await fireEvent.press(await screen.findByTestId('onboarding-start'));
+  await fireEvent.press(screen.getByTestId('allow-notify'));
+  expect(await screen.findByTestId('notify-result')).toHaveTextContent(
+    'ไม่ได้อนุญาต แอปยังดูค่า UV ได้ตามปกติ',
+  );
+  await fireEvent.press(screen.getByTestId('location-next')); // not required to continue
+  expect(screen.getByTestId('onboarding-step')).toHaveTextContent(/ประเภทผิว/);
+});

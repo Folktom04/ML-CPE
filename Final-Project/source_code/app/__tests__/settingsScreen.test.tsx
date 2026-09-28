@@ -94,8 +94,10 @@ it("sends nothing to the server without consent (the default)", async () => {
     /เก็บในเครื่องเท่านั้น/,
   );
   await fireEvent.press(screen.getByTestId("threshold-11"));
-  await fireEvent.press(screen.getByTestId("burn-60"));
-  await waitFor(() => expect(storage.stored()?.alertBurnMinutes).toBe(60));
+  await fireEvent(screen.getByTestId("notify-switch"), "valueChange", false);
+  await waitFor(() => expect(storage.stored()?.notifyEnabled).toBe(false));
+  expect(storage.stored()?.alertThreshold).toBe(11);
+  expect(screen.queryByTestId("burn-60")).toBeNull(); // 15/30/60 removed on day 22
   expect(mockCreate).not.toHaveBeenCalled();
   expect(mockUpdate).not.toHaveBeenCalled();
   expect(storage.stored()).toMatchObject({
@@ -278,20 +280,27 @@ it("if the server delete fails on withdrawal, consent stays on and an error is s
   expect(storage.stored()).toMatchObject({ serverConsent: true, userId: 7 });
 });
 
-it('the server alert switch is disabled and marked inactive until consent is given', async () => {
-  const storage = new MemoryStorage({ skinType: 'III', notifyEnabled: true });
+it('day 22: the alert switch controls local alerts and works without consent', async () => {
+  const N = jest.requireMock('expo-notifications');
+  const storage = new MemoryStorage({ skinType: 'III', notifyEnabled: false });
   await open(storage);
   const sw = screen.getByTestId('notify-switch');
-  expect(sw.props.disabled).toBe(true);
-  expect(sw.props.value).toBe(false); // not shown as "on" while it cannot work
-  expect(screen.getByTestId('notify-inactive')).toHaveTextContent(
-    'ยังไม่ทำงาน ต้องยินยอมให้ส่งข้อมูลก่อน',
-  );
-  mockCreate.mockResolvedValue(user(5));
-  await fireEvent(screen.getByTestId('consent-switch'), 'valueChange', true);
-  await waitFor(() => expect(screen.getByTestId('notify-switch').props.disabled).toBe(false));
-  expect(screen.getByTestId('notify-switch').props.value).toBe(true);
+  expect(sw.props.disabled).toBeFalsy(); // no longer tied to consent
   expect(screen.queryByTestId('notify-inactive')).toBeNull();
+  expect(screen.getByTestId('notify-limits')).toHaveTextContent(/อย่างน้อยวันละครั้ง/);
+  expect(screen.getByTestId('notify-limits')).toHaveTextContent(/Android อาจส่งแจ้งเตือนช้ากว่าเวลาที่ตั้ง/);
+  await fireEvent(sw, 'valueChange', true);
+  await waitFor(() => expect(storage.stored()?.notifyEnabled).toBe(true));
+  expect(storage.stored()?.serverConsent).toBe(false);
+  expect(mockCreate).not.toHaveBeenCalled();
+  expect(N.getPermissionsAsync).toHaveBeenCalled();
+});
+
+it('day 22: notifications not allowed by the phone are shown as such', async () => {
+  const N = jest.requireMock('expo-notifications');
+  N.getPermissionsAsync.mockResolvedValueOnce({ granted: false, canAskAgain: false });
+  await open(new MemoryStorage({ skinType: 'III' }));
+  expect(await screen.findByTestId('notify-not-allowed')).toHaveTextContent(/ยังไม่ได้อนุญาต/);
 });
 
 describe('location card and consent text (day 21)', () => {

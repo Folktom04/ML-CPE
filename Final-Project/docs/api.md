@@ -29,7 +29,7 @@ Interactive docs: http://127.0.0.1:8000/docs
 |---|---|---|---|
 | GET | `/health` | — | `status`, model files, `sky_backend` (`ai_edge_litert` or fallback `tf.lite`), `cqr_q`, `db_backend` (`postgresql` or `sqlite`), `db_fallback`, `db_ok` (day 17) |
 | POST | `/predict` | `{lat, lon, skin_type}` (skin type I–VI or 1–6) | `uvi, uvi_range, uva_wm2, uvb_wm2, level, skin_type, burn_minutes, cmf, advice, forecast[{time, uvi, …}], next_safe_time` + `uvi_q90_cqr, alert_uvi, alert_level, interval_adjusted, data_imputed, level_color, time, is_daylight, note, disclaimer` |
-| GET | `/forecast?lat&lon&hours=1..36` | — | hourly `{time, uvi, uvi_range, uva_wm2, uvb_wm2, level, interval_adjusted, data_imputed}` |
+| GET | `/forecast?lat&lon&hours=1..36` | — | hourly `{time, uvi, uvi_range, uva_wm2, uvb_wm2, level, interval_adjusted, data_imputed, alert_uvi, is_daylight}` (`alert_uvi` = max(q90 after CQR, uvi), `is_daylight` = clear-sky UVI ≥ 0.5; both added on day 22 for the app's local alerts; also in `/predict.forecast`) |
 | POST | `/users` | header `X-Device-Id` (16–64 letters/digits/dashes, a random UUID made by the app); body `{skin_type, notify_enabled?, alert_threshold? (3–11), alert_burn_minutes? (5–240), province?}` | 201 new user / 200 same device registered again: `{id, skin_type, province, notify_enabled, alert_threshold, safe_threshold, alert_burn_minutes, updated_at}` (never the device id) |
 | PUT | `/users/{id}/settings` | header `X-Device-Id` of that user; any of the fields above (`safe_threshold` is rejected: 422) | the updated user |
 | DELETE | `/users/{id}` | header `X-Device-Id` of that user | 204; the user and, through `ON DELETE CASCADE`, their push tokens, measurements and notification log are deleted |

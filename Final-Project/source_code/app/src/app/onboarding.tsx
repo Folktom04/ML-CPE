@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-nat
 import { Card, colors, Note } from '@/components/Card';
 import { DISCLAIMER_TH } from '@/config';
 import { requestLocationPermission } from '@/lib/location';
+import { notificationPermission, supported as notifySupported } from '@/lib/notifications';
 import { CONSENT_HINT_TH, CONSENT_LABEL_TH } from '@/lib/settings';
 import { useSettings } from '@/lib/SettingsContext';
 import { SKIN_DESCRIPTION_TH } from '@/lib/skinQuiz';
@@ -46,6 +47,7 @@ export default function OnboardingScreen() {
   const { settings: s, update } = useSettings();
   const [step, setStep] = useState(0);
   const [denied, setDenied] = useState(false);
+  const [notify, setNotify] = useState<boolean | null>(null);
 
   const useGps = async () => {
     setDenied(false);
@@ -112,6 +114,27 @@ export default function OnboardingScreen() {
               testID="pick-province"
             />
           </View>
+          {notifySupported ? (
+            <View style={styles.notify}>
+              <Text style={styles.label}>การแจ้งเตือน (ไม่บังคับ)</Text>
+              <Text style={styles.hint}>
+                เตือนเมื่อ UV สูง สรุปทุกเช้า 07:00 และเตือนทาครีมซ้ำ ตั้งเวลาจากในเครื่อง
+                ไม่ส่งข้อมูลออกจากมือถือ
+              </Text>
+              {notify === null ? (
+                <Button
+                  label="อนุญาตการแจ้งเตือน"
+                  kind="outline"
+                  onPress={async () => setNotify(await notificationPermission(true))}
+                  testID="allow-notify"
+                />
+              ) : (
+                <Text style={styles.value} testID="notify-result">
+                  {notify ? 'อนุญาตการแจ้งเตือนแล้ว' : 'ไม่ได้อนุญาต แอปยังดูค่า UV ได้ตามปกติ'}
+                </Text>
+              )}
+            </View>
+          ) : null}
           <Button
             label="ถัดไป"
             onPress={() => setStep(2)}
@@ -211,5 +234,6 @@ const styles = StyleSheet.create({
   },
   outlineText: { color: colors.text, fontWeight: '600' },
   disabled: { opacity: 0.4 },
+  notify: { gap: 4, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 8 },
   back: { color: colors.muted, textAlign: 'center', paddingVertical: 8 },
 });

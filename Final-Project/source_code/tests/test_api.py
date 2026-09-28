@@ -373,3 +373,18 @@ def test_predict_cloud_fraction_in_0_1(real_bundle):
         x = np.asarray(Image.new("RGB", (224, 224), color), dtype=np.float32) / 255.0
         f = predict_cloud_fraction(x, interpreter=real_bundle.sky_cloud)
         assert 0.0 <= f <= 1.0
+
+
+def test_forecast_hours_carry_alert_uvi_and_daylight(client):
+    """Day 22: the app schedules local alerts from these two fields."""
+    body = client.post("/predict", json=PAYLOAD).json()
+    fc = client.get("/forecast", params={"lat": 14.02, "lon": 100.52, "hours": 24}).json()
+    for hours in (body["forecast"], fc["hours"]):
+        assert hours
+        for h in hours:
+            assert h["alert_uvi"] == pytest.approx(max(h["uvi"], h["uvi_range"][1]), abs=0.011)
+            assert h["alert_uvi"] >= h["uvi"]
+            assert isinstance(h["is_daylight"], bool)
+            if not h["is_daylight"]:
+                assert h["uvi"] == 0 and h["alert_uvi"] == 0
+        assert {h["is_daylight"] for h in hours} == {True, False}  # 24 h has day and night

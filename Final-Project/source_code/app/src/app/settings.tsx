@@ -1,19 +1,18 @@
 import { useRouter } from 'expo-router';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { describeError } from '@/api/client';
 import { Card, colors, Note } from '@/components/Card';
 import { requestLocationPermission } from '@/lib/location';
+import { notificationPermission, supported } from '@/lib/notifications';
 import { useSettings } from '@/lib/SettingsContext';
 import {
   ALERT_THRESHOLDS,
   CONSENT_HINT_TH,
   CONSENT_LABEL_TH,
-  BURN_MINUTE_OPTIONS,
   safeThresholdFor,
   type AlertThreshold,
-  type BurnMinutes,
 } from '@/lib/settings';
 import { SKIN_DESCRIPTION_TH } from '@/lib/skinQuiz';
 import { WHO_LEVELS, levelIndex } from '@/lib/uv';
@@ -72,6 +71,17 @@ export default function SettingsScreen() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleted, setDeleted] = useState(false);
   const [gpsDenied, setGpsDenied] = useState(false);
+  const [allowed, setAllowed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    notificationPermission(false).then((ok) => {
+      if (active) setAllowed(ok);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   if (!ready) {
     return (
@@ -136,22 +146,28 @@ export default function SettingsScreen() {
       <Card title="แจ้งเตือนเมื่อ UV สูง">
         <Row
           label="เปิดการแจ้งเตือน"
-          hint={
-            s.serverConsent
-              ? 'ส่งจากเซิร์ฟเวอร์'
-              : 'ส่งจากเซิร์ฟเวอร์ จึงยังใช้ไม่ได้จนกว่าจะยินยอมให้ส่งข้อมูล (ด้านบน)'
-          }>
+          hint="แจ้งเตือนจากในเครื่อง ตั้งเวลาล่วงหน้าจากพยากรณ์ ไม่ส่งข้อมูลออกจากมือถือ ใช้ได้โดยไม่ต้องยินยอม">
           <Switch
-            value={s.serverConsent && s.notifyEnabled}
-            disabled={!s.serverConsent}
-            onValueChange={(v) => update({ notifyEnabled: v })}
+            value={s.notifyEnabled}
+            onValueChange={async (v) => {
+              if (v) setAllowed(await notificationPermission(true));
+              await update({ notifyEnabled: v });
+            }}
             accessibilityLabel="เปิดการแจ้งเตือนเมื่อ UV สูง"
             testID="notify-switch"
           />
         </Row>
-        {!s.serverConsent ? (
-          <Note testID="notify-inactive">ยังไม่ทำงาน ต้องยินยอมให้ส่งข้อมูลก่อน</Note>
+        {supported && allowed === false ? (
+          <Note testID="notify-not-allowed">
+            ยังไม่ได้อนุญาตการแจ้งเตือนของเครื่อง จึงไม่มีการแจ้งเตือนเด้งขึ้นมา เปิดสิทธิ์ได้ในการตั้งค่าของเครื่อง
+          </Note>
         ) : null}
+        <Text style={styles.hint} testID="notify-limits">
+          ต้องเปิดแอปอย่างน้อยวันละครั้ง (พยากรณ์ในเครื่องมีประมาณ 36 ชม.) ถ้าไม่ได้เปิด จะมีแจ้งเตือน
+          &quot;เปิดแอปเพื่อดู UV วันนี้&quot; ตอน 07:00 แทน · Android อาจส่งแจ้งเตือนช้ากว่าเวลาที่ตั้ง
+          (โหมดประหยัดแบตเตอรี่) · การแจ้งเตือนจากเซิร์ฟเวอร์ขณะไม่ได้เปิดแอปจะมาในเวอร์ชันถัดไป
+          และต้องยินยอมให้ส่งข้อมูล
+        </Text>
         <Text style={styles.label}>เตือนเมื่อ UV ถึงระดับ</Text>
         <Segments
           values={ALERT_THRESHOLDS}
@@ -165,14 +181,6 @@ export default function SettingsScreen() {
           {safe} (ปัดเศษแบบเดียวกับระดับ WHO เช่น 7.8 นับเป็น 8) · เตือนประเภทเดียวกันไม่เกิน 1 ครั้งใน 3
           ชม. และไม่เตือนหลังพระอาทิตย์ตก
         </Text>
-        <Text style={styles.label}>เตือนก่อนผิวไหม้</Text>
-        <Segments
-          values={BURN_MINUTE_OPTIONS}
-          value={s.alertBurnMinutes}
-          onChange={(v: BurnMinutes) => update({ alertBurnMinutes: v })}
-          format={(v) => `${v} นาที`}
-          testID="burn"
-        />
       </Card>
 
       <Card title="แจ้งเตือนในเครื่อง">
@@ -192,7 +200,10 @@ export default function SettingsScreen() {
             testID="reapply-switch"
           />
         </Row>
-        <Text style={styles.hint}>ตั้งค่าไว้ได้ก่อน การแจ้งเตือนจริงจะเริ่มทำงานในเวอร์ชันถัดไป</Text>
+        <Text style={styles.hint}>
+          เตือนทาครีมซ้ำเริ่มนับเมื่อกด &quot;ทาครีมแล้ว&quot; ในหน้าหลัก ส่วนเตือนก่อนผิวไหม้เริ่มเมื่อกด
+          &quot;ออกแดด&quot; (เตือนที่ประมาณ 80 % ของปริมาณ UV ที่ทำให้ผิวแดง)
+        </Text>
       </Card>
 
       <Card title="ตำแหน่ง">

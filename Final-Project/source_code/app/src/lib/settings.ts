@@ -45,6 +45,10 @@ export type Settings = {
   province: string | null;
   /** First-run flow (welcome, location, skin type, consent) finished. */
   onboarded: boolean;
+  /** "Going out" pressed at this time (ms); null = not in the sun (day 22, phone only). */
+  sunStartedAt: number | null;
+  /** Reapply-sunscreen reminder due at this time (ms); null = none (day 22, phone only). */
+  reapplyAt: number | null;
 };
 
 export type LocationMode = 'gps' | 'province';
@@ -69,6 +73,8 @@ export const DEFAULT_SETTINGS: Settings = {
   locationMode: null,
   province: null,
   onboarded: false,
+  sunStartedAt: null,
+  reapplyAt: null,
 };
 
 /** "Safe again" UVI for an alert UVI. */
@@ -92,6 +98,7 @@ function pick<T>(value: unknown, ok: (v: unknown) => boolean, fallback: T): T {
 }
 
 const isBool = (v: unknown) => typeof v === 'boolean';
+const isTime = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v > 0;
 
 /**
  * Settings from stored JSON. Unknown or damaged fields fall back to the defaults one by one,
@@ -136,6 +143,8 @@ export function parseSettings(raw: string | null): Settings {
     locationMode: pick(obj.locationMode, (v) => v === 'gps' || v === 'province', d.locationMode),
     province: pick(obj.province, isProvinceName, d.province),
     onboarded: pick(obj.onboarded, (v) => v === true, d.onboarded),
+    sunStartedAt: pick(obj.sunStartedAt, isTime, d.sunStartedAt),
+    reapplyAt: pick(obj.reapplyAt, isTime, d.reapplyAt),
   };
 }
 
