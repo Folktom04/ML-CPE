@@ -345,7 +345,27 @@
 ---
 
 ## ส่วนเสริม (ทำเมื่อมีเวลาเหลือ)
-- [ ] (future work, ย้ายมาวัน 15) SWIMCAT / SWIMSEG จากแบบฟอร์ม (CC BY-NC 4.0) + head CNN สัดส่วนเมฆจาก mask ของ SWIMSEG แทน red/blue proxy (ต้องประกาศเกณฑ์ก่อนเปิด test เหมือนวัน 14)
+### head CNN สัดส่วนเมฆจาก SWIMSEG (ทำหลังวัน 20)
+> **ประกาศก่อนฝึกและก่อนเปิด test split (commit นี้)** โค้ดคือ `src/sky_cloud.py` (`CLOUD_CRITERIA`, `judge_cloud()`, `ships()`) และ `--test` รันได้ครั้งเดียว (มี guard คือไฟล์ `docs/sky_cloud_test.json`) **หลังเห็นผลห้ามแก้โมเดล ข้อมูล split หรือ config ถ้าไม่ผ่านให้รายงานตามจริง** ห้ามแตะ XGBoost, CNN วัน 14 (`sky_cnn_v1*`) และ test ของโมเดลอื่น
+> - **ข้อมูล:** SWIMSEG (Dev, Lee & Winkler 2017, CC BY-NC 4.0) อยู่ที่ `dataset/sky/raw/swimseg` มีภาพ 1,013 ภาพ, mask 1,013 ไฟล์ (0/255, 600×600) และ `metadata.csv` 1,013 แถว ตรวจ license จาก `license.html` / `readme.pdf` แล้ว ภาพเป็น patch ที่แปลงจากกล้องถ่ายทั้งท้องฟ้า (WAHRSIS, NTU สิงคโปร์) ให้เป็นมุมมองเลนส์ธรรมดาประมาณ 62° **ไม่ใช่ภาพ fisheye**
+> - **target** = สัดส่วนพิกเซลเมฆใน mask **(สีขาว = เมฆ)** ตรวจบน train เท่านั้น: Spearman กับ red/blue = +0.73 และดูภาพแล้ว (ฟ้าใส → mask ดำ) ส่วน `class_dict.csv` ของไฟล์ที่นำมาอัปโหลดซ้ำเขียนว่าสีดำ = เมฆ ซึ่ง**ผิด**
+> - **split (ห้ามรั่ว):** ไม่ใช้ train/val/test ที่มากับไฟล์ ภาพ 1,013 ภาพมาจากการถ่ายแค่ **33 ครั้ง ใน 17 วัน** และบางครั้งถ่ายห่างกันไม่กี่นาที (16:52 กับ 16:54) จึง**จัดกลุ่มตามวันถ่าย** รวมกับกลุ่มภาพซ้ำตามกฎวัน 13 (thumbnail 16×16, 8 แบบ, MAD < 0.03) แล้วแบ่ง 70/15/15 ตามกลุ่ม ใช้ seed แรกตั้งแต่ 42 ที่สัดส่วนภาพห่างเป้าไม่เกิน ±5 pp และทุก split มีทั้ง mask ที่เมฆ < 20 % และ > 80 % (กฎนี้ไม่ใช้ผลโมเดล) → **seed 43: train 735 ภาพ / 9 วัน, val 137 / 3 วัน, test 141 / 5 วัน** และไม่มีกลุ่มไหนคร่อม split → `docs/sky_splits/swimseg_split.csv` (`python -m src.sky_data --index-swimseg` ไม่เขียน split ของ CCSN / SWIMCAT-ext ทับ)
+> - **ภาพซ้ำข้าม dataset** (กฎเดียวกัน) → `docs/sky_swimseg_crossdataset_duplicates.csv`: 11 คู่ ภาพ SWIMSEG 6 ภาพใน train/val กับ SWIMCAT-ext veil_clouds (train 10, test 1) ส่วน **test ของ SWIMSEG มี 0 คู่** เมื่อดูภาพแล้วไม่มีคู่ไหนเป็นภาพเดียวกัน (ฟ้าเทาหรือฟ้าเรียบ ซึ่งเป็น false positive แบบวัน 15)
+> - **โมเดล:** backbone MobileNetV3Small จาก `sky_cnn_v1_seed43.keras` **แช่ทั้งหมด** (feature 576 มิติหลัง GAP, BatchNorm อยู่ในโหมด inference) + head Dropout 0.2 → Dense(1, sigmoid), loss MAE, Adam 1e-3, batch 32, ไม่เกิน 50 epochs, early stopping บน val (patience 5, คืน weights ที่ดีที่สุด), augmentation วัน 13 **เฉพาะ flip และปรับสี/ความสว่าง/blur (ไม่หมุน ไม่ perspective เพราะ mask ไม่ได้แปลงตาม)**, **3 seeds (42/43/44)** รายงาน mean ± SD, seed ที่ export (TFLite float16 แยกไฟล์ `sky_cloud_v1.tflite`) เลือกจาก val loss ส่วน `sky_cnn_v1.tflite` ไม่แตะ
+> - **baseline:** red/blue `NRBR < 0.25` (ค่าเดิมจากงานวิจัย ไม่ได้ปรับ) บนภาพชุดเดียวกัน
+>
+> | # | ตัวชี้วัด (SWIMSEG test, 141 ภาพ / 5 วัน) | เกณฑ์ผ่าน |
+> |---|---|---|
+> | C1 | MAE ของสัดส่วนเมฆ (ค่าเฉลี่ย 3 seeds) | **≤ 0.10** |
+> | C2 | MAE ของ red/blue − MAE ของ CNN | **≥ 0.03** |
+>
+> รายงานเพิ่มแบบไม่มีเกณฑ์: RMSE, bias, MAE แยกตามช่วงสัดส่วนเมฆ และ**MAE รายวันของ test** (test มีแค่ 5 วัน ผลจึงแกว่งได้มาก)
+> **ถ้าผ่านทั้ง C1 และ C2:** `/sky-image` ส่ง `cloud_fraction_cnn` และแอปแสดงเป็นข้อมูลประกอบ ("สัดส่วนเมฆในภาพ ไม่ใช่ทั้งท้องฟ้า") **ถ้าไม่ผ่านข้อใดข้อหนึ่ง:** API ไม่ส่งค่านี้และแอปไม่แสดง แต่บันทึกผลตามจริงใน ROADMAP และ `docs/results_summary.md` ในทุกกรณีค่านี้ไม่เปลี่ยน UVI
+> **ข้อจำกัด:** SWIMSEG ถ่ายจากกล้องถ่ายทั้งท้องฟ้าที่สิงคโปร์ (NTU, 1.34N) แล้วแปลงเป็นมุมมองเลนส์ธรรมดาประมาณ 62° และ mask ติดป้ายโดยผู้เชี่ยวชาญ ภาพจากมือถือเห็นท้องฟ้าแค่บางส่วน และสี, white balance, การรับแสง รวมถึงวัตถุในภาพ (ตึก, ต้นไม้) ต่างจากชุดข้อมูล ค่าที่ได้คือ**สัดส่วนเมฆในภาพ ไม่ใช่ทั้งท้องฟ้า** และยังไม่ได้วัดผลบนภาพจากมือถือ ข้อมูลมีแค่ 17 วัน
+- [x] ตรวจไฟล์ SWIMSEG + ประกาศเกณฑ์ + split ตามวัน → `src/sky_data.py` (`index_swimseg_folders`, `union_groups`, `split_ok`, `build_swimseg_split`), `src/sky_cloud.py`, `tests/test_sky_cloud.py`
+- [ ] ฝึก 3 seeds (ผู้ใช้รันเองใน PowerShell) → `models/sky_cloud_v1_seed{42,43,44}.keras`, `models/sky_cloud_v1_metrics.json`, `models/sky_cloud_v1.tflite`
+- [ ] ประเมิน test ครั้งเดียว → `docs/sky_cloud_test.json`, `docs/figures/sky_cloud_test_scatter.png`
+- [ ] ถ้าผ่าน: API `cloud_fraction_cnn` + แอปแสดงเป็นข้อมูลประกอบ / ถ้าไม่ผ่าน: บันทึกผลอย่างเดียว
 - [ ] Himawari cloud products (JAXA P-Tree) เป็น features ความหนาเมฆ
 - [ ] ติดต่อขอข้อมูลวัด UV ภาคพื้นดินที่นครปฐม (ม.ศิลปากร) ใช้เป็น ground truth
 

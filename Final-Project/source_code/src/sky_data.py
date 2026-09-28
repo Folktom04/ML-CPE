@@ -7,8 +7,10 @@ Datasets (licences checked on day 13, details in ``docs/datasets.md``):
 * SWIMCAT-ext (Mendeley Data doi:10.17632/vwdd9grvdp.1, CC BY 4.0): 2,100 sky/cloud images
   "collected from Internet and labelled by technical expert" (Mendeley description),
   6 classes; used instead of SWIMCAT while the SWIMCAT/SWIMSEG request forms are pending.
-* SWIMSEG (CC BY-NC 4.0, request form): sky patches + binary cloud masks; indexed only when the
-  archive has been placed in ``dataset/sky/raw/`` by hand.
+* SWIMSEG (CC BY-NC 4.0, Dev, Lee & Winkler 2017): 1,013 sky patches (600x600, undistorted from a
+  whole-sky imager to a ~62 deg normal-lens view) + binary cloud masks, placed by hand in
+  ``dataset/sky/raw/swimseg`` (a repack with train/val/test folders, whose own split is NOT used:
+  the 1,013 patches come from only 33 captures on 17 days, so the split groups by capture DAY).
 
 Each dataset keeps its own labels and its own train/val/test split (no merged taxonomy).
 Near-duplicate images are kept in the same split: two images are near-duplicates when the mean
@@ -46,6 +48,12 @@ SEED = 42
 THUMB_SIZE = 16
 DUP_MAX_MAD = 0.03
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"}
+SWIMSEG_DIR = RAW_DIR / "swimseg"
+SWIMSEG_FOLDERS = ("train", "val", "test")
+# The SWIMSEG split seed is the first one from 42 whose train/val/test image shares are within
+# SPLIT_TOLERANCE of SPLIT_FRACTIONS and whose every split holds a mask with < 20 % and one with
+# > 80 % cloud pixels (rule fixed before any model is trained; uses no model output).
+SPLIT_TOLERANCE = 0.05
 
 SOURCES: dict[str, dict[str, Any]] = {
     "ccsn": {
@@ -259,6 +267,126 @@ def index_swimseg(root: Path) -> pd.DataFrame:
     if not rows:
         raise FileNotFoundError(f"no image/mask pairs under {root}")
     return pd.DataFrame(rows)
+
+
+def index_swimseg_folders(root: Path = SWIMSEG_DIR) -> pd.DataFrame:
+    """Pair SWIMSEG images and masks in the repack layout ``<f>/<id>.png`` + ``<f>_labels/<id>.png``.
+
+    The capture date/time come from ``metadata.csv``. The repack's folder is kept only as
+    ``source_folder`` for reference; it is not used as a split.
+
+    Args:
+        root: Directory with the train/val/test (+ ``_labels``) folders and ``metadata.csv``.
+
+    Returns:
+        Table with ``id``, ``dataset``, ``path``, ``mask_path`` (relative to ``SKY_DIR``),
+        ``source_folder``, ``date``, ``time``, ``capture`` and ``cloud_fraction`` (share of white
+        = cloud mask pixels; white = cloud, checked on train: Spearman 0.73 with red/blue, and the
+        repack's class_dict.csv, which says black = cloud, is wrong).
+    """
+    meta = pd.read_csv(root / "metadata.csv", dtype=str).set_index("Number")
+    rows = []
+    for folder in SWIMSEG_FOLDERS:
+        for p in sorted((root / folder).glob("*.png")):
+            mp = root / f"{folder}_labels" / p.name
+            if not mp.exists():
+                raise FileNotFoundError(f"mask missing for {p}")
+            date, time_ = meta.loc[p.stem, "Date"], meta.loc[p.stem, "Time"]
+            rows.append(
+                {
+                    "id": p.stem,
+                    "dataset": "swimseg",
+                    "path": _rel(p),
+                    "mask_path": _rel(mp),
+                    "source_folder": folder,
+                    "date": date,
+                    "time": time_,
+                    "capture": f"{date}_{time_}",
+                    "cloud_fraction": cloud_fraction(mp),
+                }
+            )
+    if len(rows) != len(meta):
+        raise ValueError(f"{len(rows)} image/mask pairs but {len(meta)} metadata rows")
+    return pd.DataFrame(rows)
+
+
+def union_groups(*keys: np.ndarray) -> np.ndarray:
+    """Group ids where rows sharing ANY key value (transitively) end up in one group.
+
+    Args:
+        *keys: Arrays of equal length (e.g. capture day, near-duplicate group).
+
+    Returns:
+        Group id per row (the index of the group's root row).
+    """
+    n = len(keys[0])
+    parent = list(range(n))
+
+    def find(i: int) -> int:
+        """Union-find root of ``i`` with path halving."""
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for key in keys:
+        first: dict[Any, int] = {}
+        for i, k in enumerate(key):
+            if k in first:
+                a, b = find(first[k]), find(i)
+                if a != b:
+                    parent[b] = a
+            else:
+                first[k] = i
+    return np.array([find(i) for i in range(n)])
+
+
+def split_ok(table: pd.DataFrame, tolerance: float = SPLIT_TOLERANCE) -> bool:
+    """Whether a SWIMSEG split meets the declared size/coverage rule (see ``SPLIT_TOLERANCE``).
+
+    Args:
+        table: Rows with ``split`` and ``cloud_fraction``.
+        tolerance: Largest allowed gap between a split's image share and its target share.
+
+    Returns:
+        True when every share is within ``tolerance`` and every split has a mask with < 0.2 and
+        one with > 0.8 cloud pixels.
+    """
+    share = table["split"].value_counts(normalize=True)
+    for name, target in zip(("train", "val", "test"), SPLIT_FRACTIONS):
+        if abs(share.get(name, 0.0) - target) > tolerance:
+            return False
+        w = table.loc[table["split"] == name, "cloud_fraction"]
+        if not ((w < 0.2).any() and (w > 0.8).any()):
+            return False
+    return True
+
+
+def build_swimseg_split(df: pd.DataFrame, first_seed: int = SEED, tries: int = 500) -> pd.DataFrame:
+    """Split SWIMSEG by capture DAY (+ near-duplicates) with the first seed passing ``split_ok``.
+
+    Patches taken the same day show the same clouds minutes apart (e.g. 16:52 and 16:54), so a
+    whole day always stays in one split. No model output is used.
+
+    Args:
+        df: Output of ``index_swimseg_folders``.
+        first_seed: First seed tried.
+        tries: Number of seeds tried before giving up.
+
+    Returns:
+        Copy with ``dup_group``, ``group`` (day + duplicates), ``split`` and ``split_seed``.
+    """
+    out = df.copy()
+    thumbs = np.stack([thumbnail(resolve(p)) for p in out["path"]])
+    out["dup_group"] = duplicate_groups(thumbs)
+    out["group"] = union_groups(out["date"].to_numpy(), out["dup_group"].to_numpy())
+    strata = pd.Series("all", index=out.index)
+    for seed in range(first_seed, first_seed + tries):
+        out["split"] = make_splits(out, strata, out["group"].to_numpy(), seed=seed)
+        if split_ok(out):
+            out["split_seed"] = seed
+            return out
+    raise RuntimeError(f"no seed in {first_seed}..{first_seed + tries - 1} passes split_ok")
 
 
 def resolve(path: str) -> Path:
@@ -583,7 +711,25 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Day 13: sky-image datasets")
     parser.add_argument("--download", action="store_true", help="fetch CCSN and SWIMCAT-ext")
     parser.add_argument("--index", action="store_true", help="index + split available datasets")
+    parser.add_argument(
+        "--index-swimseg",
+        action="store_true",
+        help="index + split SWIMSEG only (does not rewrite the CCSN / SWIMCAT-ext splits)",
+    )
     args = parser.parse_args(argv)
+
+    if args.index_swimseg:
+        SPLIT_DIR.mkdir(parents=True, exist_ok=True)
+        t = build_swimseg_split(index_swimseg_folders())
+        t.to_csv(SPLIT_DIR / "swimseg_split.csv", index=False)
+        seed = int(t["split_seed"].iat[0])
+        print(f"swimseg: {len(t)} images, {t['date'].nunique()} days, split seed {seed}")
+        print(
+            t.groupby("split").agg(
+                images=("id", "size"), days=("date", "nunique"), groups=("group", "nunique")
+            )
+        )
+        print(f"groups crossing splits: {int((t.groupby('group')['split'].nunique() > 1).sum())}")
 
     if args.download:
         for name in SOURCES:
