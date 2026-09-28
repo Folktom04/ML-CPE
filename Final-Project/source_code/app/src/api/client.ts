@@ -1,10 +1,16 @@
 /**
- * Minimal client for the UV Guard API (day 18: POST /predict, GET /forecast).
+ * Minimal client for the UV Guard API (day 18: POST /predict, GET /forecast; day 19: /users).
  */
 
 import { API_URL, REQUEST_TIMEOUT_MS } from '@/config';
 
-import type { ForecastResponse, PredictRequest, PredictResponse } from './types';
+import type {
+  ForecastResponse,
+  PredictRequest,
+  PredictResponse,
+  UserResponse,
+  UserSettingsBody,
+} from './types';
 
 /**
  * Error with a Thai message that can be shown to the user as-is, plus debug details:
@@ -31,6 +37,12 @@ export function messageForStatus(status: number): string {
       return 'ดึงข้อมูลสภาพอากาศจาก Open-Meteo ไม่ได้ ลองใหม่อีกครั้ง';
     case 503:
       return 'ข้อมูลสภาพอากาศของชั่วโมงนี้ยังไม่มา ลองใหม่ภายหลัง';
+    case 400:
+      return 'รหัสอุปกรณ์ไม่ถูกต้อง';
+    case 403:
+      return 'อุปกรณ์นี้ไม่มีสิทธิ์แก้ข้อมูลผู้ใช้นี้';
+    case 404:
+      return 'ไม่พบข้อมูลผู้ใช้บนเซิร์ฟเวอร์';
     case 422:
       return 'ข้อมูลตำแหน่งหรือประเภทผิวไม่ถูกต้อง';
     default:
@@ -94,6 +106,7 @@ async function request(
       detail: `HTTP ${res.status}${detail ? `: ${detail}` : ''}`,
     });
   }
+  if (res.status === 204) return null;
   return res.json();
 }
 
@@ -137,4 +150,57 @@ export async function fetchForecast(
     });
   }
   return data;
+}
+
+const JSON_HEADERS = { 'Content-Type': 'application/json' };
+
+/**
+ * Register this phone (idempotent per device id). The device id is sent only in the
+ * X-Device-Id header and never shown on screen.
+ */
+export async function createUser(
+  deviceId: string,
+  body: UserSettingsBody & { skin_type: string },
+  { baseUrl = API_URL, ...opts }: FetchOptions = {},
+): Promise<UserResponse> {
+  return (await request(
+    `${baseUrl}/users`,
+    {
+      method: 'POST',
+      headers: { ...JSON_HEADERS, 'X-Device-Id': deviceId },
+      body: JSON.stringify(body),
+    },
+    opts,
+  )) as UserResponse;
+}
+
+/** Change some settings of the user (only the owner's device id is accepted). */
+export async function updateUserSettings(
+  userId: number,
+  deviceId: string,
+  body: UserSettingsBody,
+  { baseUrl = API_URL, ...opts }: FetchOptions = {},
+): Promise<UserResponse> {
+  return (await request(
+    `${baseUrl}/users/${userId}/settings`,
+    {
+      method: 'PUT',
+      headers: { ...JSON_HEADERS, 'X-Device-Id': deviceId },
+      body: JSON.stringify(body),
+    },
+    opts,
+  )) as UserResponse;
+}
+
+/** Delete the user and all of their data on the server (204). */
+export async function deleteUser(
+  userId: number,
+  deviceId: string,
+  { baseUrl = API_URL, ...opts }: FetchOptions = {},
+): Promise<void> {
+  await request(
+    `${baseUrl}/users/${userId}`,
+    { method: 'DELETE', headers: { 'X-Device-Id': deviceId } },
+    opts,
+  );
 }

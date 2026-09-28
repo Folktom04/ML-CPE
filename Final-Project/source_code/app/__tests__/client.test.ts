@@ -1,4 +1,12 @@
-import { ApiError, fetchForecast, fetchPredict, messageForStatus } from '@/api/client';
+import {
+  ApiError,
+  createUser,
+  deleteUser,
+  fetchForecast,
+  fetchPredict,
+  messageForStatus,
+  updateUserSettings,
+} from '@/api/client';
 
 import { sampleHours, samplePredict } from './fixtures';
 
@@ -96,4 +104,56 @@ it('forecast errors carry the URL and the API detail', async () => {
   expect(err).toBeInstanceOf(ApiError);
   expect(err.url).toBe('http://api.test/forecast?lat=14.02&lon=100.52&hours=36');
   expect(err.detail).toBe('HTTP 502: Open-Meteo unavailable: ConnectionError');
+});
+
+describe('/users', () => {
+  const DEV = '11111111-2222-4333-8444-555555555555';
+  const USER = { id: 5, skin_type: 'III', alert_threshold: 8, safe_threshold: 6 };
+
+  it('POST /users sends the device id only in the X-Device-Id header', async () => {
+    const f = fakeFetch(201, USER);
+    const u = await createUser(DEV, { skin_type: 'III', alert_threshold: 8 }, {
+      baseUrl: 'http://api.test',
+      fetchImpl: f,
+    });
+    expect(u.id).toBe(5);
+    const [url, init] = f.mock.calls[0];
+    expect(url).toBe('http://api.test/users');
+    expect(init.method).toBe('POST');
+    expect(init.headers['X-Device-Id']).toBe(DEV);
+    expect(init.body).not.toContain(DEV);
+  });
+
+  it('PUT /users/{id}/settings and DELETE /users/{id} (204, no body)', async () => {
+    const put = fakeFetch(200, USER);
+    await updateUserSettings(5, DEV, { alert_threshold: 11 }, {
+      baseUrl: 'http://api.test',
+      fetchImpl: put,
+    });
+    expect(put.mock.calls[0][0]).toBe('http://api.test/users/5/settings');
+    expect(put.mock.calls[0][1]).toMatchObject({ method: 'PUT' });
+    expect(JSON.parse(put.mock.calls[0][1].body)).toEqual({ alert_threshold: 11 });
+
+    const json = jest.fn();
+    const del = jest.fn().mockResolvedValue({ ok: true, status: 204, json });
+    await expect(
+      deleteUser(5, DEV, { baseUrl: 'http://api.test', fetchImpl: del }),
+    ).resolves.toBeUndefined();
+    expect(del.mock.calls[0][0]).toBe('http://api.test/users/5');
+    expect(del.mock.calls[0][1]).toMatchObject({ method: 'DELETE', headers: { 'X-Device-Id': DEV } });
+    expect(json).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [403, 'อุปกรณ์นี้ไม่มีสิทธิ์แก้ข้อมูลผู้ใช้นี้'],
+    [404, 'ไม่พบข้อมูลผู้ใช้บนเซิร์ฟเวอร์'],
+  ])('maps HTTP %p to a Thai message', async (status, message) => {
+    const f = fakeFetch(status, { detail: 'x' });
+    const err = await deleteUser(5, DEV, { baseUrl: 'http://api.test', fetchImpl: f }).catch(
+      (e) => e,
+    );
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err.status).toBe(status);
+    expect(err.message).toBe(message);
+  });
 });

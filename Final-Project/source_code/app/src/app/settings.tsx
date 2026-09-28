@@ -1,0 +1,299 @@
+import { useRouter } from 'expo-router';
+import { useState, type ReactNode } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+
+import { describeError } from '@/api/client';
+import { Card, colors, Note } from '@/components/Card';
+import { useSettings } from '@/lib/SettingsContext';
+import {
+  ALERT_THRESHOLDS,
+  BURN_MINUTE_OPTIONS,
+  safeThresholdFor,
+  type AlertThreshold,
+  type BurnMinutes,
+} from '@/lib/settings';
+import { SKIN_DESCRIPTION_TH } from '@/lib/skinQuiz';
+import { WHO_LEVELS, levelIndex } from '@/lib/uv';
+
+function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+  return (
+    <View style={styles.row}>
+      <View style={styles.rowText}>
+        <Text style={styles.label}>{label}</Text>
+        {hint ? <Text style={styles.hint}>{hint}</Text> : null}
+      </View>
+      {children}
+    </View>
+  );
+}
+
+function Segments<T extends number>({
+  values,
+  value,
+  onChange,
+  format,
+  testID,
+}: {
+  values: readonly T[];
+  value: T;
+  onChange: (v: T) => void;
+  format: (v: T) => string;
+  testID: string;
+}) {
+  return (
+    <View style={styles.segments}>
+      {values.map((v) => {
+        const on = v === value;
+        return (
+          <Pressable
+            key={v}
+            onPress={() => onChange(v)}
+            style={[styles.segment, on && styles.segmentOn]}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: on }}
+            testID={`${testID}-${v}`}>
+            <Text style={[styles.segmentText, on && styles.segmentTextOn]}>{format(v)}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/** Settings: skin type, alert toggles and thresholds, and deleting my data. */
+export default function SettingsScreen() {
+  const router = useRouter();
+  const { settings: s, ready, sync, update, deleteMyData } = useSettings();
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleted, setDeleted] = useState(false);
+
+  if (!ready) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  const onDelete = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteMyData();
+      setConfirming(false);
+      setDeleted(true);
+    } catch (err) {
+      setDeleteError(
+        `ลบข้อมูลบนเซิร์ฟเวอร์ไม่สำเร็จ ข้อมูลในเครื่องยังอยู่ ลองใหม่อีกครั้ง (${describeError(err)})`,
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const safe = safeThresholdFor(s.alertThreshold);
+
+  return (
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <Card title="ประเภทผิว">
+        <Text style={styles.value} testID="settings-skin">
+          {s.skinType ? `ประเภท ${s.skinType}` : 'ยังไม่ได้ระบุ (ใช้ประเภท III ชั่วคราว)'}
+        </Text>
+        {s.skinType ? <Text style={styles.hint}>{SKIN_DESCRIPTION_TH[s.skinType]}</Text> : null}
+        <Pressable
+          style={styles.buttonOutline}
+          onPress={() => router.push('/quiz')}
+          accessibilityRole="button"
+          testID="open-quiz">
+          <Text style={styles.buttonOutlineText}>
+            {s.skinType ? 'ทำแบบสอบถามใหม่' : 'ทำแบบสอบถามประเภทผิว'}
+          </Text>
+        </Pressable>
+      </Card>
+
+      <Card title="แจ้งเตือนเมื่อ UV สูง">
+        <Row label="เปิดการแจ้งเตือน" hint="ส่งจากเซิร์ฟเวอร์ ต้องยินยอมให้ส่งข้อมูล (ด้านล่าง)">
+          <Switch
+            value={s.notifyEnabled}
+            onValueChange={(v) => update({ notifyEnabled: v })}
+            accessibilityLabel="เปิดการแจ้งเตือนเมื่อ UV สูง"
+            testID="notify-switch"
+          />
+        </Row>
+        <Text style={styles.label}>เตือนเมื่อ UV ถึงระดับ</Text>
+        <Segments
+          values={ALERT_THRESHOLDS}
+          value={s.alertThreshold}
+          onChange={(v: AlertThreshold) => update({ alertThreshold: v })}
+          format={(v) => `${WHO_LEVELS[levelIndex(v)]} (${v}+)`}
+          testID="threshold"
+        />
+        <Text style={styles.hint} testID="threshold-hint">
+          เตือนเมื่อ UVI ตั้งแต่ {s.alertThreshold} ขึ้นไป และแจ้งว่า &quot;ปลอดภัยแล้ว&quot; เมื่อต่ำกว่า{' '}
+          {safe} · เตือนประเภทเดียวกันไม่เกิน 1 ครั้งใน 3 ชม. และไม่เตือนหลังพระอาทิตย์ตก
+        </Text>
+        <Text style={styles.label}>เตือนก่อนผิวไหม้</Text>
+        <Segments
+          values={BURN_MINUTE_OPTIONS}
+          value={s.alertBurnMinutes}
+          onChange={(v: BurnMinutes) => update({ alertBurnMinutes: v })}
+          format={(v) => `${v} นาที`}
+          testID="burn"
+        />
+      </Card>
+
+      <Card title="แจ้งเตือนในเครื่อง">
+        <Row label="สรุป UV ทุกเช้า 07:00">
+          <Switch
+            value={s.dailySummary}
+            onValueChange={(v) => update({ dailySummary: v })}
+            accessibilityLabel="สรุป UV ทุกเช้า"
+            testID="daily-switch"
+          />
+        </Row>
+        <Row label="เตือนทาครีมกันแดดซ้ำทุก 2 ชม.">
+          <Switch
+            value={s.reapplyReminder}
+            onValueChange={(v) => update({ reapplyReminder: v })}
+            accessibilityLabel="เตือนทาครีมกันแดดซ้ำ"
+            testID="reapply-switch"
+          />
+        </Row>
+        <Text style={styles.hint}>ตั้งค่าไว้ได้ก่อน การแจ้งเตือนจริงจะเริ่มทำงานในเวอร์ชันถัดไป</Text>
+      </Card>
+
+      <Card title="ตำแหน่ง">
+        <Text style={styles.hint}>
+          ตอนนี้ใช้ปทุมธานีเป็นตำแหน่งเริ่มต้น การใช้ GPS และการเลือกจังหวัดเองจะมาในเวอร์ชันถัดไป
+        </Text>
+      </Card>
+
+      <Card title="ส่งข้อมูลไปเซิร์ฟเวอร์">
+        <Row
+          label="ยินยอมให้ส่งประเภทผิวและการตั้งค่าการแจ้งเตือน"
+          hint="ใช้เพื่อคำนวณเวลาก่อนผิวไหม้และส่งการแจ้งเตือนเท่านั้น ไม่มีชื่อ อีเมล หรือรูปภาพ ปิดได้ทุกเมื่อ และเมื่อปิด ระบบจะลบข้อมูลของคุณบนเซิร์ฟเวอร์">
+          <Switch
+            value={s.serverConsent}
+            onValueChange={(v) => update({ serverConsent: v })}
+            accessibilityLabel="ยินยอมให้ส่งข้อมูลไปเซิร์ฟเวอร์"
+            testID="consent-switch"
+          />
+        </Row>
+        {!s.skinType && s.serverConsent ? (
+          <Text style={styles.hint}>จะส่งเมื่อระบุประเภทผิวแล้ว</Text>
+        ) : null}
+      </Card>
+
+      <Text style={styles.sync} testID="sync-state">
+        {sync.kind === 'syncing' && 'กำลังบันทึกไปยังเซิร์ฟเวอร์…'}
+        {sync.kind === 'ok' && 'บันทึกในเครื่องและบนเซิร์ฟเวอร์แล้ว'}
+        {sync.kind === 'error' && `บันทึกในเครื่องแล้ว แต่ยังไม่ได้ซิงก์กับเซิร์ฟเวอร์: ${sync.message}`}
+        {sync.kind === 'idle' &&
+          (s.serverConsent
+            ? 'การตั้งค่าบันทึกในเครื่องทันทีที่เปลี่ยน'
+            : 'การตั้งค่าเก็บในเครื่องเท่านั้น (ยังไม่ได้ยินยอมให้ส่งไปเซิร์ฟเวอร์)')}
+      </Text>
+
+      <Card title="ข้อมูลของฉัน">
+        <Text style={styles.hint}>
+          ถ้ายินยอม เซิร์ฟเวอร์จะเก็บเฉพาะรหัสอุปกรณ์แบบสุ่ม ประเภทผิว และการตั้งค่าการแจ้งเตือน ไม่มีชื่อ
+          อีเมล หรือรูปภาพ
+        </Text>
+        {deleted ? (
+          <Note testID="deleted-note">ลบข้อมูลทั้งหมดแล้ว ทั้งบนเซิร์ฟเวอร์และในเครื่อง</Note>
+        ) : null}
+        {!confirming ? (
+          <Pressable
+            style={styles.danger}
+            onPress={() => {
+              setDeleted(false);
+              setConfirming(true);
+            }}
+            accessibilityRole="button"
+            testID="delete-start">
+            <Text style={styles.dangerText}>ลบข้อมูลของฉัน</Text>
+          </Pressable>
+        ) : (
+          <View style={styles.confirm} testID="delete-confirm">
+            <Text style={styles.label}>ยืนยันการลบข้อมูล?</Text>
+            <Text style={styles.hint}>
+              จะลบบัญชีผู้ใช้และข้อมูลที่ผูกไว้ทั้งหมดบนเซิร์ฟเวอร์ (การตั้งค่า ประวัติค่า UV
+              ประวัติการแจ้งเตือน) และล้างการตั้งค่าในเครื่อง ย้อนกลับไม่ได้
+            </Text>
+            {deleteError ? (
+              <Text style={styles.error} testID="delete-error">
+                {deleteError}
+              </Text>
+            ) : null}
+            <View style={styles.confirmButtons}>
+              <Pressable
+                style={styles.danger}
+                onPress={onDelete}
+                disabled={deleting}
+                accessibilityRole="button"
+                testID="delete-confirm-yes">
+                <Text style={styles.dangerText}>{deleting ? 'กำลังลบ…' : 'ยืนยันลบ'}</Text>
+              </Pressable>
+              <Pressable
+                style={styles.buttonOutline}
+                onPress={() => {
+                  setConfirming(false);
+                  setDeleteError(null);
+                }}
+                disabled={deleting}
+                accessibilityRole="button"
+                testID="delete-cancel">
+                <Text style={styles.buttonOutlineText}>ยกเลิก</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+      </Card>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
+  content: { padding: 16, gap: 12, maxWidth: 640, width: '100%', alignSelf: 'center' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  rowText: { flex: 1, gap: 2 },
+  label: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  value: { color: colors.text, fontSize: 18, fontWeight: '700' },
+  hint: { color: colors.muted, fontSize: 13 },
+  segments: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  segment: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  segmentOn: { backgroundColor: colors.text, borderColor: colors.text },
+  segmentText: { color: colors.text, fontWeight: '600' },
+  segmentTextOn: { color: '#FFFFFF' },
+  sync: { color: colors.muted, fontSize: 12, textAlign: 'center' },
+  buttonOutline: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: colors.text,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  buttonOutlineText: { color: colors.text, fontWeight: '600' },
+  danger: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#B42318',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  dangerText: { color: '#FFFFFF', fontWeight: '600' },
+  confirm: { gap: 8 },
+  confirmButtons: { flexDirection: 'row', gap: 8 },
+  error: { color: '#B42318', fontSize: 13 },
+});
