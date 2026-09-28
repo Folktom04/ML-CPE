@@ -40,6 +40,15 @@
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "UV Guard ใช้ตำแหน่งเพื่อดึงสภาพอากาศและคำนวณค่า UV ของพื้นที่คุณ ปัดพิกัดเหลือประมาณ 1 กม. และไม่เก็บพิกัดไว้",
+          "isAndroidBackgroundLocationEnabled": false,
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
       ]
     ],
     "experiments": {

@@ -79,5 +79,6 @@ it('maps the server fields to the API names (no local-only fields, no device id)
     notify_enabled: true,
     alert_threshold: 8,
     alert_burn_minutes: 30,
+    province: null,
   });
 });

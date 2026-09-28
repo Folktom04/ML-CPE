@@ -62,7 +62,7 @@ from src.train_cmf import DOCS_DIR
 
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
 DEFAULT_CORS_ORIGINS = ["http://localhost:8081", "http://127.0.0.1:8081"]  # npx expo start --web
-OUTSIDE_NOTE = "ตำแหน่งอยู่นอกประเทศไทย โมเดลฝึกด้วยข้อมูลของปทุมธานีเท่านั้น ค่าอาจคลาดเคลื่อนมาก"
+OUTSIDE_THAILAND = "รองรับเฉพาะพื้นที่ประเทศไทย"  # 422 detail (day 21)
 log = logging.getLogger("uvguard.api")
 
 
@@ -199,6 +199,12 @@ async def _unexpected(request: Request, exc: Exception) -> JSONResponse:
     return _error(500, "internal error")
 
 
+def _require_thailand(lat: float, lon: float) -> None:
+    """422 ``OUTSIDE_THAILAND`` outside the Thailand box, before any Open-Meteo request."""
+    if not inf.in_thailand(lat, lon):
+        raise HTTPException(422, OUTSIDE_THAILAND)
+
+
 def _live_predictions(lat: float, lon: float):
     """Fetch Open-Meteo, build features and predict every hour."""
     try:
@@ -248,6 +254,7 @@ def predict(req: PredictRequest) -> PredictResponse:
     ``alert_uvi = max(q90 after CQR, point UVI)``, so a warning is never below the value shown.
     If the current hour is missing from the live data the answer is 503 (never another hour).
     """
+    _require_thailand(req.lat, req.lon)
     pred = _live_predictions(req.lat, req.lon)
     now = inf.utc_now()
     try:
@@ -283,7 +290,7 @@ def predict(req: PredictRequest) -> PredictResponse:
         alert_level=r["alert_level"],
         interval_adjusted=bool(row.interval_adjusted),
         data_imputed=bool(row.data_imputed),
-        note=None if inf.in_thailand(req.lat, req.lon) else OUTSIDE_NOTE,
+        note=inf.training_area_note(req.lat, req.lon),
         disclaimer=DISCLAIMER,
     )
 
@@ -295,13 +302,14 @@ def forecast(
     hours: int = Query(24, ge=1, le=36),
 ) -> ForecastResponse:
     """Hourly UVI/UVA/UVB forecast (same XGBoost on Open-Meteo forecast features)."""
+    _require_thailand(lat, lon)
     pred = _live_predictions(lat, lon)
     i = inf.current_index(pred, inf.utc_now(), strict=False)
     return ForecastResponse(
         lat=lat,
         lon=lon,
         hours=[_hour(x) for x in pred.iloc[i : i + hours].itertuples()],
-        note=None if inf.in_thailand(lat, lon) else OUTSIDE_NOTE,
+        note=inf.training_area_note(lat, lon),
     )
 
 

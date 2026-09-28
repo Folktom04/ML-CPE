@@ -4,9 +4,12 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, Vie
 
 import { describeError } from '@/api/client';
 import { Card, colors, Note } from '@/components/Card';
+import { requestLocationPermission } from '@/lib/location';
 import { useSettings } from '@/lib/SettingsContext';
 import {
   ALERT_THRESHOLDS,
+  CONSENT_HINT_TH,
+  CONSENT_LABEL_TH,
   BURN_MINUTE_OPTIONS,
   safeThresholdFor,
   type AlertThreshold,
@@ -68,6 +71,7 @@ export default function SettingsScreen() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleted, setDeleted] = useState(false);
+  const [gpsDenied, setGpsDenied] = useState(false);
 
   if (!ready) {
     return (
@@ -115,8 +119,8 @@ export default function SettingsScreen() {
 
       <Card title="ส่งข้อมูลไปเซิร์ฟเวอร์">
         <Row
-          label="ยินยอมให้ส่งประเภทผิวและการตั้งค่าการแจ้งเตือน"
-          hint="ใช้เพื่อคำนวณเวลาก่อนผิวไหม้และส่งการแจ้งเตือนเท่านั้น ไม่มีชื่อ อีเมล หรือรูปภาพ ปิดได้ทุกเมื่อ และเมื่อปิด ระบบจะลบข้อมูลของคุณบนเซิร์ฟเวอร์">
+          label={CONSENT_LABEL_TH}
+          hint={CONSENT_HINT_TH}>
           <Switch
             value={s.serverConsent}
             onValueChange={(v) => update({ serverConsent: v })}
@@ -192,8 +196,43 @@ export default function SettingsScreen() {
       </Card>
 
       <Card title="ตำแหน่ง">
+        <Text style={styles.value} testID="settings-location">
+          {s.locationMode === 'gps'
+            ? 'ตำแหน่งปัจจุบัน (GPS) · จังหวัดดูได้ที่หน้าหลัก'
+            : s.locationMode === 'province' && s.province
+              ? `จ.${s.province} (เลือกเอง)`
+              : 'ปทุมธานี (ตำแหน่งเริ่มต้น)'}
+        </Text>
+        {gpsDenied ? (
+          <Note testID="settings-gps-denied">
+            ไม่ได้รับสิทธิ์ตำแหน่ง เปิดสิทธิ์ได้ในการตั้งค่าของเครื่อง หรือเลือกจังหวัดแทน
+          </Note>
+        ) : null}
+        <View style={styles.segments}>
+          {s.locationMode !== 'gps' ? (
+            <Pressable
+              style={styles.buttonOutline}
+              onPress={async () => {
+                const ok = await requestLocationPermission();
+                setGpsDenied(!ok);
+                if (ok) await update({ locationMode: 'gps' });
+              }}
+              accessibilityRole="button"
+              testID="settings-use-gps">
+              <Text style={styles.buttonOutlineText}>ใช้ GPS</Text>
+            </Pressable>
+          ) : null}
+          <Pressable
+            style={styles.buttonOutline}
+            onPress={() => router.push('/province')}
+            accessibilityRole="button"
+            testID="settings-pick-province">
+            <Text style={styles.buttonOutlineText}>เลือกจังหวัด</Text>
+          </Pressable>
+        </View>
         <Text style={styles.hint}>
-          ตอนนี้ใช้ปทุมธานีเป็นตำแหน่งเริ่มต้น การใช้ GPS และการเลือกจังหวัดเองจะมาในเวอร์ชันถัดไป
+          โมเดลฝึกและทดสอบด้วยข้อมูลของปทุมธานีเท่านั้น ถ้าอยู่ห่างเกิน 50 กม.
+          ความแม่นยำยังไม่ได้ประเมิน · รองรับเฉพาะพื้นที่ประเทศไทย
         </Text>
       </Card>
 

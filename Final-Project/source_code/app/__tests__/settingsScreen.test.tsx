@@ -78,6 +78,7 @@ it('shows the stored settings and moves "safe again" with the alert level', asyn
     notify_enabled: true,
     alert_threshold: 11,
     alert_burn_minutes: 30,
+    province: null,
   });
   expect(storage.stored()).toMatchObject({ alertThreshold: 11, userId: 7 });
   await fireEvent.press(screen.getByTestId("threshold-6"));
@@ -114,6 +115,7 @@ it("registers when consent is given, with a new device id, and stores the user i
     notify_enabled: true,
     alert_threshold: 8,
     alert_burn_minutes: 60,
+    province: null,
   });
   expect(storage.stored()).toMatchObject({
     deviceId: DEVICE,
@@ -290,4 +292,40 @@ it('the server alert switch is disabled and marked inactive until consent is giv
   await waitFor(() => expect(screen.getByTestId('notify-switch').props.disabled).toBe(false));
   expect(screen.getByTestId('notify-switch').props.value).toBe(true);
   expect(screen.queryByTestId('notify-inactive')).toBeNull();
+});
+
+describe('location card and consent text (day 21)', () => {
+  const Location = jest.requireMock('expo-location');
+
+  it('consent says the province is sent, never GPS coordinates', async () => {
+    await open(new MemoryStorage({ skinType: 'III' }));
+    expect(screen.getByText('ยินยอมให้ส่งประเภทผิว จังหวัด และการตั้งค่าการแจ้งเตือน')).toBeTruthy();
+    expect(screen.getByText(/ส่งแค่ชื่อจังหวัด ไม่ส่งพิกัด GPS/)).toBeTruthy();
+  });
+
+  it('with consent the province is synced; switching to GPS asks for permission', async () => {
+    const storage = new MemoryStorage({
+      skinType: 'III',
+      userId: 7,
+      deviceId: DEVICE,
+      serverConsent: true,
+      locationMode: 'province',
+      province: 'ขอนแก่น',
+    });
+    mockUpdate.mockResolvedValue(user(7));
+    await open(storage);
+    expect(screen.getByTestId('settings-location')).toHaveTextContent('จ.ขอนแก่น (เลือกเอง)');
+    await fireEvent.press(screen.getByTestId('threshold-11'));
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
+    expect(mockUpdate.mock.calls[0][2]).toMatchObject({ province: 'ขอนแก่น' });
+
+    Location.requestForegroundPermissionsAsync.mockResolvedValueOnce({ status: 'denied' });
+    await fireEvent.press(screen.getByTestId('settings-use-gps'));
+    expect(await screen.findByTestId('settings-gps-denied')).toBeTruthy();
+    expect(storage.stored()?.locationMode).toBe('province');
+    await fireEvent.press(screen.getByTestId('settings-use-gps'));
+    await waitFor(() => expect(storage.stored()?.locationMode).toBe('gps'));
+    expect(screen.queryByTestId('settings-gps-denied')).toBeNull();
+    expect(screen.getByTestId('settings-location')).toHaveTextContent(/^ตำแหน่งปัจจุบัน \(GPS\)/);
+  });
 });

@@ -61,6 +61,8 @@ export type UserSettingsBody = {
   notify_enabled?: boolean;
   alert_threshold?: number;
   alert_burn_minutes?: number;
+  /** Thai province name only (never GPS coordinates); sent only with consent. */
+  province?: string | null;
 };
 
 /** Response of POST /users and PUT /users/{id}/settings (never contains the device id). */

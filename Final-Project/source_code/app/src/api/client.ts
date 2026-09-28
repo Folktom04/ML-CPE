@@ -108,7 +108,9 @@ async function request(
   }
   if (!res.ok) {
     const detail = await errorDetail(res);
-    throw new ApiError(messageForStatus(res.status), {
+    // A Thai `detail` from the API (e.g. 422 "รองรับเฉพาะพื้นที่ประเทศไทย") is shown as is.
+    const thai = /[\u0E00-\u0E7F]/.test(detail) && !detail.startsWith('[') ? detail : null;
+    throw new ApiError(thai ?? messageForStatus(res.status), {
       status: res.status,
       url,
       detail: `HTTP ${res.status}${detail ? `: ${detail}` : ''}`,

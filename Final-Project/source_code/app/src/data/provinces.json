@@ -1,0 +1,621 @@
+{
+ "source": "Open-Meteo Geocoding API (GeoNames, CC BY 4.0)",
+ "provinces": [
+  {
+   "name_th": "กรุงเทพมหานคร",
+   "name_en": "Bangkok",
+   "lat": 13.75,
+   "lon": 100.5,
+   "geonames_id": 1609350,
+   "feature_code": "PPLC"
+  },
+  {
+   "name_th": "กระบี่",
+   "name_en": "Krabi",
+   "lat": 8.07,
+   "lon": 98.91,
+   "geonames_id": 1152633,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "กาญจนบุรี",
+   "name_en": "Kanchanaburi",
+   "lat": 14.0,
+   "lon": 99.55,
+   "geonames_id": 1153081,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "กาฬสินธุ์",
+   "name_en": "Kalasin",
+   "lat": 16.43,
+   "lon": 103.51,
+   "geonames_id": 1610469,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "กำแพงเพชร",
+   "name_en": "Kamphaeng Phet",
+   "lat": 16.48,
+   "lon": 99.52,
+   "geonames_id": 1153090,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ขอนแก่น",
+   "name_en": "Khon Kaen",
+   "lat": 16.45,
+   "lon": 102.83,
+   "geonames_id": 1609776,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "จันทบุรี",
+   "name_en": "Chanthaburi",
+   "lat": 12.61,
+   "lon": 102.1,
+   "geonames_id": 1611269,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ฉะเชิงเทรา",
+   "name_en": "Chachoengsao",
+   "lat": 13.69,
+   "lon": 101.07,
+   "geonames_id": 1611439,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ชลบุรี",
+   "name_en": "Chon Buri",
+   "lat": 13.36,
+   "lon": 100.98,
+   "geonames_id": 1611110,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ชัยนาท",
+   "name_en": "Chai Nat",
+   "lat": 15.19,
+   "lon": 100.12,
+   "geonames_id": 1611416,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ชัยภูมิ",
+   "name_en": "Chaiyaphum",
+   "lat": 15.81,
+   "lon": 102.03,
+   "geonames_id": 1611407,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ชุมพร",
+   "name_en": "Chumphon",
+   "lat": 10.5,
+   "lon": 99.18,
+   "geonames_id": 1153557,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "เชียงราย",
+   "name_en": "Chiang Rai",
+   "lat": 19.91,
+   "lon": 99.83,
+   "geonames_id": 1153669,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "เชียงใหม่",
+   "name_en": "Chiang Mai",
+   "lat": 18.79,
+   "lon": 98.98,
+   "geonames_id": 1153671,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ตรัง",
+   "name_en": "Trang",
+   "lat": 7.56,
+   "lon": 99.61,
+   "geonames_id": 1150007,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ตราด",
+   "name_en": "Trat",
+   "lat": 12.24,
+   "lon": 102.52,
+   "geonames_id": 1605279,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ตาก",
+   "name_en": "Tak",
+   "lat": 16.87,
+   "lon": 99.13,
+   "geonames_id": 1150490,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "นครนายก",
+   "name_en": "Nakhon Nayok",
+   "lat": 14.2,
+   "lon": 101.21,
+   "geonames_id": 1608539,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "นครปฐม",
+   "name_en": "Nakhon Pathom",
+   "lat": 13.82,
+   "lon": 100.04,
+   "geonames_id": 1608534,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "นครพนม",
+   "name_en": "Nakhon Phanom",
+   "lat": 17.41,
+   "lon": 104.78,
+   "geonames_id": 1608531,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "นครราชสีมา",
+   "name_en": "Nakhon Ratchasima",
+   "lat": 14.97,
+   "lon": 102.1,
+   "geonames_id": 1608529,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "นครศรีธรรมราช",
+   "name_en": "Nakhon Si Thammarat",
+   "lat": 8.43,
+   "lon": 99.97,
+   "geonames_id": 1151933,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "นครสวรรค์",
+   "name_en": "Nakhon Sawan",
+   "lat": 15.7,
+   "lon": 100.14,
+   "geonames_id": 1608527,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "นนทบุรี",
+   "name_en": "Nonthaburi",
+   "lat": 13.86,
+   "lon": 100.51,
+   "geonames_id": 1608133,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "นราธิวาส",
+   "name_en": "Narathiwat",
+   "lat": 6.43,
+   "lon": 101.82,
+   "geonames_id": 1608409,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "น่าน",
+   "name_en": "Nan",
+   "lat": 18.78,
+   "lon": 100.78,
+   "geonames_id": 1608452,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "บึงกาฬ",
+   "name_en": "Bueng Kan",
+   "lat": 18.36,
+   "lon": 103.65,
+   "geonames_id": 1611475,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "บุรีรัมย์",
+   "name_en": "Buri Ram",
+   "lat": 14.99,
+   "lon": 103.1,
+   "geonames_id": 1611453,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ปทุมธานี",
+   "name_en": "Pathum Thani",
+   "lat": 14.01,
+   "lon": 100.53,
+   "geonames_id": 1607983,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ประจวบคีรีขันธ์",
+   "name_en": "Prachuap Khiri Khan",
+   "lat": 11.82,
+   "lon": 99.78,
+   "geonames_id": 1151074,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ปราจีนบุรี",
+   "name_en": "Prachin Buri",
+   "lat": 14.05,
+   "lon": 101.37,
+   "geonames_id": 1607280,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ปัตตานี",
+   "name_en": "Pattani",
+   "lat": 6.87,
+   "lon": 101.25,
+   "geonames_id": 1607978,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "พระนครศรีอยุธยา",
+   "name_en": "Phra Nakhon Si Ayutthaya",
+   "lat": 14.35,
+   "lon": 100.58,
+   "geonames_id": 1607532,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "พะเยา",
+   "name_en": "Phayao",
+   "lat": 19.19,
+   "lon": 99.88,
+   "geonames_id": 1151426,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "พังงา",
+   "name_en": "Phangnga",
+   "lat": 8.45,
+   "lon": 98.53,
+   "geonames_id": 1151464,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "พัทลุง",
+   "name_en": "Phatthalung",
+   "lat": 7.62,
+   "lon": 100.08,
+   "geonames_id": 1607779,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "พิจิตร",
+   "name_en": "Phichit",
+   "lat": 16.44,
+   "lon": 100.35,
+   "geonames_id": 1607725,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "พิษณุโลก",
+   "name_en": "Phitsanulok",
+   "lat": 16.82,
+   "lon": 100.26,
+   "geonames_id": 1607708,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "เพชรบุรี",
+   "name_en": "Phetchaburi",
+   "lat": 13.11,
+   "lon": 99.94,
+   "geonames_id": 1149698,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "เพชรบูรณ์",
+   "name_en": "Phetchabun",
+   "lat": 16.42,
+   "lon": 101.16,
+   "geonames_id": 1607737,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "แพร่",
+   "name_en": "Phrae",
+   "lat": 18.15,
+   "lon": 100.14,
+   "geonames_id": 1607552,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ภูเก็ต",
+   "name_en": "Phuket",
+   "lat": 7.89,
+   "lon": 98.4,
+   "geonames_id": 1151254,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "มหาสารคาม",
+   "name_en": "Maha Sarakham",
+   "lat": 16.18,
+   "lon": 103.3,
+   "geonames_id": 1608900,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "มุกดาหาร",
+   "name_en": "Mukdahan",
+   "lat": 16.55,
+   "lon": 104.72,
+   "geonames_id": 1608597,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "แม่ฮ่องสอน",
+   "name_en": "Mae Hong Son",
+   "lat": 19.3,
+   "lon": 97.97,
+   "geonames_id": 1152222,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ยโสธร",
+   "name_en": "Yasothon",
+   "lat": 15.79,
+   "lon": 104.15,
+   "geonames_id": 1604769,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ยะลา",
+   "name_en": "Yala",
+   "lat": 6.54,
+   "lon": 101.28,
+   "geonames_id": 1604870,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ร้อยเอ็ด",
+   "name_en": "Roi Et",
+   "lat": 16.06,
+   "lon": 103.65,
+   "geonames_id": 1607001,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ระนอง",
+   "name_en": "Ranong",
+   "lat": 9.97,
+   "lon": 98.63,
+   "geonames_id": 1150965,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ระยอง",
+   "name_en": "Rayong",
+   "lat": 12.68,
+   "lon": 101.26,
+   "geonames_id": 1607017,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ราชบุรี",
+   "name_en": "Ratchaburi",
+   "lat": 13.54,
+   "lon": 99.82,
+   "geonames_id": 1150954,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ลพบุรี",
+   "name_en": "Lop Buri",
+   "lat": 14.8,
+   "lon": 100.65,
+   "geonames_id": 1609032,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ลำปาง",
+   "name_en": "Lampang",
+   "lat": 18.29,
+   "lon": 99.49,
+   "geonames_id": 1152473,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ลำพูน",
+   "name_en": "Lamphun",
+   "lat": 18.58,
+   "lon": 99.01,
+   "geonames_id": 1152468,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "เลย",
+   "name_en": "Loei",
+   "lat": 17.49,
+   "lon": 101.73,
+   "geonames_id": 1609071,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "ศรีสะเกษ",
+   "name_en": "Si Sa Ket",
+   "lat": 15.11,
+   "lon": 104.33,
+   "geonames_id": 1606239,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "สกลนคร",
+   "name_en": "Sakon Nakhon",
+   "lat": 17.16,
+   "lon": 104.15,
+   "geonames_id": 1606790,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "สงขลา",
+   "name_en": "Songkhla",
+   "lat": 7.2,
+   "lon": 100.6,
+   "geonames_id": 1606147,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "สตูล",
+   "name_en": "Satun",
+   "lat": 6.62,
+   "lon": 100.07,
+   "geonames_id": 1606376,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "สมุทรปราการ",
+   "name_en": "Samut Prakan",
+   "lat": 13.6,
+   "lon": 100.6,
+   "geonames_id": 1606590,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "สมุทรสงคราม",
+   "name_en": "Samut Songkhram",
+   "lat": 13.41,
+   "lon": 100.0,
+   "geonames_id": 1606586,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "สมุทรสาคร",
+   "name_en": "Samut Sakhon",
+   "lat": 13.55,
+   "lon": 100.27,
+   "geonames_id": 1606588,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "สระแก้ว",
+   "name_en": "Sa Kaeo",
+   "lat": 13.81,
+   "lon": 102.07,
+   "geonames_id": 1606807,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "สระบุรี",
+   "name_en": "Saraburi",
+   "lat": 14.53,
+   "lon": 100.92,
+   "geonames_id": 1606418,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "สิงห์บุรี",
+   "name_en": "Sing Buri",
+   "lat": 14.89,
+   "lon": 100.4,
+   "geonames_id": 1606270,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "สุโขทัย",
+   "name_en": "Sukhothai",
+   "lat": 17.01,
+   "lon": 99.82,
+   "geonames_id": 1150533,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "สุพรรณบุรี",
+   "name_en": "Suphan Buri",
+   "lat": 14.47,
+   "lon": 100.12,
+   "geonames_id": 1606033,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "สุราษฎร์ธานี",
+   "name_en": "Surat Thani",
+   "lat": 9.14,
+   "lon": 99.33,
+   "geonames_id": 1150515,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "สุรินทร์",
+   "name_en": "Surin",
+   "lat": 14.88,
+   "lon": 103.49,
+   "geonames_id": 1606030,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "หนองคาย",
+   "name_en": "Nong Khai",
+   "lat": 17.88,
+   "lon": 102.74,
+   "geonames_id": 1608232,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "หนองบัวลำภู",
+   "name_en": "Nong Bua Lam Phu",
+   "lat": 17.2,
+   "lon": 102.44,
+   "geonames_id": 1608269,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "อ่างทอง",
+   "name_en": "Ang Thong",
+   "lat": 14.59,
+   "lon": 100.45,
+   "geonames_id": 1621035,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "อำนาจเจริญ",
+   "name_en": "Amnat Charoen",
+   "lat": 15.86,
+   "lon": 104.63,
+   "geonames_id": 1621060,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "อุดรธานี",
+   "name_en": "Udon Thani",
+   "lat": 17.42,
+   "lon": 102.79,
+   "geonames_id": 1605239,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "อุตรดิตถ์",
+   "name_en": "Uttaradit",
+   "lat": 17.63,
+   "lon": 100.09,
+   "geonames_id": 1605215,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "อุทัยธานี",
+   "name_en": "Uthai Thani",
+   "lat": 15.38,
+   "lon": 100.02,
+   "geonames_id": 1605221,
+   "feature_code": "PPLA"
+  },
+  {
+   "name_th": "อุบลราชธานี",
+   "name_en": "Ubon Ratchathani",
+   "lat": 15.24,
+   "lon": 104.85,
+   "geonames_id": 1605245,
+   "feature_code": "PPLA"
+  }
+ ]
+}

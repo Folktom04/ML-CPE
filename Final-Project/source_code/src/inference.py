@@ -66,6 +66,9 @@ _sleep = time.sleep
 LOCAL_TZ = "Asia/Bangkok"
 SAFE_LEVEL = 0  # WHO level index "ต่ำ" (UVI < 2.5 after rounding)
 THAILAND_BBOX = (5.5, 20.5, 97.3, 105.7)  # lat_min, lat_max, lon_min, lon_max
+TRAINING_SITE = (14.02, 100.52)  # Pathum Thani: the only place trained and tested
+TRAINING_RADIUS_KM = 50.0
+OUTSIDE_TRAINING_NOTE = "ความแม่นยำนอกพื้นที่ปทุมธานียังไม่ได้ประเมิน"
 NIGHT_ZERO = ["om_kt", "om_diffuse_fraction"]
 EDGE_FILL_HOURS = INTERP_LIMIT_HOURS
 INPUT_VARS = [*WEATHER_VARS, *AIR_VARS]
@@ -364,6 +367,41 @@ def next_safe_time(pred: pd.DataFrame, now: datetime) -> str | None:
         return pd.Timestamp(now).tz_convert(LOCAL_TZ).isoformat()
     later = np.nonzero(low[i + 1 :])[0]
     return hour_start_local(pred["time_utc"].iloc[i + 1 + later[0]]) if len(later) else None
+
+
+def distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Great-circle (haversine) distance between two points.
+
+    Args:
+        lat1: Latitude of point 1 (degrees).
+        lon1: Longitude of point 1.
+        lat2: Latitude of point 2.
+        lon2: Longitude of point 2.
+
+    Returns:
+        Distance in km (Earth radius 6371 km).
+    """
+    p1, p2 = np.radians(lat1), np.radians(lat2)
+    dp, dl = p2 - p1, np.radians(lon2 - lon1)
+    a = np.sin(dp / 2) ** 2 + np.cos(p1) * np.cos(p2) * np.sin(dl / 2) ** 2
+    return float(2 * 6371.0 * np.arcsin(np.sqrt(a)))
+
+
+def training_area_note(lat: float, lon: float) -> str | None:
+    """Note for places farther than ``TRAINING_RADIUS_KM`` from Pathum Thani, else None.
+
+    The model was trained and tested at one point only (NASA POWER at Pathum Thani, with that
+    site's ozone climatology), so its accuracy elsewhere has not been measured (day 21).
+
+    Args:
+        lat: Latitude.
+        lon: Longitude.
+
+    Returns:
+        ``OUTSIDE_TRAINING_NOTE`` or None.
+    """
+    far = distance_km(lat, lon, *TRAINING_SITE) > TRAINING_RADIUS_KM
+    return OUTSIDE_TRAINING_NOTE if far else None
 
 
 def in_thailand(lat: float, lon: float) -> bool:
