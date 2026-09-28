@@ -1,6 +1,7 @@
 """Tests for the FastAPI service (real saved models, Open-Meteo mocked)."""
 
 import io
+import json
 import logging
 import os
 import re
@@ -19,7 +20,7 @@ from src import inference as inf
 from src.fetch_data import ROOT
 from src.metrics import WHO_LEVELS, who_level
 from src.risk import DISCLAIMER, burn_minutes
-from src.sky_infer import SWIM_CLASS_TH, has_exif
+from src.sky_infer import SWIM_CLASS_TH, cloud_head_result, has_exif, predict_cloud_fraction
 from tests.test_inference import fake_bundle, synthetic_raw
 
 NOW = datetime(2026, 9, 27, 5, 20, tzinfo=timezone.utc)  # 12:20 in Bangkok
@@ -230,7 +231,10 @@ def test_sky_image_result_and_nothing_stored(client, fmt):
     # the CCSN head (genus / UV cloud group) missed its criteria and is not shown in the app
     assert not {"genus", "cloud_group", "cloud_group_th", "cloud_group_probs"} & set(body)
     assert 0 <= body["cloud_fraction_rb"] <= 1
-    assert set(body["reliability"]) == {"sky_class", "cloud_fraction_rb"}
+    # the SWIMSEG head passed C1/C2 (docs/sky_cloud_test.json), so it is loaded and returned
+    assert set(body["reliability"]) == {"sky_class", "cloud_fraction_rb", "cloud_fraction_cnn"}
+    assert 0 <= body["cloud_fraction_cnn"] <= 1
+    assert "ไม่ใช่ทั้งท้องฟ้า" in body["reliability"]["cloud_fraction_cnn"]
     assert new_project == set(), f"files written: {sorted(new_project)[:5]}"
     assert new_temp == set(), f"image files written to Temp: {sorted(new_temp)[:5]}"
 
@@ -316,3 +320,34 @@ def test_configure_logging_adds_one_info_handler():
     main.configure_logging(logger)
     main.configure_logging(logger)
     assert len(logger.handlers) == 1 and logger.level == logging.INFO
+
+
+def test_cloud_head_loaded_only_when_it_passed(tmp_path):
+    assert cloud_head_result(tmp_path / "missing.json") is None
+    failed = tmp_path / "failed.json"
+    failed.write_text(json.dumps({"ships": False}), encoding="utf-8")
+    assert cloud_head_result(failed) is None
+    passed = tmp_path / "passed.json"
+    passed.write_text(json.dumps({"ships": True, "cnn": {}}), encoding="utf-8")
+    assert cloud_head_result(passed) == {"ships": True, "cnn": {}}
+    real = cloud_head_result()
+    assert real is not None and real["ships"] is True  # the one-time test result in docs/
+    assert all(c["passed"] for c in real["criteria"])
+    b = inf.ModelBundle.load(cloud_ships=False)
+    assert b.sky_cloud is None and "sky_cloud_v1" not in b.files
+
+
+def test_sky_image_without_cloud_head_omits_the_field(client, real_bundle, monkeypatch):
+    monkeypatch.setattr(real_bundle, "sky_cloud", None)
+    monkeypatch.setattr(main.app.state, "sky_reliability", main.sky_reliability(False))
+    body = client.post("/sky-image", files={"file": ("s.png", png_bytes(), "image/png")}).json()
+    assert "cloud_fraction_cnn" not in body
+    assert set(body["reliability"]) == {"sky_class", "cloud_fraction_rb"}
+    assert 0 <= body["cloud_fraction_rb"] <= 1
+
+
+def test_predict_cloud_fraction_in_0_1(real_bundle):
+    for color in ((250, 250, 250), (40, 90, 200)):
+        x = np.asarray(Image.new("RGB", (224, 224), color), dtype=np.float32) / 255.0
+        f = predict_cloud_fraction(x, interpreter=real_bundle.sky_cloud)
+        assert 0.0 <= f <= 1.0

@@ -42,25 +42,45 @@ export function rankedClasses(probs: Record<string, number>): RankedClass[] {
     .map(([name, prob]) => ({ name, nameTh: SKY_CLASS_TH[name] ?? name, prob }));
 }
 
+type CloudParts = {
+  /** Red/blue colour proxy (0-1). */
+  cloudFraction: number;
+  /** SWIMSEG head (0-1), null when the API does not send it. */
+  cloudFractionCnn: number | null;
+};
+
 export type SkyView =
-  | { kind: 'sure'; nameTh: string; confidence: number; cloudFraction: number }
-  | { kind: 'unsure'; top: RankedClass[]; confidence: number; cloudFraction: number };
+  | ({ kind: 'sure'; nameTh: string; confidence: number } & CloudParts)
+  | ({ kind: 'unsure'; top: RankedClass[]; confidence: number } & CloudParts);
+
+/** Thai labels of the `reliability` keys. */
+export const RELIABILITY_LABEL_TH: Record<string, string> = {
+  sky_class: 'สภาพท้องฟ้า',
+  cloud_fraction_rb: 'สัดส่วนเมฆ (สี)',
+  cloud_fraction_cnn: 'สัดส่วนเมฆ (โมเดล)',
+};
+
+export const CLOUD_IN_IMAGE_TH = 'สัดส่วนเมฆในภาพ ไม่ใช่ทั้งท้องฟ้า';
 
 /** What the result card shows: the class, or "ไม่แน่ใจ" + top 2 when confidence < 0.5. */
 export function skyView(r: SkyImageResponse): SkyView {
+  const cloud: CloudParts = {
+    cloudFraction: r.cloud_fraction_rb,
+    cloudFractionCnn: typeof r.cloud_fraction_cnn === 'number' ? r.cloud_fraction_cnn : null,
+  };
   if (r.sky_confidence < LOW_CONFIDENCE) {
     return {
       kind: 'unsure',
       top: rankedClasses(r.sky_class_probs).slice(0, 2),
       confidence: r.sky_confidence,
-      cloudFraction: r.cloud_fraction_rb,
+      ...cloud,
     };
   }
   return {
     kind: 'sure',
     nameTh: r.sky_class_th,
     confidence: r.sky_confidence,
-    cloudFraction: r.cloud_fraction_rb,
+    ...cloud,
   };
 }
 

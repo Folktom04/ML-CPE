@@ -90,6 +90,13 @@ class SkyImageResponse(Disclaimed):
     sky_confidence: float = Field(ge=0, le=1, description="softmax probability of sky_class")
     sky_class_probs: dict[str, float]
     cloud_fraction_rb: float
+    cloud_fraction_cnn: float | None = Field(
+        default=None,
+        ge=0,
+        le=1,
+        description="cloud fraction IN THE IMAGE from the SWIMSEG head (not the whole sky); "
+        "sent only while that head's test result passes its criteria",
+    )
     reliability: dict[str, str]
     note: str
     stored: bool = False

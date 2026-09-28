@@ -87,6 +87,11 @@ export type SkyImageResponse = {
   sky_class_probs: Record<string, number>;
   /** Red/blue-ratio cloud fraction proxy (0-1), not a model output. */
   cloud_fraction_rb: number;
+  /**
+   * Cloud fraction IN THE IMAGE (0-1) from the SWIMSEG head, not the whole sky. Present only
+   * while that head's one-time test passed its criteria (C1/C2).
+   */
+  cloud_fraction_cnn?: number;
   reliability: Record<string, string>;
   note: string;
   stored: boolean;

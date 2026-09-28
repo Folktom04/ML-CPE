@@ -10,7 +10,7 @@ GPS / เวลา / Open-Meteo (weather + air quality) → Feature Engineering 
 - **Ground truth:** NASA POWER hourly (community RE) `ALLSKY_SFC_UV_INDEX`, `ALLSKY_SFC_UVA`, `ALLSKY_SFC_UVB` ซึ่งเป็นข้อมูลดาวเทียม/แบบจำลอง **ไม่ได้ใช้เครื่องวัด UV จริง** NASA POWER ใช้เป็น target ตอนฝึกเท่านั้น ไม่ใช่ feature
 - **Features:** Open-Meteo Historical Forecast API + Air Quality API (ตอนฝึก) และ Forecast API ตัวแปรชุดเดียวกัน (ตอนใช้งาน) รวมกับเรขาคณิตดวงอาทิตย์และเวลา
 - **พยากรณ์ 6–24 ชม.:** ใช้ XGBoost ตัวเดียวกัน LSTM ทดลองแล้วไม่ผ่านเกณฑ์ (วัน 12)
-- **CNN ภาพท้องฟ้า:** โมดูลแยก **ไม่ได้ stack กับ XGBoost และไม่ปรับค่า UVI** แอปแสดงเฉพาะชนิดท้องฟ้าจาก SWIMCAT-ext (6 คลาส + ความมั่นใจ) และสัดส่วนเมฆจากอัตราส่วนสีแดง/น้ำเงิน เป็นข้อมูลประกอบเท่านั้น ฝึกจาก dataset สาธารณะ CCSN และ SWIMCAT-ext (ภาพที่เก็บจากอินเทอร์เน็ต) ส่วน SWIMSEG เป็น future work
+- **CNN ภาพท้องฟ้า:** โมดูลแยก **ไม่ได้ stack กับ XGBoost และไม่ปรับค่า UVI** แอปแสดงเฉพาะชนิดท้องฟ้าจาก SWIMCAT-ext (6 คลาส + ความมั่นใจ) สัดส่วนเมฆจากอัตราส่วนสีแดง/น้ำเงิน และสัดส่วนเมฆในภาพจาก head ที่ฝึกบน SWIMSEG (ผ่านเกณฑ์: MAE 0.084 เทียบกับวิธีสี 0.145 บนชุดทดสอบ) เป็นข้อมูลประกอบเท่านั้น ฝึกจาก dataset สาธารณะ CCSN, SWIMCAT-ext (ภาพที่เก็บจากอินเทอร์เน็ต) และ SWIMSEG (Dev, Lee & Winkler 2017, CC BY-NC 4.0, ภาพจากกล้องถ่ายท้องฟ้าที่สิงคโปร์) ค่าสัดส่วนเมฆเป็นของ**ภาพที่ถ่าย ไม่ใช่ทั้งท้องฟ้า**
 - ระบบใช้ **สมาร์ทโฟนเครื่องเดียว** ไม่มีเซนเซอร์หรือโมดูลเสริม
 
 ผลลัพธ์ทุกตัวเลขพร้อมไฟล์ต้นทางอยู่ใน [docs/results_summary.md](docs/results_summary.md)

@@ -133,3 +133,29 @@ it('asks to aim higher when the camera looks at the horizon', async () => {
   await act(async () => accel.__emit({ x: 0, y: 0, z: 1 })); // jest-expo is iOS: z=+1 → screen down
   expect(screen.queryByTestId('camera-aim-hint')).toBeNull();
 });
+
+it('shows the model cloud fraction (in the image, not the whole sky) only when the API sends it', async () => {
+  mockUpload.mockResolvedValue({
+    ...sampleSky(0.87),
+    cloud_fraction_cnn: 0.55,
+    reliability: { ...sampleSky().reliability, cloud_fraction_cnn: 'ผ่านเกณฑ์ ...' },
+  });
+  await renderWithSettings(<CameraScreen />, acked());
+  await act(async () => fireEvent.press(await screen.findByTestId('camera-shoot')));
+  expect(await screen.findByTestId('sky-cloud-cnn')).toHaveTextContent('55%', { exact: false });
+  expect(screen.getByTestId('sky-cloud-cnn-note')).toHaveTextContent(
+    'สัดส่วนเมฆในภาพ ไม่ใช่ทั้งท้องฟ้า',
+  );
+  expect(screen.getByText(/สัดส่วนเมฆ \(โมเดล\): ผ่านเกณฑ์/)).toBeTruthy();
+  expect(screen.getByTestId('sky-supporting')).toHaveTextContent('ไม่เปลี่ยนค่า UVI', {
+    exact: false,
+  });
+});
+
+it('without cloud_fraction_cnn only the red/blue line is shown', async () => {
+  mockUpload.mockResolvedValue(sampleSky(0.87));
+  await renderWithSettings(<CameraScreen />, acked());
+  await act(async () => fireEvent.press(await screen.findByTestId('camera-shoot')));
+  expect(await screen.findByTestId('sky-cloud')).toBeTruthy();
+  expect(screen.queryByTestId('sky-cloud-cnn')).toBeNull();
+});

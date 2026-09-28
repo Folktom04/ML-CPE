@@ -47,7 +47,7 @@ from src.fetch_data import AIR_VARS, OPENMETEO_AIR_URL, WEATHER_VARS, parse_open
 from src.metrics import who_level
 from src.preprocess import INTERP_LIMIT_HOURS, clean, mask_implausible
 from src.quantile import QCOLS, apply_cqr, predict_quantiles
-from src.sky_infer import TFLITE_PATH, make_interpreter
+from src.sky_infer import CLOUD_TFLITE_PATH, TFLITE_PATH, cloud_head_result, make_interpreter
 from src.train_multi import predict_multi
 
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
@@ -231,6 +231,7 @@ class ModelBundle:
     cqr_q: float
     sky: Any = None
     sky_backend: str = "none"
+    sky_cloud: Any = None  # SWIMSEG head; None unless it passed C1/C2 (``cloud_head_result``)
     files: dict[str, str] = field(default_factory=dict)
 
     @classmethod
@@ -240,6 +241,8 @@ class ModelBundle:
         quant_path: Path = QUANT_PATH,
         cqr_path: Path = CQR_Q_PATH,
         tflite_path: Path = TFLITE_PATH,
+        cloud_tflite_path: Path = CLOUD_TFLITE_PATH,
+        cloud_ships: bool | None = None,
     ) -> ModelBundle:
         """Load the day-10 final models, the frozen CQR correction and the sky TFLite model.
 
@@ -248,18 +251,27 @@ class ModelBundle:
             quant_path: Quantile XGBoost (``.ubj.gz``).
             cqr_path: JSON with the frozen CQR ``q``.
             tflite_path: Sky-CNN TFLite model.
+            cloud_tflite_path: SWIMSEG cloud-fraction TFLite model.
+            cloud_ships: Whether to load it; None = only if ``cloud_head_result()`` says it
+                passed C1 and C2.
 
         Returns:
             Loaded bundle.
         """
         sky, backend = make_interpreter(tflite_path)
+        if cloud_ships is None:
+            cloud_ships = cloud_head_result() is not None
+        sky_cloud = make_interpreter(cloud_tflite_path)[0] if cloud_ships else None
+        paths = [multi_path, quant_path, cqr_path, tflite_path]
+        paths += [cloud_tflite_path] if cloud_ships else []
         return cls(
             multi=joblib.load(multi_path),
             quant=load_xgb_gz(quant_path),
             cqr_q=float(json.loads(Path(cqr_path).read_text(encoding="utf-8"))["q"]),
             sky=sky,
             sky_backend=backend,
-            files={p.stem: p.name for p in (multi_path, quant_path, cqr_path, tflite_path)},
+            sky_cloud=sky_cloud,
+            files={p.stem: p.name for p in paths},
         )
 
 

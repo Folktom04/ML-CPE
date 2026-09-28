@@ -130,6 +130,17 @@ UV-group recall: high thin 0.707, mid 0.366, low thick 0.864, cumulus 0.413. CCS
 
 **Cross-dataset duplicate check (day 15)** `[docs/sky_cnn_crosscheck.json]`, `[docs/sky_crossdataset_duplicates.csv]`: the day-13 rule flagged 11 CCSN × SWIMCAT-ext pairs (1 CCSN-train / SWIMCAT-test, 7 train/train, 2 train/val, 1 val/val); by visual inspection none is the same photo (low-texture look-alikes). Supplementary score without the 1 flagged test image: SWIMCAT-ext 0.975 per image, 0.967 per group (310 images / 180 groups); CCSN unchanged. Re-scoring the saved models reproduces every headline number of `sky_cnn_test.json` (checkpoint).
 
+**Cloud-fraction head from SWIMSEG (after day 20)** `[docs/sky_cloud_test.json]`, `[source_code/models/sky_cloud_v1_metrics.json]`, `[docs/figures/sky_cloud_test_scatter.png]`. Criteria pre-registered in `d755ede` (before training and before the test split was read). Frozen MobileNetV3Small backbone of the day-14 seed-43 model + Dropout + Dense(1, sigmoid), MAE loss, 3 seeds; target = share of cloud pixels in the SWIMSEG mask (white = cloud). Split by capture day because the 1,013 patches come from 33 captures on 17 days: train 735 / 9 days, val 137 / 3 days, test 141 / 5 days, no group across splits `[docs/sky_splits/swimseg_split.csv]`. Validation MAE 0.0795 / 0.0783 / 0.0776 (red/blue 0.150); exported seed 44 (TFLite max diff vs Keras on val 0.0077).
+
+**Test, once — 2 / 2 pass**
+
+| # | Criterion | Value | Pass |
+|---|---|---|---|
+| C1 | mean test MAE of 3 seeds ≤ 0.10 | 0.084 ± 0.0015 | ✅ |
+| C2 | red/blue MAE (0.145) − CNN MAE ≥ 0.03 | +0.061 | ✅ |
+
+RMSE 0.103 (red/blue 0.188); CNN bias −0.012. Per test day, CNN MAE 0.041–0.097 vs red/blue 0.117–0.209 (CNN better on all 5 days). The CNN shrinks towards the middle (over-predicts clear patches, under-predicts overcast ones; it rarely predicts below ~15 %), and the test split has only 7 patches below 20 % and 9 above 80 % cloud. → `/sky-image` returns `cloud_fraction_cnn` and the app shows it as "cloud fraction in the image, not the whole sky" (supporting information; never changes the UVI).
+
 ## 6. Limitations
 
 1. **No ground UV instrument.** Targets are NASA POWER (satellite/model, coarse grid); validation is OMI (1° pixel, one overpass per day) and TEMIS (clear-sky only at Bangkok).
@@ -138,7 +149,7 @@ UV-group recall: high thin 0.707, mid 0.366, low thick 0.864, cumulus 0.413. CCS
 4. **Alerts:** Extreme hours are few (23 in 2025, 53 in 2024), so Extreme recall is uncertain (Wilson 95 % CI 0.63–0.93, `[source_code/notebooks/10_test_2025.ipynb]` section 4); Extreme precision is low (0.17), and ≥ Very high alerts have a 16 % false alarm rate.
 5. **Dev 2024 numbers after day 8 are optimistic** (tuning folds lie in 2024); test 2025 is the unbiased estimate.
 6. **Forecast covariates:** the Open-Meteo training data come from the **Historical Forecast API** (`src/fetch_data.py`), i.e. the first hours of each forecast run stitched together — not a real 24-h-ahead forecast. Real forecasting may do worse than measured, for both the LSTM and XGBoost. (Corrected on day 16; earlier text said "archive analysis". Day 16 also checked that the Forecast API used by the app returns identical values to the Historical Forecast API for the same hours: 16/16 variables, 72/72 h.)
-7. **Sky CNN:** CCSN genus / UV-group classification misses its criteria (K1–K3); 263 CCSN images with conflicting labels removed; SWIMCAT-ext images were "collected from Internet" (Mendeley description) with many near-duplicates, and its classes are partly separable by colour alone (baseline 0.82); cloud fraction is only a red/blue proxy (no SWIMSEG masks); no evaluation on phone photos from Pathum Thani; epoch history of seeds 42/43 lost in a sleep crash; SWIMCAT-ext used for education only.
+7. **Sky CNN:** CCSN genus / UV-group classification misses its criteria (K1–K3); 263 CCSN images with conflicting labels removed; SWIMCAT-ext images were "collected from Internet" (Mendeley description) with many near-duplicates, and its classes are partly separable by colour alone (baseline 0.82); the SWIMSEG cloud-fraction head (passed C1/C2) was trained and tested on patches from one whole-sky imager in Singapore (NTU, 1.34 N; fisheye images undistorted to a ~62° normal-lens view), only 17 capture days (test = 5 days), shrinks towards mid values and gives the cloud fraction IN THE IMAGE, not of the whole sky — a phone photo shows only part of the sky and differs in colour, white balance, exposure and objects (buildings, trees); no evaluation on phone photos from Pathum Thani; epoch history of seeds 42/43 lost in a sleep crash; SWIMCAT-ext used for education only.
 8. **One-year test:** 2025 is a single year at a single location (Pathum Thani, 14.02 N 100.52 E).
 
 This is an estimate for education and warning, not a medical diagnosis.
