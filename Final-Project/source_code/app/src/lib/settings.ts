@@ -36,6 +36,8 @@ export type Settings = {
   serverConsent: boolean;
   deviceId: string | null;
   userId: number | null;
+  /** The user acknowledged the sky-photo privacy notice (day 20; phone only, never sent). */
+  skyNoticeAck: boolean;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -48,6 +50,7 @@ export const DEFAULT_SETTINGS: Settings = {
   serverConsent: false,
   deviceId: null,
   userId: null,
+  skyNoticeAck: false,
 };
 
 /** "Safe again" UVI for an alert UVI. */
@@ -110,6 +113,7 @@ export function parseSettings(raw: string | null): Settings {
       d.deviceId,
     ),
     userId: pick(obj.userId, (v) => Number.isInteger(v) && (v as number) > 0, d.userId),
+    skyNoticeAck: pick(obj.skyNoticeAck, (v) => v === true, d.skyNoticeAck),
   };
 }
 

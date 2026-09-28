@@ -146,6 +146,23 @@ export default function HomeScreen() {
         </>
       ) : null}
 
+      <Card title="ดูเพิ่มเติม (ข้อมูลประกอบ ไม่เปลี่ยนค่า UVI)">
+        <View style={styles.row}>
+          <Link href="/camera" asChild>
+            <Pressable style={styles.button} accessibilityRole="button" testID="open-camera">
+              <Text style={styles.buttonText}>ถ่ายท้องฟ้า</Text>
+            </Pressable>
+          </Link>
+          {Platform.OS === 'android' ? (
+            <Link href="/light" asChild>
+              <Pressable style={styles.button} accessibilityRole="button" testID="open-light">
+                <Text style={styles.buttonText}>วัดแสง</Text>
+              </Pressable>
+            </Link>
+          ) : null}
+        </View>
+      </Card>
+
       <Text style={styles.disclaimer} testID="disclaimer">
         {state.kind === 'ok' ? state.data.disclaimer : DISCLAIMER_TH}
       </Text>
@@ -173,5 +190,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   buttonText: { color: '#FFFFFF', fontWeight: '600' },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   disclaimer: { color: colors.muted, fontSize: 12, textAlign: 'center', paddingVertical: 8 },
 });

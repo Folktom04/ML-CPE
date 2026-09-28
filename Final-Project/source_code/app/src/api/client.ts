@@ -1,6 +1,9 @@
 /**
- * Minimal client for the UV Guard API (day 18: POST /predict, GET /forecast; day 19: /users).
+ * Minimal client for the UV Guard API (day 18: POST /predict, GET /forecast; day 19: /users;
+ * day 20: POST /sky-image).
  */
+
+import { Platform } from 'react-native';
 
 import { API_URL, REQUEST_TIMEOUT_MS } from '@/config';
 
@@ -8,6 +11,7 @@ import type {
   ForecastResponse,
   PredictRequest,
   PredictResponse,
+  SkyImageResponse,
   UserResponse,
   UserSettingsBody,
 } from './types';
@@ -43,6 +47,10 @@ export function messageForStatus(status: number): string {
       return 'อุปกรณ์นี้ไม่มีสิทธิ์แก้ข้อมูลผู้ใช้นี้';
     case 404:
       return 'ไม่พบข้อมูลผู้ใช้บนเซิร์ฟเวอร์';
+    case 413:
+      return 'รูปใหญ่เกิน 10 MB';
+    case 415:
+      return 'ไฟล์นี้ไม่ใช่รูปภาพ หรือเปิดอ่านไม่ได้';
     case 422:
       return 'ข้อมูลตำแหน่งหรือประเภทผิวไม่ถูกต้อง';
     default:
@@ -203,4 +211,49 @@ export async function deleteUser(
     { method: 'DELETE', headers: { 'X-Device-Id': deviceId } },
     opts,
   );
+}
+
+/**
+ * Multipart body with the photo at `uri` (a JPEG already re-encoded without EXIF). On a phone
+ * React Native streams the local file from {uri, name, type}; on the web the uri is a blob:/data:
+ * URL, so the bytes are read into a Blob first.
+ */
+export async function skyImageForm(
+  uri: string,
+  {
+    platform = Platform.OS,
+    fetchImpl = fetch,
+  }: { platform?: string; fetchImpl?: typeof fetch } = {},
+): Promise<FormData> {
+  const form = new FormData();
+  if (platform === 'web') {
+    const blob = await (await fetchImpl(uri)).blob();
+    form.append('file', blob, 'sky.jpg');
+  } else {
+    form.append('file', { uri, name: 'sky.jpg', type: 'image/jpeg' } as unknown as Blob);
+  }
+  return form;
+}
+
+/** Sky class + cloud fraction of a sky photo (processed in memory by the API, never stored). */
+export async function uploadSkyImage(
+  uri: string,
+  { baseUrl = API_URL, platform, ...opts }: FetchOptions & { platform?: string } = {},
+): Promise<SkyImageResponse> {
+  const url = `${baseUrl}/sky-image`;
+  const body = await skyImageForm(uri, { platform, fetchImpl: opts.fetchImpl });
+  // no Content-Type header: fetch sets multipart/form-data with the boundary itself
+  const data = (await request(url, { method: 'POST', body }, opts)) as SkyImageResponse;
+  if (
+    typeof data?.sky_class_th !== 'string' ||
+    typeof data?.sky_confidence !== 'number' ||
+    typeof data?.cloud_fraction_rb !== 'number' ||
+    typeof data?.sky_class_probs !== 'object'
+  ) {
+    throw new ApiError('รูปแบบข้อมูลจากเซิร์ฟเวอร์ไม่ถูกต้อง', {
+      url,
+      detail: 'response has no sky_class_th / sky_confidence / cloud_fraction_rb',
+    });
+  }
+  return data;
 }

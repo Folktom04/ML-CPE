@@ -101,3 +101,18 @@ it('asks for the quiz while no skin type is stored (type III meanwhile)', async 
   );
   expect(mockFetch).toHaveBeenCalledWith({ lat: 14.02, lon: 100.52, skin_type: 'III' });
 });
+
+it('links to the sky camera everywhere and to the light meter only on Android', async () => {
+  const { Platform } = jest.requireActual('react-native');
+  mockFetch.mockResolvedValue(samplePredict());
+  const view = await renderWithSettings(<HomeScreen />);
+  await screen.findByTestId('uvi-value', {}, { timeout: 5000 });
+  expect(screen.getByTestId('open-camera')).toBeTruthy();
+  expect(screen.queryByTestId('open-light')).toBeNull(); // jest-expo runs as iOS
+  await view.unmount();
+  jest.replaceProperty(Platform, 'OS', 'android');
+  await renderWithSettings(<HomeScreen />);
+  await screen.findByTestId('uvi-value', {}, { timeout: 5000 });
+  expect(screen.getByTestId('open-light')).toBeTruthy();
+  jest.restoreAllMocks();
+});

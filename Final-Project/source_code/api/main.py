@@ -57,13 +57,30 @@ from src.fetch_data import ROOT
 from src.metrics import WHO_LEVELS, who_level
 from src.risk import DISCLAIMER, assess
 from src.sky_data import load_image
-from src.sky_infer import predict_sky
+from src.sky_infer import has_exif, predict_sky
 from src.train_cmf import DOCS_DIR
 
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
 DEFAULT_CORS_ORIGINS = ["http://localhost:8081", "http://127.0.0.1:8081"]  # npx expo start --web
 OUTSIDE_NOTE = "ตำแหน่งอยู่นอกประเทศไทย โมเดลฝึกด้วยข้อมูลของปทุมธานีเท่านั้น ค่าอาจคลาดเคลื่อนมาก"
 log = logging.getLogger("uvguard.api")
+
+
+def configure_logging(logger: logging.Logger = log) -> None:
+    """Print the API's own INFO lines under uvicorn, which only configures its own loggers.
+
+    Only ``uvguard.api`` is enabled; its lines hold user ids, counts and booleans, never a device
+    id, coordinates or EXIF values. Idempotent (one handler at most).
+
+    Args:
+        logger: Logger to configure (the API logger by default).
+    """
+    if logger.handlers:
+        return
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(levelname)s:     %(name)s: %(message)s"))
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
 
 
 def sky_reliability() -> dict[str, str]:
@@ -90,6 +107,7 @@ def sky_reliability() -> dict[str, str]:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Load models and create the DB engine once at start-up (tests may pre-set both)."""
+    configure_logging()
     if getattr(app.state, "bundle", None) is None:
         app.state.bundle = inf.ModelBundle.load()
     if getattr(app.state, "db_engine", None) is None:
@@ -284,6 +302,8 @@ async def sky_image(file: UploadFile = File(...)) -> SkyImageResponse:
     data = await file.read(MAX_IMAGE_BYTES + 1)
     if len(data) > MAX_IMAGE_BYTES:
         raise HTTPException(413, "image larger than 10 MB")
+    # privacy check of the app's re-encoding: log only whether EXIF is present, never its values
+    log.info("sky-image upload has_exif=%s", has_exif(data))
     try:
         Image.open(io.BytesIO(data)).verify()
         img = load_image(io.BytesIO(data))
