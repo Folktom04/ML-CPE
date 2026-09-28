@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { Link, Redirect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,8 +17,9 @@ import { Card, colors, Note } from '@/components/Card';
 import { HourlyChart } from '@/components/HourlyChart';
 import { UVCard } from '@/components/UVCard';
 import { UvaUvbCard } from '@/components/UvaUvbCard';
-import { API_URL, DEFAULT_LOCATION, DEFAULT_SKIN_TYPE, DISCLAIMER_TH } from '@/config';
+import { API_URL, DEFAULT_SKIN_TYPE, DISCLAIMER_TH } from '@/config';
 import { chartHours } from '@/lib/chart';
+import { resolvePlace, type Place } from '@/lib/location';
 import { useSettings } from '@/lib/SettingsContext';
 import { nextDaytimePeak, type DayPeak } from '@/lib/uv';
 
@@ -28,24 +29,24 @@ type State =
   | { kind: 'error'; message: string; url: string; detail: string };
 
 /** At night: peak of the next daytime period from /forecast (null if unavailable). */
-async function loadNextPeak(data: PredictResponse): Promise<DayPeak | null> {
+async function loadNextPeak(data: PredictResponse, place: Place): Promise<DayPeak | null> {
   try {
-    const fc = await fetchForecast(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lon, 36);
+    const fc = await fetchForecast(place.lat, place.lon, 36);
     return nextDaytimePeak(fc.hours, data.time);
   } catch {
     return null; // the forecast is extra information; the page still works without it
   }
 }
 
-/** Fetch /predict for the default location and the user's skin type, as a screen state. */
-async function loadState(skinType: string): Promise<State> {
+/** Fetch /predict for a place and the user's skin type, as a screen state. */
+async function loadState(skinType: string, place: Place): Promise<State> {
   try {
-    const data = await fetchPredict({
-      lat: DEFAULT_LOCATION.lat,
-      lon: DEFAULT_LOCATION.lon,
-      skin_type: skinType,
-    });
-    return { kind: 'ok', data, nextPeak: data.is_daylight ? null : await loadNextPeak(data) };
+    const data = await fetchPredict({ lat: place.lat, lon: place.lon, skin_type: skinType });
+    return {
+      kind: 'ok',
+      data,
+      nextPeak: data.is_daylight ? null : await loadNextPeak(data, place),
+    };
   } catch (err) {
     if (err instanceof ApiError) {
       return {
@@ -64,46 +65,68 @@ async function loadState(skinType: string): Promise<State> {
   }
 }
 
-/** Home: UV now (level colour, range, q90 warning), hourly chart, UVA/UVB and burn time. */
+/**
+ * Home: UV now (level colour, range, q90 warning), hourly chart, UVA/UVB and burn time, for the
+ * GPS position or the chosen province. Sends first-time users to the onboarding flow.
+ */
 export default function HomeScreen() {
-  const { settings, ready } = useSettings();
+  const { settings, ready, update } = useSettings();
   const skinType = settings.skinType ?? DEFAULT_SKIN_TYPE;
-  // A result belongs to one skin type; after a change the screen shows "loading" until the
-  // answer for the new type arrives.
-  const [loaded, setLoaded] = useState<{ skin: string; state: State } | null>(null);
+  // A result belongs to one skin type and one location choice; after a change the screen shows
+  // "loading" until the new answer arrives. In GPS mode the key does not include the province,
+  // because the province is updated from the GPS fix itself.
+  const key = `${skinType}|${
+    settings.locationMode === 'gps' ? 'gps' : `${settings.locationMode}|${settings.province}`
+  }`;
+  const [loaded, setLoaded] = useState<{ key: string; place: Place; state: State } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const state: State = loaded?.skin === skinType ? loaded.state : { kind: 'loading' };
+  const state: State = loaded?.key === key ? loaded.state : { kind: 'loading' };
+  const place = loaded?.key === key ? loaded.place : null;
+
+  const load = useCallback(async () => {
+    const p = await resolvePlace(settings);
+    const s = await loadState(skinType, p);
+    // keep the nearest province of a GPS fix (sent to the server only with consent)
+    if (p.source === 'gps' && p.province !== settings.province) {
+      await update({ province: p.province });
+    }
+    return { key, place: p, state: s };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `key` covers the settings used
+  }, [key]);
 
   useEffect(() => {
-    if (!ready) return; // wait for the stored skin type
+    if (!ready || !settings.onboarded) return; // wait for the stored settings
     let active = true;
-    loadState(skinType).then((s) => {
-      if (active) setLoaded({ skin: skinType, state: s });
+    load().then((r) => {
+      if (active) setLoaded(r);
     });
     return () => {
       active = false;
     };
-  }, [ready, skinType]);
+  }, [ready, settings.onboarded, load]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setLoaded({ skin: skinType, state: await loadState(skinType) });
+    setLoaded(await load());
     setRefreshing(false);
-  }, [skinType]);
+  }, [load]);
 
   const retry = useCallback(async () => {
     setLoaded(null);
-    setLoaded({ skin: skinType, state: await loadState(skinType) });
-  }, [skinType]);
+    setLoaded(await load());
+  }, [load]);
+
+  if (ready && !settings.onboarded) return <Redirect href="/onboarding" />;
 
   return (
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-      <Text style={styles.place}>
-        {DEFAULT_LOCATION.name} (ตำแหน่งเริ่มต้น) · ผิวประเภท {skinType}
+      <Text style={styles.place} testID="place-label">
+        {place ? place.label : 'กำลังหาตำแหน่ง…'} · ผิวประเภท {skinType}
       </Text>
+      {place?.notice ? <Note testID="place-notice">{place.notice}</Note> : null}
       {ready && settings.skinType === null ? (
         <Link href="/quiz" asChild>
           <Pressable accessibilityRole="button" testID="quiz-prompt">

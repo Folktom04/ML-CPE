@@ -19,6 +19,12 @@ Images are stored in `dataset/sky/` (git-ignored); split tables are in `docs/sky
 - Dev, S., Lee, Y. H., Winkler, S. (2017). *Color-based segmentation of sky/cloud images from ground-based cameras.* IEEE J-STARS 10(1), 231–242 (SWIMSEG).
 - Also received from the creators on 29 Sep 2026 and **not used**: `shwimseg.zip`, `swinseg.zip`, `swinyseg.zip` (in `dataset/sky/raw/`, git-ignored).
 
+### Province coordinates (day 21, app only)
+- `source_code/app/src/data/provinces.json`: the capital of each of Thailand's 77 provinces (name in Thai and English, lat/lon rounded to 0.01°, GeoNames id and feature code). It is used when the user denies location permission and picks a province instead.
+- **Source:** Open-Meteo Geocoding API (`geocoding-api.open-meteo.com/v1/search`), whose data come from **GeoNames** (geonames.org), licensed **CC BY 4.0**. Attribution: "Contains data from GeoNames (CC BY 4.0), via the Open-Meteo Geocoding API".
+- Built by `source_code/src/provinces.py` (`python -m src.provinces`), with raw responses cached in `dataset/raw/geocoding/` (git-ignored). For each province the result must be a capital (feature code `PPLA`, or `PPLC` for Bangkok) in TH whose `admin1` is that province, otherwise the build stops. Result: 76 `PPLA` + 1 `PPLC`. Tests: `tests/test_provinces.py` (77 unique names and coordinates, all inside the Thailand box, Bangkok ≈ 13.75 N 100.50 E).
+- Not used for training or evaluation.
+
 ## Licence notes
 - CCSN (CC0) and SWIMCAT-ext (CC BY 4.0) allow reuse with attribution. SWIMCAT-ext extends the original SWIMCAT (CC BY-NC 4.0) and its images were collected from the Internet (rights of the original photos are not documented), so we treat it as **non-commercial / educational use only**, as we do SWIMCAT/SWIMSEG. UV Guard is a non-commercial student project.
 

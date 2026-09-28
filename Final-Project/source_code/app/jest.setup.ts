@@ -17,6 +17,7 @@ jest.mock('expo-router', () => {
   };
   return {
     Link: ({ children }: { children: unknown }) => children,
+    Redirect: jest.fn(() => null),
     useRouter: () => router,
   };
 });
@@ -96,3 +97,14 @@ jest.mock('expo-file-system', () => {
   }
   return { File, __deleted: deleted };
 });
+
+// expo-location (day 21): permission granted and a fix in Pathum Thani unless a test overrides it.
+jest.mock('expo-location', () => ({
+  Accuracy: { Balanced: 3 },
+  requestForegroundPermissionsAsync: jest.fn(async () => ({ status: 'granted' })),
+  getForegroundPermissionsAsync: jest.fn(async () => ({ status: 'granted' })),
+  getLastKnownPositionAsync: jest.fn(async () => null),
+  getCurrentPositionAsync: jest.fn(async () => ({
+    coords: { latitude: 14.02083, longitude: 100.52504 },
+  })),
+}));

@@ -363,3 +363,13 @@ def test_fetch_live_worst_case_stays_inside_budget(monkeypatch):
     assert clock.t <= inf.LIVE_BUDGET_S + 1e-9 < 20.0  # app timeout is 20 s
     assert Hanging.calls == 3  # 5 s + 0.5 + 5 s + 1 + 3.5 s (last attempt trimmed)
     inf._cache.clear()
+
+
+def test_distance_and_training_area_note():
+    assert inf.distance_km(14.02, 100.52, 14.02, 100.52) == 0
+    assert inf.distance_km(13.75, 100.50, 14.02, 100.52) == pytest.approx(30.1, abs=0.5)
+    assert inf.distance_km(18.79, 98.98, 14.02, 100.52) == pytest.approx(556, abs=5)
+    assert inf.training_area_note(14.02, 100.52) is None
+    # 0.44 deg of latitude ~ 48.9 km, 0.46 deg ~ 51.1 km
+    assert inf.training_area_note(14.02 + 0.44, 100.52) is None
+    assert inf.training_area_note(14.02 + 0.46, 100.52) == inf.OUTSIDE_TRAINING_NOTE

@@ -184,9 +184,31 @@ def test_errors_carry_disclaimer(client, monkeypatch):
     assert img.status_code == 415 and img.json()["disclaimer"] == DISCLAIMER
 
 
-def test_outside_thailand_note(client):
-    body = client.post("/predict", json={**PAYLOAD, "lat": 35.68, "lon": 139.69}).json()
-    assert body["note"] and "นอกประเทศไทย" in body["note"]
+@pytest.mark.parametrize("lat,lon", [(35.68, 139.69), (1.35, 103.82), (21.03, 105.85)])
+def test_outside_thailand_is_422_in_thai_without_calling_open_meteo(client, monkeypatch, lat, lon):
+    calls = []
+    monkeypatch.setattr(inf, "fetch_live", lambda *a: calls.append(a) or synthetic_raw())
+    r = client.post("/predict", json={**PAYLOAD, "lat": lat, "lon": lon})
+    assert r.status_code == 422
+    assert r.json()["detail"] == "รองรับเฉพาะพื้นที่ประเทศไทย" and r.json()["disclaimer"]
+    fc = client.get("/forecast", params={"lat": lat, "lon": lon, "hours": 6})
+    assert fc.status_code == 422 and fc.json()["detail"] == "รองรับเฉพาะพื้นที่ประเทศไทย"
+    assert calls == []  # rejected before any Open-Meteo request
+
+
+def test_note_only_farther_than_50_km_from_pathum_thani(client):
+    note = "ความแม่นยำนอกพื้นที่ปทุมธานียังไม่ได้ประเมิน"
+    for lat, lon, expected in [
+        (14.02, 100.52, None),  # Pathum Thani
+        (13.75, 100.50, None),  # Bangkok, ~30 km
+        (14.35, 100.58, None),  # Ayutthaya, ~37 km
+        (18.79, 98.98, note),  # Chiang Mai
+        (7.01, 100.47, note),  # Hat Yai
+    ]:
+        body = client.post("/predict", json={**PAYLOAD, "lat": lat, "lon": lon}).json()
+        assert body["note"] == expected, (lat, lon)
+        fc = client.get("/forecast", params={"lat": lat, "lon": lon, "hours": 3}).json()
+        assert fc["note"] == expected
 
 
 @pytest.mark.parametrize("fmt", ["PNG", "JPEG"])

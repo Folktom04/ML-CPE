@@ -157,3 +157,17 @@ describe('/users', () => {
     expect(err.message).toBe(message);
   });
 });
+
+it('shows a Thai detail from the API as the message (422 outside Thailand)', async () => {
+  const f = fakeFetch(422, { detail: 'รองรับเฉพาะพื้นที่ประเทศไทย' });
+  const err = await fetchPredict(
+    { lat: 35.68, lon: 139.69, skin_type: 'III' },
+    { baseUrl: 'http://api.test', fetchImpl: f },
+  ).catch((e) => e);
+  expect(err.status).toBe(422);
+  expect(err.message).toBe('รองรับเฉพาะพื้นที่ประเทศไทย');
+  // a validation error list is not shown raw: the generic Thai message is used
+  const g = fakeFetch(422, { detail: [{ loc: ['body', 'lat'], msg: 'ต้องเป็นตัวเลข' }] });
+  const err2 = await fetchPredict(BODY, { baseUrl: 'http://api.test', fetchImpl: g }).catch((e) => e);
+  expect(err2.message).toBe(messageForStatus(422));
+});

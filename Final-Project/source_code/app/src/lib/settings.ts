@@ -9,6 +9,7 @@
  * `deviceId` is a random UUID that proves ownership of the server record (X-Device-Id).
  */
 
+import { isProvinceName } from '@/lib/provinces';
 import { isSkinType, type SkinType } from '@/lib/skinQuiz';
 
 export const STORAGE_KEY = 'uvguard.settings.v1';
@@ -38,7 +39,21 @@ export type Settings = {
   userId: number | null;
   /** The user acknowledged the sky-photo privacy notice (day 20; phone only, never sent). */
   skyNoticeAck: boolean;
+  /** Where UV is computed for (day 21): GPS, a chosen province, or null = default Pathum Thani. */
+  locationMode: LocationMode | null;
+  /** Thai province name: chosen by hand, or the one nearest to the last GPS fix. */
+  province: string | null;
+  /** First-run flow (welcome, location, skin type, consent) finished. */
+  onboarded: boolean;
 };
+
+export type LocationMode = 'gps' | 'province';
+
+/** Consent text (settings + onboarding): says exactly what is sent, including the province. */
+export const CONSENT_LABEL_TH = 'ยินยอมให้ส่งประเภทผิว จังหวัด และการตั้งค่าการแจ้งเตือน';
+export const CONSENT_HINT_TH =
+  'ใช้เพื่อคำนวณเวลาก่อนผิวไหม้และส่งการแจ้งเตือนเท่านั้น ส่งแค่ชื่อจังหวัด ไม่ส่งพิกัด GPS ' +
+  'ไม่มีชื่อ อีเมล หรือรูปภาพ ปิดได้ทุกเมื่อ และเมื่อปิด ระบบจะลบข้อมูลของคุณบนเซิร์ฟเวอร์';
 
 export const DEFAULT_SETTINGS: Settings = {
   skinType: null,
@@ -51,6 +66,9 @@ export const DEFAULT_SETTINGS: Settings = {
   deviceId: null,
   userId: null,
   skyNoticeAck: false,
+  locationMode: null,
+  province: null,
+  onboarded: false,
 };
 
 /** "Safe again" UVI for an alert UVI. */
@@ -65,6 +83,7 @@ export function serverSettings(s: Settings) {
     notify_enabled: s.notifyEnabled,
     alert_threshold: s.alertThreshold,
     alert_burn_minutes: s.alertBurnMinutes,
+    province: s.province,
   };
 }
 
@@ -114,6 +133,9 @@ export function parseSettings(raw: string | null): Settings {
     ),
     userId: pick(obj.userId, (v) => Number.isInteger(v) && (v as number) > 0, d.userId),
     skyNoticeAck: pick(obj.skyNoticeAck, (v) => v === true, d.skyNoticeAck),
+    locationMode: pick(obj.locationMode, (v) => v === 'gps' || v === 'province', d.locationMode),
+    province: pick(obj.province, isProvinceName, d.province),
+    onboarded: pick(obj.onboarded, (v) => v === true, d.onboarded),
   };
 }
 

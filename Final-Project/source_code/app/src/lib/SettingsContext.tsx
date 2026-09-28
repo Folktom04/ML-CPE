@@ -52,6 +52,7 @@ const SERVER_KEYS: (keyof Settings)[] = [
   'notifyEnabled',
   'alertThreshold',
   'alertBurnMinutes',
+  'province',
 ];
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
