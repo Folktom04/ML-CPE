@@ -141,7 +141,7 @@ export default function HomeScreen() {
       {state.kind === 'ok' ? (
         <>
           <UVCard data={state.data} />
-          <HourlyChart hours={chartHours(state.data)} />
+          <HourlyChart hours={chartHours(state.data)} isDaylight={state.data.is_daylight} />
           <UvaUvbCard data={state.data} nextPeak={state.nextPeak} />
         </>
       ) : null}

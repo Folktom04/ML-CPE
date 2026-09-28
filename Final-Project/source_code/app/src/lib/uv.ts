@@ -10,10 +10,28 @@ export const WHO_LEVELS = ['ต่ำ', 'ปานกลาง', 'สูง', '�
 export const WHO_COLORS = ['#3E9B4F', '#D9A400', '#E36B12', '#D22F3A', '#8A3FC2'] as const;
 const WHO_LOWER_BOUNDS = [0, 3, 6, 8, 11];
 
+/**
+ * UVI rounded the WHO way: nearest integer, x.5 up, negative to 0. The ONE rule for levels,
+ * colours and alert thresholds, same as `round_uvi` in src/metrics.py (7.8 -> 8 -> สูงมาก).
+ */
+export function roundUvi(uvi: number): number {
+  if (!Number.isFinite(uvi)) return 0;
+  return Math.floor(Math.max(uvi, 0) + 0.5);
+}
+
+/** Whether a UVI triggers the high-UV alert (same rounding as the levels; `risk.reaches_alert`). */
+export function reachesAlert(uvi: number, alertThreshold: number): boolean {
+  return roundUvi(uvi) >= alertThreshold;
+}
+
+/** Whether a UVI is low enough for "safe again" (`risk.is_safe_again`). */
+export function isSafeAgain(uvi: number, safeThreshold: number): boolean {
+  return roundUvi(uvi) < safeThreshold;
+}
+
 /** WHO level index 0-4 of a UVI value (same rounding as the API). */
 export function levelIndex(uvi: number): number {
-  if (!Number.isFinite(uvi)) return 0;
-  const rounded = Math.floor(Math.max(uvi, 0) + 0.5);
+  const rounded = roundUvi(uvi);
   let idx = 0;
   WHO_LOWER_BOUNDS.forEach((lo, i) => {
     if (rounded >= lo) idx = i;

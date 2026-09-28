@@ -4,9 +4,12 @@ import {
   formatClock,
   formatHourInterval,
   formatRange,
+  isSafeAgain,
   levelColor,
   levelIndex,
   nextDaytimePeak,
+  reachesAlert,
+  roundUvi,
   textOn,
   WHO_COLORS,
   WHO_LEVELS,
@@ -111,5 +114,33 @@ describe('time formatting keeps the API local time (Asia/Bangkok)', () => {
 
   it('formats a range with one decimal', () => {
     expect(formatRange([4.94, 6.66])).toBe('4.9–6.7');
+  });
+});
+
+// Shared with source_code/tests/test_risk.py: one rounding rule in the API, risk engine,
+// alerts, chart and home card.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const SHARED = require('../../tests/who_rounding_cases.json') as { cases: [number, number][] };
+
+describe('one WHO rounding rule (shared cases with pytest)', () => {
+  it.each(SHARED.cases)('UVI %p -> level %p everywhere', (uvi, level) => {
+    expect(levelIndex(uvi)).toBe(level);
+    expect(levelColor('', uvi)).toBe(WHO_COLORS[level]); // chart / card colour fallback
+    const byThreshold: [number, number][] = [
+      [6, 2],
+      [8, 3],
+      [11, 4],
+    ];
+    for (const [threshold, lvl] of byThreshold) {
+      expect(reachesAlert(uvi, threshold)).toBe(level >= lvl);
+      expect(isSafeAgain(uvi, threshold - 2) && reachesAlert(uvi, threshold)).toBe(false);
+    }
+  });
+
+  it('7.8 is สูงมาก (red) and reaches the default alert of 8', () => {
+    expect(WHO_LEVELS[levelIndex(7.8)]).toBe('สูงมาก');
+    expect(roundUvi(7.8)).toBe(8);
+    expect(reachesAlert(7.8, 8)).toBe(true);
+    expect(reachesAlert(7.49, 8)).toBe(false);
   });
 });

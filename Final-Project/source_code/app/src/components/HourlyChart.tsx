@@ -1,9 +1,17 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { HourUV } from '@/api/types';
 import { Card, colors } from '@/components/Card';
-import { hourTick, LEVEL_GRIDLINES, peakIndex, scaleY, yMax } from '@/lib/chart';
+import {
+  hourTick,
+  initialFocusIndex,
+  LEVEL_GRIDLINES,
+  peakIndex,
+  scaleY,
+  scrollOffsetFor,
+  yMax,
+} from '@/lib/chart';
 import {
   formatClock,
   formatHourInterval,
@@ -21,10 +29,14 @@ const LABEL_H = 16;
 
 /**
  * Hourly UV forecast (now + next 24 h) as columns in the WHO level colours, with the q10–q90
- * range as a thin whisker. Tap a column to read that hour (phones have no hover).
+ * range as a thin whisker. Tap a column to read that hour (phones have no hover); the chosen
+ * hour is marked by a dot under the axis, not a tall background that could read as a value.
+ * At night the chart opens on the next day's peak hour instead of the dark hours.
  */
-export function HourlyChart({ hours }: { hours: HourUV[] }) {
-  const [selected, setSelected] = useState(0);
+export function HourlyChart({ hours, isDaylight }: { hours: HourUV[]; isDaylight: boolean }) {
+  const [selected, setSelected] = useState(() => initialFocusIndex(hours, isDaylight));
+  const scroll = useRef<ScrollView>(null);
+  const scrolled = useRef(false);
   if (hours.length === 0) {
     return (
       <Card title="พยากรณ์รายชั่วโมง">
@@ -40,7 +52,7 @@ export function HourlyChart({ hours }: { hours: HourUV[] }) {
   return (
     <Card title="พยากรณ์รายชั่วโมง (UVI)">
       <Text style={styles.detail} testID="chart-detail">
-        {selected === 0 ? 'ตอนนี้ ' : ''}
+        {selected === 0 ? 'ตอนนี้ ' : sel.time.slice(0, 10) !== hours[0].time.slice(0, 10) ? 'พรุ่งนี้ ' : ''}
         {formatHourInterval(sel.time)} · UVI {sel.uvi.toFixed(1)} ({formatRange(sel.uvi_range)}) ·{' '}
         {sel.level}
         {sel.data_imputed ? ' · ข้อมูลบางส่วนถูกเติม' : ''}
@@ -57,7 +69,18 @@ export function HourlyChart({ hours }: { hours: HourUV[] }) {
             </Text>
           ))}
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} testID="chart-scroll">
+        <ScrollView
+          ref={scroll}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          testID="chart-scroll"
+          onLayout={(e) => {
+            // first layout only: centre the focused hour (daytime now, or tomorrow's peak)
+            if (scrolled.current) return;
+            scrolled.current = true;
+            const x = scrollOffsetFor(selected, SLOT_W, e.nativeEvent.layout.width, hours.length);
+            if (x > 0) scroll.current?.scrollTo({ x, animated: false });
+          }}>
           <View>
             <View style={{ height: top, width: SLOT_W * hours.length }}>
               {LEVEL_GRIDLINES.filter((g) => g <= max).map((g) => (
@@ -72,8 +95,9 @@ export function HourlyChart({ hours }: { hours: HourUV[] }) {
                     <Pressable
                       key={h.time}
                       onPress={() => setSelected(i)}
-                      style={[styles.slot, i === selected && styles.slotSelected]}
+                      style={styles.slot}
                       accessibilityRole="button"
+                      accessibilityState={{ selected: i === selected }}
                       accessibilityLabel={`${formatHourInterval(h.time)} UVI ${h.uvi.toFixed(1)} ระดับ${h.level}`}
                       testID={`bar-${i}`}>
                       {i === peak && h.uvi > 0 ? (
@@ -87,6 +111,7 @@ export function HourlyChart({ hours }: { hours: HourUV[] }) {
                             styles.bar,
                             { height: barH, backgroundColor: levelColor(h.level, h.uvi) },
                           ]}
+                          testID={`bar-fill-${i}`}
                         />
                       ) : (
                         <View style={styles.zero} />
@@ -102,9 +127,15 @@ export function HourlyChart({ hours }: { hours: HourUV[] }) {
             <View style={styles.baseline} />
             <View style={styles.ticks}>
               {hours.map((h, i) => (
-                <Text key={h.time} style={styles.hour}>
-                  {hourTick(h.time, i) ?? ''}
-                </Text>
+                <View key={h.time} style={styles.tickSlot}>
+                  <View
+                    style={[styles.marker, i === selected && styles.markerOn]}
+                    testID={i === selected ? 'selected-marker' : undefined}
+                  />
+                  <Text style={[styles.hour, i === selected && styles.hourOn]}>
+                    {i === selected ? h.time.slice(11, 13) : (hourTick(h.time, i) ?? '')}
+                  </Text>
+                </View>
               ))}
             </View>
           </View>
@@ -113,7 +144,7 @@ export function HourlyChart({ hours }: { hours: HourUV[] }) {
 
       <Text style={styles.summary} testID="chart-summary">
         สูงสุด {hours[peak].uvi.toFixed(1)} ({hours[peak].level}) เวลา {formatClock(hours[peak].time)} ·
-        แท่งคือค่าประมาณ เส้นคือช่วง q10–q90 · แตะแท่งเพื่อดูรายละเอียด
+        แท่งคือค่าประมาณ เส้นคือช่วง q10–q90 · แตะแท่งเพื่อดูรายละเอียด (จุดใต้แกนคือชั่วโมงที่เลือก)
       </Text>
       <View style={styles.legend}>
         {WHO_LEVELS.map((name, i) => (
@@ -152,9 +183,7 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    borderRadius: 6,
   },
-  slotSelected: { backgroundColor: '#E9EEF4' },
   bar: { width: BAR_W, borderTopLeftRadius: 4, borderTopRightRadius: 4 },
   zero: { width: BAR_W, height: 2, backgroundColor: colors.border },
   whisker: {
@@ -174,6 +203,10 @@ const styles = StyleSheet.create({
   },
   baseline: { height: 1, backgroundColor: colors.muted, opacity: 0.4 },
   ticks: { flexDirection: 'row' },
+  tickSlot: { width: SLOT_W, alignItems: 'center', gap: 2, paddingTop: 3 },
+  marker: { width: 8, height: 8, borderRadius: 4 },
+  markerOn: { backgroundColor: colors.text },
+  hourOn: { color: colors.text, fontWeight: '700' },
   hour: {
     width: SLOT_W,
     textAlign: 'center',
