@@ -1,10 +1,11 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, screen } from '@testing-library/react-native';
 
 import { ApiError, fetchForecast, fetchPredict } from '@/api/client';
 import HomeScreen from '@/app/index';
 import { DISCLAIMER_TH } from '@/config';
 
 import { sampleHours, sampleNight, samplePredict } from './fixtures';
+import { MemoryStorage, renderWithSettings } from './helpers';
 
 jest.mock('@/api/client', () => {
   const actual = jest.requireActual('@/api/client');
@@ -20,7 +21,7 @@ beforeEach(() => {
 
 it('loads /predict for Pathum Thani, skin type III, and shows both cards', async () => {
   mockFetch.mockResolvedValue(samplePredict());
-  await render(<HomeScreen />);
+  await renderWithSettings(<HomeScreen />);
   expect(await screen.findByTestId('uvi-value', {}, { timeout: 5000 })).toHaveTextContent('5.5');
   expect(screen.getByTestId('burn-value')).toHaveTextContent('35 นาที');
   expect(mockFetch).toHaveBeenCalledWith({ lat: 14.02, lon: 100.52, skin_type: 'III' });
@@ -36,7 +37,7 @@ it('shows the Thai error, keeps the disclaimer and retries', async () => {
       detail: 'HTTP 503: Open-Meteo data for the current hour is missing',
     }),
   );
-  await render(<HomeScreen />);
+  await renderWithSettings(<HomeScreen />);
   expect(await screen.findByTestId('error-message', {}, { timeout: 5000 })).toHaveTextContent(
     'ข้อมูลสภาพอากาศของชั่วโมงนี้ยังไม่มา',
   );
@@ -58,7 +59,7 @@ it("at night fetches /forecast and shows tomorrow's peak instead of the advice",
   // 20:00 tonight: 14 dark hours, then 10:00-12:00 tomorrow (peak 7.8 at 11:00)
   const hours = sampleHours('2026-09-27T20:00:00+07:00', [...Array(14).fill(0), 3.1, 7.8, 5.2, 0]);
   mockForecast.mockResolvedValue({ lat: 14.02, lon: 100.52, hours, note: null, disclaimer: 'd' });
-  await render(<HomeScreen />);
+  await renderWithSettings(<HomeScreen />);
   const box = await screen.findByTestId('next-peak', {}, { timeout: 5000 });
   expect(box).toHaveTextContent(/พรุ่งนี้ UV สูงสุดประมาณ/);
   expect(box).toHaveTextContent(/7\.8/);
@@ -72,10 +73,31 @@ it('at night a failed /forecast does not break the page', async () => {
   mockForecast.mockRejectedValue(
     new ApiError('ดึงข้อมูลสภาพอากาศจาก Open-Meteo ไม่ได้', { status: 502 }),
   );
-  await render(<HomeScreen />);
+  await renderWithSettings(<HomeScreen />);
   expect(await screen.findByTestId('next-peak', {}, { timeout: 5000 })).toHaveTextContent(
     'ยังไม่มีข้อมูลพยากรณ์ของวันถัดไป',
   );
   expect(screen.getByTestId('uvi-value')).toBeTruthy();
   expect(screen.queryByTestId('error-message')).toBeNull();
+});
+
+it('uses the stored skin type and draws the hourly chart', async () => {
+  mockFetch.mockResolvedValue(
+    samplePredict({ forecast: sampleHours('2026-09-27T14:00:00+07:00', [6.1, 4.2, 1.0]) }),
+  );
+  await renderWithSettings(<HomeScreen />, new MemoryStorage({ skinType: 'V' }));
+  expect(await screen.findByTestId('uvi-value', {}, { timeout: 5000 })).toBeTruthy();
+  expect(mockFetch).toHaveBeenCalledWith({ lat: 14.02, lon: 100.52, skin_type: 'V' });
+  expect(screen.getAllByTestId(/^bar-\d+$/)).toHaveLength(4); // now + 3 forecast hours
+  expect(screen.getByText(/ผิวประเภท V/)).toBeTruthy();
+  expect(screen.queryByTestId('quiz-prompt')).toBeNull();
+});
+
+it('asks for the quiz while no skin type is stored (type III meanwhile)', async () => {
+  mockFetch.mockResolvedValue(samplePredict());
+  await renderWithSettings(<HomeScreen />);
+  expect(await screen.findByTestId('quiz-prompt', {}, { timeout: 5000 })).toHaveTextContent(
+    /แบบสอบถาม 5 ข้อ/,
+  );
+  expect(mockFetch).toHaveBeenCalledWith({ lat: 14.02, lon: 100.52, skin_type: 'III' });
 });

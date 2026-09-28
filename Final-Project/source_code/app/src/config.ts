@@ -19,7 +19,7 @@ export const REQUEST_TIMEOUT_MS = 20000;
  */
 export const DEFAULT_LOCATION = { lat: 14.02, lon: 100.52, name: 'ปทุมธานี' } as const;
 
-/** Default Fitzpatrick skin type until the skin-type quiz is added (day 19). */
+/** Skin type used until the user does the quiz or picks a type (settings.skinType is null). */
 export const DEFAULT_SKIN_TYPE = 'III';
 
 /** Shown when the API is unreachable, so the disclaimer is never missing. */

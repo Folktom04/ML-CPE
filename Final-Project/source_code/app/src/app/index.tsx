@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,10 +13,13 @@ import {
 
 import { ApiError, describeError, fetchForecast, fetchPredict } from '@/api/client';
 import type { PredictResponse } from '@/api/types';
-import { Card, colors } from '@/components/Card';
+import { Card, colors, Note } from '@/components/Card';
+import { HourlyChart } from '@/components/HourlyChart';
 import { UVCard } from '@/components/UVCard';
 import { UvaUvbCard } from '@/components/UvaUvbCard';
 import { API_URL, DEFAULT_LOCATION, DEFAULT_SKIN_TYPE, DISCLAIMER_TH } from '@/config';
+import { chartHours } from '@/lib/chart';
+import { useSettings } from '@/lib/SettingsContext';
 import { nextDaytimePeak, type DayPeak } from '@/lib/uv';
 
 type State =
@@ -33,13 +37,13 @@ async function loadNextPeak(data: PredictResponse): Promise<DayPeak | null> {
   }
 }
 
-/** Fetch /predict for the default location and skin type, as a screen state. */
-async function loadState(): Promise<State> {
+/** Fetch /predict for the default location and the user's skin type, as a screen state. */
+async function loadState(skinType: string): Promise<State> {
   try {
     const data = await fetchPredict({
       lat: DEFAULT_LOCATION.lat,
       lon: DEFAULT_LOCATION.lon,
-      skin_type: DEFAULT_SKIN_TYPE,
+      skin_type: skinType,
     });
     return { kind: 'ok', data, nextPeak: data.is_daylight ? null : await loadNextPeak(data) };
   } catch (err) {
@@ -60,31 +64,37 @@ async function loadState(): Promise<State> {
   }
 }
 
-/** Home: UV now (level colour, range, q90 warning) + UVA/UVB and burn time. */
+/** Home: UV now (level colour, range, q90 warning), hourly chart, UVA/UVB and burn time. */
 export default function HomeScreen() {
-  const [state, setState] = useState<State>({ kind: 'loading' });
+  const { settings, ready } = useSettings();
+  const skinType = settings.skinType ?? DEFAULT_SKIN_TYPE;
+  // A result belongs to one skin type; after a change the screen shows "loading" until the
+  // answer for the new type arrives.
+  const [loaded, setLoaded] = useState<{ skin: string; state: State } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const state: State = loaded?.skin === skinType ? loaded.state : { kind: 'loading' };
 
   useEffect(() => {
+    if (!ready) return; // wait for the stored skin type
     let active = true;
-    loadState().then((s) => {
-      if (active) setState(s);
+    loadState(skinType).then((s) => {
+      if (active) setLoaded({ skin: skinType, state: s });
     });
     return () => {
       active = false;
     };
-  }, []);
+  }, [ready, skinType]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setState(await loadState());
+    setLoaded({ skin: skinType, state: await loadState(skinType) });
     setRefreshing(false);
-  }, []);
+  }, [skinType]);
 
   const retry = useCallback(async () => {
-    setState({ kind: 'loading' });
-    setState(await loadState());
-  }, []);
+    setLoaded(null);
+    setLoaded({ skin: skinType, state: await loadState(skinType) });
+  }, [skinType]);
 
   return (
     <ScrollView
@@ -92,8 +102,15 @@ export default function HomeScreen() {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
       <Text style={styles.place}>
-        {DEFAULT_LOCATION.name} (ตำแหน่งเริ่มต้น) · ผิวประเภท {DEFAULT_SKIN_TYPE}
+        {DEFAULT_LOCATION.name} (ตำแหน่งเริ่มต้น) · ผิวประเภท {skinType}
       </Text>
+      {ready && settings.skinType === null ? (
+        <Link href="/quiz" asChild>
+          <Pressable accessibilityRole="button" testID="quiz-prompt">
+            <Note>ยังไม่ได้ระบุประเภทผิว ใช้ประเภท III ชั่วคราว · แตะเพื่อทำแบบสอบถาม 5 ข้อ</Note>
+          </Pressable>
+        </Link>
+      ) : null}
 
       {state.kind === 'loading' ? (
         <View style={styles.center} testID="loading">
@@ -124,6 +141,7 @@ export default function HomeScreen() {
       {state.kind === 'ok' ? (
         <>
           <UVCard data={state.data} />
+          <HourlyChart hours={chartHours(state.data)} />
           <UvaUvbCard data={state.data} nextPeak={state.nextPeak} />
         </>
       ) : null}

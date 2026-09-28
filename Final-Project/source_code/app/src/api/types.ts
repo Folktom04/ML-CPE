@@ -54,3 +54,25 @@ export type ForecastResponse = {
   note: string | null;
   disclaimer: string;
 };
+
+/** Settings the server stores for remote alerts (PUT sends only the fields given). */
+export type UserSettingsBody = {
+  skin_type?: string | null;
+  notify_enabled?: boolean;
+  alert_threshold?: number;
+  alert_burn_minutes?: number;
+};
+
+/** Response of POST /users and PUT /users/{id}/settings (never contains the device id). */
+export type UserResponse = {
+  id: number;
+  skin_type: string;
+  province: string | null;
+  notify_enabled: boolean;
+  alert_threshold: number;
+  /** alert_threshold − 2, set by the server. */
+  safe_threshold: number;
+  alert_burn_minutes: number;
+  updated_at: string;
+  disclaimer: string;
+};
