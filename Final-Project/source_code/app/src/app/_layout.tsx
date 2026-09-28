@@ -29,6 +29,8 @@ export default function RootLayout() {
         />
         <Stack.Screen name="settings" options={{ title: 'ตั้งค่า' }} />
         <Stack.Screen name="quiz" options={{ title: 'แบบสอบถามประเภทผิว' }} />
+        <Stack.Screen name="camera" options={{ title: 'ถ่ายท้องฟ้า' }} />
+        <Stack.Screen name="light" options={{ title: 'วัดแสง' }} />
       </Stack>
       <StatusBar style="dark" />
     </SettingsProvider>

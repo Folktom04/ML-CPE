@@ -8,11 +8,12 @@ never used to change the UVI.
 
 from __future__ import annotations
 
+import io
 from pathlib import Path
 from typing import Any
 
 import numpy as np
-
+from PIL import Image
 from src.fetch_data import ROOT
 
 TFLITE_PATH = ROOT / "source_code" / "models" / "sky_cnn_v1.tflite"
@@ -47,6 +48,25 @@ SWIM_CLASS_TH = {
     "veil_clouds": "เมฆบางคลุมทั่วฟ้า",
 }
 DISCLAIMER_TH = "ผลจากภาพท้องฟ้าเป็นข้อมูลประกอบเท่านั้น ไม่ได้ใช้คำนวณค่า UV"
+
+
+def has_exif(data: bytes) -> bool:
+    """Whether an uploaded image still carries EXIF metadata (GPS, time, phone model...).
+
+    The app re-encodes every sky photo so none should; the API logs only this boolean and never
+    the EXIF values themselves.
+
+    Args:
+        data: Raw bytes of the uploaded image.
+
+    Returns:
+        True when the image has a non-empty EXIF block; False otherwise or if it is unreadable.
+    """
+    try:
+        with Image.open(io.BytesIO(data)) as img:
+            return bool(img.info.get("exif")) or len(img.getexif()) > 0
+    except Exception:  # noqa: BLE001 - unreadable images are rejected later with 415
+        return False
 
 
 def check_unit_range(x: np.ndarray) -> np.ndarray:

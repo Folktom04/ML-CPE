@@ -76,3 +76,19 @@ export type UserResponse = {
   updated_at: string;
   disclaimer: string;
 };
+
+/** Response of POST /sky-image: supporting information only, never changes the UVI. */
+export type SkyImageResponse = {
+  /** SWIMCAT-ext class id, e.g. "thick_white_clouds". */
+  sky_class: string;
+  sky_class_th: string;
+  /** Softmax probability of sky_class (0-1). */
+  sky_confidence: number;
+  sky_class_probs: Record<string, number>;
+  /** Red/blue-ratio cloud fraction proxy (0-1), not a model output. */
+  cloud_fraction_rb: number;
+  reliability: Record<string, string>;
+  note: string;
+  stored: boolean;
+  disclaimer: string;
+};

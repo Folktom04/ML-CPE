@@ -32,6 +32,14 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "UV Guard ใช้กล้องถ่ายภาพท้องฟ้าเพื่อดูสภาพเมฆประกอบ ภาพถูกส่งไปวิเคราะห์แล้วลบทันที ไม่มีการเก็บภาพ",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
       ]
     ],
     "experiments": {

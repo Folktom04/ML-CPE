@@ -1,7 +1,9 @@
 """Tests for the FastAPI service (real saved models, Open-Meteo mocked)."""
 
 import io
+import logging
 import os
+import re
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,7 +19,7 @@ from src import inference as inf
 from src.fetch_data import ROOT
 from src.metrics import WHO_LEVELS, who_level
 from src.risk import DISCLAIMER, burn_minutes
-from src.sky_infer import SWIM_CLASS_TH
+from src.sky_infer import SWIM_CLASS_TH, has_exif
 from tests.test_inference import fake_bundle, synthetic_raw
 
 NOW = datetime(2026, 9, 27, 5, 20, tzinfo=timezone.utc)  # 12:20 in Bangkok
@@ -265,3 +267,52 @@ def test_cors_allows_expo_web_origin_only(client):
     evil = client.post("/predict", json=PAYLOAD, headers={"Origin": "http://evil.test"})
     assert "access-control-allow-origin" not in evil.headers
     assert "access-control-allow-origin" not in client.get("/health").headers  # no Origin
+
+
+def jpeg_with_exif() -> bytes:
+    """JPEG carrying phone-like EXIF: camera model and a GPS position (Pathum Thani)."""
+    exif = Image.Exif()
+    exif[0x0110] = "SM-TEST-MODEL"  # Model
+    exif[0x8825] = {1: "N", 2: (14.0, 1.0, 12.0), 3: "E", 4: (100.0, 31.0, 12.0)}  # GPSInfo
+    buf = io.BytesIO()
+    Image.new("RGB", (300, 200), (90, 140, 220)).save(buf, format="JPEG", exif=exif)
+    return buf.getvalue()
+
+
+def test_has_exif_detects_gps_and_reencoding_removes_it():
+    raw = jpeg_with_exif()
+    assert has_exif(raw) is True
+    # re-encoding the pixels (what the app's image-manipulator does) leaves no EXIF
+    buf = io.BytesIO()
+    Image.open(io.BytesIO(raw)).convert("RGB").save(buf, format="JPEG", quality=80)
+    assert has_exif(buf.getvalue()) is False
+    assert has_exif(png_bytes()) is False and has_exif(png_bytes(fmt="JPEG")) is False
+    assert has_exif(b"not an image") is False
+
+
+def test_sky_image_logs_only_exif_boolean(client, caplog):
+    caplog.set_level("INFO", logger="uvguard.api")
+    r = client.post("/sky-image", files={"file": ("s.jpg", jpeg_with_exif(), "image/jpeg")})
+    assert r.status_code == 200
+    lines = [rec.getMessage() for rec in caplog.records if "has_exif" in rec.getMessage()]
+    assert lines == ["sky-image upload has_exif=True"]
+    text = caplog.text
+    assert "SM-TEST-MODEL" not in text and "GPS" not in text and "14.0" not in text
+    caplog.clear()
+    client.post("/sky-image", files={"file": ("s.jpg", png_bytes(fmt="JPEG"), "image/jpeg")})
+    assert "sky-image upload has_exif=False" in caplog.text
+
+
+def test_app_sky_class_names_match_api():
+    """The app's top-2 list (app/src/lib/sky.ts) uses the same Thai names as the API."""
+    ts = (ROOT / "source_code" / "app" / "src" / "lib" / "sky.ts").read_text(encoding="utf-8")
+    block = ts.split("export const SKY_CLASS_TH", 1)[1].split("};", 1)[0]
+    pairs = dict(re.findall(r"^\s*(\w+): '([^']+)',", block, flags=re.M))
+    assert pairs == SWIM_CLASS_TH
+
+
+def test_configure_logging_adds_one_info_handler():
+    logger = logging.getLogger("uvguard.test_configure_logging")
+    main.configure_logging(logger)
+    main.configure_logging(logger)
+    assert len(logger.handlers) == 1 and logger.level == logging.INFO
