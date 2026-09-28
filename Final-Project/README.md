@@ -47,6 +47,19 @@ macOS / Linux: `python3.12 -m venv .venv && source .venv/bin/activate`
 
 วิธีติดตั้ง PostgreSQL และสร้างฐานข้อมูลอยู่ใน [docs/db.md](docs/db.md)
 
+### เมื่อ Windows Smart App Control บล็อก DLL ใน `.venv`
+อาการ: `ImportError: DLL load failed ... An Application Control policy has blocked this file.` (เช่น `pandas/_libs/join`, `sklearn`, `psycopg_binary.libs/libpq`) ทำให้ `pytest` หรือการต่อ PostgreSQL ใช้ไม่ได้
+
+**อย่าปิด Smart App Control** (ปิดแล้วเปิดกลับไม่ได้ถ้าไม่ reset Windows) ให้ติดตั้งแพ็กเกจที่โดนบล็อกใหม่ **ด้วยเวอร์ชันเดิม** ก่อน:
+```powershell
+.venvScriptspython.exe -m pip list                 # ดูเวอร์ชันที่ใช้อยู่
+.venvScriptspython.exe -m pip install --force-reinstall --no-cache-dir --no-deps <package>==<เวอร์ชันเดิม>
+.venvScriptspython.exe -c "import pandas, sklearn, psycopg; print('ok')"
+```
+- ต้องใส่ `--no-deps` ไม่อย่างนั้น pip จะลง numpy / scipy รุ่นล่าสุดตามมาด้วย (ข้าม `scipy<1.18`) ซึ่งอาจทำให้ผลโมเดลเปลี่ยน
+- 28 ก.ย. 2026: pandas 3.0.6, scikit-learn 1.9.1 และ psycopg-binary 3.3.6 โดนบล็อก พอติดตั้งเวอร์ชันเดิมใหม่ก็ใช้ได้ (numpy/scipy ไม่เปลี่ยน) ทั้งที่ isort ซึ่งไม่ได้ติดตั้งใหม่ก็กลับมาโหลดได้เอง จึงน่าจะเกิดจากการตรวจชื่อเสียงไฟล์ของ SAC ล้มเหลวชั่วคราว
+- ถ้ายังโดนบล็อก ให้ลองเวอร์ชันใกล้เคียง 1 รุ่น (แบบ `scipy<1.18` ใน `requirements.txt`) ถ้าเปลี่ยนเวอร์ชัน ต้องรัน `pytest` เพื่อยืนยันว่าผลโมเดลไม่เปลี่ยน
+
 ## รัน
 ทุกคำสั่งรันจาก `Final-Project/`
 

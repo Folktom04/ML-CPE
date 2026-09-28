@@ -29,19 +29,35 @@ from api.schemas import (
     PredictRequest,
     PredictResponse,
     SkyImageResponse,
+    UserCreate,
+    UserResponse,
+    UserSettingsUpdate,
 )
-from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Header,
+    HTTPException,
+    Query,
+    Request,
+    Response,
+    UploadFile,
+)
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from PIL import Image, UnidentifiedImageError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.orm import Session
 from src import db
 from src import inference as inf
+from src import users
+from src.fetch_data import ROOT
 from src.metrics import WHO_LEVELS, who_level
 from src.risk import DISCLAIMER, assess
 from src.sky_data import load_image
 from src.sky_infer import predict_sky
-from src.fetch_data import ROOT
 from src.train_cmf import DOCS_DIR
 
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
@@ -104,13 +120,13 @@ def cors_origins(env: dict[str, str] | None = None) -> list[str]:
     return [o.strip().rstrip("/") for o in raw.split(",") if o.strip()] or DEFAULT_CORS_ORIGINS
 
 
-app = FastAPI(title="UV Guard API", version="0.18.0", lifespan=lifespan)
+app = FastAPI(title="UV Guard API", version="0.19.0", lifespan=lifespan)
 # Native apps do not send an Origin header; CORS only matters for the Expo web build.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins(),
-    allow_methods=["GET", "POST", "PUT"],
-    allow_headers=["Content-Type"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Content-Type", "X-Device-Id"],
 )
 
 
@@ -129,6 +145,21 @@ async def _validation_error(request: Request, exc: RequestValidationError) -> JS
 async def _http_error(request: Request, exc: HTTPException) -> JSONResponse:
     """HTTP errors with the disclaimer."""
     return _error(exc.status_code, exc.detail)
+
+
+@app.exception_handler(IntegrityError)
+async def _db_conflict(request: Request, exc: IntegrityError) -> JSONResponse:
+    """409 on a constraint violation; the database's text (it can name values, e.g. PostgreSQL
+    ``DETAIL: Key (device_id)=(...)``) is neither returned nor logged, only the error class."""
+    log.warning("database conflict on %s: %s", request.url.path, exc.__class__.__name__)
+    return _error(409, "conflict with existing data")
+
+
+@app.exception_handler(SQLAlchemyError)
+async def _db_error(request: Request, exc: SQLAlchemyError) -> JSONResponse:
+    """503 when the database fails; only the error class is logged (no SQL parameters)."""
+    log.error("database error on %s: %s", request.url.path, exc.__class__.__name__)
+    return _error(503, "database unavailable")
 
 
 @app.exception_handler(Exception)
@@ -260,3 +291,92 @@ async def sky_image(file: UploadFile = File(...)) -> SkyImageResponse:
         raise HTTPException(415, "not a readable image") from exc
     res = predict_sky(img, interpreter=app.state.bundle.sky)
     return SkyImageResponse(**res, reliability=app.state.sky_reliability, stored=False)
+
+
+def _session():
+    """One database session per request (engine created at start-up)."""
+    with db.make_session_factory(app.state.db_engine)() as s:
+        yield s
+
+
+def _user_response(u: db.User) -> UserResponse:
+    """A stored user as the API response (never includes the device id)."""
+    return UserResponse(
+        id=u.id,
+        skin_type=u.skin_type,
+        province=u.province,
+        notify_enabled=u.notify_enabled,
+        alert_threshold=u.alert_threshold,
+        safe_threshold=u.safe_threshold,
+        alert_burn_minutes=u.alert_burn_minutes,
+        updated_at=u.updated_at.isoformat(),
+    )
+
+
+def _owned_user(session: Session, user_id: int, device_id: str | None) -> db.User:
+    """The user ``user_id`` if ``device_id`` matches it: 404 if unknown, else 403."""
+    user = session.get(db.User, user_id)
+    if user is None:
+        raise HTTPException(404, "user not found")
+    if not users.valid_device_id(device_id) or not users.device_matches(user, device_id):
+        raise HTTPException(403, "X-Device-Id does not match this user")
+    return user
+
+
+# X-Device-Id is read as a plain string, so no validation error echoes it back, and it is never
+# logged: it is the only secret that proves a request comes from the user's phone.
+DeviceHeader = Header(None, alias="X-Device-Id")
+
+
+@app.post("/users", response_model=UserResponse, status_code=201)
+def create_user(
+    body: UserCreate,
+    response: Response,
+    x_device_id: str | None = DeviceHeader,
+    session: Session = Depends(_session),
+) -> UserResponse:
+    """Register this phone (anonymous) with its skin type and notification settings.
+
+    Idempotent per device: calling again with the same ``X-Device-Id`` updates that user and
+    answers 200 instead of 201.
+    """
+    if not users.valid_device_id(x_device_id):
+        raise HTTPException(400, "X-Device-Id header missing or malformed (16-64 chars)")
+    try:
+        user, created = users.register(session, x_device_id, body.model_dump(exclude_none=True))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    if not created:
+        response.status_code = 200
+    log.info("user %d %s", user.id, "created" if created else "re-registered")
+    return _user_response(user)
+
+
+@app.put("/users/{user_id}/settings", response_model=UserResponse)
+def update_user_settings(
+    user_id: int,
+    body: UserSettingsUpdate,
+    x_device_id: str | None = DeviceHeader,
+    session: Session = Depends(_session),
+) -> UserResponse:
+    """Change some settings; ``safe_threshold`` follows ``alert_threshold - 2``."""
+    user = _owned_user(session, user_id, x_device_id)
+    try:
+        users.apply_settings(user, body.model_dump(exclude_none=True))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    session.commit()
+    return _user_response(user)
+
+
+@app.delete("/users/{user_id}", status_code=204)
+def delete_user(
+    user_id: int,
+    x_device_id: str | None = DeviceHeader,
+    session: Session = Depends(_session),
+) -> Response:
+    """Delete the user and everything linked to them (push tokens, measurements, logs)."""
+    _owned_user(session, user_id, x_device_id)
+    db.delete_user(session, user_id)
+    log.info("user %d deleted", user_id)
+    return Response(status_code=204)
