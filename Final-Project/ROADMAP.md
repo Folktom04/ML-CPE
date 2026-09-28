@@ -275,6 +275,7 @@
   > ทดสอบ: Jest **127 passed**, `tsc` / `expo lint` / `expo export --platform web` ผ่าน pytest **294 passed, 0 skipped** (PostgreSQL 41 ข้อ)
   > **กติกาเตือนเทียบกับผล test วัน 10:** ตอนใช้งานจริง ปัด UVI ก่อนแล้วค่อยเทียบกับเกณฑ์ (7.5 → 8 จึงเตือนที่เกณฑ์ 8, 7.49 ไม่เตือน) ตรวจโค้ดแล้วพบว่า T6a–T6d ของวัน 10 วัดด้วยกติกาเดียวกัน คือ `evaluate_test.py` เรียก `quantile.alert_report()` ซึ่งแปลงทั้ง NASA POWER และ q90 เป็นระดับด้วย `who_level()` → `round_uvi()` การปัดจึงไม่ต่างกัน ไม่ต้องคำนวณใหม่ และไม่ได้รัน test 2025 ใหม่ มีจุดต่างที่ไม่ใช่เรื่องการปัดอยู่ข้อเดียว: T6 ใช้ q90 (CQR) อย่างเดียว ส่วนตอนใช้งานใช้ `max(q90, ค่าจุด)` บน dev 2024 สองค่านี้เท่ากันทุกชั่วโมง (ค่าจุดไม่เกิน q90 เลยใน 3,726 ชม.) รายละเอียดอยู่ใน `docs/results_summary.md`
   > ~~ค้าง: ตรวจหน้าจอข้อ 7–10 ใน `source_code/app/README.md` ด้วย browser agent ของ Antigravity (ยังไม่ได้รับผล)~~ **แทนด้วยการทดสอบบนมือถือจริง (Samsung, Expo Go) + Jest** (ตัดสิน 29 ก.ย. 2026)
+  > **กันเทสแตะฐานหลัก (29 ก.ย.):** ตรวจแล้วว่าไม่มีเทสไหนแตะฐาน `uvguard` (ฐานหลักมีแค่ตารางจาก `alembic upgrade head` วัน 17: `users` insert 2 ครั้ง / delete 1 ครั้งจากการทดสอบความยินยอมบนมือถือ ไม่มี device id ของเทส) แต่ `test_db.py` โหลด `.env` ตอน import ทำให้ `DATABASE_URL` ค้างอยู่ตลอดการรัน pytest จึงเพิ่ม `source_code/tests/conftest.py` (autouse): ลบ `DATABASE_URL` และทุก engine ที่สร้างผ่าน `src.db` ถ้าเป็น PostgreSQL ที่ชื่อฐานไม่มีคำว่า "test" จะ fail ทันที (`tests/test_db_guard.py`) URL ปลอมในเทส "PostgreSQL ที่ติดต่อไม่ได้" เปลี่ยนจาก `/x` เป็น `/x_test"
 
 ### วัน 20 — กล้อง + เซนเซอร์แสง
 - [x] expo-camera ส่งภาพไป `/sky-image` → `src/app/camera.tsx`, `src/lib/sky.ts`, `src/lib/skyPhoto.ts`, `uploadSkyImage()` ใน `src/api/client.ts`
@@ -298,11 +299,14 @@
 ## Phase 5: ระบบแจ้งเตือน (วัน 22–24)
 
 ### วัน 22 — Local notification
+> **ตัดสิน 29 ก.ย. 2026 (ก่อนเริ่ม):** การแจ้งเตือนในเครื่องไม่ส่งข้อมูลออกจากมือถือ จึง**ใช้ได้เสมอโดยไม่ต้องยินยอม** และใช้ใน Expo Go ได้ (เอกสาร Expo: "Local notifications (in-app notifications) remain available in Expo Go") **การแจ้งเตือนหลักคือ local notification ที่ตั้งเวลาล่วงหน้าจากพยากรณ์:** ชั่วโมงที่ q90 (`alert_uvi`) ถึงเกณฑ์ ใช้ `reachesAlert` / `isSafeAgain` (hysteresis เตือน → ปลอดภัยที่เกณฑ์ − 2) พร้อม cooldown และไม่เตือนตอนกลางคืน เวลาที่เหลือก่อนผิวไหม้**นับในเครื่องจากปุ่มออกแดด** (เซิร์ฟเวอร์ไม่รู้ว่าผู้ใช้อยู่กลางแจ้งหรือไม่)
+- [ ] เตือนระดับ UV จากพยากรณ์ (ตั้งเวลาล่วงหน้า, q90, hysteresis, cooldown, ไม่เตือนกลางคืน)
 - [ ] สรุปรายวัน 07:00
 - [ ] ปุ่มออกแดด → เตือนที่ 80% ของเวลาผิวไหม้
 - [ ] ปุ่มทาครีมแล้ว → เตือนทาซ้ำ 2 ชม.
 
 ### วัน 23 — Remote push
+> **ตัดสิน 29 ก.ย. 2026:** push จากเซิร์ฟเวอร์**ต้องเปิดสวิตช์ยินยอมก่อน** ใช้ตำแหน่งแค่**จังหวัด** (คอลัมน์ `users.province` ที่มีอยู่ ไม่เพิ่ม migration) และต้องแก้ข้อความหน้ายินยอมให้บอกว่าเก็บจังหวัด push มีแค่ "UV สูง" กับ "ปลอดภัยแล้ว" เขียน APScheduler + Expo Push แล้วเทสด้วยตัวส่งปลอมให้ครบ **Expo Go บน Android รับ remote push ไม่ได้** (เอกสาร Expo: "Push notifications (remote notifications) functionality provided by `expo-notifications` is unavailable in Expo Go on Android from SDK 53") จึงทดสอบบนมือถือจริงด้วย **EAS Build** (development build, ไม่ติดตั้ง Android Studio) ถ้ามีเวลา ต้องมี Firebase project สำหรับ FCM
 - [ ] APScheduler ทุก 30 นาที
 - [ ] Expo Push Service
 - [ ] cooldown + hysteresis + ช่วงเงียบ
@@ -319,6 +323,7 @@
 ## Phase 6: ตรวจสอบ + ปิดงาน (วัน 25–30)
 
 ### วัน 25 — ภาคสนามด้วยมือถือ
+> **ตัดสิน 29 ก.ย. 2026:** พกโน้ตบุ๊กที่ต่อ Hotspot จากมือถือ ให้โน้ตบุ๊กรัน PostgreSQL + API (`--host 0.0.0.0`) + scheduler ถ้ามีปัญหา ใช้ `adb reverse tcp:8000 tcp:8000` ผ่าน USB แทน ต้องเปิด Windows Firewall พอร์ต 8000/8081 เฉพาะวันทดสอบ ข้อมูลภาคสนาม**export เป็น CSV จากในเครื่อง** แล้วผู้ใช้ย้ายไป `dataset/field/` เอง ไม่ส่งขึ้นเซิร์ฟเวอร์
 - [ ] ใช้แอปเก็บข้อมูล: lux, ทิศทางมือถือ, เวลา, GPS ในหลายสภาพ (กลางแดด / ร่มไม้ / ใต้หลังคา / เมฆมาก) → `dataset/field/`
 - [ ] ทดลองฟีเจอร์ถ่ายท้องฟ้าในแอปเพื่อเดโมเท่านั้น (ไม่นำภาพไปฝึกโมเดล)
 - [ ] เทียบค่า UV ที่ระบบประเมินกับ Open-Meteo ณ เวลาและตำแหน่งเดียวกัน
