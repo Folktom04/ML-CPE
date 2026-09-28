@@ -1,0 +1,61 @@
+/**
+ * Keeps the scheduled local notifications in line with the latest forecast and settings (day 22).
+ * Runs whenever the home screen has a new forecast or a relevant setting changes; each run
+ * replaces the future notifications of every kind it manages.
+ */
+
+import { useEffect } from 'react';
+
+import type { HourUV } from '@/api/types';
+import { DEFAULT_SKIN_TYPE } from '@/config';
+import { burnNotification, planDaily, planReapply, planUvAlerts } from '@/lib/alertPlan';
+import { sunStatus } from '@/lib/dose';
+import { loadHistory, replaceScheduled, saveHistory, supported } from '@/lib/notifications';
+import type { Settings } from '@/lib/settings';
+import type { SkinType } from '@/lib/skinQuiz';
+
+/** Plan and schedule every local notification for `hours` (exported for tests). */
+export async function syncLocalNotifications(
+  hours: HourUV[],
+  s: Settings,
+  nowMs: number = Date.now(),
+): Promise<void> {
+  const skin = (s.skinType ?? DEFAULT_SKIN_TYPE) as SkinType;
+  const history = await loadHistory(nowMs);
+  const uv = s.notifyEnabled
+    ? planUvAlerts(hours, nowMs, { threshold: s.alertThreshold, skin }, history)
+    : [];
+  await replaceScheduled(['uv_high', 'uv_safe'], uv, nowMs);
+  await saveHistory(history, uv);
+
+  const daily = s.dailySummary ? planDaily(hours, nowMs, { threshold: s.alertThreshold }) : [];
+  await replaceScheduled(['daily_summary', 'daily_fallback'], daily, nowMs);
+
+  const warnAt = s.sunStartedAt ? sunStatus(hours, skin, s.sunStartedAt, nowMs).warnAt : null;
+  await replaceScheduled(['burn'], warnAt ? [burnNotification(warnAt)] : [], nowMs);
+
+  const reapply =
+    s.reapplyReminder && s.reapplyAt && s.reapplyAt > nowMs
+      ? planReapply(hours, s.reapplyAt - 2 * 3600 * 1000).plan
+      : null;
+  await replaceScheduled(['reapply'], reapply ? [reapply] : [], nowMs);
+}
+
+export function useLocalNotifications(hours: HourUV[] | null, s: Settings): void {
+  useEffect(() => {
+    if (!hours || !supported) return;
+    syncLocalNotifications(hours, s).catch(() => {
+      // notifications are extra; the screen keeps working without them
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only these settings matter here
+  }, [
+    hours,
+    s.notifyEnabled,
+    s.alertThreshold,
+    s.dailySummary,
+    s.reapplyReminder,
+    s.skinType,
+    s.sunStartedAt,
+    s.reapplyAt,
+  ]);
+}

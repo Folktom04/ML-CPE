@@ -108,3 +108,34 @@ jest.mock('expo-location', () => ({
     coords: { latitude: 14.02083, longitude: 100.52504 },
   })),
 }));
+
+// expo-notifications (day 22): an in-memory schedule; permission granted unless a test overrides.
+jest.mock('expo-notifications', () => {
+  type MockReq = { content: { data?: { kind?: string } }; trigger: unknown };
+  let scheduled: ({ identifier: string } & MockReq)[] = [];
+  let n = 0;
+  return {
+    AndroidImportance: { HIGH: 4, DEFAULT: 3 },
+    SchedulableTriggerInputTypes: { DATE: 'date' },
+    setNotificationHandler: jest.fn(),
+    setNotificationChannelAsync: jest.fn(async () => null),
+    getPermissionsAsync: jest.fn(async () => ({ granted: true, canAskAgain: true })),
+    requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
+    scheduleNotificationAsync: jest.fn(async (req: MockReq) => {
+      n += 1;
+      scheduled.push({ identifier: `n${n}`, ...req });
+      return `n${n}`;
+    }),
+    getAllScheduledNotificationsAsync: jest.fn(async () => scheduled.slice()),
+    cancelScheduledNotificationAsync: jest.fn(async (id: string) => {
+      scheduled = scheduled.filter((s) => s.identifier !== id);
+    }),
+    cancelAllScheduledNotificationsAsync: jest.fn(async () => {
+      scheduled = [];
+    }),
+    __reset: () => {
+      scheduled = [];
+      n = 0;
+    },
+  };
+});

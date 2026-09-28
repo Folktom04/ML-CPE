@@ -21,6 +21,8 @@ export function chartHours(data: PredictResponse): HourUV[] {
     level: data.level,
     interval_adjusted: data.interval_adjusted,
     data_imputed: data.data_imputed,
+    alert_uvi: data.alert_uvi,
+    is_daylight: data.is_daylight,
   };
   return [now, ...data.forecast.filter((h) => h.time > data.time)];
 }

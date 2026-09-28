@@ -1,5 +1,5 @@
 import { Link, Redirect } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -15,12 +15,15 @@ import { ApiError, describeError, fetchForecast, fetchPredict } from '@/api/clie
 import type { PredictResponse } from '@/api/types';
 import { Card, colors, Note } from '@/components/Card';
 import { HourlyChart } from '@/components/HourlyChart';
+import { SunSessionCard } from '@/components/SunSessionCard';
 import { UVCard } from '@/components/UVCard';
 import { UvaUvbCard } from '@/components/UvaUvbCard';
 import { API_URL, DEFAULT_SKIN_TYPE, DISCLAIMER_TH } from '@/config';
 import { chartHours } from '@/lib/chart';
 import { resolvePlace, type Place } from '@/lib/location';
 import { useSettings } from '@/lib/SettingsContext';
+import type { SkinType } from '@/lib/skinQuiz';
+import { useLocalNotifications } from '@/lib/useLocalNotifications';
 import { nextDaytimePeak, type DayPeak } from '@/lib/uv';
 
 type State =
@@ -82,6 +85,10 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const state: State = loaded?.key === key ? loaded.state : { kind: 'loading' };
   const place = loaded?.key === key ? loaded.place : null;
+  const okData = state.kind === 'ok' ? state.data : null;
+  // now + forecast hours; memoised so notifications are re-planned only for a new forecast
+  const hours = useMemo(() => (okData ? chartHours(okData) : null), [okData]);
+  useLocalNotifications(hours, settings);
 
   const load = useCallback(async () => {
     const p = await resolvePlace(settings);
@@ -164,7 +171,12 @@ export default function HomeScreen() {
       {state.kind === 'ok' ? (
         <>
           <UVCard data={state.data} />
-          <HourlyChart hours={chartHours(state.data)} isDaylight={state.data.is_daylight} />
+          <HourlyChart hours={hours ?? []} isDaylight={state.data.is_daylight} />
+          <SunSessionCard
+            hours={hours ?? []}
+            skin={skinType as SkinType}
+            isDaylight={state.data.is_daylight}
+          />
           <UvaUvbCard data={state.data} nextPeak={state.nextPeak} />
         </>
       ) : null}

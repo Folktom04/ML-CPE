@@ -19,6 +19,7 @@ import {
 } from 'react';
 
 import { ApiError, createUser, deleteUser, describeError, updateUserSettings } from '@/api/client';
+import { clearAllNotifications } from '@/lib/notifications';
 import {
   clearSettings,
   DEFAULT_SETTINGS,
@@ -166,6 +167,7 @@ export function SettingsProvider({
       }
     }
     await clearSettings(storage);
+    await clearAllNotifications();
     current.current = { ...DEFAULT_SETTINGS };
     setSettings(current.current);
     setSync({ kind: 'idle' });

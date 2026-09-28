@@ -197,3 +197,25 @@ describe('location (day 21)', () => {
     );
   });
 });
+
+it('day 22: after loading, local notifications are scheduled from the forecast', async () => {
+  const N = jest.requireMock('expo-notifications');
+  N.__reset();
+  N.getPermissionsAsync.mockResolvedValue({ granted: true, canAskAgain: true });
+  const now = Date.now();
+  const startIso = new Date(Math.floor(now / 3600e3) * 3600e3 + 7 * 3600e3)
+    .toISOString()
+    .slice(0, 19);
+  // the next 5 hours all at alert_uvi 9.8 in daytime -> one "UV high" in the next hour
+  const forecast = sampleHours(`${startIso}+07:00`, [9, 9, 9, 9, 9, 9]).slice(1);
+  mockFetch.mockResolvedValue(
+    samplePredict({ time: `${startIso}+07:00`, uvi: 2, alert_uvi: 2.5, forecast }),
+  );
+  await renderWithSettings(<HomeScreen />, new MemoryStorage({ onboarded: true, skinType: 'III' }));
+  await waitFor(() => expect(N.scheduleNotificationAsync).toHaveBeenCalled());
+  const kinds = N.scheduleNotificationAsync.mock.calls.map(
+    (c: [{ content: { data: { kind: string } } }]) => c[0].content.data.kind,
+  );
+  expect(kinds).toContain('uv_high');
+  expect(kinds.some((k: string) => k.startsWith('daily'))).toBe(true);
+});

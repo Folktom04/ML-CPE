@@ -12,6 +12,10 @@ export type HourUV = {
   level: string;
   interval_adjusted: boolean;
   data_imputed: boolean;
+  /** max(q90 after CQR, uvi): drives alerts and the burn dose (day 22). */
+  alert_uvi: number;
+  /** Clear-sky UVI >= 0.5; no alerts at night. */
+  is_daylight: boolean;
 };
 
 export type PredictRequest = {
