@@ -299,7 +299,8 @@
 - [ ] ทดสอบ flow ครบวงจรบนมือถือ Android จริง
   > ค้าง: ต้องทำเองตามขั้นตอน "ทดสอบ flow ครบวงจรบนมือถือจริง (วัน 21)" ใน `source_code/app/README.md` ทั้งกรณีอนุญาต, ไม่อนุญาต, ถอนสิทธิ์ทีหลัง และปิด GPS
 
-**Checkpoint วัน 21: แอปครบวงจร**
+**Checkpoint วัน 21: แอปครบวงจร** ✅ (29 ก.ย. 2026)
+> ตรวจของจริง: uvicorn + PostgreSQL → `/health` 200 (`status ok`, `db_backend postgresql`, `db_ok true`, 5 โมเดล, `sky_backend ai_edge_litert`) · `/predict` ปทุมธานี 200 ใน 2.3 วินาที (01:00 กลางคืน UVI 0, `note` null, forecast 24 ชม.) · `/predict` เชียงใหม่ 200 พร้อม `note` "ความแม่นยำนอกพื้นที่ปทุมธานียังไม่ได้ประเมิน" · `/predict` โตเกียว 422 "รองรับเฉพาะพื้นที่ประเทศไทย" ใน 0.003 วินาที (ไม่ได้เรียก Open-Meteo) · `/forecast` 200 · `npx expo export --platform web` ผ่าน 9 routes (รวม `/onboarding`, `/province`) · log ไม่มี error การทดสอบ flow บนมือถือจริงยังค้างอยู่ (ดูข้อสุดท้ายของวัน 21)
 
 ---
 
