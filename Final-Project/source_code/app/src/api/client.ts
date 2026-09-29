@@ -3,6 +3,7 @@
  * day 20: POST /sky-image).
  */
 
+import { File } from 'expo-file-system';
 import { Platform } from 'react-native';
 
 import { API_URL, REQUEST_TIMEOUT_MS } from '@/config';
@@ -24,15 +25,25 @@ export class ApiError extends Error {
   status?: number;
   url?: string;
   detail?: string;
+  /** 'prepare' = failed while building the request on the phone; nothing was sent. */
+  stage?: 'prepare';
 
-  constructor(message: string, opts: { status?: number; url?: string; detail?: string } = {}) {
+  constructor(
+    message: string,
+    opts: { status?: number; url?: string; detail?: string; stage?: 'prepare' } = {},
+  ) {
     super(message);
     this.name = 'ApiError';
     this.status = opts.status;
     this.url = opts.url;
     this.detail = opts.detail;
+    this.stage = opts.stage;
   }
 }
+
+/** Shown when the request body could not be built: an app problem, not the internet. */
+export const PREPARE_FAILED_TH =
+  'แอปเตรียมรูปเพื่อส่งไม่สำเร็จ ยังไม่ได้ส่งข้อมูลไปเซิร์ฟเวอร์ (เป็นปัญหาในแอป ไม่ใช่อินเทอร์เน็ต)';
 
 /** Thai message for an HTTP error status of the API. */
 export function messageForStatus(status: number): string {
@@ -215,35 +226,73 @@ export async function deleteUser(
   );
 }
 
+/** A file part that expo/fetch can read (expo-file-system `File` implements Blob via bytes()). */
+type UploadFile = Blob | { bytes(): Promise<Uint8Array>; name?: string; type?: string };
+
 /**
- * Multipart body with the photo at `uri` (a JPEG already re-encoded without EXIF). On a phone
- * React Native streams the local file from {uri, name, type}; on the web the uri is a blob:/data:
- * URL, so the bytes are read into a Blob first.
+ * Multipart body with the photo at `uri` (a JPEG already re-encoded without EXIF).
+ *
+ * On a phone SDK 57 replaces global fetch with expo/fetch, whose FormData converter accepts only
+ * strings, Blobs and objects with `bytes()`; the old React Native `{ uri, name, type }` part makes
+ * it throw "Unsupported FormDataPart implementation" before anything is sent. So the phone
+ * attaches an expo-file-system `File` (read with `bytes()`, name and MIME type from the file).
+ * No third filename argument: expo's FormData would re-wrap the part. On the web the uri is a
+ * blob:/data: URL, so the bytes are read into a Blob first.
  */
 export async function skyImageForm(
   uri: string,
   {
     platform = Platform.OS,
     fetchImpl = fetch,
-  }: { platform?: string; fetchImpl?: typeof fetch } = {},
+    makeFile = (u: string): UploadFile => new File(u),
+  }: { platform?: string; fetchImpl?: typeof fetch; makeFile?: (uri: string) => UploadFile } = {},
 ): Promise<FormData> {
   const form = new FormData();
   if (platform === 'web') {
     const blob = await (await fetchImpl(uri)).blob();
     form.append('file', blob, 'sky.jpg');
   } else {
-    form.append('file', { uri, name: 'sky.jpg', type: 'image/jpeg' } as unknown as Blob);
+    form.append('file', makeFile(uri) as Blob);
   }
   return form;
+}
+
+/**
+ * Throw unless every part is one expo/fetch can encode (a string, a Blob or has `bytes()`): the
+ * same rule as its converter, checked BEFORE fetch so a bad body is never reported as a
+ * connection problem. Forms without `entries()` are left to fetch.
+ */
+export function assertUploadableForm(form: FormData): void {
+  const entries = (form as unknown as { entries?: () => Iterable<[string, unknown]> }).entries;
+  if (typeof entries !== 'function') return;
+  for (const [name, value] of entries.call(form)) {
+    const ok =
+      typeof value === 'string' ||
+      (typeof Blob !== 'undefined' && value instanceof Blob) ||
+      (typeof value === 'object' && value !== null && 'bytes' in value);
+    if (!ok) throw new Error(`form part "${name}" cannot be sent (no bytes/Blob)`);
+  }
 }
 
 /** Sky class + cloud fraction of a sky photo (processed in memory by the API, never stored). */
 export async function uploadSkyImage(
   uri: string,
-  { baseUrl = API_URL, platform, ...opts }: FetchOptions & { platform?: string } = {},
+  {
+    baseUrl = API_URL,
+    platform,
+    makeFile,
+    ...opts
+  }: FetchOptions & { platform?: string; makeFile?: (uri: string) => UploadFile } = {},
 ): Promise<SkyImageResponse> {
   const url = `${baseUrl}/sky-image`;
-  const body = await skyImageForm(uri, { platform, fetchImpl: opts.fetchImpl });
+  let body: FormData;
+  try {
+    body = await skyImageForm(uri, { platform, fetchImpl: opts.fetchImpl, makeFile });
+    assertUploadableForm(body);
+  } catch (err) {
+    // stage "prepare": failed on the phone before the request, so never "cannot connect"
+    throw new ApiError(PREPARE_FAILED_TH, { url, detail: describeError(err), stage: 'prepare' });
+  }
   // no Content-Type header: fetch sets multipart/form-data with the boundary itself
   const data = (await request(url, { method: 'POST', body }, opts)) as SkyImageResponse;
   if (
