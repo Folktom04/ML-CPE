@@ -83,6 +83,7 @@ jest.mock('expo-image-manipulator', () => {
   };
 });
 
+// File implements Blob like expo-file-system's (bytes/name/type): expo/fetch reads it via bytes().
 jest.mock('expo-file-system', () => {
   const deleted: string[] = [];
   class File {
@@ -90,6 +91,15 @@ jest.mock('expo-file-system', () => {
     exists = true;
     constructor(uri: string) {
       this.uri = uri;
+    }
+    get name() {
+      return this.uri.split('/').pop() ?? '';
+    }
+    get type() {
+      return /\.jpe?g$/i.test(this.uri) ? 'image/jpeg' : '';
+    }
+    async bytes() {
+      return new Uint8Array([0xff, 0xd8, 0xff, 0xd9]); // tiny JPEG markers
     }
     delete() {
       deleted.push(this.uri);

@@ -134,6 +134,52 @@ it('asks to aim higher when the camera looks at the horizon', async () => {
   expect(screen.queryByTestId('camera-aim-hint')).toBeNull();
 });
 
+describe('low shooting angle (option B: still analysed, labelled unreliable)', () => {
+  async function shootAt(g: { x: number; y: number; z: number } | null) {
+    mockUpload.mockResolvedValue(sampleSky(0.87));
+    await renderWithSettings(<CameraScreen />, acked());
+    await screen.findByTestId('camera-shoot');
+    await waitFor(() => expect(accel.__hasListener()).toBe(true));
+    if (g) await act(async () => accel.__emit(g));
+    await act(async () => fireEvent.press(screen.getByTestId('camera-shoot')));
+    await screen.findByTestId('sky-class');
+  }
+
+  it('about 20° up: the photo is analysed and the result says it is unreliable', async () => {
+    // jest-expo is iOS (z is flipped): z = +sin(20°) means the back camera looks 20° up
+    const e = (20 * Math.PI) / 180;
+    await shootAt({ x: 0, y: Math.cos(e), z: Math.sin(e) });
+    expect(mockUpload).toHaveBeenCalledTimes(1); // not blocked
+    expect(screen.getByTestId('sky-low-angle')).toHaveTextContent(
+      'ถ่ายที่มุมเงยประมาณ 20° (ต่ำกว่า 30°) อาจมีตึกหรือต้นไม้ในภาพ ผลนี้ไม่น่าเชื่อถือ',
+    );
+  });
+
+  it('about 45° up: no label', async () => {
+    const e = (45 * Math.PI) / 180;
+    await shootAt({ x: 0, y: Math.cos(e), z: Math.sin(e) });
+    expect(screen.queryByTestId('sky-low-angle')).toBeNull();
+  });
+
+  it('without a sensor reading: no label', async () => {
+    await shootAt(null);
+    expect(screen.queryByTestId('sky-low-angle')).toBeNull();
+  });
+});
+
+it('a "prepare" error says nothing was sent (not "cannot connect"), temp files deleted', async () => {
+  const { PREPARE_FAILED_TH } = jest.requireActual('@/api/client');
+  mockUpload.mockRejectedValue(
+    new ApiError(PREPARE_FAILED_TH, { detail: 'Error: Unsupported FormDataPart', stage: 'prepare' }),
+  );
+  await renderWithSettings(<CameraScreen />, acked());
+  await act(async () => fireEvent.press(await screen.findByTestId('camera-shoot')));
+  const msg = await screen.findByTestId('camera-error');
+  expect(msg).toHaveTextContent('ยังไม่ได้ส่งข้อมูลไปเซิร์ฟเวอร์', { exact: false });
+  expect(msg).not.toHaveTextContent('เชื่อมต่อ', { exact: false });
+  expect(fs.__deleted).toEqual([ORIGINAL, CLEAN]);
+});
+
 it('shows the model cloud fraction (in the image, not the whole sky) only when the API sends it', async () => {
   mockUpload.mockResolvedValue({
     ...sampleSky(0.87),

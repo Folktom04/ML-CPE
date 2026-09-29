@@ -74,6 +74,20 @@ export function faceUpMessage(status: FaceUpStatus, tiltDeg: number | null): str
 }
 
 /** Thai hint for aiming the back camera at the sky (null when the aim is fine). */
+/**
+ * Label for a sky photo taken below `CAMERA_MIN_ELEVATION_DEG` (buildings or trees may be in
+ * the image, which the sky model was not trained on). The photo is still analysed; null when the
+ * angle is fine or unknown (no sensor). The angle stays on the phone.
+ */
+export function lowAngleWarning(elevationDeg: number | null): string | null {
+  if (elevationDeg === null || elevationDeg >= CAMERA_MIN_ELEVATION_DEG) return null;
+  return (
+    // floor: 29.6° must not read "ประมาณ 30° (ต่ำกว่า 30°)"
+    `ถ่ายที่มุมเงยประมาณ ${Math.floor(elevationDeg)}° (ต่ำกว่า ${CAMERA_MIN_ELEVATION_DEG}°) ` +
+    'อาจมีตึกหรือต้นไม้ในภาพ ผลนี้ไม่น่าเชื่อถือ'
+  );
+}
+
 export function cameraAimHint(elevationDeg: number | null): string | null {
   if (elevationDeg === null) return null;
   if (elevationDeg < CAMERA_MIN_ELEVATION_DEG) {

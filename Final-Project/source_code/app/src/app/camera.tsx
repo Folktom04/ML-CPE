@@ -1,5 +1,5 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -14,7 +14,7 @@ import { ApiError, describeError } from '@/api/client';
 import type { SkyImageResponse } from '@/api/types';
 import { Card, colors, Note } from '@/components/Card';
 import { DISCLAIMER_TH } from '@/config';
-import { cameraAimHint, cameraElevationDeg } from '@/lib/orientation';
+import { cameraAimHint, cameraElevationDeg, lowAngleWarning } from '@/lib/orientation';
 import { useSettings } from '@/lib/SettingsContext';
 import {
   CLOUD_CLEAR_NOTE_TH,
@@ -33,13 +33,15 @@ import { useGravity } from '@/lib/useGravity';
 type Shot =
   | { kind: 'idle' }
   | { kind: 'busy' }
-  | { kind: 'ok'; data: SkyImageResponse }
+  | { kind: 'ok'; data: SkyImageResponse; elevationDeg: number | null }
   | { kind: 'error'; message: string; detail: string };
 
-function SkyResult({ data }: { data: SkyImageResponse }) {
+function SkyResult({ data, elevationDeg }: { data: SkyImageResponse; elevationDeg: number | null }) {
   const v = skyView(data);
+  const lowAngle = lowAngleWarning(elevationDeg);
   return (
     <Card title="ผลวิเคราะห์ท้องฟ้า">
+      {lowAngle ? <Note testID="sky-low-angle">{lowAngle}</Note> : null}
       {v.kind === 'sure' ? (
         <Text style={styles.big} testID="sky-class">
           {v.nameTh}
@@ -94,15 +96,22 @@ export default function CameraScreen() {
   const camera = useRef<CameraView>(null);
   const [shot, setShot] = useState<Shot>({ kind: 'idle' });
   const gravity = useGravity();
-  const hint = gravity ? cameraAimHint(cameraElevationDeg(gravity, Platform.OS)) : null;
+  const elevation = gravity ? cameraElevationDeg(gravity, Platform.OS) : null;
+  const hint = cameraAimHint(elevation);
+  // angle at the moment of the shot (below 30°: still analysed, but labelled as unreliable)
+  const elevationRef = useRef<number | null>(null);
+  useEffect(() => {
+    elevationRef.current = elevation;
+  }, [elevation]);
 
   const takeAndAnalyze = useCallback(async () => {
     if (!camera.current) return;
     setShot({ kind: 'busy' });
     try {
+      const elevationDeg = elevationRef.current;
       const photo = await camera.current.takePictureAsync({ quality: 0.8, exif: false });
       if (!photo) throw new Error('no photo');
-      setShot({ kind: 'ok', data: await analyzeSkyPhoto(photo) });
+      setShot({ kind: 'ok', data: await analyzeSkyPhoto(photo), elevationDeg });
     } catch (err) {
       setShot({
         kind: 'error',
@@ -172,7 +181,7 @@ export default function CameraScreen() {
             {shot.kind === 'busy' ? 'กำลังวิเคราะห์…' : 'ถ่ายและวิเคราะห์'}
           </Text>
         </Pressable>
-        {shot.kind === 'ok' ? <SkyResult data={shot.data} /> : null}
+        {shot.kind === 'ok' ? <SkyResult data={shot.data} elevationDeg={shot.elevationDeg} /> : null}
         {shot.kind === 'error' ? (
           <Card title="วิเคราะห์ไม่สำเร็จ">
             <Text style={styles.text} testID="camera-error">

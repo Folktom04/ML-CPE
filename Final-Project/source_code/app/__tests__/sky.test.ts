@@ -1,4 +1,9 @@
-import { ApiError, messageForStatus, skyImageForm, uploadSkyImage } from '@/api/client';
+import {
+  ApiError,
+  messageForStatus,
+  skyImageForm,
+  uploadSkyImage,
+} from '@/api/client';
 import { cloudLevelTh, LOW_CONFIDENCE, pct, rankedClasses, skyView } from '@/lib/sky';
 import { analyzeSkyPhoto, reencodePhoto, removeTempFile, type SkyPhotoDeps } from '@/lib/skyPhoto';
 
@@ -66,14 +71,16 @@ describe('uploadSkyImage', () => {
     expect(init.body).toBeInstanceOf(FormData);
   });
 
-  it('native form sends {uri, name, type}; web form reads the blob', async () => {
+  it('native form sends an expo-file-system File (not {uri}); web form reads the blob', async () => {
+    const { File } = jest.requireMock('expo-file-system');
     const append = jest.spyOn(FormData.prototype, 'append').mockImplementation(() => undefined);
     await skyImageForm('file:///c/clean.jpg', { platform: 'android' });
-    expect(append).toHaveBeenLastCalledWith('file', {
-      uri: 'file:///c/clean.jpg',
-      name: 'sky.jpg',
-      type: 'image/jpeg',
-    });
+    const [name, part, filename] = append.mock.calls[append.mock.calls.length - 1];
+    expect(name).toBe('file');
+    expect(part).toBeInstanceOf(File);
+    expect((part as unknown as { uri: string }).uri).toBe('file:///c/clean.jpg');
+    expect(part).not.toHaveProperty('uri', undefined);
+    expect(filename).toBeUndefined(); // expo's FormData would re-wrap the part otherwise
     const blob = new Blob(['x'], { type: 'image/jpeg' });
     const f = jest.fn().mockResolvedValue({ blob: () => Promise.resolve(blob) });
     await skyImageForm('blob:http://localhost/1', { platform: 'web', fetchImpl: f });
@@ -91,6 +98,17 @@ describe('uploadSkyImage', () => {
     expect(err.message).toBe(messageForStatus(status));
     expect(messageForStatus(413)).toBe('รูปใหญ่เกิน 10 MB');
     expect(messageForStatus(415)).toContain('ไม่ใช่รูปภาพ');
+  });
+
+  it('a real network failure is still "cannot connect" (no prepare stage)', async () => {
+    const f = jest.fn().mockRejectedValue(new TypeError('Network request failed'));
+    const err = await uploadSkyImage('file:///c.jpg', {
+      fetchImpl: f as unknown as typeof fetch,
+      platform: 'android',
+    }).catch((e) => e);
+    expect(f).toHaveBeenCalledTimes(1);
+    expect(err.stage).toBeUndefined();
+    expect(err.message).toBe('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจอินเทอร์เน็ตหรือที่อยู่ API');
   });
 
   it('rejects a response without the sky fields', async () => {

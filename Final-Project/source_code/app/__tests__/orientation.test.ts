@@ -3,6 +3,7 @@ import {
   cameraElevationDeg,
   faceUpMessage,
   faceUpStatus,
+  lowAngleWarning,
   screenTiltDeg,
   upZ,
 } from '@/lib/orientation';
@@ -58,4 +59,17 @@ it('back camera points at the zenith when the screen faces down', () => {
   expect(cameraAimHint(10)).toContain('ยกกล้องขึ้นอีก');
   expect(cameraAimHint(30)).toBeNull();
   expect(cameraAimHint(null)).toBeNull();
+});
+
+describe('lowAngleWarning (sky photo below 30°: analysed but labelled)', () => {
+  it('labels angles below 30°, never the rest or a missing reading', () => {
+    expect(lowAngleWarning(20)).toBe(
+      'ถ่ายที่มุมเงยประมาณ 20° (ต่ำกว่า 30°) อาจมีตึกหรือต้นไม้ในภาพ ผลนี้ไม่น่าเชื่อถือ',
+    );
+    expect(lowAngleWarning(29.6)).toMatch(/^ถ่ายที่มุมเงยประมาณ 29° \(ต่ำกว่า 30°\)/);
+    expect(lowAngleWarning(-10)).toMatch(/ประมาณ -10°/);
+    expect(lowAngleWarning(30)).toBeNull();
+    expect(lowAngleWarning(75)).toBeNull();
+    expect(lowAngleWarning(null)).toBeNull();
+  });
 });
