@@ -5,7 +5,11 @@ import type { HourUV } from '@/api/types';
 import { Card, colors, Note } from '@/components/Card';
 import { planReapply } from '@/lib/alertPlan';
 import { BURN_FRACTION, sunStatus } from '@/lib/dose';
-import { notificationPermission, supported } from '@/lib/notifications';
+import {
+  notificationPermission,
+  notificationsAvailable,
+  notifyUnavailableText,
+} from '@/lib/notifications';
 import { useSettings } from '@/lib/SettingsContext';
 import type { SkinType } from '@/lib/skinQuiz';
 
@@ -73,6 +77,10 @@ export function SunSessionCard({
     };
   }, []);
 
+  // without notifications (Expo Go on Android) the card only shows the times on screen
+  const available = notificationsAvailable();
+  const unavailable = notifyUnavailableText();
+  const pct = Math.round(BURN_FRACTION * 100);
   const status = s.sunStartedAt ? sunStatus(hours, skin, s.sunStartedAt, nowMs) : null;
   const reapplyDue = s.reapplyAt && s.reapplyAt > nowMs ? s.reapplyAt : null;
 
@@ -92,9 +100,14 @@ export function SunSessionCard({
 
   return (
     <Card title="อยู่กลางแจ้ง">
-      {supported && allowed === false ? (
+      {available && allowed === false ? (
         <Note testID="notify-not-allowed">
           ยังไม่ได้อนุญาตการแจ้งเตือน ปุ่มด้านล่างยังคำนวณให้ แต่จะไม่มีการแจ้งเตือนเด้งขึ้นมา
+        </Note>
+      ) : null}
+      {unavailable ? (
+        <Note testID="notify-unavailable">
+          {unavailable} · ปุ่มด้านล่างยังคำนวณให้และแสดงเวลาบนจอนี้ ต้องเปิดแอปดูเอง
         </Note>
       ) : null}
 
@@ -108,10 +121,14 @@ export function SunSessionCard({
           </Text>
           <Text style={styles.text} testID="sun-warn-at">
             {status.warnAt === null
-              ? `ช่วงพยากรณ์ที่มีอยู่ ไม่ถึง ${Math.round(BURN_FRACTION * 100)} % จึงยังไม่ตั้งเตือน`
+              ? available
+                ? `ช่วงพยากรณ์ที่มีอยู่ ไม่ถึง ${pct} % จึงยังไม่ตั้งเตือน`
+                : `ช่วงพยากรณ์ที่มีอยู่ ไม่ถึง ${pct} %`
               : status.warnAt <= nowMs
-                ? `ถึง ${Math.round(BURN_FRACTION * 100)} % แล้วโดยประมาณ ควรเข้าร่มหรือป้องกันผิว`
-                : `จะเตือนราว ${clockBkk(status.warnAt)} (ที่ประมาณ ${Math.round(BURN_FRACTION * 100)} % ของ MED)`}
+                ? `ถึง ${pct} % แล้วโดยประมาณ ควรเข้าร่มหรือป้องกันผิว`
+                : available
+                  ? `จะเตือนราว ${clockBkk(status.warnAt)} (ที่ประมาณ ${pct} % ของ MED)`
+                  : `จะถึงประมาณ ${pct} % ของ MED ราว ${clockBkk(status.warnAt)} (ไม่มีแจ้งเตือนเด้ง ดูที่หน้านี้)`}
           </Text>
           <Button
             label="เข้าร่มแล้ว"
@@ -132,7 +149,9 @@ export function SunSessionCard({
         <View style={styles.block}>
           {reapplyDue ? (
             <Text style={styles.text} testID="reapply-at">
-              จะเตือนทาครีมซ้ำราว {clockBkk(reapplyDue)}
+              {available
+                ? `จะเตือนทาครีมซ้ำราว ${clockBkk(reapplyDue)}`
+                : `ควรทาครีมซ้ำราว ${clockBkk(reapplyDue)} (ไม่มีแจ้งเตือนเด้ง)`}
             </Text>
           ) : null}
           {reapplyReason ? (

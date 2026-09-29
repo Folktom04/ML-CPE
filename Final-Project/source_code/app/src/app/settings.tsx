@@ -5,7 +5,12 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, Vie
 import { describeError } from '@/api/client';
 import { Card, colors, Note } from '@/components/Card';
 import { requestLocationPermission } from '@/lib/location';
-import { notificationPermission, supported } from '@/lib/notifications';
+import {
+  notificationPermission,
+  notificationsAvailable,
+  notifyUnavailableText,
+  WITHOUT_NOTIFY_TH,
+} from '@/lib/notifications';
 import { useSettings } from '@/lib/SettingsContext';
 import {
   ALERT_THRESHOLDS,
@@ -108,6 +113,11 @@ export default function SettingsScreen() {
   };
 
   const safe = safeThresholdFor(s.alertThreshold);
+  // Without the notifications module (Expo Go on Android) the switches are shown off and
+  // disabled ON SCREEN ONLY: the stored values (and notify_enabled on the server) stay as they
+  // are, so a development build later works with the user's own choices.
+  const available = notificationsAvailable();
+  const unavailable = notifyUnavailableText();
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -144,12 +154,19 @@ export default function SettingsScreen() {
       </Card>
 
       <Card title="แจ้งเตือนเมื่อ UV สูง">
+        {unavailable ? (
+          <Note testID="notify-unavailable">
+            {unavailable} · {WITHOUT_NOTIFY_TH}
+          </Note>
+        ) : null}
         <Row
           label="เปิดการแจ้งเตือน"
           hint="แจ้งเตือนจากในเครื่อง ตั้งเวลาล่วงหน้าจากพยากรณ์ ไม่ส่งข้อมูลออกจากมือถือ ใช้ได้โดยไม่ต้องยินยอม">
           <Switch
-            value={s.notifyEnabled}
+            value={available ? s.notifyEnabled : false}
+            disabled={!available}
             onValueChange={async (v) => {
+              if (!available) return;
               if (v) setAllowed(await notificationPermission(true));
               await update({ notifyEnabled: v });
             }}
@@ -157,7 +174,7 @@ export default function SettingsScreen() {
             testID="notify-switch"
           />
         </Row>
-        {supported && allowed === false ? (
+        {available && allowed === false ? (
           <Note testID="notify-not-allowed">
             ยังไม่ได้อนุญาตการแจ้งเตือนของเครื่อง จึงไม่มีการแจ้งเตือนเด้งขึ้นมา เปิดสิทธิ์ได้ในการตั้งค่าของเครื่อง
           </Note>
@@ -186,16 +203,18 @@ export default function SettingsScreen() {
       <Card title="แจ้งเตือนในเครื่อง">
         <Row label="สรุป UV ทุกเช้า 07:00">
           <Switch
-            value={s.dailySummary}
-            onValueChange={(v) => update({ dailySummary: v })}
+            value={available ? s.dailySummary : false}
+            disabled={!available}
+            onValueChange={(v) => (available ? update({ dailySummary: v }) : undefined)}
             accessibilityLabel="สรุป UV ทุกเช้า"
             testID="daily-switch"
           />
         </Row>
         <Row label="เตือนทาครีมกันแดดซ้ำทุก 2 ชม.">
           <Switch
-            value={s.reapplyReminder}
-            onValueChange={(v) => update({ reapplyReminder: v })}
+            value={available ? s.reapplyReminder : false}
+            disabled={!available}
+            onValueChange={(v) => (available ? update({ reapplyReminder: v }) : undefined)}
             accessibilityLabel="เตือนทาครีมกันแดดซ้ำ"
             testID="reapply-switch"
           />

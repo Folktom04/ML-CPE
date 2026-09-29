@@ -10,7 +10,12 @@ import type { HourUV } from '@/api/types';
 import { DEFAULT_SKIN_TYPE } from '@/config';
 import { burnNotification, planDaily, planReapply, planUvAlerts } from '@/lib/alertPlan';
 import { sunStatus } from '@/lib/dose';
-import { loadHistory, replaceScheduled, saveHistory, supported } from '@/lib/notifications';
+import {
+  loadHistory,
+  notificationsAvailable,
+  replaceScheduled,
+  saveHistory,
+} from '@/lib/notifications';
 import type { Settings } from '@/lib/settings';
 import type { SkinType } from '@/lib/skinQuiz';
 
@@ -20,6 +25,7 @@ export async function syncLocalNotifications(
   s: Settings,
   nowMs: number = Date.now(),
 ): Promise<void> {
+  if (!notificationsAvailable()) return; // Expo Go on Android / web: nothing to schedule
   const skin = (s.skinType ?? DEFAULT_SKIN_TYPE) as SkinType;
   const history = await loadHistory(nowMs);
   const uv = s.notifyEnabled
@@ -43,7 +49,7 @@ export async function syncLocalNotifications(
 
 export function useLocalNotifications(hours: HourUV[] | null, s: Settings): void {
   useEffect(() => {
-    if (!hours || !supported) return;
+    if (!hours || !notificationsAvailable()) return;
     syncLocalNotifications(hours, s).catch(() => {
       // notifications are extra; the screen keeps working without them
     });
