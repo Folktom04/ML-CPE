@@ -5,7 +5,11 @@ import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-nat
 import { Card, colors, Note } from '@/components/Card';
 import { DISCLAIMER_TH } from '@/config';
 import { requestLocationPermission } from '@/lib/location';
-import { notificationPermission, supported as notifySupported } from '@/lib/notifications';
+import {
+  notificationPermission,
+  notificationsAvailable,
+  notifyUnavailableText,
+} from '@/lib/notifications';
 import { CONSENT_HINT_TH, CONSENT_LABEL_TH } from '@/lib/settings';
 import { useSettings } from '@/lib/SettingsContext';
 import { SKIN_DESCRIPTION_TH } from '@/lib/skinQuiz';
@@ -114,7 +118,7 @@ export default function OnboardingScreen() {
               testID="pick-province"
             />
           </View>
-          {notifySupported ? (
+          {notificationsAvailable() ? (
             <View style={styles.notify}>
               <Text style={styles.label}>การแจ้งเตือน (ไม่บังคับ)</Text>
               <Text style={styles.hint}>
@@ -134,6 +138,10 @@ export default function OnboardingScreen() {
                 </Text>
               )}
             </View>
+          ) : notifyUnavailableText() ? (
+            <Note testID="onboarding-notify-unavailable">
+              {notifyUnavailableText()} · แอปยังดูค่า UV ได้ตามปกติ
+            </Note>
           ) : null}
           <Button
             label="ถัดไป"
