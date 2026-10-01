@@ -103,7 +103,7 @@
 
 ## ทดสอบ push จากเซิร์ฟเวอร์ (วัน 23–24, ต้องใช้ development build)
 Expo Go บน Android รับ remote push ไม่ได้ (ตั้งแต่ SDK 53) ต้องใช้ EAS development build และ Firebase project (FCM)
-1. รัน `eas init` (เขียน `extra.eas.projectId` ลง `app.json` ให้เอง ห้ามใส่ค่าปลอม) แล้วตั้งค่า FCM ตามเอกสาร Expo จากนั้น `eas build --profile development --platform android`
+1. รัน `eas init` (เขียน `extra.eas.projectId` ลง `app.json` ให้เอง ห้ามใส่ค่าปลอม) แล้วตั้งค่า FCM ตามเอกสาร Expo จากนั้น `eas build --profile development --platform android` **service account key ของ Firebase (ไฟล์ JSON ที่ดาวน์โหลดจาก Firebase console) เป็นความลับ ห้าม commit:** เก็บไว้นอก repo แล้วอัปโหลดผ่าน `eas credentials` (Android → Google Service Account → FCM V1) ไฟล์ชื่อ `*firebase-adminsdk*.json` และ `*service-account*.json` ถูก ignore ไว้ใน `.gitignore` แล้ว ก่อน commit ให้ดู `git status` ว่าไม่มีไฟล์ key ติดไปด้วย
 2. รัน API ด้วย `--host 0.0.0.0` (ห้ามตั้ง `PUSH_SCHEDULER=off`) แล้วเปิด `/health` ต้องได้ `"push_scheduler": true`
 3. ในแอป: เปิดสวิตช์ยินยอม เลือกจังหวัด (หรือเปิด GPS ให้ได้จังหวัด) เปิดการแจ้งเตือนและอนุญาตสิทธิ์ หน้าตั้งค่าต้องขึ้น "การแจ้งเตือน "UV สูง" และ "ปลอดภัยแล้ว" ส่งจากเซิร์ฟเวอร์ทุก 30 นาที …" และตาราง `push_tokens` ต้องมีแถวใหม่
 4. ลองส่งทันทีโดยไม่รอ 30 นาที (PowerShell ที่ `Final-Project/`): `$env:PYTHONPATH = "source_code"; .venv\Scripts\python.exe -m src.push --once --dry-run` (ดูข้อความที่จะส่ง ไม่ส่งจริง) แล้วรันซ้ำโดยไม่ใส่ `--dry-run` ตอนที่ค่าบนของ UV ถึงเกณฑ์ ต้องได้ "UV สูง ประมาณ …" และ `notifications_log` ต้องมีแถว `status = sent`
