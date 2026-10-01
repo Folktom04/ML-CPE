@@ -3,6 +3,10 @@
  * then, only with the user's explicit consent (`serverConsent`), syncs the server fields (skin
  * type, alerts) with POST/PUT /users. Withdrawing consent deletes the server record. The app
  * keeps working when the server is unreachable; the sync state says "not synced yet".
+ *
+ * Day 23: a failed sync sets `serverPending` (stored), retried when the app opens. `pushActive`
+ * (memory only, false at every start) says whether server push replaces the local "UV สูง" /
+ * "ปลอดภัยแล้ว" alerts; it is re-checked on start and after every relevant change (push.ts).
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -18,8 +22,19 @@ import {
   type ReactNode,
 } from 'react';
 
-import { ApiError, createUser, deleteUser, describeError, updateUserSettings } from '@/api/client';
+import { Platform } from 'react-native';
+
+import {
+  ApiError,
+  createUser,
+  deleteUser,
+  describeError,
+  getHealth,
+  registerPushToken,
+  updateUserSettings,
+} from '@/api/client';
 import { clearAllNotifications } from '@/lib/notifications';
+import { checkServerPush, getPushToken, type PushDeps } from '@/lib/push';
 import {
   clearSettings,
   DEFAULT_SETTINGS,
@@ -45,6 +60,16 @@ type SettingsContextValue = {
   update: (patch: Partial<Settings>) => Promise<void>;
   /** Delete the server record (if any), then everything stored on the phone. */
   deleteMyData: () => Promise<void>;
+  /** Day 23: server push is active, so local "UV สูง" / "ปลอดภัยแล้ว" are not scheduled. */
+  pushActive: boolean;
+};
+
+/** Real server-push dependencies (tests pass fakes). */
+const REAL_PUSH_DEPS: PushDeps = {
+  getToken: () => getPushToken(),
+  register: registerPushToken,
+  health: () => getHealth(),
+  platform: Platform.OS,
 };
 
 const SERVER_KEYS: (keyof Settings)[] = [
@@ -76,15 +101,19 @@ export function SettingsProvider({
   children,
   storage = AsyncStorage,
   newDeviceId = Crypto.randomUUID,
+  pushDeps = REAL_PUSH_DEPS,
 }: {
   children: ReactNode;
   storage?: KeyValueStorage;
   newDeviceId?: () => string;
+  pushDeps?: PushDeps;
 }) {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [ready, setReady] = useState(false);
   const [sync, setSync] = useState<SyncState>({ kind: 'idle' });
+  const [pushActive, setPushActive] = useState(false);
   const current = useRef<Settings>(DEFAULT_SETTINGS);
+  const pushCheck = useRef(0);
 
   const commit = useCallback(
     async (s: Settings) => {
@@ -129,6 +158,30 @@ export function SettingsProvider({
     setSync({ kind: 'idle' });
   }, [commit]);
 
+  /** Sync the server fields now; a failure is remembered in `serverPending` for a retry. */
+  const syncNow = useCallback(
+    async (next: Settings) => {
+      setSync({ kind: 'syncing' });
+      try {
+        const userId = await syncToServer(next);
+        const c = current.current;
+        if (userId !== c.userId || c.serverPending) {
+          await commit({ ...c, userId, serverPending: false });
+        }
+        setSync({ kind: 'ok' });
+      } catch (err) {
+        if (!current.current.serverPending) {
+          await commit({ ...current.current, serverPending: true });
+        }
+        setSync({
+          kind: 'error',
+          message: err instanceof ApiError ? err.message : describeError(err),
+        });
+      }
+    },
+    [commit],
+  );
+
   const update = useCallback(
     async (patch: Partial<Settings>) => {
       let next: Settings = { ...current.current, ...patch };
@@ -140,20 +193,39 @@ export function SettingsProvider({
       }
       const serverChanged = SERVER_KEYS.some((k) => k in patch) || next.userId === null;
       if (!next.serverConsent || !next.skinType || !serverChanged) return;
-      setSync({ kind: 'syncing' });
-      try {
-        const userId = await syncToServer(next);
-        if (userId !== current.current.userId) await commit({ ...current.current, userId });
-        setSync({ kind: 'ok' });
-      } catch (err) {
-        setSync({
-          kind: 'error',
-          message: err instanceof ApiError ? err.message : describeError(err),
-        });
-      }
+      await syncNow(next);
     },
-    [commit, newDeviceId, withdraw],
+    [commit, newDeviceId, withdraw, syncNow],
   );
+
+  // App opened after a sync that failed: retry once (consent is still required).
+  useEffect(() => {
+    if (!ready) return;
+    const s = current.current;
+    if (s.serverPending && s.serverConsent && s.skinType && s.deviceId) syncNow(s);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, after loading
+  }, [ready]);
+
+  // Day 23: (re)check server push on start and after every relevant change; only the latest
+  // check counts, and any failure leaves pushActive false (local alerts).
+  useEffect(() => {
+    if (!ready || sync.kind === 'syncing') return;
+    const id = ++pushCheck.current;
+    checkServerPush(current.current, pushDeps).then((ok) => {
+      if (id === pushCheck.current) setPushActive(ok);
+    });
+  }, [
+    ready,
+    sync.kind,
+    pushDeps,
+    settings.serverConsent,
+    settings.skinType,
+    settings.province,
+    settings.notifyEnabled,
+    settings.userId,
+    settings.deviceId,
+    settings.serverPending,
+  ]);
 
   const deleteMyData = useCallback(async () => {
     const { userId, deviceId } = current.current;
@@ -168,14 +240,16 @@ export function SettingsProvider({
     }
     await clearSettings(storage);
     await clearAllNotifications();
+    pushCheck.current += 1; // ignore a check still in flight
+    setPushActive(false);
     current.current = { ...DEFAULT_SETTINGS };
     setSettings(current.current);
     setSync({ kind: 'idle' });
   }, [storage]);
 
   const value = useMemo(
-    () => ({ settings, ready, sync, update, deleteMyData }),
-    [settings, ready, sync, update, deleteMyData],
+    () => ({ settings, ready, sync, update, deleteMyData, pushActive }),
+    [settings, ready, sync, update, deleteMyData, pushActive],
   );
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }

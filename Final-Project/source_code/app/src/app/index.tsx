@@ -73,7 +73,7 @@ async function loadState(skinType: string, place: Place): Promise<State> {
  * GPS position or the chosen province. Sends first-time users to the onboarding flow.
  */
 export default function HomeScreen() {
-  const { settings, ready, update } = useSettings();
+  const { settings, ready, update, pushActive } = useSettings();
   const skinType = settings.skinType ?? DEFAULT_SKIN_TYPE;
   // A result belongs to one skin type and one location choice; after a change the screen shows
   // "loading" until the new answer arrives. In GPS mode the key does not include the province,
@@ -88,7 +88,7 @@ export default function HomeScreen() {
   const okData = state.kind === 'ok' ? state.data : null;
   // now + forecast hours; memoised so notifications are re-planned only for a new forecast
   const hours = useMemo(() => (okData ? chartHours(okData) : null), [okData]);
-  useLocalNotifications(hours, settings);
+  useLocalNotifications(hours, settings, pushActive);
 
   const load = useCallback(async () => {
     const p = await resolvePlace(settings);

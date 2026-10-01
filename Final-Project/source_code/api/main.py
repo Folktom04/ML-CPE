@@ -28,6 +28,8 @@ from api.schemas import (
     HourUV,
     PredictRequest,
     PredictResponse,
+    PushTokenIn,
+    PushTokenResponse,
     SkyImageResponse,
     UserCreate,
     UserResponse,
@@ -52,7 +54,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 from src import db
 from src import inference as inf
-from src import users
+from src import push, users
 from src.fetch_data import ROOT
 from src.metrics import WHO_LEVELS, who_level
 from src.risk import DISCLAIMER, assess
@@ -128,7 +130,14 @@ async def lifespan(app: FastAPI):
     log.info("database backend: %s", db.backend_name(app.state.db_engine))
     app.state.sky_reliability = sky_reliability(app.state.bundle.sky_cloud is not None)
     log.info("models loaded (sky backend: %s)", app.state.bundle.sky_backend)
-    yield
+    # day 23: server push every 30 min (PUSH_SCHEDULER=off disables it, e.g. in tests)
+    app.state.push_scheduler = push.start_scheduler(app.state.db_engine, app.state.bundle)
+    try:
+        yield
+    finally:
+        if app.state.push_scheduler is not None:
+            app.state.push_scheduler.shutdown(wait=False)
+            app.state.push_scheduler = None
 
 
 def cors_origins(env: dict[str, str] | None = None) -> list[str]:
@@ -150,7 +159,7 @@ def cors_origins(env: dict[str, str] | None = None) -> list[str]:
     return [o.strip().rstrip("/") for o in raw.split(",") if o.strip()] or DEFAULT_CORS_ORIGINS
 
 
-app = FastAPI(title="UV Guard API", version="0.19.0", lifespan=lifespan)
+app = FastAPI(title="UV Guard API", version="0.23.0", lifespan=lifespan)
 # Native apps do not send an Origin header; CORS only matters for the Expo web build.
 app.add_middleware(
     CORSMiddleware,
@@ -167,8 +176,11 @@ def _error(status: int, detail: Any) -> JSONResponse:
 
 @app.exception_handler(RequestValidationError)
 async def _validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
-    """422 with the disclaimer."""
-    return _error(422, json.loads(json.dumps(exc.errors(), default=str)))
+    """422 with the disclaimer; on ``/push-token`` the input values are dropped (no token echo)."""
+    errors = json.loads(json.dumps(exc.errors(), default=str))
+    if request.url.path.endswith("/push-token"):
+        errors = [{k: v for k, v in e.items() if k not in ("input", "ctx")} for e in errors]
+    return _error(422, errors)
 
 
 @app.exception_handler(HTTPException)
@@ -233,6 +245,12 @@ def _hour(row: Any) -> HourUV:
     )
 
 
+def _scheduler_running() -> bool:
+    """Whether the push scheduler was started and is still running."""
+    sched = getattr(app.state, "push_scheduler", None)
+    return bool(sched is not None and sched.running)
+
+
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     """Service status, the loaded model files and which database backend is in use."""
@@ -245,6 +263,7 @@ def health() -> HealthResponse:
         db_backend=db.backend_name(engine),
         db_fallback=bool(getattr(app.state, "db_fallback", False)),
         db_ok=db.ping(engine),
+        push_scheduler=_scheduler_running(),
     )
 
 
@@ -426,3 +445,24 @@ def delete_user(
     db.delete_user(session, user_id)
     log.info("user %d deleted", user_id)
     return Response(status_code=204)
+
+
+@app.put("/users/{user_id}/push-token", response_model=PushTokenResponse)
+def register_push_token(
+    user_id: int,
+    body: PushTokenIn,
+    x_device_id: str | None = DeviceHeader,
+    session: Session = Depends(_session),
+) -> PushTokenResponse:
+    """Store this phone's Expo push token for server push (day 23).
+
+    404 unknown user, 403 wrong ``X-Device-Id``, 422 when the token is not
+    ``ExponentPushToken[...]`` (at most 255 characters) or the platform is not ios/android.
+    The token is never echoed back or logged.
+    """
+    user = _owned_user(session, user_id, x_device_id)
+    try:
+        row = push.register_token(session, user, body.token, body.platform)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return PushTokenResponse(registered=True, platform=row.platform, active=row.active)

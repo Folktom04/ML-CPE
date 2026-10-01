@@ -70,7 +70,7 @@ function Segments<T extends number>({
 /** Settings: skin type, alert toggles and thresholds, and deleting my data. */
 export default function SettingsScreen() {
   const router = useRouter();
-  const { settings: s, ready, sync, update, deleteMyData } = useSettings();
+  const { settings: s, ready, sync, update, deleteMyData, pushActive } = useSettings();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -182,9 +182,22 @@ export default function SettingsScreen() {
         <Text style={styles.hint} testID="notify-limits">
           ต้องเปิดแอปอย่างน้อยวันละครั้ง (พยากรณ์ในเครื่องมีประมาณ 36 ชม.) ถ้าไม่ได้เปิด จะมีแจ้งเตือน
           &quot;เปิดแอปเพื่อดู UV วันนี้&quot; ตอน 07:00 แทน · Android อาจส่งแจ้งเตือนช้ากว่าเวลาที่ตั้ง
-          (โหมดประหยัดแบตเตอรี่) · การแจ้งเตือนจากเซิร์ฟเวอร์ขณะไม่ได้เปิดแอปจะมาในเวอร์ชันถัดไป
-          และต้องยินยอมให้ส่งข้อมูล
+          (โหมดประหยัดแบตเตอรี่) · การแจ้งเตือน &quot;UV สูง&quot; / &quot;ปลอดภัยแล้ว&quot; จากเซิร์ฟเวอร์
+          (ขณะไม่ได้เปิดแอป) ต้องยินยอมให้ส่งข้อมูลและใช้ development build (Expo Go บน Android
+          รับไม่ได้) และถ้าเซิร์ฟเวอร์ปิด push จะไม่มา
         </Text>
+        {pushActive ? (
+          <Note testID="push-status">
+            การแจ้งเตือน &quot;UV สูง&quot; และ &quot;ปลอดภัยแล้ว&quot; ส่งจากเซิร์ฟเวอร์ทุก 30 นาที ตามจังหวัด
+            จ.{s.province} แทนการตั้งเวลาในเครื่อง · ตรวจทุกครั้งที่เปิดแอป ถ้าเซิร์ฟเวอร์ปิดหลังจากนั้น
+            push จะไม่มาจนกว่าจะเปิดแอปครั้งถัดไป
+          </Note>
+        ) : s.serverConsent && s.province === null ? (
+          <Note testID="push-no-province">
+            ยังไม่รู้จังหวัด การแจ้งเตือนจากเซิร์ฟเวอร์จึงยังไม่ทำงาน (ใช้การแจ้งเตือนในเครื่องแทน)
+            เปิด GPS หรือเลือกจังหวัด
+          </Note>
+        ) : null}
         <Text style={styles.label}>เตือนเมื่อ UV ถึงระดับ</Text>
         <Segments
           values={ALERT_THRESHOLDS}
@@ -277,9 +290,9 @@ export default function SettingsScreen() {
       </Text>
 
       <Card title="ข้อมูลของฉัน">
-        <Text style={styles.hint}>
-          ถ้ายินยอม เซิร์ฟเวอร์จะเก็บเฉพาะรหัสอุปกรณ์แบบสุ่ม ประเภทผิว และการตั้งค่าการแจ้งเตือน ไม่มีชื่อ
-          อีเมล หรือรูปภาพ
+        <Text style={styles.hint} testID="my-data-text">
+          ถ้ายินยอม เซิร์ฟเวอร์จะเก็บเฉพาะรหัสอุปกรณ์แบบสุ่ม ประเภทผิว จังหวัด (ไม่เก็บพิกัด GPS)
+          การตั้งค่าการแจ้งเตือน และรหัสรับการแจ้งเตือนของเครื่อง (push token) ไม่มีชื่อ อีเมล หรือรูปภาพ
         </Text>
         {deleted ? (
           <Note testID="deleted-note">ลบข้อมูลทั้งหมดแล้ว ทั้งบนเซิร์ฟเวอร์และในเครื่อง</Note>

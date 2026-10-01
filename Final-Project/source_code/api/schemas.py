@@ -114,6 +114,9 @@ class HealthResponse(Disclaimed):
     db_backend: str = Field(description="postgresql (target) or sqlite (fallback only)")
     db_fallback: bool = Field(description="true when DATABASE_URL is unset and SQLite is used")
     db_ok: bool = Field(description="database answered SELECT 1")
+    push_scheduler: bool = Field(
+        False, description="server push job is running (the app uses local alerts otherwise)"
+    )
 
 
 class ErrorResponse(Disclaimed):
@@ -160,3 +163,24 @@ class UserResponse(Disclaimed):
     safe_threshold: float = Field(description="'safe again' UVI = alert_threshold - 2")
     alert_burn_minutes: int
     updated_at: str = Field(description="UTC, ISO 8601")
+
+
+class PushTokenIn(BaseModel):
+    """Body of ``PUT /users/{id}/push-token``.
+
+    Both fields are plain strings and are checked in the endpoint, so a 422 never echoes the
+    token back (FastAPI's own validation errors include the input value).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    token: str = Field(description="ExponentPushToken[...] (at most 255 characters)")
+    platform: str = Field(description="ios or android")
+
+
+class PushTokenResponse(Disclaimed):
+    """Result of registering a push token (the token itself is never returned)."""
+
+    registered: bool
+    platform: str
+    active: bool
