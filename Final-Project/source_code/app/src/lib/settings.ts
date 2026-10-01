@@ -1,7 +1,8 @@
 /**
  * User settings kept on the phone (day 19), stored as JSON in AsyncStorage.
  *
- * `skinType`, `notifyEnabled`, `alertThreshold` and `alertBurnMinutes` are sent to the server
+ * `skinType`, `notifyEnabled`, `alertThreshold`, `alertBurnMinutes` and `province` (the Thai
+ * name only, never GPS coordinates) are sent to the server
  * (`POST /users`, `PUT /users/{id}/settings`) for remote alerts (day 23) ONLY after the user
  * turns on `serverConsent` (explicit, opt-in: the skin type is health-related data, PDPA s.26,
  * see docs/db.md). Turning it off withdraws consent and deletes the server record. The daily
@@ -49,6 +50,11 @@ export type Settings = {
   sunStartedAt: number | null;
   /** Reapply-sunscreen reminder due at this time (ms); null = none (day 22, phone only). */
   reapplyAt: number | null;
+  /**
+   * Day 23: the last server sync failed, so the server may hold older settings (threshold,
+   * province). Retried when the app opens; server push is not trusted while it is true.
+   */
+  serverPending: boolean;
 };
 
 export type LocationMode = 'gps' | 'province';
@@ -75,6 +81,7 @@ export const DEFAULT_SETTINGS: Settings = {
   onboarded: false,
   sunStartedAt: null,
   reapplyAt: null,
+  serverPending: false,
 };
 
 /** "Safe again" UVI for an alert UVI. */
@@ -145,6 +152,7 @@ export function parseSettings(raw: string | null): Settings {
     onboarded: pick(obj.onboarded, (v) => v === true, d.onboarded),
     sunStartedAt: pick(obj.sunStartedAt, isTime, d.sunStartedAt),
     reapplyAt: pick(obj.reapplyAt, isTime, d.reapplyAt),
+    serverPending: pick(obj.serverPending, isBool, d.serverPending),
   };
 }
 

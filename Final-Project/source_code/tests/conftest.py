@@ -34,8 +34,9 @@ def assert_test_database(url: Any) -> None:
 
 @pytest.fixture(autouse=True)
 def never_main_database(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Drop ``DATABASE_URL`` and guard every engine created through ``src.db``."""
+    """Drop ``DATABASE_URL``, turn the push scheduler off and guard every ``src.db`` engine."""
     monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("PUSH_SCHEDULER", "off")  # day 23: no background push job in tests
 
     def guarded(url: Any, *args: Any, **kwargs: Any) -> Any:
         """``create_engine`` that refuses non-test PostgreSQL databases."""

@@ -1,6 +1,6 @@
 /**
  * Minimal client for the UV Guard API (day 18: POST /predict, GET /forecast; day 19: /users;
- * day 20: POST /sky-image).
+ * day 20: POST /sky-image; day 23: PUT /users/{id}/push-token, GET /health).
  */
 
 import { File } from 'expo-file-system';
@@ -10,8 +10,10 @@ import { API_URL, REQUEST_TIMEOUT_MS } from '@/config';
 
 import type {
   ForecastResponse,
+  HealthResponse,
   PredictRequest,
   PredictResponse,
+  PushTokenResponse,
   SkyImageResponse,
   UserResponse,
   UserSettingsBody,
@@ -224,6 +226,36 @@ export async function deleteUser(
     { method: 'DELETE', headers: { 'X-Device-Id': deviceId } },
     opts,
   );
+}
+
+/**
+ * Day 23: store this phone's Expo push token for server push (only the owner's device id is
+ * accepted). The server never echoes the token back.
+ */
+export async function registerPushToken(
+  userId: number,
+  deviceId: string,
+  token: string,
+  platform: string,
+  { baseUrl = API_URL, ...opts }: FetchOptions = {},
+): Promise<PushTokenResponse> {
+  return (await request(
+    `${baseUrl}/users/${userId}/push-token`,
+    {
+      method: 'PUT',
+      headers: { ...JSON_HEADERS, 'X-Device-Id': deviceId },
+      body: JSON.stringify({ token, platform }),
+    },
+    opts,
+  )) as PushTokenResponse;
+}
+
+/** GET /health: server status, including whether the push scheduler runs (day 23). */
+export async function getHealth({
+  baseUrl = API_URL,
+  ...opts
+}: FetchOptions = {}): Promise<HealthResponse> {
+  return (await request(`${baseUrl}/health`, { method: 'GET' }, opts)) as HealthResponse;
 }
 
 /** A file part that expo/fetch can read (expo-file-system `File` implements Blob via bytes()). */

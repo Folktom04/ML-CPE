@@ -83,6 +83,20 @@ export type UserResponse = {
   disclaimer: string;
 };
 
+/** Response of GET /health (only the fields the app reads). */
+export type HealthResponse = {
+  status: string;
+  /** Day 23: the server's 30-min push job is running (else the app keeps local UV alerts). */
+  push_scheduler?: boolean;
+};
+
+/** Response of PUT /users/{id}/push-token (the token itself is never returned). */
+export type PushTokenResponse = {
+  registered: boolean;
+  platform: string;
+  active: boolean;
+};
+
 /** Response of POST /sky-image: supporting information only, never changes the UVI. */
 export type SkyImageResponse = {
   /** SWIMCAT-ext class id, e.g. "thick_white_clouds". */
