@@ -169,6 +169,22 @@ describe('checkServerPush', () => {
     expect(await checkServerPush(READY, deps({ health: jest.fn(async () => ({ status: 'ok' })) }))).toBe(false);
   });
 
+  it('never rejects: getToken / register / health rejecting or throwing all give false', async () => {
+    const boom = () => {
+      throw new Error('sync throw');
+    };
+    const cases: Partial<PushDeps>[] = [
+      { getToken: jest.fn().mockRejectedValue(new Error('token failed')) },
+      { getToken: jest.fn(boom) },
+      { register: jest.fn(boom) },
+      { health: jest.fn(boom) },
+      { health: jest.fn().mockRejectedValue(new Error('down')) },
+    ];
+    for (const c of cases) {
+      await expect(checkServerPush(READY, deps(c))).resolves.toBe(false);
+    }
+  });
+
   it('16 /health fails -> false', async () => {
     const d = deps({ health: jest.fn().mockRejectedValue(new TypeError('Network request failed')) });
     expect(await checkServerPush(READY, d)).toBe(false);
@@ -206,6 +222,25 @@ describe('SettingsProvider pushActive', () => {
     await waitFor(() => expect(screen.getByTestId('probe')).toHaveTextContent('push|synced'));
     // a stored "pushActive" is ignored when loading, and the app never stores it
     expect(parseSettings(JSON.stringify({ pushActive: true }))).not.toHaveProperty('pushActive');
+  });
+
+  it('pushActive is never written to storage, even while true and after a settings change', async () => {
+    const storage = new MemoryStorage(READY); // starts without pushActive
+    expect(JSON.stringify([...storage.data.values()])).not.toContain('pushActive');
+    let api!: ReturnType<typeof useSettings>;
+    function Grab() {
+      api = useSettings();
+      return <Probe />;
+    }
+    await renderProvider(<Grab />, storage, deps());
+    await waitFor(() => expect(screen.getByTestId('probe')).toHaveTextContent(/^push\|/));
+    await act(async () => api.update({ alertThreshold: 11 }));
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
+    await waitFor(() => expect(storage.stored()?.alertThreshold).toBe(11)); // a write happened
+    expect(screen.getByTestId('probe')).toHaveTextContent(/^push\|/);
+    for (const [key, raw] of storage.data) {
+      expect(`${key}=${raw}`).not.toContain('pushActive');
+    }
   });
 
   it('12 a failed sync is remembered and retried on start; push waits while it fails', async () => {
