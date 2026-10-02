@@ -1,0 +1,33 @@
+# EAS Build upload = the UV Guard Expo app only (Final-Project/source_code/app).
+# eas-cli reads this file from the git root, and when it exists it REPLACES every .gitignore
+# for the upload, so the secret / build-output rules below are repeated on purpose.
+# Re-include patterns have no trailing "/": eas-cli checks directories without a slash.
+
+# allowlist: ignore everything, then open only the path to the app
+/*
+!/Final-Project
+/Final-Project/*
+!/Final-Project/source_code
+/Final-Project/source_code/*
+!/Final-Project/source_code/app
+
+# never upload (repeated from the .gitignore files)
+.git
+node_modules
+.expo
+dist
+web-build
+.env
+.env.*
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+*firebase-adminsdk*.json
+*service-account*.json
+.DS_Store
+/Final-Project/source_code/app/android
+/Final-Project/source_code/app/ios
