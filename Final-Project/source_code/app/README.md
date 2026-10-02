@@ -101,6 +101,30 @@
 
 ผลที่ต้องบันทึกใน ROADMAP: ช้ากี่นาทีในแต่ละข้อ (1, 3, 4, 5) พร้อมรุ่นมือถือ, Android เวอร์ชัน และโหมดประหยัดแบตเตอรี่เปิดหรือปิด
 
+## EAS development build สำหรับ Android (วัน 24, build #1 ยังไม่มี FCM)
+APK มีแค่ส่วน native (รวม `expo-dev-client`) ส่วน JS โหลดจาก Metro บนโน้ตบุ๊ก ดังนั้น `EXPO_PUBLIC_API_URL` ใน `.env.local` ยังใช้ได้ตามเดิม Metro ใส่ค่าให้ตอน bundle ค่าไม่ถูกฝังใน APK และไฟล์ไม่ถูกอัปโหลด ถ้าแก้ค่าให้รัน `npx expo start --dev-client -c` ใหม่ URL ต้องเป็น IP ของโน้ตบุ๊กใน LAN หรือ Hotspot (หรือใช้ `localhost` คู่กับ `adb reverse tcp:8000 tcp:8000`) และ API ต้องรันด้วย `--host 0.0.0.0`
+
+- **ตั้งค่า:** `eas.json` มี profile `development` (`developmentClient`, `distribution: internal`, Android `apk`) ใน `app.json` ตั้ง `android.package = com.folktom04.uvguard` ห้ามเปลี่ยนชื่อนี้ เพราะ keystore และ `google-services.json` ของ build #2 ผูกกับชื่อนี้
+- **สิ่งที่ถูกอัปโหลด:** git root คือ `ML-CPE/` และ eas-cli อ่าน `ML-CPE/.easignore` จากตรงนั้น ไฟล์นี้**ใช้แทน `.gitignore` ทุกไฟล์** จึงเปิดให้ผ่านเฉพาะ `Final-Project/source_code/app` และเขียนกฎกันความลับซ้ำไว้ในตัว ถ้าไม่มีไฟล์นี้จะอัปโหลดทั้ง repo ประมาณ 619 MB (LAB*, models, docs ฯลฯ) จำลองด้วยโค้ดของ eas-cli 24.8.0 (2 ต.ค. 2026) ได้ 79 ไฟล์ 1.95 MB (tar.gz 1.2 MB) ไม่มี `.env*`, `dataset`, `models`, `LAB*`, `.git` และ `node_modules`
+- **keystore:** ให้ EAS สร้างและเก็บไว้ ("Generate a new Android Keystore?" ตอบ Yes) ห้ามดาวน์โหลดหรือสร้างไฟล์ keystore ใน repo `*.jks` และ `*.keystore` ถูก ignore ไว้แล้ว
+
+- **lock file กับ npm บน EAS:** build #1 (จาก commit `956e8f9`) พังที่ขั้น Install dependencies ด้วย `npm ci` EUSAGE "Missing: @emnapi/core@1.11.3 / @emnapi/runtime@1.11.3 from lock file" สาเหตุไม่ใช่ Windows แต่เป็นเวอร์ชัน npm: npm 11.6.2 บนเครื่องเราไม่ใส่ peer deps ของ `@napi-rs/wasm-runtime` (optional, มาจาก `eslint-config-expo` → `eslint-import-resolver-typescript` → `unrs-resolver`) ไว้ระดับบนสุดของ lock แต่ npm 10.8.2, 10.9.2 และ 11.4.2 ต้องการให้มี (ลองซ้ำได้บน Windows ทั้งแบบใส่และไม่ใส่ `--os=linux`) แก้แล้ววันที่ 2 ต.ค. 2026 โดยเพิ่ม 2 รายการนี้ลง `package-lock.json` เอง (+25 บรรทัด ไม่มีแพ็กเกจอื่นเปลี่ยนเวอร์ชัน) และมี `__tests__/lockfile.test.ts` คอยตรวจ ถ้ารัน `npm install` ด้วย npm 11.6.2 แล้วมันลบ 2 รายการนี้ออก เทสต์จะ fail **ก่อน `eas build` ทุกครั้งที่ lock เปลี่ยน ให้ตรวจด้วย:** `npx -y npm@10.9.2 ci --dry-run --ignore-scripts --os=linux --cpu=x64` ต้องไม่มี EUSAGE
+
+ขั้นตอน (PowerShell ที่ `Final-Project/source_code/app`, working tree ต้องสะอาดก่อน เพราะไฟล์ที่ยังไม่ commit ก็ถูกอัปโหลดด้วย):
+```powershell
+eas login
+eas init                                            # เขียน extra.eas.projectId (+ owner) ลง app.json → commit
+eas build --profile development --platform android  # ได้ลิงก์/QR ของ APK
+npx expo start --dev-client                         # เปิดแอป UV Guard ในมือถือแล้วเชื่อม Metro
+```
+ติดตั้ง APK ในมือถือ (อนุญาต "ติดตั้งแอปที่ไม่รู้จัก") แล้วตรวจ:
+1. หน้าตั้งค่า**ต้องไม่ขึ้น** "Expo Go บน Android ไม่รองรับการแจ้งเตือน" สวิตช์แจ้งเตือนต้องกดได้ (`notificationsAvailable()` = true)
+2. Android 13+ ต้องถามสิทธิ์ "แจ้งเตือน" (`POST_NOTIFICATIONS` มาจาก manifest ของ `expo-notifications`) ให้กดอนุญาต ใน Settings → แอป → UV Guard → การแจ้งเตือน ต้องเห็น 2 ช่อง: "เตือนระดับ UV" และ "เตือนความจำ (สรุปรายวัน, ทาครีมซ้ำ)"
+3. ยังไม่มี FCM: `getPushToken()` คืน null (`getExpoPushTokenAsync` throw แล้วถูก catch) แอปต้องไม่ crash และการแจ้งเตือนทั้งหมดเป็น local หน้าตั้งค่าต้องไม่ขึ้นข้อความว่าส่งจากเซิร์ฟเวอร์
+4. ทำตามข้อ 1–7 ของหัวข้อ "ทดสอบการแจ้งเตือนบนมือถือจริง (วัน 22)" แล้วจดว่าช้ากี่นาที
+
+**ข้อจำกัด: ไม่ขอสิทธิ์ `SCHEDULE_EXACT_ALARM` (และ `USE_EXACT_ALARM`)** ใน `expo-notifications` 57 trigger แบบ `DATE` จะใช้ alarm แบบเวลาแน่นอน (exact) เฉพาะเมื่อ `canScheduleExactAlarms()` เป็น true ไม่อย่างนั้นใช้ `setAndAllowWhileIdle` แทน (`ExpoSchedulingDelegate.kt`) เหตุผลที่ไม่ขอ: บน Android 14+ สิทธิ์นี้ถูกปฏิเสธเป็นค่าเริ่มต้น ผู้ใช้ต้องไปเปิดเองที่ "การปลุกและการช่วยเตือน" ส่วน `USE_EXACT_ALARM` Google Play ให้ใช้เฉพาะแอปนาฬิกาปลุกหรือปฏิทิน ผลคือ**แจ้งเตือนที่ตั้งเวลาไว้ (UV สูง, สรุป 07:00, ใกล้ผิวไหม้, ทาครีมซ้ำ) อาจมาช้ากว่าเวลาที่ตั้ง** โดยเฉพาะเมื่อจอดับนานหรือเปิดโหมดประหยัดแบตเตอรี่ (Doze) ให้ถือเป็นการเตือนโดยประมาณ ผู้ใช้ควรดูค่าในแอปประกอบ ความล่าช้าที่วัดได้จริงให้บันทึกใน ROADMAP วัน 24
+
 ## ทดสอบ push จากเซิร์ฟเวอร์ (วัน 23–24, ต้องใช้ development build)
 Expo Go บน Android รับ remote push ไม่ได้ (ตั้งแต่ SDK 53) ต้องใช้ EAS development build และ Firebase project (FCM)
 1. รัน `eas init` (เขียน `extra.eas.projectId` ลง `app.json` ให้เอง ห้ามใส่ค่าปลอม) แล้วตั้งค่า FCM ตามเอกสาร Expo จากนั้น `eas build --profile development --platform android` **service account key ของ Firebase (ไฟล์ JSON ที่ดาวน์โหลดจาก Firebase console) เป็นความลับ ห้าม commit:** เก็บไว้นอก repo แล้วอัปโหลดผ่าน `eas credentials` (Android → Google Service Account → FCM V1) ไฟล์ชื่อ `*firebase-adminsdk*.json` และ `*service-account*.json` ถูก ignore ไว้ใน `.gitignore` แล้ว ก่อน commit ให้ดู `git status` ว่าไม่มีไฟล์ key ติดไปด้วย

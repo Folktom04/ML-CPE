@@ -342,6 +342,7 @@
 
 ### วัน 24 — ทดสอบบนมือถือจริง
 - [ ] Android
+  > ค้าง: เตรียม EAS development build #1 แล้ว (ยังไม่มี FCM, 2 ต.ค. 2026) มี `expo-dev-client`, `eas.json` (profile `development`, APK, internal), `android.package = com.folktom04.uvguard` และ `ML-CPE/.easignore` ที่ให้อัปโหลดเฉพาะโฟลเดอร์แอป (จำลองได้ 79 ไฟล์ 1.95 MB ไม่มี `.env*`, dataset, models, LAB*, `.git` และ `node_modules`) ตัดสินว่าไม่ขอ `SCHEDULE_EXACT_ALARM` แจ้งเตือนที่ตั้งเวลาไว้จึงอาจช้า (เป็นข้อจำกัดใน `source_code/app/README.md`) ผู้ใช้ต้อง `eas init` → `eas build --profile development --platform android` → ติดตั้ง APK → `npx expo start --dev-client` แล้วทดสอบตาม README หัวข้อ "EAS development build" และบันทึกว่าช้ากี่นาที remote push เป็น build #2 (Firebase/FCM)
 - [ ] iOS (development build)
 - [ ] ทดสอบทุกประเภทการแจ้งเตือน
 
