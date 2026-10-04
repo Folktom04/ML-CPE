@@ -211,7 +211,7 @@ UVA MAE 2.910 W/m², UVB MAE 0.088 W/m² `[docs/test_2025_results.json]`
 |---|---|
 | [ROADMAP.md](ROADMAP.md) | แผน 30 วันและบันทึกการตัดสินใจ |
 | [report.pdf](report.pdf) | รายงาน (PDF, ไฟล์ส่งงาน) |
-| [docs/report.md](docs/report.md) | ร่างรายงาน |
+| [docs/report.md](docs/report.md) | รายงาน (ต้นฉบับ Markdown ของ report.pdf) |
 | [docs/architecture.md](docs/architecture.md) | ไดอะแกรมสถาปัตยกรรม (Mermaid) |
 | [docs/results_summary.md](docs/results_summary.md) | ผลลัพธ์ทุกตัวเลขพร้อมไฟล์ต้นทาง |
 | [docs/uv_guard_presentation.pptx](docs/uv_guard_presentation.pptx) | สไลด์นำเสนอ |
