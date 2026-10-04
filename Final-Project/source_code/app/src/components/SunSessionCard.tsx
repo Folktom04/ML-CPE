@@ -117,9 +117,11 @@ export function SunSessionCard({
           </Text>
           <Text style={styles.text} testID="sun-warn-at">
             {status.warnAt === null
-              ? available
-                ? `ช่วงพยากรณ์ที่มีอยู่ ไม่ถึง ${pct} % จึงยังไม่ตั้งเตือน`
-                : `ช่วงพยากรณ์ที่มีอยู่ ไม่ถึง ${pct} %`
+              ? status.notBeforeSunset
+                ? `วันนี้ UV ไม่พอจะถึง ${pct} % ของ MED ก่อนแดดหมด จึงไม่ตั้งเตือน`
+                : available
+                  ? `ช่วงพยากรณ์ที่มีอยู่ ไม่ถึง ${pct} % จึงยังไม่ตั้งเตือน`
+                  : `ช่วงพยากรณ์ที่มีอยู่ ไม่ถึง ${pct} %`
               : status.warnAt <= nowMs
                 ? `ถึง ${pct} % แล้วโดยประมาณ ควรเข้าร่มหรือป้องกันผิว`
                 : available
