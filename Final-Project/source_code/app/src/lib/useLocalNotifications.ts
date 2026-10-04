@@ -33,24 +33,33 @@ export async function syncLocalNotifications(
   if (!notificationsAvailable()) return; // Expo Go on Android / web: nothing to schedule
   const skin = (s.skinType ?? DEFAULT_SKIN_TYPE) as SkinType;
   const history = await loadHistory(nowMs);
-  const uv =
-    s.notifyEnabled && !pushActive
-      ? planUvAlerts(hours, nowMs, { threshold: s.alertThreshold, skin }, history)
+  // An overdue notification (time passed, Android not delivered yet) is kept while its reason
+  // still holds, see replaceScheduled(); switching a kind off or ending a session cancels it.
+  const uvOn = s.notifyEnabled && !pushActive;
+  const uv = uvOn
+    ? planUvAlerts(hours, nowMs, { threshold: s.alertThreshold, skin }, history)
     : [];
-  await replaceScheduled(['uv_high', 'uv_safe'], uv, nowMs);
+  await replaceScheduled(['uv_high', 'uv_safe'], uv, nowMs, () => uvOn);
   await saveHistory(history, uv);
 
   const daily = s.dailySummary ? planDaily(hours, nowMs, { threshold: s.alertThreshold }) : [];
-  await replaceScheduled(['daily_summary', 'daily_fallback'], daily, nowMs);
+  await replaceScheduled(['daily_summary', 'daily_fallback'], daily, nowMs, () => s.dailySummary);
 
-  const warnAt = s.sunStartedAt ? sunStatus(hours, skin, s.sunStartedAt, nowMs).warnAt : null;
-  await replaceScheduled(['burn'], warnAt ? [burnNotification(warnAt)] : [], nowMs);
+  const started = s.sunStartedAt;
+  const warnAt = started ? sunStatus(hours, skin, started, nowMs).warnAt : null;
+  // keep the overdue warning of THIS session only (a new "ออกแดด" starts after it), unless a
+  // newer forecast moved the 80 % time into the future (then the new warning replaces it)
+  await replaceScheduled(['burn'], warnAt ? [burnNotification(warnAt)] : [], nowMs, (n) =>
+    started !== null && n.at >= started ? warnAt === null || warnAt <= nowMs : false,
+  );
 
+  const reapplyAt = s.reapplyReminder ? s.reapplyAt : null;
   const reapply =
-    s.reapplyReminder && s.reapplyAt && s.reapplyAt > nowMs
-      ? planReapply(hours, s.reapplyAt - 2 * 3600 * 1000).plan
-      : null;
-  await replaceScheduled(['reapply'], reapply ? [reapply] : [], nowMs);
+    reapplyAt && reapplyAt > nowMs ? planReapply(hours, reapplyAt - 2 * 3600 * 1000).plan : null;
+  // keep only the overdue reminder of the current press ("ทาครีมอีกครั้งแล้ว" moves reapplyAt)
+  await replaceScheduled(['reapply'], reapply ? [reapply] : [], nowMs, (n) =>
+    reapplyAt ? Math.abs(n.at - reapplyAt) < 60 * 1000 : false,
+  );
 }
 
 export function useLocalNotifications(

@@ -12,6 +12,7 @@ import {
 } from '@/lib/notifications';
 import { useSettings } from '@/lib/SettingsContext';
 import type { SkinType } from '@/lib/skinQuiz';
+import { NOW_INTERVAL_MS, useNow } from '@/lib/useNow';
 
 /** "HH:MM" in Asia/Bangkok of a time in ms. */
 export function clockBkk(ms: number): string {
@@ -53,17 +54,12 @@ export function SunSessionCard({
   hours: HourUV[];
   skin: SkinType;
   isDaylight: boolean;
-  /** Fixed clock for tests; the app ticks every minute. */
+  /** Fixed clock for tests; the app uses `useNow` (30 s + on returning to the foreground). */
   nowMs?: number;
 }) {
   const { settings: s, update } = useSettings();
-  const [tick, setTick] = useState(() => Date.now());
-  useEffect(() => {
-    if (fixedNow !== undefined) return;
-    const id = setInterval(() => setTick(Date.now()), 60 * 1000);
-    return () => clearInterval(id);
-  }, [fixedNow]);
-  const nowMs = fixedNow ?? tick;
+  // refreshed every 30 s and when the app returns from the background (timers pause while locked)
+  const nowMs = useNow(NOW_INTERVAL_MS, fixedNow);
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [reapplyReason, setReapplyReason] = useState<string | null>(null);
 
