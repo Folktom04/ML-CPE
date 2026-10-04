@@ -210,9 +210,12 @@ UVA MAE 2.910 W/m², UVB MAE 0.088 W/m² `[docs/test_2025_results.json]`
 | เอกสาร | เนื้อหา |
 |---|---|
 | [ROADMAP.md](ROADMAP.md) | แผน 30 วันและบันทึกการตัดสินใจ |
+| [report.pdf](report.pdf) | รายงาน (PDF, ไฟล์ส่งงาน) |
 | [docs/report.md](docs/report.md) | ร่างรายงาน |
 | [docs/architecture.md](docs/architecture.md) | ไดอะแกรมสถาปัตยกรรม (Mermaid) |
 | [docs/results_summary.md](docs/results_summary.md) | ผลลัพธ์ทุกตัวเลขพร้อมไฟล์ต้นทาง |
+| [docs/uv_guard_presentation.pptx](docs/uv_guard_presentation.pptx) | สไลด์นำเสนอ |
+| [docs/uv_guard_field_test_2026-10-04.xlsx](docs/uv_guard_field_test_2026-10-04.xlsx) | บันทึกทดสอบภาคสนาม 4 ต.ค. 2026 |
 | [docs/api.md](docs/api.md) · [docs/db.md](docs/db.md) | API และฐานข้อมูล (รวม PDPA) |
 | [docs/datasets.md](docs/datasets.md) | dataset ภาพท้องฟ้า, license และการอ้างอิง |
 | [source_code/app/README.md](source_code/app/README.md) | การรันแอปและขั้นตอนทดสอบบนมือถือ |
