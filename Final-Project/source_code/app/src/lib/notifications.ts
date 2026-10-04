@@ -149,35 +149,53 @@ export async function notificationPermission(ask: boolean): Promise<boolean> {
   }
 }
 
-/** Cancel the scheduled notifications of the given kinds. */
-export async function cancelKinds(kinds: NotificationKind[]): Promise<void> {
-  const Notifications = loadNotifications().mod;
-  if (!Notifications) return;
-  const all = await Notifications.getAllScheduledNotificationsAsync();
-  await Promise.all(
-    all
-      .filter((n) => kinds.includes(n.content.data?.kind as NotificationKind))
-      .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
-  );
-}
+/** A scheduled notification whose time has passed but which Android has not delivered yet. */
+export type OverdueNotification = { kind: NotificationKind; at: number };
+
+/**
+ * Longest an overdue notification is kept (every kind). Later than this it would arrive out of
+ * context (a "07:00" summary at 10:00, a burn warning long after going indoors), so it is
+ * cancelled. Delays measured on 4 Oct 2026 were 2–6 min.
+ */
+export const MAX_OVERDUE_MS = 30 * 60 * 1000;
 
 /**
  * Replace the scheduled notifications of `kinds` with `plan` (only future times are scheduled).
+ *
+ * Android delivers these alarms inexactly (no exact-alarm permission), so a notification can
+ * still be pending some minutes after its time (field test 4 Oct 2026: 10:00 → 10:06). Such an
+ * OVERDUE notification (its `data.at` ≤ `nowMs`) is kept when `keepOverdue` says its reason
+ * still holds; otherwise a re-plan in that gap would cancel it and, its time being past, never
+ * schedule it again. Overdue by more than `MAX_OVERDUE_MS` it is cancelled anyway. Without
+ * `keepOverdue` (or for notifications without `data.at`, scheduled by older versions) everything
+ * of `kinds` is cancelled as before.
  * Returns how many were scheduled; 0 without permission, on the web or without the module.
  */
 export async function replaceScheduled(
   kinds: NotificationKind[],
   plan: PlannedNotification[],
   nowMs: number = Date.now(),
+  keepOverdue?: (n: OverdueNotification) => boolean,
 ): Promise<number> {
   const Notifications = loadNotifications().mod;
   if (!Notifications) return 0;
-  await cancelKinds(kinds);
+  const all = await Notifications.getAllScheduledNotificationsAsync();
+  await Promise.all(
+    all
+      .filter((n) => {
+        const kind = n.content.data?.kind as NotificationKind;
+        if (!kinds.includes(kind)) return false;
+        const at = n.content.data?.at;
+        const overdue = typeof at === 'number' && at <= nowMs && nowMs - at <= MAX_OVERDUE_MS;
+        return !(overdue && keepOverdue?.({ kind, at }));
+      })
+      .map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
+  );
   if (!(await notificationPermission(false))) return 0;
   const future = plan.filter((p) => kinds.includes(p.kind) && p.at > nowMs);
   for (const p of future) {
     await Notifications.scheduleNotificationAsync({
-      content: { title: p.title, body: p.body, data: { kind: p.kind } },
+      content: { title: p.title, body: p.body, data: { kind: p.kind, at: p.at } },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,
         date: p.at,

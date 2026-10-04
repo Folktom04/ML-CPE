@@ -1,5 +1,5 @@
 import { Link, Redirect } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -24,7 +24,13 @@ import { resolvePlace, type Place } from '@/lib/location';
 import { useSettings } from '@/lib/SettingsContext';
 import type { SkinType } from '@/lib/skinQuiz';
 import { useLocalNotifications } from '@/lib/useLocalNotifications';
+import { clockHour, hourChanged, useNow } from '@/lib/useNow';
 import { nextDaytimePeak, type DayPeak } from '@/lib/uv';
+
+/** Automatic refresh after the clock hour changes: at most this many tries per clock hour, */
+const AUTO_REFRESH_MAX_PER_HOUR = 3;
+/** and never closer together than this (also across hours). */
+const AUTO_REFRESH_GAP_MS = 2 * 60 * 1000;
 
 type State =
   | { kind: 'loading' }
@@ -81,7 +87,13 @@ export default function HomeScreen() {
   const key = `${skinType}|${
     settings.locationMode === 'gps' ? 'gps' : `${settings.locationMode}|${settings.province}`
   }`;
-  const [loaded, setLoaded] = useState<{ key: string; place: Place; state: State } | null>(null);
+  const [loaded, setLoaded] = useState<{
+    key: string;
+    place: Place;
+    state: State;
+    /** When the request was made; /predict answers for that clock hour. */
+    fetchedAt: number;
+  } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const state: State = loaded?.key === key ? loaded.state : { kind: 'loading' };
   const place = loaded?.key === key ? loaded.place : null;
@@ -91,13 +103,14 @@ export default function HomeScreen() {
   useLocalNotifications(hours, settings, pushActive);
 
   const load = useCallback(async () => {
+    const fetchedAt = Date.now();
     const p = await resolvePlace(settings);
     const s = await loadState(skinType, p);
     // keep the nearest province of a GPS fix (sent to the server only with consent)
     if (p.source === 'gps' && p.province !== settings.province) {
       await update({ province: p.province });
     }
-    return { key, place: p, state: s };
+    return { key, place: p, state: s, fetchedAt };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `key` covers the settings used
   }, [key]);
 
@@ -111,6 +124,48 @@ export default function HomeScreen() {
       active = false;
     };
   }, [ready, settings.onboarded, load]);
+
+  // "UV now" belongs to the clock hour of the request: fetch again once the hour has changed
+  // (useNow ticks every 30 s and when the app returns from the background; field test 4 Oct 2026:
+  // at 12:00 the card still said 11:00–12:00). The old values stay on screen meanwhile and also
+  // when this automatic refresh fails: then a note asks to pull down, and it is retried at most
+  // AUTO_REFRESH_MAX_PER_HOUR times per clock hour, AUTO_REFRESH_GAP_MS apart. A refresh by the
+  // user ("ลองใหม่" / pull down) still shows a failure as the full error card.
+  const nowMs = useNow();
+  const auto = useRef({ inFlight: false, hour: -1, tries: 0, lastAt: -Infinity });
+  /** `fetchedAt` of the data on screen when an automatic refresh failed (null: no failure). */
+  const [autoFailedFor, setAutoFailedFor] = useState<number | null>(null);
+  useEffect(() => {
+    if (!loaded || loaded.key !== key || loaded.state.kind !== 'ok') return;
+    if (!hourChanged(loaded.fetchedAt, nowMs)) return;
+    const a = auto.current;
+    const hour = clockHour(nowMs);
+    if (a.hour !== hour) {
+      a.hour = hour;
+      a.tries = 0;
+    }
+    if (a.inFlight || a.tries >= AUTO_REFRESH_MAX_PER_HOUR) return;
+    if (nowMs - a.lastAt < AUTO_REFRESH_GAP_MS) return;
+    a.inFlight = true;
+    a.tries += 1;
+    a.lastAt = nowMs;
+    const shown = loaded.fetchedAt;
+    load()
+      .then((r) => {
+        if (r.state.kind === 'ok') {
+          // a result for an older key must not replace a newer one
+          setLoaded((prev) => (prev && prev.key !== r.key ? prev : r));
+        } else {
+          setAutoFailedFor(shown); // keep the old values on screen
+        }
+      })
+      .catch(() => setAutoFailedFor(shown))
+      .finally(() => {
+        a.inFlight = false;
+      });
+  }, [nowMs, loaded, key, load]);
+  const stale = loaded !== null && hourChanged(loaded.fetchedAt, nowMs);
+  const autoFailed = loaded !== null && autoFailedFor === loaded.fetchedAt;
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -170,7 +225,10 @@ export default function HomeScreen() {
 
       {state.kind === 'ok' ? (
         <>
-          <UVCard data={state.data} />
+          {autoFailed ? (
+            <Note testID="auto-refresh-failed">อัปเดตชั่วโมงใหม่ไม่สำเร็จ · ลากลงเพื่อลองใหม่</Note>
+          ) : null}
+          <UVCard data={state.data} stale={stale} />
           <HourlyChart hours={hours ?? []} isDaylight={state.data.is_daylight} />
           <SunSessionCard
             hours={hours ?? []}

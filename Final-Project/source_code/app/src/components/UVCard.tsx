@@ -13,15 +13,24 @@ import {
 
 import { Card, Note, colors } from './Card';
 
-/** UV now: point UVI, q10–q90 range, WHO level colour and the upper-quantile warning. */
-export function UVCard({ data }: { data: PredictResponse }) {
+/**
+ * UV now: point UVI, q10–q90 range, WHO level colour and the upper-quantile warning. With
+ * `stale` (the clock hour has moved on and the data could not be updated yet) the title names
+ * the hour of the data without "ตอนนี้".
+ */
+export function UVCard({ data, stale = false }: { data: PredictResponse; stale?: boolean }) {
   const color = levelColor(data.level, data.uvi);
   const alertColor = levelColor(data.alert_level, data.alert_uvi);
   const showAlert = alertIsHigher(data.level, data.alert_level);
   const lowNow = levelIndexOf(data.alert_level) === 0;
 
   return (
-    <Card title={`ดัชนี UV ตอนนี้ (${formatHourInterval(data.time)} น.)`}>
+    <Card
+      title={
+        stale
+          ? `ดัชนี UV ช่วง ${formatHourInterval(data.time)} น. (ยังไม่ได้อัปเดตเป็นชั่วโมงปัจจุบัน)`
+          : `ดัชนี UV ตอนนี้ (${formatHourInterval(data.time)} น.)`
+      }>
       <View style={styles.row}>
         <Text style={[styles.uvi, { color }]} testID="uvi-value">
           {data.uvi.toFixed(1)}
