@@ -96,11 +96,11 @@ More from `[docs/test_2025_results.json]`: n = 3,718 hours; UVA MAE 2.910 W/m²,
 ## 4. Forecast: LSTM vs XGBoost (days 11–12)
 
 **Baselines on the dev-2024 windows** `[docs/lstm_baseline_dev_2024.csv]`: B1 XGBoost + Open-Meteo features MAE 0.450 (≥ Very high recall 0.831); B2 Open-Meteo `uv_index` 1.162.
-**LSTM, 3 seeds** `[source_code/models/lstm_v1_metrics.json]` (LSTM chosen over GRU on Nov–Dec 2023 validation loss: mean 0.00426 vs 0.00477):
+**LSTM, 3 seeds** `[source_code/models/lstm_v1_metrics.json]` (LSTM chosen over GRU on Nov–Dec 2023 validation loss: mean 0.00426 vs 0.00478):
 
 | Pre-declared rule (day 11) | Value | Pass |
 |---|---|---|
-| dev MAE < B1 − 0.02 (0.430) | 0.463 ± 0.008 | ❌ |
+| dev MAE < B1 − 0.02 (0.430) | 0.463 ± 0.007 | ❌ |
 | ≥ Very high recall ≥ B1 − 0.03 (0.801) | 0.873 | ✅ |
 
 → **XGBoost stays in the app**, including the 6–24 h forecast. LSTM bias +0.168.
