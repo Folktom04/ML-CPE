@@ -440,6 +440,35 @@
 - [ ] Himawari cloud products (JAXA P-Tree) เป็น features ความหนาเมฆ
 - [ ] ติดต่อขอข้อมูลวัด UV ภาคพื้นดินที่นครปฐม (ม.ศิลปากร) ใช้เป็น ground truth
 
+### ทดลอง: รังสีจากดาวเทียม Himawari-9 เป็น features ของโมเดล CMF (branch `exp/himawari-sat-features`)
+> **ประกาศก่อนดูผล (commit นี้):** เกณฑ์ทั้งหมดอยู่ใน `source_code/models/sat_exp_prereg_v1.json` ซึ่งเป็นไฟล์เดียวที่โค้ดอ่านเกณฑ์ (`load_criteria`) **main (โมเดล, API, แอป) ไม่เปลี่ยนไม่ว่าผลเป็นอย่างไร** การ merge ต้องตัดสินใจแยกอีกครั้ง หลังเห็นผลห้ามแก้ prereg และโค้ดการทดลอง `--dev` / `--test` จะไม่ยอมรันถ้า prereg, spec, `sat_experiment.py`, `sat_features.py`, `splits.py` หรือ `metrics.py` ต่างจาก HEAD
+> - **ข้อมูล:** Open-Meteo Satellite Radiation API (`jma_jaxa_himawari`, ค่าเฉลี่ยย้อนหลัง 1 ชม. ป้ายเวลาที่ท้ายชั่วโมงเหมือน `time_utc`) 2023-01-01 ถึง 2026-06-30 ข้อมูลขาดในชั่วโมงกลางวัน: 2023 0.32 %, 2024 0 %, 2025 0 %, 2026 ม.ค.–มิ.ย. 1.56 % ไฟล์ดิบอยู่ใน `dataset/raw/` เท่านั้น (เงื่อนไข JAXA P-Tree: ใช้เพื่อการศึกษาไม่แสวงกำไร ห้ามแจกต่อ)
+> - **features:** B = 23 features เดิม · **S1 (ชุดหลัก)** = B + `sat_kt_l1`, `sat_diffuse_fraction_l1`, `sat_minus_om_kt_l1` (ค่าของชั่วโมง T−1h) · S0 (ชั่วโมงเดียวกัน, ใช้งานจริงไม่ได้) และ lag 2 รายงานเท่านั้น
+> - **วิธีเทียบ:** แถวชุดเดียวกับ `train.parquet` (ปี 2026 ใช้ตัวกรองเดียวกัน), weights `uvi_clear^2`, params วัน 8 ไม่ tune ใหม่, **5 seeds (42–46)** ใช้ค่าเฉลี่ยและรายงาน SD เลือกบน train 2023 → dev 2024 และ CV folds 3–5 ถ้า go จึง refit B และ S1 บน 2023–2025 แล้วเปิด **test ใหม่ = 2026-01-01 ถึง 2026-06-30 ครั้งเดียว** (NASA POWER มีถึงแค่ 30 มิ.ย., แหล่ง SYN1DEG) ปี 2025 เปิดไปแล้วจึงไม่ใช้ตัดสิน
+> - **OMI 2026 ก่อน prereg:** นับจาก metadata ของ CMR ได้ 181 วัน (ไม่ได้ดูค่า) ปี 2025 ใช้ได้จริง 74 % ผ่านเงื่อนไข ≥ 60 วัน
+>
+> | # | เกณฑ์ (dev 2024, ต้องผ่านทุกข้อจึง go) | ผ่านเมื่อ |
+> |---|---|---|
+> | D1 | MAE_B − MAE_S1 บน dev 2024 และค่าเฉลี่ย CV folds 3–5 | **> 0.02 UVI ทั้งคู่** และ S1 ดีกว่า ≥ 2 จาก 3 folds |
+> | D2 | ขอบล่าง 95 % CI แบบ bootstrap รายวัน (2,000 รอบ, seed 42) | **> 0** |
+> | D3 | recall ของ q90 ระดับ ≥ สูงมาก ที่ลดลง | **≤ 0.03** |
+> | D4 | การตรวจข้อมูลรั่วทั้งหมด (รวมการตรวจ lag ของดาวเทียม) | ผ่านทุกข้อ |
+>
+> | # | เกณฑ์ (test 2026 ม.ค.–มิ.ย., ต้องผ่านทุกข้อ) | ผ่านเมื่อ |
+> |---|---|---|
+> | P1 | MAE_B − MAE_S1 เทียบ NASA POWER และขอบล่าง CI | **> 0.02** และ **> 0** |
+> | P2 | recall ของ q90 ระดับ ≥ สูงมาก ที่ลดลง | **≤ 0.03** |
+> | P3 | MAE ตอนเที่ยงเทียบ OMI ของ S1 − B (ต้องมี ≥ 60 วัน) | **≤ 0.10 UVI** |
+> | P4 | coverage ของช่วง CQR ของ S1 | **0.75–0.85** |
+>
+> **รายงานเท่านั้น:** S0, lag 2, B_main (โมเดลใน main, เทรน 2023–2024, ไม่เทรนใหม่), MAE เมื่อมี fallback (ตอนใช้งานจริง S1 ใช้ได้เฉพาะครึ่งหลังของชั่วโมง), recall ระดับรุนแรงมาก, การกระจายของ features ดาวเทียมรายปี 2023–2026, ค่าวินิจฉัยต้นทางร่วมกับ NASA POWER
+> **ข้อจำกัด:** NASA POWER เป็นค่าเฉลี่ยพื้นที่ราว 1° จึงพิสูจน์ความแม่นเฉพาะจุดไม่ได้ · CERES SYN1deg ใช้ภาพจากดาวเทียมค้างฟ้ารวม Himawari จึงอาจมีต้นทางร่วมกับ feature (P3 ใช้ OMI กันกรณีนี้) · ช่วยเฉพาะค่าปัจจุบัน ไม่ช่วยพยากรณ์ 6–24 ชม. · test มีแค่ ม.ค.–มิ.ย. · ข้อมูลดาวเทียมมาจาก archive ซึ่งอาจถูกเติมหรือประมวลผลซ้ำ ตอนใช้งานจริงอาจขาดมากกว่า
+- [x] โค้ดและเทสต์: `src/fetch_satellite.py`, `src/sat_features.py`, `src/sat_experiment.py`, guard ปี 2026 ใน `src/splits.py`, split `test2026` ใน `src/fetch_validation.py`, `metrics.daily_bootstrap_diff` (pytest 449 passed)
+- [x] ดึงข้อมูลดาวเทียม 2023–2026 H1 และ features Open-Meteo 2026 H1 (ไม่ดึง target ปี 2026) → `train_sat.parquet`, `models/dataset_spec_sat_v1.json`
+- [x] pre-register เกณฑ์ → `models/sat_exp_prereg_v1.json`
+- [ ] `python -m src.sat_experiment --dev` → `docs/sat_dev_results.json` (go / no-go)
+- [ ] ถ้า go: `--refit` (2023–2025) แล้ว `--test` ครั้งเดียว → `docs/sat_test_2026_results.json`
+
 ## ถ้าช้ากว่าแผน ตัดตามลำดับนี้
 1. CNN ภาพท้องฟ้า (วัน 13–14; วัน 15 สำรอง)
 2. เซนเซอร์แสงมือถือ + calibrate
