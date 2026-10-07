@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "created": "2026-10-08",
+  "base_spec": "dataset_spec_v1.json (23 features, unchanged)",
+  "feature_sets": {
+    "B": [
+      "cos_sza",
+      "hour_sin",
+      "hour_cos",
+      "month_sin",
+      "month_cos",
+      "uv_index",
+      "uv_index_clear_sky",
+      "cloud_cover",
+      "cloud_cover_low",
+      "cloud_cover_mid",
+      "cloud_cover_high",
+      "relative_humidity_2m",
+      "temperature_2m",
+      "shortwave_radiation",
+      "direct_radiation",
+      "diffuse_radiation",
+      "precipitation",
+      "om_kt",
+      "om_diffuse_fraction",
+      "aerosol_optical_depth",
+      "dust",
+      "pm2_5",
+      "ozone"
+    ],
+    "S0": [
+      "cos_sza",
+      "hour_sin",
+      "hour_cos",
+      "month_sin",
+      "month_cos",
+      "uv_index",
+      "uv_index_clear_sky",
+      "cloud_cover",
+      "cloud_cover_low",
+      "cloud_cover_mid",
+      "cloud_cover_high",
+      "relative_humidity_2m",
+      "temperature_2m",
+      "shortwave_radiation",
+      "direct_radiation",
+      "diffuse_radiation",
+      "precipitation",
+      "om_kt",
+      "om_diffuse_fraction",
+      "aerosol_optical_depth",
+      "dust",
+      "pm2_5",
+      "ozone",
+      "sat_kt_l0",
+      "sat_diffuse_fraction_l0",
+      "sat_minus_om_kt_l0"
+    ],
+    "S1": [
+      "cos_sza",
+      "hour_sin",
+      "hour_cos",
+      "month_sin",
+      "month_cos",
+      "uv_index",
+      "uv_index_clear_sky",
+      "cloud_cover",
+      "cloud_cover_low",
+      "cloud_cover_mid",
+      "cloud_cover_high",
+      "relative_humidity_2m",
+      "temperature_2m",
+      "shortwave_radiation",
+      "direct_radiation",
+      "diffuse_radiation",
+      "precipitation",
+      "om_kt",
+      "om_diffuse_fraction",
+      "aerosol_optical_depth",
+      "dust",
+      "pm2_5",
+      "ozone",
+      "sat_kt_l1",
+      "sat_diffuse_fraction_l1",
+      "sat_minus_om_kt_l1"
+    ],
+    "S1_lag2": [
+      "cos_sza",
+      "hour_sin",
+      "hour_cos",
+      "month_sin",
+      "month_cos",
+      "uv_index",
+      "uv_index_clear_sky",
+      "cloud_cover",
+      "cloud_cover_low",
+      "cloud_cover_mid",
+      "cloud_cover_high",
+      "relative_humidity_2m",
+      "temperature_2m",
+      "shortwave_radiation",
+      "direct_radiation",
+      "diffuse_radiation",
+      "precipitation",
+      "om_kt",
+      "om_diffuse_fraction",
+      "aerosol_optical_depth",
+      "dust",
+      "pm2_5",
+      "ozone",
+      "sat_kt_l2",
+      "sat_diffuse_fraction_l2",
+      "sat_minus_om_kt_l2"
+    ]
+  },
+  "satellite_columns": {
+    "lag0": [
+      "sat_kt_l0",
+      "sat_diffuse_fraction_l0",
+      "sat_minus_om_kt_l0"
+    ],
+    "lag1": [
+      "sat_kt_l1",
+      "sat_diffuse_fraction_l1",
+      "sat_minus_om_kt_l1"
+    ],
+    "lag2": [
+      "sat_kt_l2",
+      "sat_diffuse_fraction_l2",
+      "sat_minus_om_kt_l2"
+    ]
+  },
+  "n_rows_by_year": {
+    "2023": 3712,
+    "2024": 3726,
+    "2025": 3718
+  },
+  "share_sat_present_l1_by_year": {
+    "2023": 0.9967672413793104,
+    "2024": 1.0,
+    "2025": 1.0
+  },
+  "nan_share_s1_columns_by_year": {
+    "2023": {
+      "sat_kt_l1": 0.0078125,
+      "sat_diffuse_fraction_l1": 0.0078125,
+      "sat_minus_om_kt_l1": 0.0078125
+    },
+    "2024": {
+      "sat_kt_l1": 0.004025764895330112,
+      "sat_diffuse_fraction_l1": 0.004025764895330112,
+      "sat_minus_om_kt_l1": 0.004025764895330112
+    },
+    "2025": {
+      "sat_kt_l1": 0.00457235072619688,
+      "sat_diffuse_fraction_l1": 0.00457235072619688,
+      "sat_minus_om_kt_l1": 0.00457235072619688
+    }
+  },
+  "source": "Open-Meteo Satellite Radiation API, jma_jaxa_himawari, hourly backward means"
+}
