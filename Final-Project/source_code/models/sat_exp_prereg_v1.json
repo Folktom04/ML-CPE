@@ -1,0 +1,279 @@
+{
+  "id": "sat_exp_prereg_v1",
+  "title": "Himawari-9 satellite radiation as CMF features (S1) vs model B",
+  "status": "pre-registered before any S1-vs-B metric was computed",
+  "main_unchanged": "main (models, API, app) does not change whatever the result; merging is a separate decision",
+  "hypothesis": "Adding the previous hour's Himawari clear-sky index, diffuse fraction and difference to om_kt (S1) lowers the hourly UVI MAE of model B without lowering the q90 alert recall.",
+  "data": {
+    "targets": "NASA POWER hourly community RE ALLSKY_SFC_UV_INDEX / UVA / UVB -> cmf_uvi, cmf_a, cmf_b (definitions unchanged, src/features.py)",
+    "target_source_2026": "NASA POWER header sources = ['SYN1DEG'] for 2026-01..06 (checked 2026-10-07, hour counts only); last hour with data 2026-06-30 23:00 UTC",
+    "satellite": "Open-Meteo Satellite Radiation API, models=jma_jaxa_himawari, hourly backward means labelled at the end of the hour, timezone GMT, grid cell 14.0N 100.5E",
+    "satellite_missing_daytime_share": {
+      "2023": 0.0032,
+      "2024": 0.0,
+      "2025": 0.0,
+      "2026H1": 0.0156
+    },
+    "rows_compared": "exactly the rows of dataset/processed/train.parquet (model-B rows: daytime, uvi_clear >= 0.5, no NaN in the 23 B features or the targets). A satellite gap never removes a row; the S1 columns stay NaN (XGBoost missing branch). Satellite values are never interpolated. The 2026 test rows use exactly the same filters (daytime, uvi_clear >= 0.5, no NaN in the 23 B features or the targets; src.sat_experiment.build_test_table runs the training pipeline), and B, S1 and B_main are scored on that same set of rows.",
+    "n_rows": {
+      "2023": 3712,
+      "2024": 3726,
+      "2025": 3718
+    },
+    "share_rows_with_satellite_T_minus_1h": {
+      "2023": 0.9968,
+      "2024": 1.0,
+      "2025": 1.0
+    },
+    "splits": {
+      "selection": "train 2023 -> dev 2024, and CV folds 3-5 of TimeSeriesSplit(5, gap=12) on 2023-2024 (the folds of days 7-9)",
+      "refit": "B and S1 refit on 2023-2025 (2025 was opened on day 10 and is never used to choose)",
+      "test": {
+        "start": "2026-01-01",
+        "end": "2026-06-30",
+        "opened_once_by": "python -m src.sat_experiment --test (splits.open_test_2026 writes docs/sat_test_2026.lock before any 2026 target is read)"
+      }
+    }
+  },
+  "features": {
+    "B": [
+      "cos_sza",
+      "hour_sin",
+      "hour_cos",
+      "month_sin",
+      "month_cos",
+      "uv_index",
+      "uv_index_clear_sky",
+      "cloud_cover",
+      "cloud_cover_low",
+      "cloud_cover_mid",
+      "cloud_cover_high",
+      "relative_humidity_2m",
+      "temperature_2m",
+      "shortwave_radiation",
+      "direct_radiation",
+      "diffuse_radiation",
+      "precipitation",
+      "om_kt",
+      "om_diffuse_fraction",
+      "aerosol_optical_depth",
+      "dust",
+      "pm2_5",
+      "ozone"
+    ],
+    "S1": [
+      "cos_sza",
+      "hour_sin",
+      "hour_cos",
+      "month_sin",
+      "month_cos",
+      "uv_index",
+      "uv_index_clear_sky",
+      "cloud_cover",
+      "cloud_cover_low",
+      "cloud_cover_mid",
+      "cloud_cover_high",
+      "relative_humidity_2m",
+      "temperature_2m",
+      "shortwave_radiation",
+      "direct_radiation",
+      "diffuse_radiation",
+      "precipitation",
+      "om_kt",
+      "om_diffuse_fraction",
+      "aerosol_optical_depth",
+      "dust",
+      "pm2_5",
+      "ozone",
+      "sat_kt_l1",
+      "sat_diffuse_fraction_l1",
+      "sat_minus_om_kt_l1"
+    ],
+    "definitions": {
+      "cos_sza": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "hour_sin": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "hour_cos": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "month_sin": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "month_cos": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "uv_index": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "uv_index_clear_sky": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "cloud_cover": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "cloud_cover_low": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "cloud_cover_mid": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "cloud_cover_high": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "relative_humidity_2m": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "temperature_2m": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "shortwave_radiation": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "direct_radiation": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "diffuse_radiation": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "precipitation": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "om_kt": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "om_diffuse_fraction": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "aerosol_optical_depth": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "dust": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "pm2_5": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "ozone": "model-B feature, unchanged (dataset_spec_v1.json, src/features.py)",
+      "sat_kt_l1": "Himawari shortwave_radiation (hourly backward mean, W/m2) / ghi_clear of the same satellite hour (pvlib clear-sky GHI, mean of CMF_SUBSTEPS=12 instants); clipped to [0, 1.5]; NaN when ghi_clear < 20 W/m2 (same definition as om_kt); for model row T the satellite hour labelled T-1h (interval (T-2h, T-1h])",
+      "sat_diffuse_fraction_l1": "Himawari diffuse_radiation / shortwave_radiation of the same hour; clipped to [0, 1]; 1 when shortwave = 0; NaN when ghi_clear < 20 W/m2 (same definition as om_diffuse_fraction); for model row T the satellite hour labelled T-1h (interval (T-2h, T-1h])",
+      "sat_minus_om_kt_l1": "sat_kt - om_kt, both for the same satellite hour; for model row T the satellite hour labelled T-1h (interval (T-2h, T-1h])"
+    },
+    "report_only_sets": {
+      "S0": [
+        "sat_kt_l0",
+        "sat_diffuse_fraction_l0",
+        "sat_minus_om_kt_l0"
+      ],
+      "S1_lag2": [
+        "sat_kt_l2",
+        "sat_diffuse_fraction_l2",
+        "sat_minus_om_kt_l2"
+      ]
+    },
+    "report_only_note": "S0 = same-hour satellite (not available at run time; ceiling only). S1_lag2 = T-2h (robustness only). Neither is used for any decision."
+  },
+  "training": {
+    "model": "MultiOutputRegressor(XGBRegressor) on [cmf_uvi, cmf_a, cmf_b] + XGBoost reg:quantileerror on cmf_uvi (q10, q50, q75, q90)",
+    "params_multi": {
+      "n_estimators": 850,
+      "learning_rate": 0.01092265347287312,
+      "max_depth": 10,
+      "subsample": 0.876321273972357,
+      "colsample_bytree": 0.5249129521941819,
+      "min_child_weight": 8.809610396480752,
+      "reg_lambda": 0.002463511356175994,
+      "reg_alpha": 0.0003529861396838399,
+      "gamma": 1.991269195547748e-05
+    },
+    "params_quantile": {
+      "base": "params_multi",
+      "objective": "reg:quantileerror",
+      "quantile_alpha": [
+        0.1,
+        0.5,
+        0.75,
+        0.9
+      ]
+    },
+    "sample_weight": "uvi_clear^2",
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "seed_handling": "random_state is the only parameter that changes between seeds. D1, D3, P1 and P2 use the mean over the 5 seeds of the per-seed metric (SD reported). The bootstrap uses the 5-seed mean prediction.",
+    "no_retuning": "the day-8 Optuna params are used unchanged for B and S1",
+    "cqr": {
+      "dev_2024": "Q from pooled out-of-fold q10/q90 of 2023 folds [1, 2] (as in src/quantile.py)",
+      "refit_2023_2025": "Q from pooled out-of-fold folds [3, 4, 5] of TimeSeriesSplit(5, gap=12) on 2023-2025, per seed",
+      "nominal_coverage": 0.8
+    }
+  },
+  "metrics": {
+    "mae": "hourly UVI MAE vs NASA POWER; UVI = uvi_clear x predicted cmf_uvi (multi-output model)",
+    "alert_recall": "recall of 'level >= Very high' (rounded UVI >= 8) using the served q90 = uvi_clear x (q90 + Q)",
+    "coverage": "share of NASA UVI inside [q10 - Q, q90 + Q] (UVI scale)",
+    "bootstrap": {
+      "method": "paired day-block bootstrap (src.metrics.daily_bootstrap_diff): resample Asia/Bangkok calendar days with replacement and recompute MAE_B - MAE_S1 on the same rows",
+      "n_boot": 2000,
+      "seed": 42,
+      "ci": "2.5-97.5 percentile"
+    },
+    "omi_noon": "solar-noon interpolation of hourly UVI (src.preprocess.solar_noon_values) vs OMI OMUVBd UVindex at the 14.02N 100.52E pixel (values < 0 = missing); MAE on the days where OMI, B and S1 all exist"
+  },
+  "criteria": {
+    "dev": {
+      "D1": {
+        "min_mae_gain_uvi": 0.02,
+        "min_folds_better": 2,
+        "rule": "MAE_B - MAE_S1 > 0.02 on dev 2024 AND its mean over CV folds 3-5 > 0.02 AND S1 better in >= 2 of 3 folds (5-seed means)"
+      },
+      "D2": {
+        "ci_low_gt": 0.0,
+        "rule": "lower 95% bootstrap bound of MAE_B - MAE_S1 on dev 2024 > 0"
+      },
+      "D3": {
+        "max_recall_drop": 0.03,
+        "rule": "q90 recall (>= Very high) of B minus that of S1 on dev 2024 <= 0.03 (5-seed means)"
+      },
+      "D4": {
+        "leakage_checks_pass": true,
+        "rule": "every check in leakage_checks passes"
+      },
+      "go": "all of D1-D4. Otherwise stop: no refit, 2026 stays closed, report no-go."
+    },
+    "test": {
+      "P1": {
+        "min_mae_gain_uvi": 0.02,
+        "ci_low_gt": 0.0,
+        "rule": "MAE_B - MAE_S1 vs NASA POWER 2026-01..06 > 0.02 (5-seed means) AND lower 95% bootstrap bound > 0"
+      },
+      "P2": {
+        "max_recall_drop": 0.03,
+        "rule": "q90 recall (>= Very high) of B minus S1 <= 0.03 (5-seed means)"
+      },
+      "P3": {
+        "max_omi_mae_increase": 0.1,
+        "min_days": 60,
+        "rule": "noon MAE vs OMI of S1 minus B <= 0.10 UVI (5-seed mean predictions); fewer than 60 paired days -> not evaluable -> fail"
+      },
+      "P4": {
+        "coverage": [
+          0.75,
+          0.85
+        ],
+        "rule": "S1 served-interval coverage (5-seed mean) in [0.75, 0.85]"
+      },
+      "pass": "all of P1-P4"
+    }
+  },
+  "leakage_checks": [
+    "no rows >= 2025 in the selection data (existing check)",
+    "S1 features exclude NASA / targets / denominators (existing check)",
+    "folds chronological with gap 12 and no shared timestamps (existing check)",
+    "no S1 feature with |Spearman| > 0.95 vs cmf_uvi (existing check)",
+    "shuffled-target model R2 <= 0.05 (existing check)",
+    "S1 uses only lag-1 satellite columns and no NASA column",
+    "the lag-1 value of row T equals the lag-0 value of row T-1h"
+  ],
+  "diagnostic_only": "Spearman of sat_kt and om_kt with the NASA POWER clear-sky index (nasa_sw_all / nasa_sw_clear) on 2023-2024: how much the satellite feature shares with the target source",
+  "report_only": [
+    "S0 (same-hour ceiling)",
+    "S1_lag2",
+    "B_main: main's cmf_multi_xgb_final.joblib + cmf_uvi_quantile_xgb_final.ubj.gz + cqr_q_final_v1.json (trained 2023-2024), loaded without retraining",
+    "fallback MAE (dev 2024 and test 2026)",
+    "Extreme (>= 11) recall",
+    "precision and false-alarm rate of the q90 alert",
+    "TEMIS 2026 (clear-sky only)",
+    "OMI noon MAE of B_main",
+    "per-year (2023, 2024, 2025, 2026 H1) distribution of sat_kt_l1, sat_diffuse_fraction_l1 and sat_minus_om_kt_l1: median, p05, p95, NaN share; rows = every hour with the sun up at the interval midpoint and uvi_clear >= 0.5 (physics only); features only, no target (src.sat_experiment.feature_distribution)"
+  ],
+  "serving": {
+    "rule": "S1 is usable only once the satellite value labelled T-1h is published (~30 min delay), i.e. in the second half of the hour that ends at T. Before that, or when the satellite API fails or the value is missing, the system falls back to B (src.sat_features.choose_model).",
+    "fallback_metric": "report only: expected MAE when S1 serves half of each hour and B the rest (rows without the T-1h satellite value use B)"
+  },
+  "omi_2026_availability_before_preregistration": {
+    "method": "CMR granule metadata only (no login, no download, no values)",
+    "n_granule_days_2026_01_06": 181,
+    "reference": "2025 (already opened): 269 of 365 days had a usable pixel (74%)",
+    "gate": ">= 60 days required before pre-registration: passed"
+  },
+  "limitations_to_report": [
+    "NASA POWER is an area mean (CERES SYN1deg, ~1 deg); the satellite feature is a ~5 km cell. Agreement with NASA cannot prove point accuracy.",
+    "CERES SYN1deg uses geostationary imagers (incl. Himawari), so S1 and the target may share an upstream source; a gain vs NASA may partly be imitation of NASA. P3 (OMI) guards against this.",
+    "S1 helps only the current-hour estimate (second half of each hour), not the 6-24 h forecast.",
+    "The 2026 test covers January-June only (dry season to early rainy season).",
+    "Himawari data via JAXA P-Tree: non-profit research and education only; raw data is not redistributed.",
+    "The satellite data used for training and testing comes from the archive, which may have been gap-filled or reprocessed later. Data available at run time may have more gaps, so the real-time performance may be lower than measured."
+  ],
+  "guarded_files_must_equal_HEAD": [
+    "source_code/models/sat_exp_prereg_v1.json",
+    "source_code/models/dataset_spec_sat_v1.json",
+    "source_code/src/sat_experiment.py",
+    "source_code/src/sat_features.py",
+    "source_code/src/splits.py",
+    "source_code/src/metrics.py"
+  ],
+  "attribution": "Satellite radiation: Open-Meteo.com Satellite Radiation API (CC BY 4.0), based on Himawari-9 data supplied by the P-Tree System, Japan Aerospace Exploration Agency (JAXA), and the Japan Meteorological Agency (JMA)."
+}
