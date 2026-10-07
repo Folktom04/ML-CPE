@@ -124,3 +124,57 @@ def error_metrics(pred: pd.Series | np.ndarray, ref: pd.Series | np.ndarray) -> 
         "rmse": float(np.sqrt((diff**2).mean())),
         "r": corr,
     }
+
+
+def daily_bootstrap_diff(
+    time_utc: pd.Series | pd.DatetimeIndex,
+    abs_err_a: np.ndarray | pd.Series,
+    abs_err_b: np.ndarray | pd.Series,
+    n_boot: int = 2000,
+    seed: int = 42,
+    tz: str = "Asia/Bangkok",
+) -> dict[str, float]:
+    """Paired day-block bootstrap of ``MAE_a - MAE_b`` (positive = b is better).
+
+    Rows are grouped by local calendar day; each resample draws whole days with replacement
+    (keeping the hourly autocorrelation inside a day) and recomputes both MAEs on the same rows.
+    The CI is the 2.5-97.5 % percentile interval.
+
+    Args:
+        time_utc: Timezone-aware timestamps of the scored rows.
+        abs_err_a: Absolute errors of estimator a (e.g. the baseline).
+        abs_err_b: Absolute errors of estimator b on the same rows.
+        n_boot: Number of resamples.
+        seed: Random seed.
+        tz: Timezone that defines a day.
+
+    Returns:
+        ``{"diff", "ci_low", "ci_high", "n_days", "n_rows", "n_boot", "seed"}``.
+    """
+    a = np.asarray(abs_err_a, dtype=float)
+    b = np.asarray(abs_err_b, dtype=float)
+    t = pd.DatetimeIndex(time_utc)
+    if not (len(a) == len(b) == len(t)):
+        raise ValueError("time_utc, abs_err_a and abs_err_b must have the same length")
+    if np.isnan(a).any() or np.isnan(b).any():
+        raise ValueError("errors must not contain NaN (score both on the same complete rows)")
+    day = pd.Series(t.tz_convert(tz).date)
+    codes, _ = pd.factorize(day)
+    n_days = int(codes.max()) + 1
+    sum_a = np.bincount(codes, weights=a, minlength=n_days)
+    sum_b = np.bincount(codes, weights=b, minlength=n_days)
+    count = np.bincount(codes, minlength=n_days).astype(float)
+
+    rng = np.random.default_rng(seed)
+    draws = rng.integers(0, n_days, size=(n_boot, n_days))
+    n = count[draws].sum(axis=1)
+    diffs = (sum_a[draws].sum(axis=1) - sum_b[draws].sum(axis=1)) / n
+    return {
+        "diff": float((a.sum() - b.sum()) / len(a)),
+        "ci_low": float(np.percentile(diffs, 2.5)),
+        "ci_high": float(np.percentile(diffs, 97.5)),
+        "n_days": n_days,
+        "n_rows": int(len(a)),
+        "n_boot": int(n_boot),
+        "seed": int(seed),
+    }
