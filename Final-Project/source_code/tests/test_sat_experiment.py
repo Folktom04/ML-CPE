@@ -257,3 +257,33 @@ def test_build_test_table_keeps_only_2026_h1_and_adds_satellite():
     assert out["time_utc"].min() >= sp.TEST2026_START and out["time_utc"].max() < sp.TEST2026_END
     assert set(FEATURE_SETS["S1"]) <= set(out.columns) and set(DENOMINATORS) <= set(out.columns)
     assert out["sat_present_l1"].all()
+
+
+# ------------------------------------------------------------------ report-only feature distribution
+def test_feature_distribution_by_year_uses_features_only():
+    t = pd.date_range("2025-12-30 00:00", "2026-01-02 23:00", freq="h", tz="UTC")
+    rng = np.random.default_rng(3)
+    sw = rng.uniform(100, 900, len(t))
+    sw[30] = np.nan  # one satellite gap
+    sat = pd.DataFrame(
+        {
+            "time_utc": t,
+            "sat_shortwave_radiation": sw,
+            "sat_direct_radiation": sw * 0.6,
+            "sat_diffuse_radiation": sw * 0.4,
+        }
+    )
+    weather = pd.DataFrame(
+        {"time_utc": t, "shortwave_radiation": 500.0, "diffuse_radiation": 150.0}
+    )
+    dist = se.feature_distribution(sat, weather)
+    assert set(dist) == {2025, 2026}
+    for year in (2025, 2026):
+        for col in FEATURE_SETS["S1"][23:]:
+            d = dist[year][col]
+            assert set(d) == {"n", "median", "p05", "p95", "nan_share"}
+            assert 0 <= d["nan_share"] <= 1 and d["n"] > 0
+            if d["nan_share"] < 1:
+                assert d["p05"] <= d["median"] <= d["p95"]
+    # rows are hours with uvi_clear >= 0.5 only: 06:00 BKK (23:00 UTC) is excluded
+    assert dist[2026]["sat_kt_l1"]["n"] < 2 * 24
