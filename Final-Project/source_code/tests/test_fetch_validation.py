@@ -173,3 +173,59 @@ def test_fetch_temis_uses_cache_and_downloads_once(tmp_path, monkeypatch):
     assert calls == [fv.TEMIS_URL] and path.exists()
     pd.testing.assert_frame_equal(first, second)
     pd.testing.assert_frame_equal(first, fv.parse_temis(TEMIS_SAMPLE))
+
+
+# ------------------------------------------------------------ 2026 held-out split (Himawari)
+def test_split_test2026_is_first_half_of_2026_only():
+    assert fv.split_range("test2026") == (date(2026, 1, 1), date(2026, 6, 30))
+    df = pd.DataFrame(
+        {"date": pd.to_datetime(["2025-12-31", "2026-01-01", "2026-06-30", "2026-07-01"])}
+    )
+    assert fv.filter_split(df, "test2026")["date"].dt.strftime("%m-%d").tolist() == [
+        "01-01",
+        "06-30",
+    ]
+    assert fv.SPLIT_FILES[("omi", "test2026")] == "omi_holdout_2026.csv"
+
+
+def test_write_split_test2026_prints_only_row_count(tmp_path, capsys):
+    df = pd.DataFrame({"date": pd.to_datetime(["2026-02-01"]), "UVindex": [11.5]})
+    fv.write_split(df, "omi", "test2026", out_dir=tmp_path)
+    out = capsys.readouterr().out
+    assert "1 rows" in out and "11.5" not in out and "missing" not in out
+
+
+def test_fetch_omi_test2026_needs_confirmation(monkeypatch):
+    monkeypatch.setitem(sys.modules, "earthaccess", types.SimpleNamespace())
+    with pytest.raises(PermissionError):
+        fv.fetch_omi("test2026")
+
+
+def test_main_cannot_download_test2026(monkeypatch):
+    with pytest.raises(SystemExit):
+        fv.main(["--split", "test2026", "--skip-omi"])
+
+
+def test_count_omi_days_counts_granule_dates_without_login_or_download(monkeypatch):
+    class Granule:
+        def __init__(self, name):
+            self.name = name
+
+        def data_links(self):
+            return [f"https://x/{self.name}"]
+
+    names = [f"OMI-Aura_L3-OMUVBd_2026m01{d:02d}_v003-x.he5" for d in (1, 2, 2, 5)]
+    calls = {}
+
+    def search_data(**kw):
+        calls.update(kw)
+        return [Granule(n) for n in names]
+
+    def forbidden(*a, **k):
+        raise AssertionError("must not log in or download")
+
+    fake = types.SimpleNamespace(search_data=search_data, login=forbidden, download=forbidden)
+    monkeypatch.setitem(sys.modules, "earthaccess", fake)
+    res = fv.count_omi_days("test2026")
+    assert res == {"split": "test2026", "n_granules": 4, "n_days": 3, "by_month": {"2026-01": 3}}
+    assert calls["temporal"] == ("2026-01-01", "2026-06-30")

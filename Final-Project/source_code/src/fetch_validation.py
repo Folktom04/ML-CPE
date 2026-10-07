@@ -5,6 +5,9 @@
 **target source. 2025 ("test" split) is held out until day 10: do not inspect it; printing a**
 **row count is the only allowed output. 2024 is never written or used (it overlaps the model**
 **dev year, see src/splits.py).** Always read these files via ``load_validation()``.
+**Himawari experiment: "test2026" (2026-01-01 to 2026-06-30) is the new held-out split. Before the**
+**pre-registration only ``count_omi_days`` (granule metadata, no values) may touch it; the data**
+**is downloaded only inside the one-time 2026 evaluation (``confirm_test2026=True``).**
 
 - TEMIS v2.0 overpass file for Bangkok (13.667N, 100.612E): daily clear-sky noon UVI + ozone.
   Cloud-modified columns are -1 outside the MSG area, so TEMIS gives clear-sky values only.
@@ -77,13 +80,17 @@ OMI_FILE_DATE = re.compile(r"OMUVBd_(\d{4})m(\d{2})(\d{2})")
 
 # 2024 is deliberately absent: it overlaps the model dev year (src/splits.py), so TEMIS/OMI 2024
 # is never written or used.
-SPLIT_YEARS = {"select": (2023, 2023), "test": (2025, 2025)}
+SPLIT_YEARS = {"select": (2023, 2023), "test": (2025, 2025), "test2026": (2026, 2026)}
+SPLIT_LAST_DAY = {"test2026": date(2026, 6, 30)}  # NASA POWER ends 2026-06-30
 SPLIT_FILES = {
     ("temis", "select"): "temis_select_2023.csv",
     ("temis", "test"): "temis_holdout_2025.csv",
     ("omi", "select"): "omi_select_2023.csv",
     ("omi", "test"): "omi_holdout_2025.csv",
+    ("temis", "test2026"): "temis_holdout_2026.csv",
+    ("omi", "test2026"): "omi_holdout_2026.csv",
 }
+CLI_SPLITS = ("select", "test")  # test2026 is never downloaded from the command line
 
 log = logging.getLogger(__name__)
 
@@ -92,15 +99,15 @@ def split_range(split: str) -> tuple[date, date]:
     """Return the inclusive date range of a validation split.
 
     Args:
-        split: ``"select"`` (2023) or ``"test"`` (2025).
+        split: ``"select"`` (2023), ``"test"`` (2025) or ``"test2026"`` (2026-01 to 2026-06).
 
     Returns:
         ``(first_day, last_day)``.
     """
     if split not in SPLIT_YEARS:
-        raise ValueError(f"unknown split {split!r}; use 'select' or 'test'")
+        raise ValueError(f"unknown split {split!r}; use one of {sorted(SPLIT_YEARS)}")
     y0, y1 = SPLIT_YEARS[split]
-    return date(y0, 1, 1), date(y1, 12, 31)
+    return date(y0, 1, 1), SPLIT_LAST_DAY.get(split, date(y1, 12, 31))
 
 
 def filter_split(df: pd.DataFrame, split: str) -> pd.DataFrame:
@@ -121,7 +128,7 @@ def filter_split(df: pd.DataFrame, split: str) -> pd.DataFrame:
 def write_split(df: pd.DataFrame, source: str, split: str, out_dir: Path = VAL_DIR) -> Path:
     """Write one split to its CSV file and log a summary.
 
-    Only the row count is reported for the held-out ``test`` split.
+    Only the row count is reported for the held-out splits (``test``, ``test2026``).
 
     Args:
         df: Rows already restricted to ``split``.
@@ -135,7 +142,7 @@ def write_split(df: pd.DataFrame, source: str, split: str, out_dir: Path = VAL_D
     path = out_dir / SPLIT_FILES[(source, split)]
     path.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(path, index=False)
-    if split == "test":
+    if split != "select":
         print(f"{source} holdout: {len(df)} rows -> {path.name} (not inspected)")
     else:
         print(summarize(f"{source} {split}", df.rename(columns={"date": "time_utc"})))
@@ -289,6 +296,7 @@ def fetch_omi(
     lon: float = LON,
     keep_he5: bool = False,
     batch_size: int = 30,
+    confirm_test2026: bool = False,
 ) -> pd.DataFrame:
     """Download OMUVBd files for one split and extract the pixel over ``(lat, lon)``.
 
@@ -302,10 +310,13 @@ def fetch_omi(
         lon: Longitude in degrees.
         keep_he5: Keep the downloaded files in ``dataset/validation/raw/omi/``.
         batch_size: Files downloaded per batch.
+        confirm_test2026: Must be True for ``"test2026"`` (only the one-time 2026 evaluation).
 
     Returns:
         One row per day with ``date`` and ``OMI_FIELDS`` columns.
     """
+    if split == "test2026" and not confirm_test2026:
+        raise PermissionError("OMI 2026 is downloaded only inside the one-time 2026 evaluation")
     import earthaccess
     from dotenv import load_dotenv
 
@@ -351,6 +362,39 @@ def fetch_omi(
     return filter_split(df, split)
 
 
+def count_omi_days(split: str, lat: float = LAT, lon: float = LON) -> dict[str, Any]:
+    """Count OMUVBd granules (days) of a split from CMR metadata only.
+
+    No login and no download: the values are never seen. A granule is a whole-day global file,
+    so this is an upper bound on usable days (the pixel may still be fill).
+
+    Args:
+        split: Validation split name.
+        lat: Latitude in degrees.
+        lon: Longitude in degrees.
+
+    Returns:
+        ``{"split", "n_granules", "n_days", "by_month"}``.
+    """
+    import earthaccess
+
+    start, end = split_range(split)
+    granules = earthaccess.search_data(
+        short_name=OMI_SHORT_NAME,
+        version=OMI_VERSION,
+        temporal=(start.isoformat(), end.isoformat()),
+        bounding_box=(lon - 0.5, lat - 0.5, lon + 0.5, lat + 0.5),
+    )
+    days = sorted({omi_file_date(g.data_links()[0]) for g in granules})
+    by_month = pd.Series(1, index=pd.to_datetime(days)).groupby(lambda t: f"{t:%Y-%m}").sum()
+    return {
+        "split": split,
+        "n_granules": len(granules),
+        "n_days": len(days),
+        "by_month": {k: int(v) for k, v in by_month.items()},
+    }
+
+
 def main(argv: list[str] | None = None) -> None:
     """Fetch TEMIS (both splits written, test split only counted) and OMI for one split.
 
@@ -360,7 +404,7 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Fetch TEMIS / OMI validation data")
     parser.add_argument(
         "--split",
-        choices=sorted(SPLIT_YEARS),
+        choices=CLI_SPLITS,
         default="select",
         help="OMI split to download: select=2023 (day 2), test=2025 (day 10 only)",
     )
