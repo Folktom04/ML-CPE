@@ -37,12 +37,12 @@ from src.evaluate_test import CQR_Q_PATH as MAIN_Q_PATH
 from src.evaluate_test import MULTI_PATH as MAIN_MULTI_PATH
 from src.evaluate_test import QUANT_PATH as MAIN_QUANT_PATH
 from src.evaluate_test import load_xgb_gz, save_xgb_gz
-from src.features import PROCESSED_DIR, build_dataset
-from src.fetch_data import RAW_DIR, ROOT, fetch_nasapower
-from src.fetch_satellite import FEATURES_2026, SAT_CSV
+from src.features import MIN_UVI_CLEAR, PROCESSED_DIR, build_dataset
+from src.fetch_data import LAT, LON, RAW_DIR, ROOT, fetch_nasapower
+from src.fetch_satellite import FEATURES_2026, SAT_CSV, is_daytime
 from src.fetch_validation import fetch_omi, fetch_temis, filter_split, write_split
 from src.metrics import daily_bootstrap_diff
-from src.physics import CLIMATOLOGY_PATH
+from src.physics import CLIMATOLOGY_PATH, CMF_SUBSTEPS, uvi_clear_interval
 from src.preprocess import add_solar_zenith, clean, drop_night, merge_sources, solar_noon_values
 from src.quantile import (
     CALIBRATION_FOLDS_DEV,
@@ -64,6 +64,7 @@ from src.sat_features import (
     SAT_BASE,
     add_sat_features,
     fallback_abs_error,
+    lagged,
     sat_columns,
     sat_ratios,
 )
@@ -411,6 +412,44 @@ def shared_source_diagnostic(data: pd.DataFrame) -> dict[str, float]:
     }
 
 
+def feature_distribution(
+    sat: pd.DataFrame, weather: pd.DataFrame, lat: float = LAT, lon: float = LON
+) -> dict[int, dict[str, dict[str, float]]]:
+    """Per-year distribution of the S1 satellite features (report only, no target used).
+
+    Rows are every hour T up to ``TEST2026_END`` with the sun above the horizon at the interval
+    midpoint and ``uvi_clear(T) >= MIN_UVI_CLEAR`` (physics only), the same definition for
+    2023-2026, so no NASA POWER value is needed.
+
+    Args:
+        sat: Hourly satellite table.
+        weather: Hourly Open-Meteo weather covering the same hours.
+        lat: Latitude in degrees.
+        lon: Longitude in degrees.
+
+    Returns:
+        ``{year: {column: {"n", "median", "p05", "p95", "nan_share"}}}``.
+    """
+    l1 = lagged(sat_ratios(sat, weather, lat, lon), 1)
+    l1 = l1.loc[l1["time_utc"] < TEST2026_END].reset_index(drop=True)
+    t = l1["time_utc"]
+    uvi = np.asarray(uvi_clear_interval(t, lat, lon, substeps=CMF_SUBSTEPS))
+    part = l1.loc[is_daytime(t, lat, lon) & (uvi >= MIN_UVI_CLEAR)]
+    out: dict[int, dict[str, dict[str, float]]] = {}
+    for year, g in part.groupby(part["time_utc"].dt.year):
+        out[int(year)] = {
+            c: {
+                "n": int(len(g)),
+                "median": float(g[c].median()),
+                "p05": float(g[c].quantile(0.05)),
+                "p95": float(g[c].quantile(0.95)),
+                "nan_share": float(g[c].isna().mean()),
+            }
+            for c in sat_columns(1)
+        }
+    return out
+
+
 def judge_dev(summary: dict[str, Any], crit: dict[str, Any]) -> dict[str, Any]:
     """Pre-registered go / no-go on dev 2024 (D1-D4; all must pass).
 
@@ -567,6 +606,10 @@ def dev_main() -> None:
     rep["leakage"] = json.loads(checks.astype({"detail": str}).to_json(orient="records"))
     rep["leakage_ok"] = bool(checks["passed"].all())
     rep["diagnostic_shared_source"] = shared_source_diagnostic(data)
+    weather_all = pd.concat(
+        [_read_csv("openmeteo_weather_2023_2025.csv"), _read_csv("openmeteo_weather_2026h1.csv")]
+    )
+    rep["feature_distribution_l1"] = feature_distribution(_read_csv(SAT_CSV), weather_all)
     rep["decision"] = judge_dev(rep, crit)
     rep["created"] = date.today().isoformat()
     _, dev = chronological_split(data)
