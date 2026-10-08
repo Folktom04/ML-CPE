@@ -20,6 +20,7 @@ import json
 import subprocess
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -151,30 +152,90 @@ def assert_committed(paths: Iterable[Path], repo_dir: Path = ROOT) -> None:
             raise PermissionError(f"{path.name} differs from HEAD (commit it first)")
 
 
+def assert_clean_paths(paths: Iterable[Path], repo_dir: Path = ROOT) -> None:
+    """Raise if any TRACKED file under ``paths`` has unstaged or staged (uncommitted) changes.
+
+    Untracked files are ignored (e.g. git-ignored model files, which are hash-checked instead).
+
+    Args:
+        paths: Files or directories, e.g. ``source_code/src`` and ``source_code/models``.
+        repo_dir: Any directory inside the git work tree.
+    """
+    out = _git(repo_dir, "status", "--porcelain", "--untracked-files=no", "--", *map(str, paths))
+    if out.returncode != 0:
+        raise PermissionError(f"git status failed: {out.stderr.strip()}")
+    dirty = [line[3:] for line in out.stdout.splitlines() if line.strip()]
+    if dirty:
+        raise PermissionError(f"uncommitted changes in tracked files: {', '.join(dirty)}")
+
+
 def open_test_2026(
-    guarded: Iterable[Path], lock_path: Path, results_path: Path, repo_dir: Path = ROOT
-) -> dict[str, str]:
+    guarded: Iterable[Path],
+    lock_path: Path,
+    results_path: Path,
+    repo_dir: Path = ROOT,
+    resume: bool = False,
+    extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Open the 2026 held-out set ONCE: check the committed files, then write the lock file.
 
     The lock is created (exclusively) before any 2026 target is read, so a crash after opening
-    still counts as the one evaluation.
+    still counts as the one evaluation. Amendment 1: a run that crashed before writing the
+    results may be resumed (``resume=True``) only if the lock exists, HEAD is still the commit
+    recorded in the lock and every guarded file equals HEAD. A results file always refuses the
+    run, so the test set is never evaluated twice.
 
     Args:
         guarded: Pre-registration and experiment code that must equal HEAD.
-        lock_path: Lock file written on success; its presence refuses later runs.
-        results_path: Results file; its presence refuses the run.
+        lock_path: Lock file written on success; its presence refuses later (non-resume) runs.
+        results_path: Results file; its presence refuses every run.
         repo_dir: Any directory inside the git work tree.
+        resume: Continue a crashed run instead of opening a new one.
+        extra: Values written into a new lock (e.g. ``inputs_sha256``); on resume each
+            must equal the value stored in the lock.
 
     Returns:
-        ``{"opened_utc", "head"}`` as written to the lock file.
+        The lock content (``opened_utc``, ``head`` and, after a resume, ``resumed_utc``).
     """
-    for p in (lock_path, results_path):
-        if Path(p).exists():
-            raise FileExistsError(f"{Path(p).name} exists: the 2026 test set is opened only once")
+    if Path(results_path).exists():
+        raise FileExistsError(f"{Path(results_path).name} exists: the 2026 test set was evaluated")
+    if resume:
+        if not Path(lock_path).exists():
+            raise FileNotFoundError(f"{Path(lock_path).name} missing: nothing to resume")
+        assert_committed(guarded, repo_dir)
+        info = json.loads(Path(lock_path).read_text(encoding="utf-8"))
+        head = _git(repo_dir, "rev-parse", "HEAD").stdout.strip()
+        if head != info.get("head"):
+            raise PermissionError("HEAD differs from the commit recorded in the lock")
+        for key, value in (extra or {}).items():
+            if info.get(key) != value:
+                raise PermissionError(f"{key} differs from the value recorded in the lock")
+        resumed = [*info.get("resumed_utc", []), pd.Timestamp.now(tz="UTC").isoformat()]
+        return update_lock(lock_path, resumed_utc=resumed)
+    if Path(lock_path).exists():
+        raise FileExistsError(
+            f"{Path(lock_path).name} exists: the 2026 test set is opened only once"
+        )
     assert_committed(guarded, repo_dir)
     head = _git(repo_dir, "rev-parse", "HEAD").stdout.strip()
-    info = {"opened_utc": pd.Timestamp.now(tz="UTC").isoformat(), "head": head}
+    info = {"opened_utc": pd.Timestamp.now(tz="UTC").isoformat(), "head": head, **(extra or {})}
     Path(lock_path).parent.mkdir(parents=True, exist_ok=True)
     with open(lock_path, "x", encoding="utf-8") as f:
         json.dump(info, f, indent=2)
+    return info
+
+
+def update_lock(lock_path: Path, **fields: Any) -> dict[str, Any]:
+    """Merge ``fields`` into an existing lock file (e.g. progress marks of the 2026 run).
+
+    Args:
+        lock_path: Existing lock file.
+        **fields: JSON-serialisable values to set.
+
+    Returns:
+        The updated lock content.
+    """
+    info = json.loads(Path(lock_path).read_text(encoding="utf-8"))
+    info.update(fields)
+    Path(lock_path).write_text(json.dumps(info, indent=2), encoding="utf-8")
     return info
