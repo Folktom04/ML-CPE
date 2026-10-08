@@ -137,3 +137,85 @@ def test_open_test_2026_refuses_existing_results_or_uncommitted_prereg(repo):
     with pytest.raises(PermissionError):
         sp.open_test_2026([repo / "prereg.json"], lock, results, repo_dir=repo)
     assert not lock.exists()  # no lock when the guard refuses
+
+
+# ------------------------------------------------------------------ amendment 1: resumable test
+def test_open_test_2026_resume_needs_same_head_and_appends(repo):
+    lock, results = repo / "test.lock", repo / "results.json"
+    first = sp.open_test_2026([repo / "prereg.json"], lock, results, repo_dir=repo)
+    info = sp.open_test_2026([repo / "prereg.json"], lock, results, repo_dir=repo, resume=True)
+    assert info["head"] == first["head"] and len(info["resumed_utc"]) == 1
+    saved = json.loads(lock.read_text(encoding="utf-8"))
+    assert saved["opened_utc"] == first["opened_utc"] and len(saved["resumed_utc"]) == 1
+
+
+def test_open_test_2026_resume_refused_after_new_commit(repo):
+    lock, results = repo / "test.lock", repo / "results.json"
+    sp.open_test_2026([repo / "prereg.json"], lock, results, repo_dir=repo)
+    (repo / "other.txt").write_text("x", encoding="utf-8")
+    _git(repo, "add", "other.txt")
+    _git(repo, "commit", "-q", "-m", "later")
+    with pytest.raises(PermissionError, match="HEAD"):
+        sp.open_test_2026([repo / "prereg.json"], lock, results, repo_dir=repo, resume=True)
+
+
+def test_open_test_2026_resume_refused_with_modified_guarded_file(repo):
+    lock, results = repo / "test.lock", repo / "results.json"
+    sp.open_test_2026([repo / "prereg.json"], lock, results, repo_dir=repo)
+    (repo / "prereg.json").write_text('{"v": 9}', encoding="utf-8")
+    with pytest.raises(PermissionError):
+        sp.open_test_2026([repo / "prereg.json"], lock, results, repo_dir=repo, resume=True)
+
+
+def test_open_test_2026_resume_refused_without_lock_or_with_results(repo):
+    lock, results = repo / "test.lock", repo / "results.json"
+    with pytest.raises(FileNotFoundError):
+        sp.open_test_2026([repo / "prereg.json"], lock, results, repo_dir=repo, resume=True)
+    sp.open_test_2026([repo / "prereg.json"], lock, results, repo_dir=repo)
+    results.write_text("{}", encoding="utf-8")
+    with pytest.raises(FileExistsError):  # never evaluate twice once results exist
+        sp.open_test_2026([repo / "prereg.json"], lock, results, repo_dir=repo, resume=True)
+
+
+def test_update_lock_merges_fields(tmp_path):
+    lock = tmp_path / "l.lock"
+    lock.write_text(json.dumps({"head": "abc"}), encoding="utf-8")
+    out = sp.update_lock(lock, targets_downloaded_utc="t")
+    assert out == {"head": "abc", "targets_downloaded_utc": "t"}
+    assert json.loads(lock.read_text(encoding="utf-8")) == out
+    with pytest.raises(FileNotFoundError):
+        sp.update_lock(tmp_path / "missing.lock", x=1)
+
+
+# ------------------------------------------------------------------ amendment 1 (additions)
+def test_assert_clean_paths_refuses_modified_or_staged_tracked_files(repo):
+    src = repo / "src"
+    src.mkdir()
+    (src / "mod.py").write_text("a = 1\n", encoding="utf-8")
+    _git(repo, "add", "src/mod.py")
+    _git(repo, "commit", "-q", "-m", "src")
+    sp.assert_clean_paths([src], repo_dir=repo)
+    (src / "new_untracked.py").write_text("b = 1\n", encoding="utf-8")
+    sp.assert_clean_paths([src], repo_dir=repo)  # untracked files are not checked
+    (src / "mod.py").write_text("a = 2\n", encoding="utf-8")
+    with pytest.raises(PermissionError, match="mod.py"):
+        sp.assert_clean_paths([src], repo_dir=repo)
+    _git(repo, "add", "src/mod.py")
+    with pytest.raises(PermissionError, match="mod.py"):
+        sp.assert_clean_paths([src], repo_dir=repo)
+    sp.assert_clean_paths([repo / "prereg.json"], repo_dir=repo)  # other paths unaffected
+
+
+def test_open_test_2026_records_extra_and_resume_requires_same_values(repo):
+    lock, results = repo / "test.lock", repo / "results.json"
+    extra = {"inputs_sha256": {"a.csv": "1" * 64}}
+    sp.open_test_2026([repo / "prereg.json"], lock, results, repo_dir=repo, extra=extra)
+    assert json.loads(lock.read_text(encoding="utf-8"))["inputs_sha256"] == extra["inputs_sha256"]
+    sp.open_test_2026(
+        [repo / "prereg.json"], lock, results, repo_dir=repo, resume=True, extra=extra
+    )
+    changed = {"inputs_sha256": {"a.csv": "2" * 64}}
+    with pytest.raises(PermissionError, match="inputs_sha256"):
+        sp.open_test_2026(
+            [repo / "prereg.json"], lock, results, repo_dir=repo, resume=True, extra=changed
+        )
