@@ -229,3 +229,52 @@ def test_count_omi_days_counts_granule_dates_without_login_or_download(monkeypat
     res = fv.count_omi_days("test2026")
     assert res == {"split": "test2026", "n_granules": 4, "n_days": 3, "by_month": {"2026-01": 3}}
     assert calls["temporal"] == ("2026-01-01", "2026-06-30")
+
+
+# ------------------------------------------------------------------ amendment 1: preflight probes
+def test_earthdata_login_requires_credentials(monkeypatch):
+    monkeypatch.setattr(fv, "ROOT", Path("does-not-exist"))
+    monkeypatch.delenv("EARTHDATA_USERNAME", raising=False)
+    monkeypatch.delenv("EARTHDATA_PASSWORD", raising=False)
+    monkeypatch.setitem(sys.modules, "earthaccess", types.SimpleNamespace())
+    with pytest.raises(RuntimeError):
+        fv.earthdata_login()
+
+
+def test_probe_omi_refuses_2026_before_any_network(monkeypatch):
+    def boom(*a, **k):
+        raise AssertionError("no network for 2026")
+
+    monkeypatch.setitem(
+        sys.modules, "earthaccess", types.SimpleNamespace(login=boom, search_data=boom)
+    )
+    with pytest.raises(ValueError):
+        fv.probe_omi(date(2026, 1, 1))
+
+
+def test_probe_omi_downloads_one_2025_day_and_reports_no_values(tmp_path, monkeypatch):
+    monkeypatch.setenv("EARTHDATA_USERNAME", "u")
+    monkeypatch.setenv("EARTHDATA_PASSWORD", "p")
+    calls, kept = {}, []
+
+    class Granule:
+        def data_links(self):
+            return ["https://x/OMI-Aura_L3-OMUVBd_2025m0115_v003-x.he5"]
+
+    def search_data(**kw):
+        calls.update(kw)
+        return [Granule()]
+
+    def download(batch, local_path):
+        path = make_omuvbd(Path(local_path) / "OMI-Aura_L3-OMUVBd_2025m0115_v003-x.he5", uvi=7.0)
+        kept.append(path)
+        return [path]
+
+    fake = types.SimpleNamespace(
+        login=lambda strategy: None, search_data=search_data, download=download
+    )
+    monkeypatch.setitem(sys.modules, "earthaccess", fake)
+    res = fv.probe_omi(date(2025, 1, 15))
+    assert calls["temporal"] == ("2025-01-15", "2025-01-15")
+    assert res == {"day": "2025-01-15", "n_granules": 1, "pixel_read": True}
+    assert not kept[0].exists()  # temporary file removed

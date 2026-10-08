@@ -290,6 +290,62 @@ def extract_omuvbd_pixel(h5_path: Path, lat: float = LAT, lon: float = LON) -> d
     return out
 
 
+def earthdata_login() -> Any:
+    """Log in to NASA Earthdata with ``EARTHDATA_USERNAME`` / ``EARTHDATA_PASSWORD``.
+
+    The variables are read from the environment after ``load_dotenv(ROOT / ".env")``; their
+    values are never printed.
+
+    Returns:
+        The ``earthaccess`` auth object.
+    """
+    import earthaccess
+    from dotenv import load_dotenv
+
+    load_dotenv(ROOT / ".env")
+    if not (os.getenv("EARTHDATA_USERNAME") and os.getenv("EARTHDATA_PASSWORD")):
+        raise RuntimeError("EARTHDATA_USERNAME / EARTHDATA_PASSWORD are not set in .env")
+    return earthaccess.login(strategy="environment")
+
+
+def probe_omi(day: date = date(2025, 1, 15), lat: float = LAT, lon: float = LON) -> dict[str, Any]:
+    """Check OMI search + download + pixel extraction on one day of an OPENED year (preflight).
+
+    The file goes to a temporary directory and is deleted; no value is returned. Days in 2026
+    or later are refused before any network call.
+
+    Args:
+        day: Day to probe (must be before 2026).
+        lat: Latitude in degrees.
+        lon: Longitude in degrees.
+
+    Returns:
+        ``{"day", "n_granules", "pixel_read"}``.
+    """
+    if day >= date(2026, 1, 1):
+        raise ValueError("probe_omi only uses opened years (before 2026)")
+    import earthaccess
+
+    earthdata_login()
+    granules = earthaccess.search_data(
+        short_name=OMI_SHORT_NAME,
+        version=OMI_VERSION,
+        temporal=(day.isoformat(), day.isoformat()),
+        bounding_box=(lon - 0.5, lat - 0.5, lon + 0.5, lat + 0.5),
+    )
+    tmp = Path(tempfile.mkdtemp(prefix="omuvbd_probe_"))
+    try:
+        paths = earthaccess.download(granules[:1], local_path=str(tmp)) if granules else []
+        rows = [extract_omuvbd_pixel(Path(p), lat, lon) for p in paths]
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return {
+        "day": day.isoformat(),
+        "n_granules": len(granules),
+        "pixel_read": bool(rows) and set(OMI_FIELDS) <= set(rows[0]),
+    }
+
+
 def fetch_omi(
     split: str = "select",
     lat: float = LAT,
@@ -318,12 +374,8 @@ def fetch_omi(
     if split == "test2026" and not confirm_test2026:
         raise PermissionError("OMI 2026 is downloaded only inside the one-time 2026 evaluation")
     import earthaccess
-    from dotenv import load_dotenv
 
-    load_dotenv(ROOT / ".env")
-    if not (os.getenv("EARTHDATA_USERNAME") and os.getenv("EARTHDATA_PASSWORD")):
-        raise RuntimeError("EARTHDATA_USERNAME / EARTHDATA_PASSWORD are not set in .env")
-    earthaccess.login(strategy="environment")
+    earthdata_login()
 
     start, end = split_range(split)
     cache = VAL_DIR / f"omi_pixel_cache_{split}.csv"
