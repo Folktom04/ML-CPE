@@ -287,3 +287,280 @@ def test_feature_distribution_by_year_uses_features_only():
                 assert d["p05"] <= d["median"] <= d["p95"]
     # rows are hours with uvi_clear >= 0.5 only: 06:00 BKK (23:00 UTC) is excluded
     assert dist[2026]["sat_kt_l1"]["n"] < 2 * 24
+
+
+# ------------------------------------------------------------------ amendment 1: model hashes
+def test_file_sha256_known_value(tmp_path):
+    p = tmp_path / "a.bin"
+    p.write_bytes(b"abc")
+    assert se.file_sha256(p) == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+
+
+def _tiny_models(data):
+    from src.quantile import fit_quantile
+    from src.train_multi import fit_multi
+
+    feats = FEATURE_SETS["B"]
+    mp, qp = params_for(42)
+    return (
+        feats,
+        fit_multi(data[feats], data, None, mp),
+        fit_quantile(data[feats], data["cmf_uvi"], None, qp),
+    )
+
+
+def test_save_refit_models_records_sha256(tmp_path):
+    data = synthetic("2023-01-01", "2023-03-31")
+    feats, multi, quant = _tiny_models(data)
+    entry = se.save_refit_models("B", 42, feats, multi, quant, 0.05, exp_dir=tmp_path)
+    for key in ("multi", "quantile"):
+        path = tmp_path / entry[key]
+        assert path.exists() and entry[f"{key}_sha256"] == se.file_sha256(path)
+    assert entry["cqr_q"] == 0.05 and entry["features"] == feats and entry["seed"] == 42
+
+
+def test_verify_model_hashes_ok_mismatch_and_missing(tmp_path):
+    data = synthetic("2023-01-01", "2023-03-31")
+    feats, multi, quant = _tiny_models(data)
+    entry = se.save_refit_models("B", 42, feats, multi, quant, 0.05, exp_dir=tmp_path)
+    manifest = {"models": {"B_seed42": entry}}
+    se.verify_model_hashes(manifest, exp_dir=tmp_path)
+    bad = json.loads(json.dumps(manifest))
+    bad["models"]["B_seed42"]["multi_sha256"] = "0" * 64
+    with pytest.raises(PermissionError, match="B_seed42"):
+        se.verify_model_hashes(bad, exp_dir=tmp_path)
+    nohash = json.loads(json.dumps(manifest))
+    del nohash["models"]["B_seed42"]["quantile_sha256"]
+    with pytest.raises(PermissionError):
+        se.verify_model_hashes(nohash, exp_dir=tmp_path)
+    (tmp_path / entry["multi"]).unlink()
+    with pytest.raises(PermissionError):
+        se.verify_model_hashes(manifest, exp_dir=tmp_path)
+
+
+# ------------------------------------------------------------------ amendment 1: crash-safe test
+def _no_targets(monkeypatch):
+    fail = lambda *a, **k: pytest.fail("2026 targets were read")  # noqa: E731
+    monkeypatch.setattr(se, "fetch_nasapower", fail)
+    monkeypatch.setattr(se, "fetch_omi", fail)
+    monkeypatch.setattr(se, "fetch_temis", fail)
+
+
+def test_test_main_checks_hashes_before_writing_the_lock(tmp_path, monkeypatch):
+    _no_targets(monkeypatch)
+    manifest = tmp_path / "refit_manifest.json"
+    entry = {"multi": "m.joblib", "quantile": "q.ubj.gz", "multi_sha256": "0" * 64}
+    (tmp_path / "m.joblib").write_bytes(b"x")
+    (tmp_path / "q.ubj.gz").write_bytes(b"y")
+    entry["quantile_sha256"] = "0" * 64
+    manifest.write_text(json.dumps({"models": {"B_seed42": entry}}), encoding="utf-8")
+    monkeypatch.setattr(se, "MANIFEST_PATH", manifest)
+    monkeypatch.setattr(se, "EXP_DIR", tmp_path)
+    monkeypatch.setattr(se, "LOCK_PATH", tmp_path / "sat_test_2026.lock")
+    monkeypatch.setattr(se, "TEST_RESULTS_PATH", tmp_path / "r.json")
+    monkeypatch.setattr(se, "open_test_2026", lambda *a, **k: pytest.fail("lock was written"))
+    monkeypatch.setattr(se, "assert_clean_paths", lambda paths, repo_dir=None: None)
+    with pytest.raises(PermissionError):
+        se.test_main()
+    assert not (tmp_path / "sat_test_2026.lock").exists()
+
+
+def test_test_main_resume_without_lock_reads_nothing(tmp_path, monkeypatch):
+    _no_targets(monkeypatch)
+    monkeypatch.setattr(se, "LOCK_PATH", tmp_path / "sat_test_2026.lock")
+    monkeypatch.setattr(se, "TEST_RESULTS_PATH", tmp_path / "r.json")
+    with pytest.raises(FileNotFoundError):
+        se.test_main(resume=True)
+
+
+def test_test_main_never_runs_when_results_exist(tmp_path, monkeypatch):
+    _no_targets(monkeypatch)
+    (tmp_path / "r.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(se, "LOCK_PATH", tmp_path / "sat_test_2026.lock")
+    monkeypatch.setattr(se, "TEST_RESULTS_PATH", tmp_path / "r.json")
+    for resume in (False, True):
+        with pytest.raises(FileExistsError):
+            se.test_main(resume=resume)
+
+
+def test_download_targets_2026_saves_everything_then_marks_lock(tmp_path, monkeypatch):
+    lock = tmp_path / "l.lock"
+    lock.write_text(json.dumps({"head": "abc"}), encoding="utf-8")
+    calls = []
+    monkeypatch.setattr(
+        se, "fetch_nasapower", lambda s, e: calls.append(("nasa", s, e)) or (pd.DataFrame(), {})
+    )
+
+    def fake_omi(split, confirm_test2026=False):
+        assert split == "test2026" and confirm_test2026 is True
+        calls.append(("omi",))
+        return pd.DataFrame({"date": pd.to_datetime(["2026-01-05"]), "UVindex": [9.0]})
+
+    monkeypatch.setattr(se, "fetch_omi", fake_omi)
+    monkeypatch.setattr(
+        se,
+        "fetch_temis",
+        lambda: calls.append(("temis",)) or pd.DataFrame({"date": pd.to_datetime(["2026-01-05"])}),
+    )
+    written = []
+    monkeypatch.setattr(
+        se, "write_split", lambda df, source, split: written.append((source, split))
+    )
+    se.download_targets_2026(lock)
+    assert [c[0] for c in calls] == ["nasa", "omi", "temis"]
+    assert calls[0][1:] == se.FEATURES_2026
+    assert written == [("omi", "test2026"), ("temis", "test2026")]
+    assert "targets_downloaded_utc" in json.loads(lock.read_text(encoding="utf-8"))
+
+
+# ------------------------------------------------------------------ amendment 1: preflight
+def _ok_probes(monkeypatch, seen):
+    monkeypatch.setattr(se, "assert_committed", lambda paths: None)
+    monkeypatch.setattr(se, "earthdata_login", lambda: object())
+
+    def omi(day):
+        seen.append(day)
+        return {"day": str(day), "n_granules": 1, "pixel_read": True}
+
+    def nasa(s, e):
+        seen.extend([s, e])
+        return pd.DataFrame({"time_utc": pd.date_range(str(s), periods=24, freq="h", tz="UTC")}), {}
+
+    monkeypatch.setattr(se, "probe_omi", omi)
+    monkeypatch.setattr(se, "fetch_nasapower", nasa)
+    monkeypatch.setattr(se, "temis_reachable", lambda: True)
+    monkeypatch.setattr(se, "verify_model_hashes", lambda manifest: None)
+    monkeypatch.setattr(se, "free_memory_gb", lambda: 8.0)
+
+
+def test_preflight_passes_and_never_touches_2026(tmp_path, monkeypatch):
+    seen = []
+    _ok_probes(monkeypatch, seen)
+    manifest = tmp_path / "m.json"
+    manifest.write_text(json.dumps({"models": {}}), encoding="utf-8")
+    monkeypatch.setattr(se, "MANIFEST_PATH", manifest)
+    monkeypatch.setattr(se, "LOCK_PATH", tmp_path / "sat_test_2026.lock")
+    monkeypatch.setattr(se, "TEST_RESULTS_PATH", tmp_path / "r.json")
+    checks = se.preflight()
+    assert all(c["passed"] for c in checks), checks
+    assert seen and all(d.year == 2025 for d in seen)
+
+
+def test_preflight_fails_with_lock_low_memory_or_login_error(tmp_path, monkeypatch):
+    seen = []
+    _ok_probes(monkeypatch, seen)
+    manifest = tmp_path / "m.json"
+    manifest.write_text(json.dumps({"models": {}}), encoding="utf-8")
+    monkeypatch.setattr(se, "MANIFEST_PATH", manifest)
+    (tmp_path / "sat_test_2026.lock").write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(se, "LOCK_PATH", tmp_path / "sat_test_2026.lock")
+    monkeypatch.setattr(se, "TEST_RESULTS_PATH", tmp_path / "r.json")
+    monkeypatch.setattr(se, "free_memory_gb", lambda: 1.0)
+
+    def bad_login():
+        raise RuntimeError("EARTHDATA_USERNAME / EARTHDATA_PASSWORD are not set in .env")
+
+    monkeypatch.setattr(se, "earthdata_login", bad_login)
+    checks = {c["check"]: c for c in se.preflight()}
+    failed = {k for k, c in checks.items() if not c["passed"]}
+    assert any("lock" in k for k in failed)
+    assert not any("memory" in k for k in failed)  # amendment 1: low memory only warns
+    assert any("Earthdata" in k for k in failed)
+
+
+# ------------------------------------------------------------------ amendment 1 (additions)
+def test_test_inputs_cover_every_file_test_main_reads():
+    names = {p.name for p in se.test_inputs()}
+    assert {
+        "satellite_himawari_2023_2026h1.csv",
+        "openmeteo_weather_2026h1.csv",
+        "openmeteo_airquality_2026h1.csv",
+        "openmeteo_weather_2023_2025.csv",
+        "ozone_climatology_v2.json",
+        "cmf_multi_xgb_final.joblib",
+        "cmf_uvi_quantile_xgb_final.ubj.gz",
+        "cqr_q_final_v1.json",
+        "train_sat.parquet",
+    } <= names
+
+
+def test_input_hashes_relative_keys_and_missing_file(tmp_path, monkeypatch):
+    monkeypatch.setattr(se, "ROOT", tmp_path)
+    a = tmp_path / "dataset" / "a.csv"
+    a.parent.mkdir()
+    a.write_bytes(b"abc")
+    out = se.input_hashes([a])
+    assert out == {"dataset/a.csv": se.file_sha256(a)}
+    with pytest.raises(FileNotFoundError):
+        se.input_hashes([tmp_path / "missing.csv"])
+
+
+def test_test_main_refuses_dirty_src_or_models_before_lock(tmp_path, monkeypatch):
+    _no_targets(monkeypatch)
+    monkeypatch.setattr(se, "LOCK_PATH", tmp_path / "sat_test_2026.lock")
+    monkeypatch.setattr(se, "TEST_RESULTS_PATH", tmp_path / "r.json")
+    seen = {}
+
+    def dirty(paths, repo_dir=None):
+        seen["paths"] = [p.name for p in paths]
+        raise PermissionError("source_code/src/x.py has uncommitted changes")
+
+    monkeypatch.setattr(se, "assert_clean_paths", dirty)
+    monkeypatch.setattr(se, "open_test_2026", lambda *a, **k: pytest.fail("lock was written"))
+    for resume in (False, True):
+        if resume:
+            (tmp_path / "sat_test_2026.lock").write_text("{}", encoding="utf-8")
+        with pytest.raises(PermissionError):
+            se.test_main(resume=resume)
+    assert seen["paths"] == ["src", "models"]
+
+
+def test_test_main_writes_input_hashes_into_the_lock(tmp_path, monkeypatch):
+    _no_targets(monkeypatch)
+    monkeypatch.setattr(se, "LOCK_PATH", tmp_path / "sat_test_2026.lock")
+    monkeypatch.setattr(se, "TEST_RESULTS_PATH", tmp_path / "r.json")
+    manifest = tmp_path / "m.json"
+    manifest.write_text(json.dumps({"models": {}}), encoding="utf-8")
+    monkeypatch.setattr(se, "MANIFEST_PATH", manifest)
+    monkeypatch.setattr(se, "assert_clean_paths", lambda paths, repo_dir=None: None)
+    monkeypatch.setattr(se, "verify_model_hashes", lambda m: None)
+    monkeypatch.setattr(se, "input_hashes", lambda paths: {"dataset/raw/x.csv": "f" * 64})
+    captured = {}
+
+    class Stop(Exception):
+        pass
+
+    def fake_open(guarded, lock, results, resume=False, extra=None):
+        captured.update(resume=resume, extra=extra)
+        raise Stop
+
+    monkeypatch.setattr(se, "open_test_2026", fake_open)
+    with pytest.raises(Stop):
+        se.test_main()
+    assert captured == {
+        "resume": False,
+        "extra": {"inputs_sha256": {"dataset/raw/x.csv": "f" * 64}},
+    }
+
+
+def test_free_memory_gb_works_without_psutil(monkeypatch):
+    import sys
+
+    monkeypatch.setitem(sys.modules, "psutil", None)  # import psutil would fail
+    gb = se.free_memory_gb()
+    assert isinstance(gb, float) and gb > 0
+
+
+def test_preflight_low_memory_is_a_warning_not_a_failure(tmp_path, monkeypatch):
+    seen = []
+    _ok_probes(monkeypatch, seen)
+    manifest = tmp_path / "m.json"
+    manifest.write_text(json.dumps({"models": {}}), encoding="utf-8")
+    monkeypatch.setattr(se, "MANIFEST_PATH", manifest)
+    monkeypatch.setattr(se, "LOCK_PATH", tmp_path / "sat_test_2026.lock")
+    monkeypatch.setattr(se, "TEST_RESULTS_PATH", tmp_path / "r.json")
+    monkeypatch.setattr(se, "free_memory_gb", lambda: 1.0)
+    checks = se.preflight()
+    mem = [c for c in checks if "memory" in c["check"]][0]
+    assert mem["passed"] is True and mem["warning"] is True
+    assert all(c["passed"] for c in checks)

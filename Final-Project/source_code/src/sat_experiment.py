@@ -17,12 +17,21 @@ Steps (run from the project root, ``PYTHONPATH=source_code python -m src.sat_exp
 * ``--test`` (once): ``splits.open_test_2026`` checks the committed files and writes the lock,
   then NASA POWER and OMI/TEMIS 2026-01..06 are read, B, S1 and B_main (main model, report only)
   are scored and ``judge_test`` applies P1-P4 -> ``docs/sat_test_2026_results.json``.
+
+Amendment 1 (process only, ``docs/sat_exp_amendments.md``; features, training, metrics and
+criteria unchanged): the refit manifest records the SHA-256 of every model file and ``--test``
+checks them before the lock is written; ``--test`` first saves every 2026 target to disk, then
+evaluates, and a crashed run can be continued with ``--resume-test`` (same commit as in the lock,
+guarded files unchanged, no results file yet); ``--preflight`` checks access and memory using
+the opened year 2025 only.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
 from collections.abc import Callable, Iterable
 from datetime import date
 from pathlib import Path
@@ -38,9 +47,18 @@ from src.evaluate_test import MULTI_PATH as MAIN_MULTI_PATH
 from src.evaluate_test import QUANT_PATH as MAIN_QUANT_PATH
 from src.evaluate_test import load_xgb_gz, save_xgb_gz
 from src.features import MIN_UVI_CLEAR, PROCESSED_DIR, build_dataset
-from src.fetch_data import LAT, LON, RAW_DIR, ROOT, fetch_nasapower
+from src.fetch_data import LAT, LON, RAW_DIR, ROOT, fetch_nasapower, make_session
 from src.fetch_satellite import FEATURES_2026, SAT_CSV, is_daytime
-from src.fetch_validation import fetch_omi, fetch_temis, filter_split, write_split
+from src.fetch_validation import (
+    TEMIS_URL,
+    earthdata_login,
+    fetch_omi,
+    fetch_temis,
+    filter_split,
+    load_validation,
+    probe_omi,
+    write_split,
+)
 from src.metrics import daily_bootstrap_diff
 from src.physics import CLIMATOLOGY_PATH, CMF_SUBSTEPS, uvi_clear_interval
 from src.preprocess import add_solar_zenith, clean, drop_night, merge_sources, solar_noon_values
@@ -73,11 +91,13 @@ from src.splits import (
     TEST2026_END,
     TEST2026_START,
     TEST_START,
+    assert_clean_paths,
     assert_committed,
     assert_no_rows_from,
     chronological_split,
     load_rows_before,
     open_test_2026,
+    update_lock,
 )
 from src.train_cmf import DOCS_DIR, MODEL_DIR
 from src.train_multi import (
@@ -113,6 +133,8 @@ GUARDED = [
     SRC_DIR / "splits.py",
     SRC_DIR / "metrics.py",
 ]
+PREFLIGHT_DAY = date(2025, 1, 15)  # opened year: preflight never touches 2026
+PREFLIGHT_MIN_FREE_GB = 4.0
 SCORE_KEYS = ["mae", "recall_vh", "recall_ex", "precision_vh", "far_vh", "coverage"]
 
 ParamsFor = Callable[[int], tuple[dict[str, Any], dict[str, Any]]]
@@ -619,6 +641,112 @@ def dev_main() -> None:
     print(f"-> {DEV_RESULTS_PATH}")
 
 
+def file_sha256(path: Path) -> str:
+    """SHA-256 hex digest of a file (read in 1 MiB blocks)."""
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def save_refit_models(
+    name: str,
+    seed: int,
+    features: list[str],
+    multi: Any,
+    quant: Any,
+    q: float,
+    exp_dir: Path | None = None,
+) -> dict[str, Any]:
+    """Save one refit pair (multi-output + quantile) and return its manifest entry with hashes.
+
+    Args:
+        name: Feature-set name.
+        seed: Random seed.
+        features: Feature columns.
+        multi: Fitted multi-output model.
+        quant: Fitted quantile model.
+        q: CQR correction for this seed.
+        exp_dir: Output directory (default ``EXP_DIR``).
+
+    Returns:
+        ``{"set", "seed", "features", "multi", "quantile", "cqr_q", "multi_sha256",
+        "quantile_sha256"}``.
+    """
+    exp_dir = exp_dir or EXP_DIR
+    exp_dir.mkdir(parents=True, exist_ok=True)
+    mpath = exp_dir / f"{name}_seed{seed}_multi.joblib"
+    qpath = exp_dir / f"{name}_seed{seed}_quant.ubj.gz"
+    joblib.dump(multi, mpath, compress=3)
+    save_xgb_gz(quant, qpath)
+    return {
+        "set": name,
+        "seed": seed,
+        "features": features,
+        "multi": mpath.name,
+        "quantile": qpath.name,
+        "cqr_q": q,
+        "multi_sha256": file_sha256(mpath),
+        "quantile_sha256": file_sha256(qpath),
+    }
+
+
+def test_inputs() -> list[Path]:
+    """Every input file ``--test`` reads besides the 2026 targets and the hashed refit models.
+
+    Returns:
+        Satellite series, Open-Meteo weather / air quality (2023-2025 and 2026 H1), the
+        2023-2025 satellite training table, the ozone climatology, B_main files and the spec.
+    """
+    return [
+        RAW_DIR / SAT_CSV,
+        RAW_DIR / "openmeteo_weather_2023_2025.csv",
+        RAW_DIR / "openmeteo_weather_2026h1.csv",
+        RAW_DIR / "openmeteo_airquality_2026h1.csv",
+        DATA_PATH,
+        CLIMATOLOGY_PATH,
+        MAIN_MULTI_PATH,
+        MAIN_QUANT_PATH,
+        MAIN_Q_PATH,
+        SPEC_PATH,
+    ]
+
+
+def input_hashes(paths: Iterable[Path]) -> dict[str, str]:
+    """SHA-256 of each input file, keyed by its path relative to the project root.
+
+    Args:
+        paths: Existing files.
+
+    Returns:
+        ``{relative_posix_path: sha256}``.
+    """
+    out = {}
+    for p in paths:
+        p = Path(p)
+        if not p.exists():
+            raise FileNotFoundError(f"input file missing: {p}")
+        out[p.resolve().relative_to(Path(ROOT).resolve()).as_posix()] = file_sha256(p)
+    return out
+
+
+def verify_model_hashes(manifest: dict[str, Any], exp_dir: Path | None = None) -> None:
+    """Raise unless every model file exists and matches the SHA-256 in the manifest.
+
+    Args:
+        manifest: Parsed ``refit_manifest.json``.
+        exp_dir: Directory of the model files (default ``EXP_DIR``).
+    """
+    exp_dir = exp_dir or EXP_DIR
+    for key, m in manifest["models"].items():
+        for kind in ("multi", "quantile"):
+            expected = m.get(f"{kind}_sha256")
+            path = exp_dir / m[kind]
+            if not expected or not path.exists() or file_sha256(path) != expected:
+                raise PermissionError(f"{key}: {kind} model file missing or SHA-256 mismatch")
+
+
 def refit_main() -> None:
     """``--refit``: after a go on dev, refit B and S1 on 2023-2025 for every seed and freeze Q."""
     assert_committed(GUARDED)
@@ -645,20 +773,9 @@ def refit_main() -> None:
             q = oof_cqr(data, feats, folds, OBJECTIVE_FOLDS, qp)
             multi = fit_multi(data[feats], data, w, mp)
             quant = fit_quantile(data[feats], data["cmf_uvi"], w, qp)
-            mpath, qpath = (
-                EXP_DIR / f"{name}_seed{seed}_multi.joblib",
-                EXP_DIR / f"{name}_seed{seed}_quant.ubj.gz",
+            manifest["models"][f"{name}_seed{seed}"] = save_refit_models(
+                name, seed, feats, multi, quant, q
             )
-            joblib.dump(multi, mpath, compress=3)
-            save_xgb_gz(quant, qpath)
-            manifest["models"][f"{name}_seed{seed}"] = {
-                "set": name,
-                "seed": seed,
-                "features": feats,
-                "multi": mpath.name,
-                "quantile": qpath.name,
-                "cqr_q": q,
-            }
     _json(MANIFEST_PATH, manifest)
     print(f"-> {MANIFEST_PATH}")
 
@@ -675,12 +792,53 @@ def _noon_omi(pred: pd.DataFrame, omi: pd.DataFrame, cols: list[str]) -> dict[st
     return out
 
 
-def test_main() -> None:
-    """``--test`` (once): open 2026 through the guard, score B, S1 and B_main, apply P1-P4."""
-    info = open_test_2026([*GUARDED, MANIFEST_PATH, DEV_RESULTS_PATH], LOCK_PATH, TEST_RESULTS_PATH)
-    crit = load_criteria()["test"]
-    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+def download_targets_2026(lock_path: Path) -> pd.DataFrame:
+    """Save every 2026 target to disk (after the lock), then mark the lock.
+
+    NASA POWER goes to the raw cache (``fetch_data.get_json``), OMI to its pixel cache and
+    ``omi_holdout_2026.csv``, TEMIS to ``temis_holdout_2026.csv``. Each step is resumable from
+    its cache. Nothing is scored here.
+
+    Args:
+        lock_path: Lock file written by ``open_test_2026``.
+
+    Returns:
+        NASA POWER 2026 H1 table.
+    """
     power26, _ = fetch_nasapower(*FEATURES_2026)
+    omi = filter_split(fetch_omi("test2026", confirm_test2026=True), "test2026")
+    write_split(omi, "omi", "test2026")
+    temis = filter_split(fetch_temis(), "test2026")
+    write_split(temis, "temis", "test2026")
+    update_lock(lock_path, targets_downloaded_utc=pd.Timestamp.now(tz="UTC").isoformat())
+    return power26
+
+
+def test_main(resume: bool = False) -> None:
+    """``--test`` (once): open 2026 through the guard, save targets, score B, S1 and B_main.
+
+    Args:
+        resume: Continue a run that crashed after the lock (``--resume-test``).
+    """
+    if TEST_RESULTS_PATH.exists():
+        raise FileExistsError(f"{TEST_RESULTS_PATH.name} exists: 2026 was already evaluated")
+    if resume and not LOCK_PATH.exists():
+        raise FileNotFoundError(f"{LOCK_PATH.name} missing: nothing to resume")
+    if not resume and LOCK_PATH.exists():
+        raise FileExistsError(f"{LOCK_PATH.name} exists: use --resume-test after a crash")
+    assert_clean_paths([SRC_DIR, MODEL_DIR])  # no tracked code/model file changed or staged
+    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    verify_model_hashes(manifest)  # before the lock: a bad model file must not burn the test
+    extra = {"inputs_sha256": input_hashes(test_inputs())}  # resume: must be identical
+    info = open_test_2026(
+        [*GUARDED, MANIFEST_PATH, DEV_RESULTS_PATH],
+        LOCK_PATH,
+        TEST_RESULTS_PATH,
+        resume=resume,
+        extra=extra,
+    )
+    crit = load_criteria()["test"]
+    power26 = download_targets_2026(LOCK_PATH)
     weather26 = _read_csv("openmeteo_weather_2026h1.csv")
     weather_all = pd.concat([_read_csv("openmeteo_weather_2023_2025.csv"), weather26])
     test = build_test_table(
@@ -721,10 +879,7 @@ def test_main() -> None:
         "note": "report only",
     }
 
-    omi = filter_split(fetch_omi("test2026", confirm_test2026=True), "test2026")
-    write_split(omi, "omi", "test2026")
-    temis = filter_split(fetch_temis(), "test2026")
-    write_split(temis, "temis", "test2026")
+    omi = load_validation("omi", split="test2026")
     summary["omi"] = _noon_omi(pred, omi, ["uvi_B", f"uvi_{PRIMARY}", "uvi_B_main"])
 
     decision = judge_test(summary, crit)
@@ -739,13 +894,143 @@ def test_main() -> None:
         "report_only": ["B_main", "fallback", "Extreme recall", "omi mae_B_main"],
         "note": "main is unchanged whatever the result",
     }
-    _json(TEST_RESULTS_PATH, payload)
+    tmp = TEST_RESULTS_PATH.with_suffix(".tmp")
+    _json(tmp, payload)
+    os.replace(tmp, TEST_RESULTS_PATH)  # results appear atomically, after everything succeeded
     print(json.dumps(decision, indent=2, default=float))
     print(f"-> {TEST_RESULTS_PATH}")
 
 
+def temis_reachable() -> bool:
+    """True if the TEMIS server answers (HEAD request, no data read)."""
+    return make_session(total_retries=2).head(TEMIS_URL, timeout=30).status_code < 400
+
+
+def free_memory_gb() -> float:
+    """Available physical memory in GB without extra packages.
+
+    Windows: ``GlobalMemoryStatusEx`` via ctypes; POSIX: ``os.sysconf`` available pages.
+    (psutil is not in requirements.txt, so it is not used.)
+    """
+    if os.name == "nt":
+        import ctypes
+
+        class MemoryStatusEx(ctypes.Structure):
+            """``MEMORYSTATUSEX`` from the Windows API."""
+
+            _fields_ = [
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            ]
+
+        stat = MemoryStatusEx()
+        stat.dwLength = ctypes.sizeof(MemoryStatusEx)
+        if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat)):
+            raise OSError("GlobalMemoryStatusEx failed")
+        return float(stat.ullAvailPhys) / 1e9
+    return float(os.sysconf("SC_AVPHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")) / 1e9
+
+
+def preflight() -> list[dict[str, Any]]:
+    """Checks before ``--test`` that never touch 2026 data (opened year 2025 only).
+
+    Returns:
+        One ``{"check", "passed", "detail"}`` per check.
+    """
+    checks: list[dict[str, Any]] = []
+
+    def run(name: str, fn: Callable[[], tuple[bool, str]], warn_only: bool = False) -> bool:
+        """Run one check and record it; exceptions count as failures (or warnings)."""
+        try:
+            ok, detail = fn()
+        except Exception as exc:  # noqa: BLE001 - report every failure, keep checking
+            ok, detail = False, f"{type(exc).__name__}: {exc}"
+        if warn_only:
+            checks.append({"check": name, "passed": True, "warning": not ok, "detail": detail})
+            return True
+        checks.append({"check": name, "passed": bool(ok), "warning": False, "detail": detail})
+        return bool(ok)
+
+    def committed() -> tuple[bool, str]:
+        """Guarded files, manifest and dev results equal HEAD."""
+        assert_committed([*GUARDED, MANIFEST_PATH, DEV_RESULTS_PATH])
+        return True, f"{len(GUARDED) + 2} files equal HEAD"
+
+    def not_opened() -> tuple[bool, str]:
+        """No lock and no results file yet."""
+        found = [p.name for p in (LOCK_PATH, TEST_RESULTS_PATH) if p.exists()]
+        return not found, ", ".join(found) or "no lock, no results"
+
+    def hashes() -> tuple[bool, str]:
+        """Model files match the manifest SHA-256."""
+        manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+        verify_model_hashes(manifest)
+        return True, f"{len(manifest['models'])} model pairs"
+
+    def login() -> tuple[bool, str]:
+        """Earthdata login works."""
+        earthdata_login()
+        return True, "logged in (credentials from the environment / .env, not printed)"
+
+    def omi() -> tuple[bool, str]:
+        """OMI search, download and pixel read on the opened-year day."""
+        res = probe_omi(PREFLIGHT_DAY)
+        return res["n_granules"] > 0 and res["pixel_read"], f"{res}"
+
+    def nasa() -> tuple[bool, str]:
+        """NASA POWER returns 24 hours for the opened-year day."""
+        df, _ = fetch_nasapower(PREFLIGHT_DAY, PREFLIGHT_DAY)
+        return len(df) == 24, f"{len(df)} hours on {PREFLIGHT_DAY}"
+
+    def temis() -> tuple[bool, str]:
+        """TEMIS server answers."""
+        return temis_reachable(), TEMIS_URL
+
+    def memory() -> tuple[bool, str]:
+        """Enough free memory for the evaluation."""
+        gb = free_memory_gb()
+        return gb >= PREFLIGHT_MIN_FREE_GB, f"{gb:.1f} GB available"
+
+    run("guarded files, manifest and dev results equal HEAD", committed)
+    run("2026 not opened yet (no lock, no results)", not_opened)
+    run("model files match the manifest SHA-256", hashes)
+    if run("Earthdata login", login):
+        run(f"OMI search + download + pixel ({PREFLIGHT_DAY}, opened year)", omi)
+    else:
+        checks.append(
+            {
+                "check": "OMI download (opened year)",
+                "passed": False,
+                "warning": False,
+                "detail": "skipped: no login",
+            }
+        )
+    run(f"NASA POWER access ({PREFLIGHT_DAY}, opened year)", nasa)
+    run("TEMIS server reachable", temis)
+    run(f"free memory >= {PREFLIGHT_MIN_FREE_GB:.0f} GB (warning only)", memory, warn_only=True)
+    return checks
+
+
+def preflight_main() -> None:
+    """``--preflight``: print the checks; exit code 1 if any fails."""
+    checks = preflight()
+    for c in checks:
+        tag = "FAIL" if not c["passed"] else ("WARN" if c.get("warning") else "OK  ")
+        print(f"[{tag}] {c['check']}: {c['detail']}")
+    if not all(c["passed"] for c in checks):
+        raise SystemExit(1)
+
+
 def main(argv: list[str] | None = None) -> None:
-    """Command line: exactly one of ``--build``, ``--dev``, ``--refit``, ``--test``.
+    """Command line: one of ``--build``, ``--dev``, ``--refit``, ``--preflight``, ``--test``,
+    ``--resume-test``.
 
     Args:
         argv: Optional argument list (defaults to ``sys.argv``).
@@ -756,6 +1041,8 @@ def main(argv: list[str] | None = None) -> None:
     group.add_argument("--dev", action="store_true", help="dev 2024 + CV comparison (prereg)")
     group.add_argument("--refit", action="store_true", help="refit B and S1 on 2023-2025")
     group.add_argument("--test", action="store_true", help="one-time evaluation on 2026 H1")
+    group.add_argument("--resume-test", action="store_true", help="continue a crashed --test")
+    group.add_argument("--preflight", action="store_true", help="checks before --test (no 2026)")
     args = parser.parse_args(argv)
     if args.build:
         dataset_main()
@@ -763,6 +1050,10 @@ def main(argv: list[str] | None = None) -> None:
         dev_main()
     elif args.refit:
         refit_main()
+    elif args.preflight:
+        preflight_main()
+    elif args.resume_test:
+        test_main(resume=True)
     else:
         test_main()
 
