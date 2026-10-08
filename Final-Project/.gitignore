@@ -13,6 +13,9 @@ dataset/sky/*
 !dataset/**/.gitkeep
 source_code/models/*.keras
 source_code/models/*.h5
+# Himawari experiment refit models (~0.5 GB; SHA-256 recorded in sat_exp/refit_manifest.json)
+source_code/models/sat_exp/*.joblib
+source_code/models/sat_exp/*.ubj.gz
 *.sqlite
 
 # Secrets
