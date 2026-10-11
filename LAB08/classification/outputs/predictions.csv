@@ -1,0 +1,17 @@
+animal_name,true_class,predicted_class,confidence,correct
+octopus,Invertebrate,Invertebrate,0.9985,1
+slowworm,Reptile,Reptile,0.9738,1
+carp,Fish,Fish,1.0000,1
+lynx,Mammal,Mammal,1.0000,1
+crab,Invertebrate,Invertebrate,0.9999,1
+leopard,Mammal,Mammal,1.0000,1
+pony,Mammal,Mammal,1.0000,1
+pike,Fish,Fish,1.0000,1
+moth,Bug,Bug,1.0000,1
+hawk,Bird,Bird,1.0000,1
+vole,Mammal,Mammal,1.0000,1
+swan,Bird,Bird,1.0000,1
+cheetah,Mammal,Mammal,1.0000,1
+lark,Bird,Bird,1.0000,1
+toad,Amphibian,Amphibian,0.9900,1
+goat,Mammal,Mammal,1.0000,1

@@ -1,0 +1,361 @@
+{
+  "settings": {
+    "epoch_options": [
+      10,
+      25,
+      50,
+      100,
+      200
+    ],
+    "conv_layer_options": [
+      2,
+      4,
+      6
+    ],
+    "dense_unit_options": [
+      32,
+      64,
+      128
+    ],
+    "base_config": {
+      "conv_layers": 4,
+      "dense_units": 64
+    },
+    "base_filters": 32,
+    "batch_size": 16,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "final_seed": 42
+  },
+  "split_sizes": {
+    "train": 69,
+    "val": 16,
+    "test": 16
+  },
+  "epoch_experiment": [
+    {
+      "conv_layers": 4,
+      "dense_units": 64,
+      "epochs": 10,
+      "params": 38695,
+      "train_acc_mean": 0.9033816655476888,
+      "val_acc_mean": 0.8125,
+      "val_acc_std": 0.0,
+      "val_loss_mean": 0.5236823459466299,
+      "test_acc_mean": 0.875,
+      "test_acc_std": 0.0,
+      "test_acc_runs": [
+        0.875,
+        0.875,
+        0.875
+      ]
+    },
+    {
+      "conv_layers": 4,
+      "dense_units": 64,
+      "epochs": 25,
+      "params": 38695,
+      "train_acc_mean": 1.0,
+      "val_acc_mean": 0.9375,
+      "val_acc_std": 0.0,
+      "val_loss_mean": 0.25898377597332,
+      "test_acc_mean": 0.9791666666666666,
+      "test_acc_std": 0.02946278254943948,
+      "test_acc_runs": [
+        1.0,
+        0.9375,
+        1.0
+      ]
+    },
+    {
+      "conv_layers": 4,
+      "dense_units": 64,
+      "epochs": 50,
+      "params": 38695,
+      "train_acc_mean": 1.0,
+      "val_acc_mean": 0.9375,
+      "val_acc_std": 0.0,
+      "val_loss_mean": 0.18433409929275513,
+      "test_acc_mean": 0.9791666666666666,
+      "test_acc_std": 0.02946278254943948,
+      "test_acc_runs": [
+        1.0,
+        0.9375,
+        1.0
+      ]
+    },
+    {
+      "conv_layers": 4,
+      "dense_units": 64,
+      "epochs": 100,
+      "params": 38695,
+      "train_acc_mean": 1.0,
+      "val_acc_mean": 0.9375,
+      "val_acc_std": 0.0,
+      "val_loss_mean": 0.2934235731760661,
+      "test_acc_mean": 0.9791666666666666,
+      "test_acc_std": 0.02946278254943948,
+      "test_acc_runs": [
+        1.0,
+        0.9375,
+        1.0
+      ]
+    },
+    {
+      "conv_layers": 4,
+      "dense_units": 64,
+      "epochs": 200,
+      "params": 38695,
+      "train_acc_mean": 1.0,
+      "val_acc_mean": 0.9375,
+      "val_acc_std": 0.0,
+      "val_loss_mean": 0.3699647585550944,
+      "test_acc_mean": 1.0,
+      "test_acc_std": 0.0,
+      "test_acc_runs": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "config_experiment": [
+    {
+      "conv_layers": 2,
+      "dense_units": 32,
+      "epochs": 50,
+      "params": 11687,
+      "train_acc_mean": 1.0,
+      "val_acc_mean": 0.9375,
+      "val_acc_std": 0.0,
+      "val_loss_mean": 0.25898213187853497,
+      "test_acc_mean": 0.9791666666666666,
+      "test_acc_std": 0.02946278254943948,
+      "test_acc_runs": [
+        0.9375,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "conv_layers": 2,
+      "dense_units": 64,
+      "epochs": 50,
+      "params": 20135,
+      "train_acc_mean": 1.0,
+      "val_acc_mean": 0.9375,
+      "val_acc_std": 0.0,
+      "val_loss_mean": 0.22447743018468222,
+      "test_acc_mean": 1.0,
+      "test_acc_std": 0.0,
+      "test_acc_runs": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "conv_layers": 2,
+      "dense_units": 128,
+      "epochs": 50,
+      "params": 37031,
+      "train_acc_mean": 1.0,
+      "val_acc_mean": 0.9375,
+      "val_acc_std": 0.0,
+      "val_loss_mean": 0.280239537358284,
+      "test_acc_mean": 1.0,
+      "test_acc_std": 0.0,
+      "test_acc_runs": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "conv_layers": 4,
+      "dense_units": 32,
+      "epochs": 50,
+      "params": 30247,
+      "train_acc_mean": 1.0,
+      "val_acc_mean": 0.9583333333333334,
+      "val_acc_std": 0.02946278254943948,
+      "val_loss_mean": 0.26770976434151333,
+      "test_acc_mean": 1.0,
+      "test_acc_std": 0.0,
+      "test_acc_runs": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "conv_layers": 4,
+      "dense_units": 64,
+      "epochs": 50,
+      "params": 38695,
+      "train_acc_mean": 1.0,
+      "val_acc_mean": 0.9375,
+      "val_acc_std": 0.0,
+      "val_loss_mean": 0.18433409929275513,
+      "test_acc_mean": 0.9791666666666666,
+      "test_acc_std": 0.02946278254943948,
+      "test_acc_runs": [
+        1.0,
+        0.9375,
+        1.0
+      ]
+    },
+    {
+      "conv_layers": 4,
+      "dense_units": 128,
+      "epochs": 50,
+      "params": 55591,
+      "train_acc_mean": 1.0,
+      "val_acc_mean": 0.9375,
+      "val_acc_std": 0.0,
+      "val_loss_mean": 0.16743517915407816,
+      "test_acc_mean": 1.0,
+      "test_acc_std": 0.0,
+      "test_acc_runs": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "conv_layers": 6,
+      "dense_units": 32,
+      "epochs": 50,
+      "params": 104231,
+      "train_acc_mean": 1.0,
+      "val_acc_mean": 0.9375,
+      "val_acc_std": 0.0,
+      "val_loss_mean": 0.3852451741695404,
+      "test_acc_mean": 0.9583333333333334,
+      "test_acc_std": 0.02946278254943948,
+      "test_acc_runs": [
+        0.9375,
+        1.0,
+        0.9375
+      ]
+    },
+    {
+      "conv_layers": 6,
+      "dense_units": 64,
+      "epochs": 50,
+      "params": 112679,
+      "train_acc_mean": 1.0,
+      "val_acc_mean": 0.9375,
+      "val_acc_std": 0.0,
+      "val_loss_mean": 0.5407697260379791,
+      "test_acc_mean": 0.9583333333333334,
+      "test_acc_std": 0.02946278254943948,
+      "test_acc_runs": [
+        0.9375,
+        1.0,
+        0.9375
+      ]
+    },
+    {
+      "conv_layers": 6,
+      "dense_units": 128,
+      "epochs": 50,
+      "params": 129575,
+      "train_acc_mean": 1.0,
+      "val_acc_mean": 0.9375,
+      "val_acc_std": 0.0,
+      "val_loss_mean": 0.5374390880266825,
+      "test_acc_mean": 0.9791666666666666,
+      "test_acc_std": 0.02946278254943948,
+      "test_acc_runs": [
+        1.0,
+        0.9375,
+        1.0
+      ]
+    }
+  ],
+  "final_model": {
+    "conv_layers": 4,
+    "dense_units": 32,
+    "epochs": 50,
+    "params": 30247,
+    "train_accuracy": 1.0,
+    "val_accuracy": 0.9375,
+    "test_accuracy": 1.0,
+    "validation_errors": [
+      {
+        "animal_name": "seasnake",
+        "true_class": "Reptile",
+        "predicted_class": "Fish"
+      }
+    ],
+    "confusion_matrix": [
+      [
+        6,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2
+      ]
+    ]
+  }
+}
