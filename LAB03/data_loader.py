@@ -21,7 +21,7 @@ def load_features(n_samples=None, random_state=42):
     X = np.load(PIXELS_PATH)
     meta = pd.read_csv(META_PATH)
 
-    assert len(X) == len(meta),  
+    assert len(X) == len(meta), f"pixels ({len(X)}) and meta ({len(meta)}) row counts differ"
 
     rng = np.random.RandomState(random_state)
     if n_samples is not None and n_samples < len(X):
