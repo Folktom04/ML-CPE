@@ -1,0 +1,10 @@
+# Cat vs Dog Object Detection (YOLO format)
+# ไม่ระบุ path -> Ultralytics ใช้โฟลเดอร์ที่ไฟล์ data.yaml นี้อยู่เป็น root
+train: train/images
+val: val/images
+test: test/images
+
+nc: 2
+names:
+  0: cat
+  1: dog
