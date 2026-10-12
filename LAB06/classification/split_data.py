@@ -1,21 +1,3 @@
-"""
-split_data.py
---------------
-Split the feature/label arrays (and the matching animal names) into
-training, validation, and test sets, and persist every split as a file
-in outputs/.
-
-The Zoo dataset only has 101 rows and 7 imbalanced classes (one class,
-"Amphibian", has just 4 members), so splits are stratified wherever
-possible to keep every class represented in train/val/test.
-
-Animal names are split alongside X and y (via shared indices) so that a
-Nearest Neighbor prediction can later be traced back to exactly which
-training animal it matched (see nn_model.nearest_neighbor_lookup and
-test_nn.py) - this traceability is one of the practical strengths of NN
-that other model types don't offer as directly.
-"""
-
 import os
 import json
 import numpy as np

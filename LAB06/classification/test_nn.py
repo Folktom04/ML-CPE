@@ -1,16 +1,3 @@
-"""
-test_nn.py
------------
-Load the saved Nearest Neighbor model and run a quick sanity check by
-predicting the class of four random animals taken from the test set.
-
-Because this is plain 1-NN, every prediction can be traced back to
-exactly one training animal - the closest one. For each sample we print
-and plot not just true-vs-predicted class, but which training animal was
-matched and how far away it was, which is the clearest way to "see" a
-Nearest Neighbor model working.
-"""
-
 import os
 import json
 import random

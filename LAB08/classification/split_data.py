@@ -1,12 +1,3 @@
-"""
-split_data.py
-Split the dataset into training, validation, and test sets.
-
-The split is stratified, so every class keeps the same proportion in all
-three sets. This matters here because the Zoo dataset is small and
-imbalanced (Mammal = 41 samples, Amphibian = 4 samples).
-"""
-
 import numpy as np
 from sklearn.model_selection import train_test_split
 

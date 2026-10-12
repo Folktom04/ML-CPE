@@ -1,13 +1,3 @@
-"""
-evaluate.py
-------------
-Evaluate the trained Nearest Neighbor (NN) model on the held-out test
-set: accuracy, classification report, confusion matrix, and a plot of
-each test sample's distance to its nearest neighbor (the natural
-diagnostic for a 1-NN model, which has no epoch-based loss curve the way
-a neural network does, and no k to sweep the way k-NN does).
-"""
-
 import os
 import json
 import numpy as np

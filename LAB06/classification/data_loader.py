@@ -1,14 +1,3 @@
-"""
-data_loader.py
----------------
-Load the UCI Zoo dataset (dataset.csv / zoo.csv) and the class-name lookup
-table (class.csv), skipping/repairing any malformed rows, and return a
-clean pandas DataFrame ready for preprocessing.
-
-Dataset source: UCI Machine Learning Repository - Zoo Data Set
-https://archive.ics.uci.edu/dataset/111/zoo
-"""
-
 import os
 import json
 import pandas as pd

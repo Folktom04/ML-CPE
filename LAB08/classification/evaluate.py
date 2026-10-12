@@ -1,8 +1,3 @@
-"""
-evaluate.py
-Accuracy, classification report, confusion matrix, and training history plots.
-"""
-
 import matplotlib
 
 matplotlib.use("Agg")

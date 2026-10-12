@@ -1,16 +1,3 @@
-"""
-preprocessing.py
-Standardize the input features and reshape them for a 1D DCNN.
-
-In the image version of this lab this module resizes images and converts
-BGR to RGB. For tabular data the equivalent preparation is:
-  1. Standardize every feature (zero mean, unit variance).
-     The scaler is fitted on the TRAINING set only, so no information
-     from the validation / test set leaks into training.
-  2. Reshape (n_samples, 16) -> (n_samples, 16, 1) so that Conv1D can
-     slide over the 16 features as a 1-channel sequence.
-"""
-
 import json
 import os
 

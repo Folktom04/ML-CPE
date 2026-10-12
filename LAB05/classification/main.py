@@ -1,20 +1,3 @@
-"""
-main.py
--------
-สคริปต์หลักที่รันทุกขั้นตอนของ pipeline ตั้งแต่ต้นจนจบ:
-
-    1. โหลดรายชื่อไฟล์ภาพจาก PetImages/  (data_loader)
-    2. สกัด feature ด้วย HOG                (preprocessing)
-    3. บันทึก features.npy / labels.npy / classes.json
-    4. แบ่ง Train/Test และทำ Feature Scaling (split_data)
-    5. เทรนโมเดล SVM                        (svm_model)
-    6. ประเมินผลและวาด Confusion Matrix      (evaluate)
-
-วิธีใช้งาน:
-    cd classification
-    python main.py
-"""
-
 import os
 import json
 import time
