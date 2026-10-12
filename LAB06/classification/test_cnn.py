@@ -1,15 +1,3 @@
-"""
-test_cnn.py
------------
-Quick sanity-check script: loads the trained model and runs it on
-four randomly chosen samples from the test set, printing (and
-plotting) the predicted class vs. the true class.
-
-Equivalent to the original "test the model on four random images"
-step, but here each "sample" is a row of 8 numeric yeast features
-instead of a photo.
-"""
-
 import os
 import json
 import numpy as np

@@ -1,14 +1,3 @@
-"""
-test_vgg.py
-Test the trained model using four random samples from the test set.
-
-Loads outputs/vgg_model.keras, picks four random test animals, predicts
-their class and saves the result to outputs/prediction_sample.png.
-
-Run (after main.py):  python test_vgg.py            # different animals every run
-                      python test_vgg.py --seed 7   # reproducible choice
-"""
-
 import argparse
 import json
 import os

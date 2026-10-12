@@ -1,12 +1,3 @@
-"""
-data_loader.py
-Load the Zoo dataset from dataset.csv and skip corrupted rows.
-
-In the image version of this lab this module loads images and skips
-corrupted files. Our dataset is tabular, so "corrupted" means a row with
-missing values, non-numeric features, or a class id outside 1-7.
-"""
-
 import json
 import os
 

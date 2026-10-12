@@ -1,19 +1,3 @@
-"""
-vgg_model.py
-Build, train, save, and predict using a VGG-style Deep CNN (DCNN).
-
-VGG idea: stack several small 3-wide convolutions, two per block, and
-double the number of filters after every pooling step.
-Because the Zoo dataset is tabular (16 features), the 2D layers of VGG
-are replaced by their 1D versions (Conv1D / MaxPooling1D).
-
-    Input (16, 1)
-    [Conv1D(f) -> Conv1D(f) -> MaxPool1D(2)]        block 1  (f   filters)
-    [Conv1D(2f) -> Conv1D(2f) -> MaxPool1D(2)]      block 2  (2f  filters)
-    [Conv1D(4f) -> Conv1D(4f) -> MaxPool1D(2)]      block 3  (4f  filters)
-    Flatten -> Dense(dense_units) -> Dropout -> Dense(num_classes, softmax)
-"""
-
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers, models

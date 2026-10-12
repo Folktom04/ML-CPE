@@ -1,17 +1,3 @@
-"""
-cnn_model.py
-------------
-Builds, trains, saves, and predicts with a 1D Convolutional Neural
-Network (Conv1D) for the yeast tabular dataset.
-
-A 1D-CNN is used instead of a 2D-CNN (which is designed for images)
-because each sample here is a short sequence of 8 numeric features,
-not a 2D image. Conv1D still lets the network learn local patterns
-between neighboring feature values, then a Dense head does the final
-classification - the same overall idea as an image CNN, just applied
-to a 1-D "signal" instead of a 2-D grid of pixels.
-"""
-
 import os
 import json
 import numpy as np

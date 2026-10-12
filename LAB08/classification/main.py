@@ -1,20 +1,3 @@
-"""
-main.py
-Main training pipeline for ML-08 Deep Convolutional Neural Network (DCNN).
-
-Steps
-  1. Load the dataset (skip corrupted rows)
-  2. Split into training / validation / test sets (70 / 15 / 15, stratified)
-  3. Standardize the input features (scaler fitted on the training set)
-  4. Experiment 1 - train the same DCNN with different numbers of epochs
-  5. Experiment 2 - compare DCNN configurations
-                    (number of convolutional layers x neurons in the dense layer)
-  6. Train the final model with the best setting (chosen by validation accuracy),
-     evaluate it on the test set and save every output file.
-
-Run:  python main.py
-"""
-
 import csv
 import json
 import os

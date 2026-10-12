@@ -1,18 +1,3 @@
-"""
-nn_model.py
-------------
-Build, train, save, and predict with a plain **Nearest Neighbor (NN)**
-classifier for the Zoo dataset, using scikit-learn's KNeighborsClassifier
-with a single neighbor (n_neighbors=1) — i.e. classic 1-NN, not k-NN.
-
-Every prediction is decided by exactly one training example: the closest
-one by Euclidean distance. This module also exposes a small
-"interpretability" helper (nearest_neighbor_lookup) that reports which
-training animal was the nearest neighbor and how far away it was, since
-that traceability is the hallmark practical application of Nearest
-Neighbor models (see test_nn.py and evaluate.py).
-"""
-
 import os
 import joblib
 import numpy as np

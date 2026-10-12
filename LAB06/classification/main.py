@@ -1,20 +1,3 @@
-"""
-main.py
---------
-End-to-end training pipeline for the ML-06-NN project:
-
-  1. Load the Zoo dataset (data_loader.py)
-  2. Extract & scale features (preprocessing.py)
-  3. Split into train/val/test, keeping animal names aligned (split_data.py)
-  4. Train the Nearest Neighbor (1-NN) model (nn_model.py)
-  5. Evaluate on the test set: accuracy, report, confusion matrix,
-     nearest-neighbor-distance plot (evaluate.py)
-  6. Sanity-check the saved model on 4 random test samples, tracing each
-     prediction back to the training animal it matched (test_nn.py)
-
-Run with:  python main.py
-"""
-
 import os
 import numpy as np
 
