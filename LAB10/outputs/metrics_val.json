@@ -1,0 +1,28 @@
+{
+  "split": "val",
+  "weights": "best.pt",
+  "precision": 0.8804,
+  "recall": 0.896,
+  "mAP50": 0.9345,
+  "mAP50_95": 0.7729,
+  "per_class": {
+    "cat": {
+      "precision": 0.8486,
+      "recall": 0.8717,
+      "mAP50": 0.9276,
+      "mAP50_95": 0.7497
+    },
+    "dog": {
+      "precision": 0.9122,
+      "recall": 0.9202,
+      "mAP50": 0.9415,
+      "mAP50_95": 0.7961
+    }
+  },
+  "speed_ms_per_image": {
+    "preprocess": 1.68,
+    "inference": 44.54,
+    "loss": 0.0,
+    "postprocess": 0.23
+  }
+}
