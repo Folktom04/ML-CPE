@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ผู้ช่วยภาษา ออฟไลน์</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #fff; --text: #1d2330; --muted: #667085; --line: #dde1e7;
+    --accent: #2f6fde; --accent-soft: #e8f0fd; --del: #fde8e8; --del-text: #b42318;
+    --ins: #e6f6ec; --ins-text: #067647; --warn: #fff6e0; --warn-text: #93590a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --card: #1b2029; --text: #e6e9ef; --muted: #98a2b3; --line: #2c3340;
+      --accent: #6b9cf5; --accent-soft: #1f2b44; --del: #3a1d1d; --del-text: #ffb4ab;
+      --ins: #16301f; --ins-text: #8be0a8; --warn: #33290f; --warn-text: #f5c26b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.6 "Sarabun", "Noto Sans Thai", "Leelawadee UI", "Tahoma", system-ui, sans-serif; }
+  main { max-width: 900px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; font-size: .95rem; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tab { border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 999px;
+         padding: 8px 16px; cursor: pointer; font: inherit; }
+  .tab[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  textarea { width: 100%; min-height: 140px; resize: vertical; border: 1px solid var(--line); border-radius: 8px;
+             padding: 10px 12px; font: inherit; background: var(--bg); color: var(--text); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  label { color: var(--muted); font-size: .9rem; }
+  select, input[type=text] { font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line);
+                             background: var(--card); color: var(--text); }
+  .chk { display: inline-flex; gap: 6px; align-items: center; color: var(--text); }
+  button.go { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 9px 20px;
+              font: inherit; cursor: pointer; margin-left: auto; }
+  button.go:disabled { opacity: .55; cursor: wait; }
+  .panel { display: none; } .panel.on { display: block; }
+  .out { margin-top: 14px; display: grid; gap: 10px; }
+  .res { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--card); position: relative; }
+  .res h3 { margin: 0 0 6px; font-size: .9rem; color: var(--accent); }
+  .res .txt { white-space: pre-wrap; word-wrap: break-word; }
+  .res .meta { color: var(--muted); font-size: .8rem; margin-top: 8px; }
+  .copy { position: absolute; top: 8px; right: 8px; border: 1px solid var(--line); background: var(--card);
+          color: var(--muted); border-radius: 6px; font-size: .8rem; padding: 2px 8px; cursor: pointer; }
+  del { background: var(--del); color: var(--del-text); text-decoration: line-through; border-radius: 3px; padding: 0 2px; }
+  ins { background: var(--ins); color: var(--ins-text); text-decoration: none; border-radius: 3px; padding: 0 2px; }
+  .warn { background: var(--warn); color: var(--warn-text); border-radius: 8px; padding: 8px 12px; font-size: .9rem; }
+  .err { background: var(--del); color: var(--del-text); border-radius: 8px; padding: 8px 12px; }
+  .status { font-size: .85rem; color: var(--muted); margin-bottom: 14px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 4px 0 10px; }
+  .glossary { width: 100%; min-height: 60px; margin-top: 8px; font-size: .9rem; }
+  @media (max-width: 560px) { button.go { width: 100%; margin-left: 0; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>ผู้ช่วยภาษา (ออฟไลน์)</h1>
+  <p class="sub">แก้คำผิด · ปรับระดับภาษา · แปลภาษา (ทำงานบนเครื่องนี้ทั้งหมด ไม่ส่งข้อมูลออกอินเทอร์เน็ต)</p>
+  <div class="status" id="status">กำลังตรวจสอบโมเดล…</div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="correct">1. แก้คำผิด</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="style">2. ปรับระดับภาษา</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="translate">3. แปลภาษา</button>
+  </div>
+
+  <div class="card">
+    <textarea id="text" placeholder="พิมพ์หรือวางข้อความที่นี่…">ผมอยากกินข้าวมันไก่ที่ร้านนนั้นอร่อยมาก แต่วันนี้ร้านปิดเพาะเจ้าของไม่สะบาย</textarea>
+
+    <div class="panel on" id="p-correct">
+      <div class="row"><button class="go" data-run="correct">ตรวจคำผิด</button></div>
+    </div>
+
+    <div class="panel" id="p-style">
+      <div class="row">
+        <label>รูปแบบ:</label>
+        {% for key, s in styles.items() %}
+        <label class="chk"><input type="checkbox" name="style" value="{{ key }}" {% if key in ['polite','formal','casual'] %}checked{% endif %}> {{ s.th }}</label>
+        {% endfor %}
+      </div>
+      <div class="row">
+        <label for="gender">ผู้พูด:</label>
+        <select id="gender">
+          <option value="neutral">ไม่ระบุ</option>
+          <option value="male">ชาย (ผม / ครับ)</option>
+          <option value="female">หญิง (ดิฉัน / ค่ะ)</option>
+        </select>
+        <button class="go" data-run="style">ปรับข้อความ</button>
+      </div>
+    </div>
+
+    <div class="panel" id="p-translate">
+      <div class="row">
+        <label for="src">จาก</label>
+        <select id="src"><option value="auto">ตรวจอัตโนมัติ</option>
+          {% for code, l in languages.items() %}<option value="{{ code }}">{{ l[1] }}</option>{% endfor %}
+        </select>
+        <label for="tgt">เป็น</label>
+        <select id="tgt">
+          {% for code, l in languages.items() %}<option value="{{ code }}" {% if code == 'en' %}selected{% endif %}>{{ l[1] }}</option>{% endfor %}
+        </select>
+        <label for="tstyle">น้ำเสียง</label>
+        <select id="tstyle"><option value="">ตามต้นฉบับ</option>
+          {% for key, s in styles.items() %}<option value="{{ key }}">{{ s.th }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="row">
+        <label class="chk"><input type="checkbox" id="back"> แปลกลับเพื่อตรวจความหมาย</label>
+        <button class="go" data-run="translate">แปล</button>
+      </div>
+      <textarea class="glossary" id="glossary" placeholder="คำศัพท์บังคับ (ไม่บังคับ) บรรทัดละคู่ เช่น&#10;ฝ่ายบุคคล = HR Department"></textarea>
+    </div>
+  </div>
+
+  <div class="out" id="out"></div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === t));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'p-' + t.dataset.tab));
+  $('#out').innerHTML = '';
+});
+
+fetch('api/status').then(r => r.json()).then(s => {
+  const dot = ok => `<span class="dot" style="background:${ok ? '#12b76a' : '#f04438'}"></span>`;
+  $('#status').innerHTML = `${dot(s.general_model)}โมเดลหลัก ${s.general_model ? 'พร้อม' : 'ไม่พบ (ใช้โหมดพื้นฐาน)'}`
+    + `${dot(s.translate_model)}โมเดลแปลไทย-อังกฤษ ${s.translate_model ? 'พร้อม' : 'ไม่พบ'}`;
+}).catch(() => $('#status').textContent = '');
+
+function card(title, text, extra = '', raw = null) {
+  const id = 'c' + Math.random().toString(36).slice(2);
+  window[id] = raw ?? text;
+  return `<div class="res"><button class="copy" onclick="navigator.clipboard.writeText(window['${id}'])">คัดลอก</button>
+    <h3>${esc(title)}</h3><div class="txt">${raw === null ? esc(text) : text}</div>${extra}</div>`;
+}
+const warns = r => (r.warnings || []).map(w => `<div class="warn">${esc(w)}</div>`).join('');
+const meta = r => `<div class="meta">โมเดล: ${esc(r.engine)}</div>`;
+
+// Corrected text with removed parts struck through and new parts highlighted.
+const markChanges = r => (r.diff || [{op: 'same', text: r.text}]).map(d =>
+  d.op === 'same' ? esc(d.text) : d.op === 'del' ? `<del>${esc(d.text)}</del>` : `<ins>${esc(d.text)}</ins>`).join('');
+
+async function run(kind, btn) {
+  const text = $('#text').value;
+  if (!text.trim()) return;
+  const body = { text };
+  if (kind === 'style') {
+    body.styles = [...document.querySelectorAll('input[name=style]:checked')].map(x => x.value);
+    body.gender = $('#gender').value;
+    if (!body.styles.length) return;
+  }
+  if (kind === 'translate') Object.assign(body, {
+    source: $('#src').value, target: $('#tgt').value, style: $('#tstyle').value,
+    back: $('#back').checked, glossary: $('#glossary').value });
+
+  btn.disabled = true; const label = btn.textContent; btn.textContent = 'กำลังประมวลผล…';
+  $('#out').innerHTML = '';
+  try {
+    const res = await fetch('api/' + kind, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const r = await res.json();
+    if (r.error) throw new Error(r.error);
+    if (kind === 'correct') {
+      const n = r.changes.length;
+      $('#out').innerHTML = card(n ? `แก้ไข ${n} จุด` : 'ไม่พบคำผิด', markChanges(r), meta(r), r.text) + warns(r);
+    } else if (kind === 'style') {
+      const names = {{ styles | tojson }};
+      $('#out').innerHTML = Object.entries(r).map(([k, v]) => card(names[k].th, v.text, meta(v)) + warns(v)).join('');
+    } else {
+      const back = r.back_translation ? `<div class="meta">แปลกลับ: ${esc(r.back_translation)}</div>` : '';
+      $('#out').innerHTML = card('คำแปล', r.text, back + meta(r)) + warns(r);
+    }
+  } catch (e) {
+    $('#out').innerHTML = `<div class="err">${esc(e.message)}</div>`;
+  } finally { btn.disabled = false; btn.textContent = label; }
+}
+document.querySelectorAll('[data-run]').forEach(b => b.onclick = () => run(b.dataset.run, b));
+</script>
+</body>
+</html>

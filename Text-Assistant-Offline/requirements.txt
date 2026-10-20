@@ -1,0 +1,6 @@
+llama-cpp-python>=0.3.8   # runs the GGUF models locally (CPU; GPU builds also work)
+pythainlp>=5.0            # Thai word tokenizer + dictionary
+pyspellchecker>=0.8       # English spell check for the no-model fallback
+flask>=3.0                # local web UI
+huggingface_hub>=0.24     # only used once by download_models.py
+pytest>=8.0               # tests
