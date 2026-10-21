@@ -1,0 +1,17 @@
+{
+  "opened_utc": "2026-10-11T08:37:59.805226+00:00",
+  "head": "55568356b706dee53b341de7383948c43f21da65",
+  "inputs_sha256": {
+    "dataset/raw/satellite_himawari_2023_2026h1.csv": "ecbfd3e5f5717dece347f14f92f01a0c0455564a6a1713c180635dbed9a98a79",
+    "dataset/raw/openmeteo_weather_2023_2025.csv": "ec38cf1f1e8d428ebaf027369773ca0d0529b6af9a88c50528c6348e1876c2a5",
+    "dataset/raw/openmeteo_weather_2026h1.csv": "722cfd545a55470b5849ffbae88da73d87ec35ed09f7223ba0e9185edf01e255",
+    "dataset/raw/openmeteo_airquality_2026h1.csv": "73b5193ce19df47675bda918c5e9e26d8150096bfa92f3121f1e13f36d901e61",
+    "dataset/processed/train_sat.parquet": "87b2600e8eda4baa77a5507fd95251d2ee46f6ac4ff630421472bee1875c7960",
+    "source_code/models/ozone_climatology_v2.json": "7a1cdeafa59891369627bed8b4907e377f0e72bc849a99fda0bf903fe1404919",
+    "source_code/models/cmf_multi_xgb_final.joblib": "14ffeb5dc3fb5c30c701ef5a1a215497d6cdb72506d8c1cb541a627daee721b5",
+    "source_code/models/cmf_uvi_quantile_xgb_final.ubj.gz": "27250c78cd1ff7c48c28c59a34f1a3eacba907f9302ffd9d7577926e8ea3f3ce",
+    "source_code/models/cqr_q_final_v1.json": "44dbaec7c40518567b11216859923d93b0baa2980bfb9ee2d26ca23989004ace",
+    "source_code/models/dataset_spec_sat_v1.json": "d7d7026901829faa5e76d8fbf4fc07158e4451bcf49e28171ea66ae3a2b534d7"
+  },
+  "targets_downloaded_utc": "2026-10-11T08:39:33.927456+00:00"
+}
