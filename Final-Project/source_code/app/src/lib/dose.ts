@@ -20,6 +20,23 @@ export function hourStartMs(h: HourUV): number {
 }
 
 /**
+ * Hours of a "going out" session: the hours kept from earlier answers (`saved`) plus the latest
+ * answer (`fresh`; it wins for an hour present in both), sorted by time, without hours that end
+ * before the session started at `fromMs`. `/predict` starts at the current clock hour, so after
+ * the hour changes the hour the session started in is gone from the new answer (field test
+ * 21 Oct 2026: started 14:24, at 15:00 the dose became unknown and the 15:02 warning was
+ * cancelled); the saved hours fill that part.
+ */
+export function mergeHours(saved: HourUV[], fresh: HourUV[], fromMs: number): HourUV[] {
+  const byStart = new Map<number, HourUV>();
+  for (const h of [...saved, ...fresh]) {
+    const start = hourStartMs(h);
+    if (Number.isFinite(start) && start + HOUR_MS > fromMs) byStart.set(start, h);
+  }
+  return [...byStart.entries()].sort((a, b) => a[0] - b[0]).map(([, h]) => h);
+}
+
+/**
  * Dose (J/m²) from `fromMs` to `toMs`, hour by hour. Returns null if a part of the span is not
  * covered by `hours` (the forecast ends), because the dose there is unknown.
  */

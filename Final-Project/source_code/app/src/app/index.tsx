@@ -20,6 +20,7 @@ import { UVCard } from '@/components/UVCard';
 import { UvaUvbCard } from '@/components/UvaUvbCard';
 import { API_URL, DEFAULT_SKIN_TYPE, DISCLAIMER_TH } from '@/config';
 import { chartHours } from '@/lib/chart';
+import { mergeHours } from '@/lib/dose';
 import { resolvePlace, type Place } from '@/lib/location';
 import { useSettings } from '@/lib/SettingsContext';
 import type { SkinType } from '@/lib/skinQuiz';
@@ -100,7 +101,26 @@ export default function HomeScreen() {
   const okData = state.kind === 'ok' ? state.data : null;
   // now + forecast hours; memoised so notifications are re-planned only for a new forecast
   const hours = useMemo(() => (okData ? chartHours(okData) : null), [okData]);
-  useLocalNotifications(hours, settings, pushActive);
+  // "Going out": the hours kept since the session started plus the new answer, so the dose of
+  // the start hour survives the hourly refresh (field test 21 Oct 2026, see mergeHours).
+  const sunStartedAt = settings.sunStartedAt;
+  const sessionHours = useMemo(
+    () =>
+      hours && sunStartedAt !== null
+        ? mergeHours(settings.sunHours, hours, sunStartedAt)
+        : (hours ?? []),
+    [hours, sunStartedAt, settings.sunHours],
+  );
+  useEffect(() => {
+    if (!hours || sunStartedAt === null) return;
+    const merged = mergeHours(settings.sunHours, hours, sunStartedAt);
+    const same =
+      merged.length === settings.sunHours.length &&
+      merged.every((h, i) => h === settings.sunHours[i]);
+    if (!same) update({ sunHours: merged });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- store once per new answer
+  }, [hours, sunStartedAt]);
+  useLocalNotifications(hours, settings, pushActive, sessionHours);
 
   const load = useCallback(async () => {
     const fetchedAt = Date.now();
@@ -232,6 +252,7 @@ export default function HomeScreen() {
           <HourlyChart hours={hours ?? []} isDaylight={state.data.is_daylight} />
           <SunSessionCard
             hours={hours ?? []}
+            sessionHours={sessionHours}
             skin={skinType as SkinType}
             isDaylight={state.data.is_daylight}
           />

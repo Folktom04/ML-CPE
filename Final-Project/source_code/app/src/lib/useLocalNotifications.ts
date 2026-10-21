@@ -23,12 +23,17 @@ import {
 import type { Settings } from '@/lib/settings';
 import type { SkinType } from '@/lib/skinQuiz';
 
-/** Plan and schedule every local notification for `hours` (exported for tests). */
+/**
+ * Plan and schedule every local notification for `hours` (exported for tests). The burn warning
+ * uses `sessionHours` (the hours kept since "ออกแดด", see `mergeHours`), so it is not cancelled
+ * when the hour the session started in drops out of a newer answer.
+ */
 export async function syncLocalNotifications(
   hours: HourUV[],
   s: Settings,
   nowMs: number = Date.now(),
   pushActive = false,
+  sessionHours: HourUV[] = hours,
 ): Promise<void> {
   if (!notificationsAvailable()) return; // Expo Go on Android / web: nothing to schedule
   const skin = (s.skinType ?? DEFAULT_SKIN_TYPE) as SkinType;
@@ -46,7 +51,7 @@ export async function syncLocalNotifications(
   await replaceScheduled(['daily_summary', 'daily_fallback'], daily, nowMs, () => s.dailySummary);
 
   const started = s.sunStartedAt;
-  const warnAt = started ? sunStatus(hours, skin, started, nowMs).warnAt : null;
+  const warnAt = started ? sunStatus(sessionHours, skin, started, nowMs).warnAt : null;
   // keep the overdue warning of THIS session only (a new "ออกแดด" starts after it), unless a
   // newer forecast moved the 80 % time into the future (then the new warning replaces it)
   await replaceScheduled(['burn'], warnAt ? [burnNotification(warnAt)] : [], nowMs, (n) =>
@@ -66,10 +71,11 @@ export function useLocalNotifications(
   hours: HourUV[] | null,
   s: Settings,
   pushActive = false,
+  sessionHours: HourUV[] | null = null,
 ): void {
   useEffect(() => {
     if (!hours || !notificationsAvailable()) return;
-    syncLocalNotifications(hours, s, Date.now(), pushActive).catch(() => {
+    syncLocalNotifications(hours, s, Date.now(), pushActive, sessionHours ?? hours).catch(() => {
       // notifications are extra; the screen keeps working without them
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only these settings matter here
