@@ -170,6 +170,12 @@ UVA MAE 2.910 W/m², UVB MAE 0.088 W/m² `[docs/test_2025_results.json]`
 - **ความแม่นยำของ UVI ในวันทดสอบประเมินไม่ได้:** ไม่มีเครื่องวัด UV ภาคพื้นและไม่ได้เทียบกับ Open-Meteo
 - **บั๊กที่พบ 4 ตัวแก้แล้ว:** % ของ MED ค้างหลังล็อกจอ, แจ้งเตือนที่เลยเวลาถูกยกเลิก และหน้าหลักแสดงชั่วโมงเก่า (commit `c6b05db`) และเตือนผิวไหม้ข้ามวัน (15:37 ค่าบน 3.0 การ์ดบอก "จะเตือนราว 08:06" ของวันถัดไป, `d2b1762`) ทั้งหมดมีเทส Jest หลังแก้ข้อ 1–3 บนเครื่องจริง 15:37–15:39 % ของ MED เปลี่ยนจาก 0 เป็น 2 % (สูตรได้ 2.6 %) และแจ้งเตือนยังใช้ได้ ส่วนข้อ 4 บนเครื่องจริงไม่ได้จด
 
+**การทดลองเสริม: เมฆจากดาวเทียม Himawari-9 (ไม่ผ่าน จึงไม่ได้ใส่ในแอป)** branch [`exp/himawari-sat-features`](https://github.com/Folktom04/ML-CPE/tree/exp/himawari-sat-features/Final-Project), §4.9 ใน [docs/report.md](docs/report.md)
+- ประกาศเกณฑ์ล่วงหน้า (commit `f4f625e`) เพิ่ม 3 features จาก Open-Meteo Satellite Radiation API (ชั่วโมงก่อนหน้า)
+- dev 2024: MAE 0.451 → **0.411** (ดีขึ้น 0.040, 95 % CI 0.031–0.049) จึงไปต่อ `[docs/sat_dev_results.json]`
+- test ม.ค.–มิ.ย. 2026 (1,845 ชม., เปิดครั้งเดียว): 0.461 → 0.454 ดีขึ้นแค่ 0.007 (เกณฑ์ > 0.02, CI −0.007–0.020) **ไม่ผ่าน P1** ผ่าน P2–P4 `[docs/sat_test_2026_results.json]`
+- โมเดลหลักของแอป (ไม่ได้แก้) ได้ MAE **0.470** บนข้อมูลใหม่ ม.ค.–มิ.ย. 2026 ใกล้กับ 0.479 ของ test 2025
+
 ## ภาพหน้าจอ
 ภาพจากมือถือจริง (Samsung Galaxy S23 Ultra, development build) วันที่ 4 ต.ค. 2026 ตัดแถบสถานะของมือถือออก ปุ่มเฟืองสีเทาที่ลอยอยู่เป็นปุ่มเครื่องมือของ development build ไม่ใช่ส่วนของแอป
 
@@ -203,6 +209,7 @@ UVA MAE 2.910 W/m², UVB MAE 0.088 W/m² `[docs/test_2025_results.json]`
    - ยังไม่มี export CSV และตัวแยก "กลางแดด/ในร่ม"
 9. **License:** SWIMCAT-ext และ SWIMSEG ใช้เพื่อการศึกษาและไม่ใช่เชิงพาณิชย์เท่านั้น ([docs/datasets.md](docs/datasets.md))
 10. **ไม่ใช่เครื่องมือแพทย์**
+11. **ไม่มีข้อมูลเมฆเฉพาะจุดแบบ real-time:** ลองเพิ่มดาวเทียม Himawari แล้วไม่ผ่าน test 2026 แอปจึงใช้พยากรณ์ของ Open-Meteo อย่างเดียว
 
 รายการเต็มอยู่ใน [docs/results_summary.md](docs/results_summary.md) §6 และ [docs/report.md](docs/report.md) บทที่ 5
 
@@ -215,6 +222,7 @@ UVA MAE 2.910 W/m², UVB MAE 0.088 W/m² `[docs/test_2025_results.json]`
 | [docs/architecture.md](docs/architecture.md) | ไดอะแกรมสถาปัตยกรรม (Mermaid) |
 | [docs/results_summary.md](docs/results_summary.md) | ผลลัพธ์ทุกตัวเลขพร้อมไฟล์ต้นทาง |
 | [docs/uv_guard_presentation.pptx](docs/uv_guard_presentation.pptx) | สไลด์นำเสนอ |
+| [`exp/himawari-sat-features`](https://github.com/Folktom04/ML-CPE/tree/exp/himawari-sat-features/Final-Project) | การทดลองดาวเทียม Himawari (เกณฑ์ล่วงหน้า, ผล dev และ test 2026) |
 | [docs/uv_guard_field_test_2026-10-04.xlsx](docs/uv_guard_field_test_2026-10-04.xlsx) | บันทึกทดสอบภาคสนาม 4 ต.ค. 2026 |
 | [docs/api.md](docs/api.md) · [docs/db.md](docs/db.md) | API และฐานข้อมูล (รวม PDPA) |
 | [docs/datasets.md](docs/datasets.md) | dataset ภาพท้องฟ้า, license และการอ้างอิง |
