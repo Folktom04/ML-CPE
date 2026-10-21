@@ -1,0 +1,204 @@
+{
+  "created": "2026-10-11",
+  "opened": {
+    "opened_utc": "2026-10-11T08:37:59.805226+00:00",
+    "head": "55568356b706dee53b341de7383948c43f21da65",
+    "inputs_sha256": {
+      "dataset/raw/satellite_himawari_2023_2026h1.csv": "ecbfd3e5f5717dece347f14f92f01a0c0455564a6a1713c180635dbed9a98a79",
+      "dataset/raw/openmeteo_weather_2023_2025.csv": "ec38cf1f1e8d428ebaf027369773ca0d0529b6af9a88c50528c6348e1876c2a5",
+      "dataset/raw/openmeteo_weather_2026h1.csv": "722cfd545a55470b5849ffbae88da73d87ec35ed09f7223ba0e9185edf01e255",
+      "dataset/raw/openmeteo_airquality_2026h1.csv": "73b5193ce19df47675bda918c5e9e26d8150096bfa92f3121f1e13f36d901e61",
+      "dataset/processed/train_sat.parquet": "87b2600e8eda4baa77a5507fd95251d2ee46f6ac4ff630421472bee1875c7960",
+      "source_code/models/ozone_climatology_v2.json": "7a1cdeafa59891369627bed8b4907e377f0e72bc849a99fda0bf903fe1404919",
+      "source_code/models/cmf_multi_xgb_final.joblib": "14ffeb5dc3fb5c30c701ef5a1a215497d6cdb72506d8c1cb541a627daee721b5",
+      "source_code/models/cmf_uvi_quantile_xgb_final.ubj.gz": "27250c78cd1ff7c48c28c59a34f1a3eacba907f9302ffd9d7577926e8ea3f3ce",
+      "source_code/models/cqr_q_final_v1.json": "44dbaec7c40518567b11216859923d93b0baa2980bfb9ee2d26ca23989004ace",
+      "source_code/models/dataset_spec_sat_v1.json": "d7d7026901829faa5e76d8fbf4fc07158e4451bcf49e28171ea66ae3a2b534d7"
+    }
+  },
+  "period": [
+    "2026-01-01",
+    "2026-06-30"
+  ],
+  "n_rows": 1845,
+  "summary": {
+    "B": {
+      "per_seed": [
+        {
+          "seed": 42,
+          "mae": 0.45963318504187545,
+          "recall_vh": 0.9771689497716894,
+          "recall_ex": 0.6730769230769231,
+          "precision_vh": 0.6524390243902439,
+          "far_vh": 0.16204690831556504,
+          "coverage": 0.7913279132791328
+        },
+        {
+          "seed": 43,
+          "mae": 0.46090754548707114,
+          "recall_vh": 0.9748858447488584,
+          "recall_ex": 0.6730769230769231,
+          "precision_vh": 0.6519083969465649,
+          "far_vh": 0.16204690831556504,
+          "coverage": 0.7913279132791328
+        },
+        {
+          "seed": 44,
+          "mae": 0.4613259810132141,
+          "recall_vh": 0.9771689497716894,
+          "recall_ex": 0.7307692307692307,
+          "precision_vh": 0.6534351145038167,
+          "far_vh": 0.1613361762615494,
+          "coverage": 0.7924119241192412
+        },
+        {
+          "seed": 45,
+          "mae": 0.45940938792050845,
+          "recall_vh": 0.9771689497716894,
+          "recall_ex": 0.6730769230769231,
+          "precision_vh": 0.654434250764526,
+          "far_vh": 0.16062544420753375,
+          "coverage": 0.7924119241192412
+        },
+        {
+          "seed": 46,
+          "mae": 0.4633332217124876,
+          "recall_vh": 0.9771689497716894,
+          "recall_ex": 0.6730769230769231,
+          "precision_vh": 0.6534351145038167,
+          "far_vh": 0.1613361762615494,
+          "coverage": 0.7940379403794038
+        }
+      ],
+      "mae_mean": 0.46092186423503134,
+      "mae_sd": 0.0015753125837355087,
+      "recall_vh_mean": 0.9767123287671232,
+      "recall_vh_sd": 0.001021035606164275,
+      "recall_ex_mean": 0.6846153846153846,
+      "recall_ex_sd": 0.025800784355766763,
+      "precision_vh_mean": 0.6531303802217937,
+      "precision_vh_sd": 0.0009819649138642934,
+      "far_vh_mean": 0.16147832267235251,
+      "far_vh_sd": 0.0005946410991713474,
+      "coverage_mean": 0.7923035230352303,
+      "coverage_sd": 0.001110780570835737
+    },
+    "S1": {
+      "per_seed": [
+        {
+          "seed": 42,
+          "mae": 0.453224837542798,
+          "recall_vh": 0.9817351598173516,
+          "recall_ex": 0.6730769230769231,
+          "precision_vh": 0.6595092024539877,
+          "far_vh": 0.15778251599147122,
+          "coverage": 0.775609756097561
+        },
+        {
+          "seed": 43,
+          "mae": 0.4530395785722415,
+          "recall_vh": 0.9840182648401826,
+          "recall_ex": 0.7115384615384616,
+          "precision_vh": 0.6570121951219512,
+          "far_vh": 0.15991471215351813,
+          "coverage": 0.7734417344173442
+        },
+        {
+          "seed": 44,
+          "mae": 0.4542178850155191,
+          "recall_vh": 0.9817351598173516,
+          "recall_ex": 0.7115384615384616,
+          "precision_vh": 0.6584992343032159,
+          "far_vh": 0.15849324804548684,
+          "coverage": 0.7718157181571815
+        },
+        {
+          "seed": 45,
+          "mae": 0.45463849762181313,
+          "recall_vh": 0.9794520547945206,
+          "recall_ex": 0.6923076923076923,
+          "precision_vh": 0.6559633027522935,
+          "far_vh": 0.15991471215351813,
+          "coverage": 0.7777777777777778
+        },
+        {
+          "seed": 46,
+          "mae": 0.4561383311584778,
+          "recall_vh": 0.9817351598173516,
+          "recall_ex": 0.6730769230769231,
+          "precision_vh": 0.6615384615384615,
+          "far_vh": 0.15636105188343993,
+          "coverage": 0.77289972899729
+        }
+      ],
+      "mae_mean": 0.45425182598216984,
+      "mae_sd": 0.001248380727566687,
+      "recall_vh_mean": 0.9817351598173516,
+      "recall_vh_sd": 0.0016143990438048834,
+      "recall_ex_mean": 0.6923076923076923,
+      "recall_ex_sd": 0.019230769230769218,
+      "precision_vh_mean": 0.6585044792339819,
+      "precision_vh_sd": 0.002173650999132472,
+      "far_vh_mean": 0.15849324804548687,
+      "far_vh_sd": 0.0015076903650033048,
+      "coverage_mean": 0.7743089430894308,
+      "coverage_sd": 0.0023811254890502907
+    },
+    "B_main": {
+      "mae": 0.47033397509503866,
+      "recall_vh": 0.9771689497716894,
+      "recall_ex": 0.7115384615384616,
+      "precision_vh": 0.643609022556391,
+      "far_vh": 0.16844349680170576,
+      "coverage": 0.7804878048780488
+    },
+    "bootstrap": {
+      "diff": 0.006302294242966909,
+      "ci_low": -0.007477944606090329,
+      "ci_high": 0.02001039425732981,
+      "n_days": 181,
+      "n_rows": 1845,
+      "n_boot": 2000,
+      "seed": 42
+    },
+    "fallback": {
+      "mae": 0.45566792767728703,
+      "note": "report only"
+    },
+    "omi": {
+      "n_days": 136,
+      "mae_B": 1.0681510573255097,
+      "mae_S1": 1.107072186803568,
+      "mae_B_main": 0.9761877114748363
+    }
+  },
+  "decision": {
+    "P1": {
+      "passed": false,
+      "gain": 0.006670038252861499,
+      "ci_low": -0.007477944606090329
+    },
+    "P2": {
+      "passed": true,
+      "recall_drop": -0.005022831050228382
+    },
+    "P3": {
+      "passed": true,
+      "status": "evaluated",
+      "n_days": 136,
+      "mae_increase": 0.03892112947805826
+    },
+    "P4": {
+      "passed": true,
+      "coverage": 0.7743089430894308
+    },
+    "passed": false
+  },
+  "report_only": [
+    "B_main",
+    "fallback",
+    "Extreme recall",
+    "omi mae_B_main"
+  ],
+  "note": "main is unchanged whatever the result"
+}
