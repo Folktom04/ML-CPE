@@ -10,6 +10,7 @@
  * `deviceId` is a random UUID that proves ownership of the server record (X-Device-Id).
  */
 
+import type { HourUV } from '@/api/types';
 import { isProvinceName } from '@/lib/provinces';
 import { isSkinType, type SkinType } from '@/lib/skinQuiz';
 
@@ -51,6 +52,11 @@ export type Settings = {
   /** Reapply-sunscreen reminder due at this time (ms); null = none (day 22, phone only). */
   reapplyAt: number | null;
   /**
+   * Forecast hours seen since `sunStartedAt` (phone only), so the dose of the hour the session
+   * started in is still known after `/predict` moves on to the next clock hour (`mergeHours`).
+   */
+  sunHours: HourUV[];
+  /**
    * Day 23: the last server sync failed, so the server may hold older settings (threshold,
    * province). Retried when the app opens; server push is not trusted while it is true.
    */
@@ -81,6 +87,7 @@ export const DEFAULT_SETTINGS: Settings = {
   onboarded: false,
   sunStartedAt: null,
   reapplyAt: null,
+  sunHours: [],
   serverPending: false,
 };
 
@@ -106,6 +113,22 @@ function pick<T>(value: unknown, ok: (v: unknown) => boolean, fallback: T): T {
 
 const isBool = (v: unknown) => typeof v === 'boolean';
 const isTime = (v: unknown) => typeof v === 'number' && Number.isFinite(v) && v > 0;
+const isNum = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
+
+/** A stored forecast hour with the fields the dose needs (time, alert_uvi, is_daylight). */
+function isStoredHour(v: unknown): boolean {
+  if (!v || typeof v !== 'object') return false;
+  const h = v as Record<string, unknown>;
+  return (
+    typeof h.time === 'string' &&
+    Number.isFinite(Date.parse(h.time)) &&
+    isNum(h.alert_uvi) &&
+    isBool(h.is_daylight)
+  );
+}
+
+/** At most this many stored session hours (two days); more means damaged data. */
+const MAX_SUN_HOURS = 48;
 
 /**
  * Settings from stored JSON. Unknown or damaged fields fall back to the defaults one by one,
@@ -152,6 +175,11 @@ export function parseSettings(raw: string | null): Settings {
     onboarded: pick(obj.onboarded, (v) => v === true, d.onboarded),
     sunStartedAt: pick(obj.sunStartedAt, isTime, d.sunStartedAt),
     reapplyAt: pick(obj.reapplyAt, isTime, d.reapplyAt),
+    sunHours: pick(
+      obj.sunHours,
+      (v) => Array.isArray(v) && v.length <= MAX_SUN_HOURS && v.every(isStoredHour),
+      d.sunHours,
+    ),
     serverPending: pick(obj.serverPending, isBool, d.serverPending),
   };
 }

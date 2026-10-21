@@ -47,11 +47,14 @@ function Button({
  */
 export function SunSessionCard({
   hours,
+  sessionHours = hours,
   skin,
   isDaylight,
   nowMs: fixedNow,
 }: {
   hours: HourUV[];
+  /** Hours kept since "ออกแดด" plus the latest answer (`mergeHours`), for the dose. */
+  sessionHours?: HourUV[];
   skin: SkinType;
   isDaylight: boolean;
   /** Fixed clock for tests; the app uses `useNow` (30 s + on returning to the foreground). */
@@ -77,12 +80,12 @@ export function SunSessionCard({
   const available = notificationsAvailable();
   const unavailable = notifyUnavailableText();
   const pct = Math.round(BURN_FRACTION * 100);
-  const status = s.sunStartedAt ? sunStatus(hours, skin, s.sunStartedAt, nowMs) : null;
+  const status = s.sunStartedAt ? sunStatus(sessionHours, skin, s.sunStartedAt, nowMs) : null;
   const reapplyDue = s.reapplyAt && s.reapplyAt > nowMs ? s.reapplyAt : null;
 
   const goOut = async () => {
     if (allowed === false) setAllowed(await notificationPermission(true));
-    await update({ sunStartedAt: fixedNow ?? Date.now() });
+    await update({ sunStartedAt: fixedNow ?? Date.now(), sunHours: [] });
   };
 
   const applied = async () => {
@@ -112,14 +115,16 @@ export function SunSessionCard({
           <Text style={styles.value}>อยู่กลางแดดตั้งแต่ {clockBkk(s.sunStartedAt!)}</Text>
           <Text style={styles.text}>
             {status.fractionNow === null
-              ? 'ยังคำนวณปริมาณ UV ที่ได้รับไม่ได้'
+              ? 'ยังคำนวณปริมาณ UV ที่ได้รับไม่ได้ เพราะข้อมูล UV บางช่วงตั้งแต่ออกแดดไม่ครบ'
               : `ได้รับ UV แล้วประมาณ ${Math.round(status.fractionNow * 100)} % ของปริมาณที่ทำให้ผิวแดง (MED)`}
           </Text>
           <Text style={styles.text} testID="sun-warn-at">
             {status.warnAt === null
               ? status.notBeforeSunset
                 ? `วันนี้ UV ไม่พอจะถึง ${pct} % ของ MED ก่อนแดดหมด จึงไม่ตั้งเตือน`
-                : available
+                : status.fractionNow === null
+                  ? 'ข้อมูลไม่ครบ จึงตั้งเตือนไม่ได้ กด "เข้าร่มแล้ว" แล้วกด "ออกแดด" ใหม่ถ้ายังอยู่กลางแดด'
+                  : available
                   ? `ช่วงพยากรณ์ที่มีอยู่ ไม่ถึง ${pct} % จึงยังไม่ตั้งเตือน`
                   : `ช่วงพยากรณ์ที่มีอยู่ ไม่ถึง ${pct} %`
               : status.warnAt <= nowMs
@@ -131,7 +136,7 @@ export function SunSessionCard({
           <Button
             label="เข้าร่มแล้ว"
             kind="outline"
-            onPress={() => update({ sunStartedAt: null })}
+            onPress={() => update({ sunStartedAt: null, sunHours: [] })}
             testID="sun-stop"
           />
         </View>
