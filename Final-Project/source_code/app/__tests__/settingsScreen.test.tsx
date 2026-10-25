@@ -337,4 +337,34 @@ describe('location card and consent text (day 21)', () => {
     expect(screen.queryByTestId('settings-gps-denied')).toBeNull();
     expect(screen.getByTestId('settings-location')).toHaveTextContent(/^ตำแหน่งปัจจุบัน \(GPS\)/);
   });
+
+  // Field test 25 Oct 2026: in GPS mode with the permission revoked (or "ask every time") the
+  // home screen used the last province and said "เปลี่ยนได้ในหน้าตั้งค่า", but this screen hid
+  // "ใช้ GPS", so a province had to be picked before the permission could be asked again.
+  it('GPS mode without permission still offers "ใช้ GPS" and asks again', async () => {
+    Location.getForegroundPermissionsAsync.mockResolvedValue({ status: 'denied' });
+    const storage = new MemoryStorage({ skinType: 'III', locationMode: 'gps' });
+    await open(storage);
+    expect(await screen.findByTestId('settings-gps-missing')).toBeTruthy();
+    expect(screen.getByTestId('settings-location')).toHaveTextContent(/ยังไม่ได้รับสิทธิ์ตำแหน่ง/);
+
+    Location.requestForegroundPermissionsAsync.mockResolvedValueOnce({ status: 'granted' });
+    await fireEvent.press(screen.getByTestId('settings-use-gps'));
+    await waitFor(() => expect(screen.queryByTestId('settings-use-gps')).toBeNull());
+    expect(Location.requestForegroundPermissionsAsync).toHaveBeenCalled();
+    expect(screen.queryByTestId('settings-gps-missing')).toBeNull();
+    expect(screen.getByTestId('settings-location')).toHaveTextContent(/^ตำแหน่งปัจจุบัน \(GPS\)/);
+    expect(storage.stored()?.locationMode).toBe('gps');
+    Location.getForegroundPermissionsAsync.mockResolvedValue({ status: 'granted' });
+  });
+
+  it('GPS mode with permission hides "ใช้ GPS" as before', async () => {
+    Location.getForegroundPermissionsAsync.mockResolvedValue({ status: 'granted' });
+    await open(new MemoryStorage({ skinType: 'III', locationMode: 'gps' }));
+    await waitFor(() =>
+      expect(screen.getByTestId('settings-location')).toHaveTextContent(/^ตำแหน่งปัจจุบัน \(GPS\)/),
+    );
+    expect(screen.queryByTestId('settings-use-gps')).toBeNull();
+    expect(screen.queryByTestId('settings-gps-missing')).toBeNull();
+  });
 });

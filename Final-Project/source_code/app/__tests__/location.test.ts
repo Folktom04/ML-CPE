@@ -3,6 +3,7 @@ import * as Location from 'expo-location';
 import {
   fallbackPlace,
   LOCATION_TIMEOUT_MS,
+  locationPermissionGranted,
   requestLocationPermission,
   resolvePlace,
   roundCoord,
@@ -74,6 +75,15 @@ describe('location', () => {
     expect(await requestLocationPermission()).toBe(false);
     L.requestForegroundPermissionsAsync.mockRejectedValueOnce(new Error('boom'));
     expect(await requestLocationPermission()).toBe(false);
+  });
+
+  it('checks the permission without asking and never throws', async () => {
+    expect(await locationPermissionGranted()).toBe(true);
+    L.getForegroundPermissionsAsync.mockResolvedValueOnce({ status: 'denied' } as never);
+    expect(await locationPermissionGranted()).toBe(false);
+    L.getForegroundPermissionsAsync.mockRejectedValueOnce(new Error('boom'));
+    expect(await locationPermissionGranted()).toBe(false);
+    expect(L.requestForegroundPermissionsAsync).not.toHaveBeenCalled();
   });
 
   it('with nothing chosen uses Pathum Thani without touching GPS', async () => {
