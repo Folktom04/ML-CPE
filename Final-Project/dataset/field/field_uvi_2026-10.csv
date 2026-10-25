@@ -1,0 +1,14 @@
+date,hour_local,source,location,lat,lon,uvi,uvi_q10,uvi_q90,uva_wm2,uvb_wm2,burn_minutes_skin_iii,cloud_cover_pct,note
+2026-10-22,13:00,app,gps,,,,,,42.3,1.29,31,,UVI outside screenshot 13:01
+2026-10-22,13:00,api,pathum_default,14.02,100.52,6.68,5.55,7.62,43.833,1.3109,30,,called by Claude 13:01
+2026-10-22,13:00,open_meteo_uv_index,gps,14.04,100.73,7.90,,,,,,16,instantaneous at HH:00; fetched 2026-10-25
+2026-10-22,13:00,open_meteo_uv_index,pathum_default,14.02,100.52,7.95,,,,,,,instantaneous at HH:00; fetched 2026-10-25
+2026-10-22,14:00,open_meteo_uv_index,gps,14.04,100.73,7.10,,,,,,6,instantaneous at HH:00; fetched 2026-10-25
+2026-10-22,14:00,open_meteo_uv_index,pathum_default,14.02,100.52,7.15,,,,,,,instantaneous at HH:00; fetched 2026-10-25
+2026-10-25,12:00,app,gps,14.04,100.73,7.8,,,45.9,1.54,,,UVI = chart maximum at 12:00 (screenshot 12:00)
+2026-10-25,12:00,api_forecast_0500,pathum_default,14.02,100.52,7.70,6.78,8.68,,,,,forecast fetched 05:00
+2026-10-25,12:00,open_meteo_uv_index,gps,14.04,100.73,7.75,,,,,,62,instantaneous at HH:00; fetched 2026-10-25
+2026-10-25,12:00,open_meteo_uv_index,pathum_default,14.02,100.52,7.85,,,,,,44,instantaneous at HH:00; fetched 2026-10-25
+2026-10-25,13:00,api_forecast_0500,pathum_default,14.02,100.52,6.71,5.58,7.49,,,,,forecast fetched 05:00
+2026-10-25,13:00,open_meteo_uv_index,gps,14.04,100.73,7.80,,,,,,23,instantaneous at HH:00; fetched 2026-10-25
+2026-10-25,13:00,open_meteo_uv_index,pathum_default,14.02,100.52,7.80,,,,,,23,instantaneous at HH:00; fetched 2026-10-25

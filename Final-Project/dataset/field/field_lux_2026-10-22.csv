@@ -1,0 +1,6 @@
+date,time_local,condition,lat,lon,lux_1,lux_2,lux_3,orientation_text,tilt_deg,sky,note
+2026-10-22,13:04,full_sun,,,140545,,,ทิศทางถูกต้อง: หน้าจอหงายขึ้นฟ้า,11,,
+2026-10-22,13:03,tree_shade,,,2917,,,ทิศทางถูกต้อง: หน้าจอหงายขึ้นฟ้า,3,,outdoors under a tree
+2026-10-22,13:03,under_roof,,,1585,,,ทิศทางถูกต้อง: หน้าจอหงายขึ้นฟ้า,2,,outdoors under a roof
+2026-10-22,13:03,indoors,,,236,,,ทิศทางถูกต้อง: หน้าจอหงายขึ้นฟ้า,7,,indoors with some daylight
+2026-10-22,,overcast,,,,,,,,,not tested
