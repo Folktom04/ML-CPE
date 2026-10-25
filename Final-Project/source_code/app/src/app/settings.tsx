@@ -1,10 +1,19 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  AppState,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native';
 
 import { describeError } from '@/api/client';
 import { Card, colors, Note } from '@/components/Card';
-import { requestLocationPermission } from '@/lib/location';
+import { locationPermissionGranted, requestLocationPermission } from '@/lib/location';
 import {
   notificationPermission,
   notificationsAvailable,
@@ -76,7 +85,31 @@ export default function SettingsScreen() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleted, setDeleted] = useState(false);
   const [gpsDenied, setGpsDenied] = useState(false);
+  // GPS mode without location permission (revoked, "ask every time", "only this time" expired):
+  // the home screen falls back to the last province and points here, so offer "ใช้ GPS" again
+  // (field test 25 Oct 2026: the button was hidden and a province had to be picked first).
+  const [gpsPermitted, setGpsPermitted] = useState<boolean | null>(null);
   const [allowed, setAllowed] = useState<boolean | null>(null);
+  const gpsMode = s.locationMode === 'gps';
+  const gpsMissing = gpsMode && gpsPermitted === false;
+
+  useEffect(() => {
+    if (!gpsMode) return;
+    let active = true;
+    const check = () =>
+      locationPermissionGranted().then((ok) => {
+        if (active) setGpsPermitted(ok);
+      });
+    check();
+    // re-check after the user comes back from the phone's settings
+    const sub = AppState.addEventListener('change', (st) => {
+      if (st === 'active') check();
+    });
+    return () => {
+      active = false;
+      sub.remove();
+    };
+  }, [gpsMode]);
 
   useEffect(() => {
     let active = true;
@@ -240,8 +273,10 @@ export default function SettingsScreen() {
 
       <Card title="ตำแหน่ง">
         <Text style={styles.value} testID="settings-location">
-          {s.locationMode === 'gps'
-            ? 'ตำแหน่งปัจจุบัน (GPS) · จังหวัดดูได้ที่หน้าหลัก'
+          {gpsMode
+            ? gpsMissing
+              ? 'GPS (ยังไม่ได้รับสิทธิ์ตำแหน่ง) · ตอนนี้ใช้จังหวัดจากตำแหน่งล่าสุด'
+              : 'ตำแหน่งปัจจุบัน (GPS) · จังหวัดดูได้ที่หน้าหลัก'
             : s.locationMode === 'province' && s.province
               ? `จ.${s.province} (เลือกเอง)`
               : 'ปทุมธานี (ตำแหน่งเริ่มต้น)'}
@@ -250,15 +285,22 @@ export default function SettingsScreen() {
           <Note testID="settings-gps-denied">
             ไม่ได้รับสิทธิ์ตำแหน่ง เปิดสิทธิ์ได้ในการตั้งค่าของเครื่อง หรือเลือกจังหวัดแทน
           </Note>
+        ) : gpsMissing ? (
+          <Note testID="settings-gps-missing">
+            ยังไม่ได้รับสิทธิ์ตำแหน่ง กด &quot;ใช้ GPS&quot; เพื่อขอสิทธิ์อีกครั้ง หรือเลือกจังหวัด
+          </Note>
         ) : null}
         <View style={styles.segments}>
-          {s.locationMode !== 'gps' ? (
+          {!gpsMode || gpsMissing ? (
             <Pressable
               style={styles.buttonOutline}
               onPress={async () => {
                 const ok = await requestLocationPermission();
                 setGpsDenied(!ok);
-                if (ok) await update({ locationMode: 'gps' });
+                if (ok) {
+                  setGpsPermitted(true);
+                  if (!gpsMode) await update({ locationMode: 'gps' });
+                }
               }}
               accessibilityRole="button"
               testID="settings-use-gps">

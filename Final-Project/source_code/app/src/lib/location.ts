@@ -45,6 +45,16 @@ export async function requestLocationPermission(): Promise<boolean> {
   }
 }
 
+/** True when "while using the app" location permission is granted now (never asks). */
+export async function locationPermissionGranted(): Promise<boolean> {
+  try {
+    const { status } = await Location.getForegroundPermissionsAsync();
+    return status === 'granted';
+  } catch {
+    return false;
+  }
+}
+
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
     const t = setTimeout(() => reject(new Error(`no location fix within ${ms / 1000} s`)), ms);
