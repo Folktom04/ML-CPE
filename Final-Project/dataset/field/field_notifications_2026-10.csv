@@ -1,0 +1,16 @@
+date,kind,scheduled_local,received_local,delay_min,battery_saver,device_state,skin_type,text_title,note
+2026-10-21,burn,15:02,,,unknown,,III,ใกล้ถึงเวลาผิวไหม้ (ประมาณ),not received: cancelled after 15:00 refresh (bug fixed in f98f98b)
+2026-10-22,daily_summary,07:00,07:41,41,on,left idle,III,UV วันนี้สูงสุดประมาณ 8.0 (สูงมาก),
+2026-10-22,uv_high,11:00,11:41,41,on,left idle,III,UV สูงมาก ช่วง 11:00–12:00,
+2026-10-22,uv_safe,14:00,14:09,9,off,in use,III,UV ลดลงแล้ว ตั้งแต่ 14:00,
+2026-10-22,burn,14:32,14:32,0,off,screen recording (screen on),I,ใกล้ถึงเวลาผิวไหม้ (ประมาณ),scheduled time from formula (pressed ~14:11)
+2026-10-23,reapply,,01:29,,unknown,received after phone use 01:20-01:24,,ถึงเวลาทาครีมกันแดดซ้ำ,press time unknown; arrived at night
+2026-10-23,daily_fallback,07:00,07:29,29,unknown,,IV,เปิดแอปเพื่อดู UV วันนี้,
+2026-10-23,uv_high,11:00,11:00,0,unknown,,IV,UV สูงมาก ช่วง 11:00–12:00,
+2026-10-23,uv_safe,14:00,,,unknown,,IV,UV ลดลงแล้ว ตั้งแต่ 14:00,screenshot shows date only
+2026-10-24,daily_fallback,07:00,07:45,45,unknown,,IV,เปิดแอปเพื่อดู UV วันนี้,no uv_high: no forecast for the day on the phone
+2026-10-25,daily_summary,07:00,07:45,45,on,left idle,IV,UV วันนี้สูงสุดประมาณ 7.5 (สูง),
+2026-10-25,uv_high,11:00,11:29,29,on,left idle,IV,UV สูงมาก ช่วง 11:00–12:00,
+2026-10-25,burn,12:12,12:36,24,off,locked; arrived when phone woken,III,ใกล้ถึงเวลาผิวไหม้ (ประมาณ),session crossed 11:00->12:00
+2026-10-25,reapply,14:00,14:57,57,off,locked,III,ถึงเวลาทาครีมกันแดดซ้ำ,applied about noon (tester)
+2026-10-25,uv_safe,14:00,14:57,57,off,locked; battery 18%,III,UV ลดลงแล้ว ตั้งแต่ 14:00,arrived same minute as reapply
