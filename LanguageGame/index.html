@@ -176,6 +176,24 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--lv); outlin
 .feedback.no h3 { color: var(--bad); }
 .feedback p { font-size: .93rem; }
 
+/* skill profile + new question types */
+.profile { display: flex; flex-direction: column; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+.skillrow { display: grid; grid-template-columns: 8.5em 1fr 3em; gap: 10px; align-items: center; font-size: .88rem; }
+.skillrow .num { text-align: right; color: var(--muted); }
+.skill { display: flex; flex-direction: column; gap: 10px; }
+.skillhead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.skillhead h3 { font-size: 1.1rem; }
+.passage.quote { white-space: pre-line; border-left: 3px solid var(--lv); border-radius: 4px 12px 12px 4px; font-size: 1.02rem; }
+.segs { display: flex; flex-wrap: wrap; gap: 8px; font-size: 1.15rem; }
+.seg { border: 1.5px solid var(--line); border-bottom: 3px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 12px; }
+.seg:hover:not(:disabled) { border-color: var(--lv); }
+.seg.ok { border-color: var(--good); background: var(--good-bg); }
+.seg.no { border-color: var(--bad); background: var(--bad-bg); }
+.seg:disabled { cursor: default; }
+.keyword { font-family: var(--mono); font-size: .9rem; letter-spacing: .06em; padding: 3px 10px; border-radius: 6px; background: var(--lv); color: #fff; }
+.gapline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 1.1rem; }
+.gapline .textin { flex: 1 1 12em; width: auto; min-width: 0; }
+
 /* result */
 .score { font-family: var(--display); font-weight: 800; font-size: 4rem; line-height: 1; color: var(--lv); }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -583,12 +601,241 @@ C2: {
 }
 };
 
+/* ------------------------------------------------------------------ */
+/* Skills beyond knowing words: interpreting meaning, using language   */
+/* in real situations, spotting errors and producing sentences.        */
+/* interpret: [text, question, answer, [wrong], Thai note]             */
+/* situation: [situation in Thai, best reply, [wrong], Thai note]      */
+/* errors:    ['seg | seg | seg', wrong segment index, fix, Thai note] */
+/* build:     [task in Thai, original, keyword|null, start, end, [accepted answers]] */
+/* ------------------------------------------------------------------ */
+const EXTRA = {
+A1: {
+  interpret: [
+    ['A: "Are you hungry?"\nB: "I had a big lunch."','What does B mean?','No, B is not hungry.',['Yes, B wants food.','B is cooking lunch.','B wants a big lunch.'],'B ไม่ได้ตอบ yes/no ตรงๆ แต่บอกว่าเพิ่งกินมื้อใหญ่ = ไม่หิว'],
+    ['Sign on a shop door:\nCLOSED ON SUNDAYS','Can you shop there on Sunday?','No, you can’t.',['Yes, all day.','Only in the morning.','Yes, and it’s free.'],'closed = ปิด, on Sundays = ทุกวันอาทิตย์'],
+    ['Tom: "It’s cold in here. Can you close the window?"','Why does Tom want the window closed?','He feels cold.',['It is noisy.','He wants to sleep.','It is raining.'],'Tom ให้เหตุผลไว้ในประโยคแรก It’s cold'],
+    ['Text message: "Sorry! Bus is late. See you at 6:30, not 6."','What does the message tell you?','The writer will arrive later.',['The writer is not coming.','The bus was early.','They will meet at 6.'],'not 6 = ไม่ใช่ 6 โมง แต่เป็น 6:30 แทน'],
+    ['A: "Do you want tea or coffee?"\nB: "Just water, please."','What does B want?','Water',['Tea','Coffee','Tea and coffee'],'Just water = ขอแค่น้ำเปล่า (ไม่เอาทั้งชาและกาแฟ)'],
+    ['Lina: "My sister is a nurse. She works at night and sleeps in the day."','When does Lina’s sister work?','At night',['In the morning','On weekends only','She doesn’t work.'],'works at night = ทำงานตอนกลางคืน']
+  ],
+  situation: [
+    ['คุณพบคนใหม่เป็นครั้งแรก เขาพูดว่า "Hi, I’m Ben."','Nice to meet you, Ben. I’m Mai.',['Goodbye, Ben.','I’m fine, thanks.','You’re welcome.'],'พบกันครั้งแรกตอบด้วย Nice to meet you แล้วแนะนำตัว'],
+    ['คุณช่วยเพื่อนถือของ เพื่อนพูดว่า "Thank you for your help!"','You’re welcome.',['Thank you.','I’m sorry.','Yes, please.'],'You’re welcome = ยินดี (ตอบคำขอบคุณ)'],
+    ['คุณอยากสั่งกาแฟที่ร้าน','Can I have a coffee, please?',['Give coffee.','I am coffee.','Do you like coffee?'],'Can I have ..., please? เป็นวิธีสั่งของที่สุภาพและเป็นธรรมชาติ'],
+    ['คุณเดินชนคนอื่นโดยไม่ได้ตั้งใจ','Oh, sorry!',['Thank you!','Well done!','See you later!'],'ทำผิดเล็กน้อยใช้ Sorry! ทันที'],
+    ['คุณฟังครูไม่ทัน ไม่เข้าใจสิ่งที่ครูพูด','Sorry, can you say that again?',['Yes, I understand.','Me too.','Good night.'],'ขอให้พูดซ้ำอย่างสุภาพด้วย Sorry, can you say that again?'],
+    ['ตอนเย็นคุณจะกลับบ้านแล้ว และจะเจอเพื่อนอีกพรุ่งนี้','See you tomorrow!',['Good morning!','Nice to meet you!','How old are you?'],'บอกลาและนัดเจอกันใหม่ใช้ See you + เวลา']
+  ],
+  errors: [
+    ['She | don’t like | coffee.',1,'doesn’t like','he/she/it ใช้ doesn’t ไม่ใช่ don’t'],
+    ['I | have | twenty years | old.',1,'am','บอกอายุใช้ verb to be: I am twenty years old.'],
+    ['He | go | to work | by car.',1,'goes','ประธาน he ใน Present Simple ต้องเติม -es: goes'],
+    ['There | is | three books | on the table.',1,'are','three books เป็นพหูพจน์ ใช้ there are'],
+    ['I | like | play | football.',2,'playing (หรือ to play)','หลัง like ใช้ V-ing หรือ to + V1'],
+    ['She | is | a | engineer.',2,'an','engineer ขึ้นต้นด้วยเสียงสระ ใช้ an']
+  ],
+  build: [
+    ['เปลี่ยนเป็นประโยคคำถาม','You like coffee.',null,'','coffee?',['do you like']],
+    ['เปลี่ยนเป็นประโยคปฏิเสธ','He plays tennis.',null,'He','tennis.',['does not play']],
+    ['เปลี่ยนเป็นอดีต','I watch TV every evening.',null,'Yesterday I','TV.',['watched']],
+    ['แปลเป็นภาษาอังกฤษ','ฉันมีพี่สาวสองคน',null,'I','sisters.',['have two','have got two','have two older']],
+    ['บอกว่ากำลังทำอยู่ตอนนี้','She reads a book.',null,'She','a book now.',['is reading']],
+    ['แปลเป็นภาษาอังกฤษโดยใช้ can','ฉันว่ายน้ำได้',null,'I','.',['can swim']]
+  ]
+},
+A2: {
+  interpret: [
+    ['A: "Shall we eat out tonight?"\nB: "I’m a bit short of money this week."','What does B probably mean?','B would prefer not to go out.',['B wants an expensive restaurant.','B will pay for dinner.','B is very hungry.'],'short of money = เงินไม่ค่อยพอ เป็นการปฏิเสธแบบอ้อมๆ'],
+    ['Notice at an airport:\nPlease do not leave bags unattended.','What should you do?','Keep your bags with you.',['Leave your bags at the desk.','Open your bags.','Buy a new bag.'],'unattended = ไม่มีคนดูแล'],
+    ['Email: "I’m afraid I can’t make it to the meeting on Tuesday."','The writer is …','saying they won’t come.',['afraid of the meeting.','organising the meeting.','asking for the time.'],'I’m afraid ... = เสียใจที่ต้องบอกว่า (ไม่ได้แปลว่ากลัว), make it = ไปได้ทัน/ไปร่วมได้'],
+    ['A: "How was the film?"\nB: "Well… the music was nice."','What does B think of the film?','B didn’t really enjoy it.',['B loved it.','B hasn’t seen it.','B thought the music was bad.'],'ชมแค่ส่วนเล็กๆ และขึ้นต้นด้วย Well… = สุภาพแต่ไม่ค่อยชอบ'],
+    ['Sign at a café:\nBuy one coffee, get one free – today only!','What does the sign mean?','Buy one coffee today and get a second one free.',['All coffee is free today.','Coffee is free every day.','You must buy two coffees.'],'get one free = ได้อีกแก้วฟรี, today only = เฉพาะวันนี้'],
+    ['Mum: "Have you done your homework yet?"\nSon: "I’ll do it after dinner."','What do we know?','He hasn’t done it yet.',['He finished it.','He has no homework.','He did it at school.'],'I’ll do it = จะทำ (อนาคต) แปลว่ายังไม่ได้ทำ']
+  ],
+  situation: [
+    ['ทานอาหารที่ร้านเสร็จแล้ว คุณอยากจ่ายเงิน','Could we have the bill, please?',['Give me the money.','How much are you?','I want pay now.'],'ขอเช็กบิลใช้ Could we have the bill, please? (อเมริกันใช้ check)'],
+    ['โทรหาเพื่อน แต่คนรับสายบอกว่าเขาไม่อยู่','Could I leave a message for him?',['Where is he? Find him.','Bye.','I am leaving him.'],'leave a message = ฝากข้อความ'],
+    ['เพื่อนชวนไปดูหนังคืนนี้ แต่คุณไม่ว่าง (ปฏิเสธอย่างสุภาพ)','I’d love to, but I’m busy tonight.',['No. I don’t want.','Yes, I’m busy.','Maybe you are busy.'],'ปฏิเสธอย่างสุภาพ: แสดงความอยากก่อน (I’d love to) แล้วตามด้วยเหตุผล'],
+    ['คุณหลงทางและอยากไปสถานีรถไฟ','Excuse me, how do I get to the station?',['Where are you going?','Station, now!','Is this the station of you?'],'Excuse me ใช้เรียกความสนใจคนแปลกหน้าอย่างสุภาพ'],
+    ['คุณมาเช็กอินที่โรงแรมที่จองไว้','Hi, I have a reservation under the name Kim.',['I want room. Give me.','Do you have a reservation?','I booked you.'],'a reservation under the name ... = จองไว้ในชื่อ ... (Do you have a reservation? เป็นประโยคของพนักงาน)'],
+    ['เพื่อนบอกว่าสอบผ่านแล้ว','Congratulations! That’s great news.',['Never mind.','I’m sorry to hear that.','Get well soon.'],'ข่าวดีใช้ Congratulations! ส่วน I’m sorry to hear that ใช้กับข่าวร้าย']
+  ],
+  errors: [
+    ['I | have seen | him | yesterday.',1,'saw','มีคำบอกเวลาในอดีต (yesterday) ต้องใช้ Past Simple'],
+    ['She is | more tall | than | her brother.',1,'taller','คำสั้นพยางค์เดียวเติม -er ไม่ใช้ more'],
+    ['I’ve lived | here | since | five years.',2,'for','ช่วงเวลา (five years) ใช้ for; since ใช้กับจุดเริ่มต้น'],
+    ['How much | people | came | to the party?',0,'How many','people นับได้ ใช้ how many'],
+    ['If it | will rain, | we’ll stay | at home.',1,'rains,','ประโยค If ใน First Conditional ใช้ Present Simple ไม่ใช้ will'],
+    ['He | is interested | on | history.',2,'in','interested in เป็นคู่คำตายตัว']
+  ],
+  build: [
+    ['ถามถึงประสบการณ์ด้วย Present Perfect','Did you go to Japan at any time in your life?','EVER','Have you','to Japan?',['ever been']],
+    ['เขียนประโยคเปรียบเทียบ','My car is fast. Your car is slower.',null,'My car is','your car.',['faster than']],
+    ['บอกแผนที่ตั้งใจไว้ด้วย going to','I plan to visit my aunt.',null,'I am','visit my aunt.',['going to']],
+    ['ให้คำแนะนำด้วย should','It’s a good idea to drink more water.',null,'You','more water.',['should drink']],
+    ['รวมประโยคด้วย too ... to','The coffee is very hot. I can’t drink it.',null,'The coffee is','drink.',['too hot to']],
+    ['ใช้ for หรือ since','I started working here in 2020 and I still work here.',null,'I have worked here','2020.',['since']]
+  ]
+},
+B1: {
+  interpret: [
+    ['Manager: "Your report is fine, but could you check the figures again?"','What is the manager suggesting?','There may be mistakes in the numbers.',['The report is perfect.','The report is too long.','He wants a completely new report.'],'ชมก่อนแล้วตามด้วย but = จุดที่ต้องแก้จริงๆ อยู่หลัง but'],
+    ['Hotel review: "Great location. Shame about the noise from the street."','What did the reviewer think?','The location was good, but it was noisy.',['Everything was perfect.','The hotel was too quiet.','The location was bad.'],'Shame about ... = น่าเสียดายเรื่อง ... (จุดด้อย)'],
+    ['A: "Could you give me a hand with these boxes?"','What does A want?','Help carrying the boxes',['To shake hands','A present','To give the boxes away'],'give someone a hand = ช่วยเหลือ (สำนวน)'],
+    ['Friend: "I wouldn’t eat at that place if I were you."','What is the friend doing?','Warning you not to eat there',['Inviting you to eat there','Saying they want to eat there','Saying the place is closed'],'If I were you, I wouldn’t ... = ถ้าฉันเป็นคุณจะไม่ทำ (คำเตือน/คำแนะนำ)'],
+    ['Sign in a restaurant:\nStaff only beyond this point','What does the sign mean?','Customers should not go any further.',['Staff must stop here.','Everyone is welcome.','Staff are not allowed in.'],'beyond this point = เลยจุดนี้ไป, staff only = เฉพาะพนักงาน'],
+    ['Teacher: "Not bad at all — you’ve clearly put a lot of work into this."','How does the teacher feel?','Pleased with the student’s effort',['Disappointed','Angry','Confused'],'Not bad at all = ดีทีเดียว (พูดน้อยกว่าความจริงแบบอังกฤษ)']
+  ],
+  situation: [
+    ['อีเมลถึงอาจารย์ (ไม่สนิท) เพื่อขอเลื่อนส่งงาน','Would it be possible to have a few more days to finish the assignment?',['Hey, I need more time, OK?','Give me an extension now.','I won’t finish it, sorry lol.'],'Would it be possible to ...? เป็นการขออย่างสุภาพเหมาะกับผู้ใหญ่หรือคนที่ไม่สนิท'],
+    ['สินค้าที่ซื้อเมื่อวานเสีย คุณกลับไปที่ร้านเพื่อขอคืนเงิน','I bought this yesterday, but it doesn’t work. Could I get a refund?',['This is rubbish. Money back!','I’d like to buy another one, please.','Is it working?'],'บอกปัญหาชัดเจน แล้วขอสิ่งที่ต้องการอย่างสุภาพ'],
+    ['ในการประชุม คุณไม่เห็นด้วยกับเพื่อนร่วมงาน','I see your point, but I’m not sure that will work.',['That’s a stupid idea.','You’re wrong, as usual.','Yes, I completely agree.'],'ยอมรับความเห็นอีกฝ่ายก่อน (I see your point) แล้วค่อยแย้ง'],
+    ['เพื่อนเล่าว่าสุนัขที่เลี้ยงมานานตายแล้ว','Oh no, I’m so sorry to hear that.',['Congratulations!','Never mind, just get another one.','That’s interesting.'],'ข่าวร้ายตอบด้วย I’m sorry to hear that แสดงความเห็นใจ'],
+    ['สัมภาษณ์งาน ผู้สัมภาษณ์ถามว่า "Why do you want this job?"','I’m keen to develop my skills, and your company’s values match mine.',['Because I need money, obviously.','I don’t really know.','Why do you ask?'],'ตอบเชิงบวก เชื่อมความสามารถของตัวเองกับบริษัท'],
+    ['คุณต้องขัดจังหวะคนที่กำลังพูดในที่ประชุม','Sorry to interrupt, but could I add something?',['Stop talking, please.','Be quiet, it’s my turn.','Excuse you!'],'Sorry to interrupt, but ... = ขอโทษที่ขัดจังหวะ ใช้ได้ทั้งที่ทำงานและทั่วไป']
+  ],
+  errors: [
+    ['I’m looking forward | to see | you | next week.',1,'to seeing','look forward to + V-ing'],
+    ['If I | would have | more time, | I’d learn Spanish.',1,'had','Second Conditional: If + Past Simple (ไม่ใช้ would ในประโยค if)'],
+    ['She | said me | that she | was tired.',1,'told me (หรือ said)','say ไม่มีกรรมตามทันที; tell someone / say (to someone)'],
+    ['Despite of | the rain, | we | went out.',0,'Despite (หรือ In spite of)','despite ไม่มี of; in spite of มี of'],
+    ['The book | who | I read | was great.',1,'that / which','who ใช้กับคน; สิ่งของใช้ which หรือ that'],
+    ['I | am agree | with | you.',1,'agree','agree เป็นกริยาอยู่แล้ว ไม่ต้องมี am']
+  ],
+  build: [
+    ['เปลี่ยนเป็น Passive','Someone stole my bike.',null,'My bike','.',['was stolen']],
+    ['เปลี่ยนเป็น Reported speech','"I am tired," she said.',null,'She said that she','tired.',['was']],
+    ['เขียนใหม่ด้วย used to','I smoked in the past, but I don’t now.','USED','I','smoke.',['used to']],
+    ['เขียนเป็นประโยคเงื่อนไข','I don’t have a car, so I can’t drive to work.',null,'If I','a car, I could drive to work.',['had']],
+    ['รวมเป็นประโยคเดียวด้วย relative clause','That’s the woman. She helped me.',null,'That’s the woman','me.',['who helped','that helped']],
+    ['เขียนใหม่โดยใช้ unless','If you don’t hurry, you’ll miss the bus.','UNLESS','','hurry, you’ll miss the bus.',['unless you']]
+  ]
+},
+B2: {
+  interpret: [
+    ['Colleague: "Great. Another meeting that could have been an email."','What is the speaker’s tone?','Sarcastic – they think the meeting is unnecessary.',['Enthusiastic about the meeting','Asking someone to send an email','Confused about the meeting time'],'Great. ที่ตามด้วยคำบ่น = ประชด (sarcasm) ไม่ใช่ชมจริง'],
+    ['Email: "Further to our conversation, I attach the revised contract for your consideration."','What is the purpose of the email?','To send an updated contract for review',['To cancel the contract','To request a meeting','To complain about a conversation'],'Further to = ต่อจาก (ภาษาธุรกิจ), revised = ปรับแก้แล้ว, for your consideration = เพื่อพิจารณา'],
+    ['"I’m not saying the plan won’t work; I’m just saying we haven’t thought it through."','What does the speaker mean?','The plan needs more careful thought.',['The plan will definitely fail.','The plan is perfect.','They refuse to discuss the plan.'],'think something through = คิดให้รอบคอบถี่ถ้วน'],
+    ['Review: "The plot is predictable, but the performances more than make up for it."','What is the reviewer’s overall opinion?','Positive, despite a weak plot',['Completely negative','The plot is excellent.','The acting is poor.'],'more than make up for = ชดเชยได้เกินพอ แปลว่าโดยรวมดี'],
+    ['Boss: "Let’s put this on the back burner for now."','What does the boss want to do?','Deal with it later',['Make it the top priority','Cancel it permanently','Give it to someone else immediately'],'put something on the back burner = พักไว้ก่อน ยังไม่ทำตอนนี้'],
+    ['"Had the warning been taken seriously, the damage could have been avoided."','What actually happened?','The warning was ignored, and there was damage.',['There was no damage.','The warning was taken seriously.','There was no warning.'],'Third Conditional พูดถึงสิ่งที่ตรงข้ามกับความจริงในอดีต']
+  ],
+  situation: [
+    ['เขียนอีเมลทางการถึงลูกค้า เพื่อขอโทษที่ส่งสินค้าล่าช้า','Please accept our apologies for the delay in delivering your order.',['Sorry, our bad! Your stuff is late.','It’s not our fault your order is late.','Your order is late because of you.'],'Please accept our apologies for ... เป็นสำนวนขอโทษแบบทางการในธุรกิจ'],
+    ['ให้ความเห็นต่องานของลูกน้องที่ยังต้องปรับปรุง อย่างสร้างสรรค์','You’ve made a strong start; the analysis could be developed a bit further, though.',['This is terrible. Do it again.','Perfect, no changes needed.','Whatever, it’s fine.'],'ชมจุดดีก่อน แล้วเสนอจุดแก้แบบนุ่มนวล (could be developed) และตรงไปตรงมา'],
+    ['คุณต้องการคุยกับหัวหน้าเรื่องขอขึ้นเงินเดือน','I’d like to discuss my salary, given the additional responsibilities I’ve taken on.',['Pay me more or I’ll leave.','Can I have more money?','Everyone earns more than me. It’s unfair!'],'ขอแบบมืออาชีพ: เปิดประเด็นสุภาพ (I’d like to discuss) และให้เหตุผลสนับสนุน'],
+    ['ระหว่างนำเสนองาน คุณต้องการเปลี่ยนไปหัวข้อถัดไป','Moving on to the next point, let’s look at the costs.',['Anyway, whatever, costs.','Stop. Costs now.','And that’s the end of my talk.'],'Moving on to ... เป็นคำเชื่อมเปลี่ยนหัวข้อในการนำเสนอ'],
+    ['ส่งข้อความชวนเพื่อนสนิทไปกินข้าว (ภาษาเป็นกันเอง)','Fancy grabbing a bite later?',['I would be most grateful if you would join me for luncheon.','You will eat with me.','Dinner is requested of you.'],'กับเพื่อนสนิทใช้ภาษาไม่เป็นทางการ (fancy ...? grab a bite) ภาษาทางการเกินไปฟังดูแปลก'],
+    ['คุณเป็นพนักงาน ลูกค้าโกรธเรื่องบริการที่ล่าช้า','I completely understand your frustration. Let me see what I can do.',['Calm down, it’s not a big deal.','That’s not my department.','You should have read the rules.'],'แสดงความเข้าใจความรู้สึก แล้วเสนอช่วยแก้ปัญหา']
+  ],
+  errors: [
+    ['Hardly | I had | arrived | when it started to rain.',1,'had I','Hardly ขึ้นต้นประโยค ต้องสลับเป็น had I (inversion)'],
+    ['I’d rather | you | don’t smoke | in here.',2,'didn’t smoke','would rather + ประธานอื่น ตามด้วย Past Simple'],
+    ['She | suggested | me to | take a break.',2,'that I (should) take / suggested taking','suggest ไม่ใช้โครงสร้าง suggest somebody to do'],
+    ['The information | you gave me | were | very useful.',2,'was','information เป็นนามนับไม่ได้ ใช้กริยาเอกพจน์'],
+    ['By the time we arrived, | the film | has already | started.',2,'had already','เหตุการณ์ก่อนอีกเหตุการณ์ในอดีตใช้ Past Perfect'],
+    ['He | denied | to steal | the money.',2,'stealing (หรือ having stolen)','deny + V-ing']
+  ],
+  build: [
+    ['เขียนใหม่โดยใช้คำที่กำหนด','I regret not studying harder.','WISH','I wish','harder.',['i had studied']],
+    ['เขียนใหม่โดยใช้คำที่กำหนด','It’s possible that she has forgotten.','MIGHT','She','forgotten.',['might have']],
+    ['เขียนใหม่โดยใช้คำที่กำหนด','People say that he is very rich.','SAID','He','very rich.',['is said to be']],
+    ['เขียนใหม่โดยใช้คำที่กำหนด','I didn’t go because I was ill.','IF','I would have gone','ill.',['if i had not been']],
+    ['เขียนใหม่โดยใช้คำที่กำหนด','A mechanic is repairing my car at the moment.','HAVING','I am','at the moment.',['having my car repaired']],
+    ['เขียนใหม่โดยใช้คำที่กำหนด','Although it was raining, we went for a walk.','DESPITE','',', we went for a walk.',['despite the rain','despite it raining','despite the fact that it was raining']]
+  ]
+},
+C1: {
+  interpret: [
+    ['"With all due respect, I don’t think you’ve fully grasped the implications."','What is the speaker doing?','Disagreeing politely but firmly',['Expressing admiration','Agreeing completely','Asking for clarification'],'With all due respect = คำนำก่อนแย้งอย่างสุภาพ แต่จริงๆ คือไม่เห็นด้วยอย่างชัดเจน'],
+    ['Report: "While the initiative yielded some gains, these were largely offset by rising costs."','What does the report conclude?','Most of the benefits were cancelled out by higher costs.',['The initiative was a great success.','Costs went down.','There were no gains at all.'],'offset = หักล้าง, yield gains = ให้ผลดี'],
+    ['"I could hardly have asked for a better team."','How does the speaker feel about the team?','Very happy with it',['Disappointed with it','They never asked for a team.','They find the team difficult.'],'could hardly have asked for better = ดีที่สุดแล้ว ไม่มีอะไรดีกว่านี้'],
+    ['Editorial: "The minister’s so-called reforms amount to little more than rebranding."','What is the writer’s attitude?','Critical – the reforms are superficial.',['Supportive of the reforms','Completely neutral','Unsure what the reforms are'],'so-called = ที่เรียกกันว่า (แฝงความไม่เชื่อ), amount to little more than = ไม่ได้มากไปกว่า'],
+    ['"It goes without saying that safety must come first."','What does the speaker mean?','This is obvious and needs no explanation.',['This should not be said.','Safety is not important.','The speaker is unsure.'],'It goes without saying = เป็นที่รู้กันอยู่แล้ว'],
+    ['"She’s not exactly the most punctual person I know."','What is implied about her?','She is often late.',['She is always early.','The speaker has never met her.','She is very organised.'],'not exactly the most ... = พูดอ้อมๆ (understatement) หมายถึงตรงกันข้าม']
+  ],
+  situation: [
+    ['เปิดจดหมายทางการถึงบริษัท โดยไม่รู้ชื่อผู้รับ','Dear Sir or Madam,',['Hi there!','Dear friend,','Hey guys,'],'ไม่ทราบชื่อผู้รับในจดหมายทางการแบบบริติช ใช้ Dear Sir or Madam และปิดท้ายด้วย Yours faithfully'],
+    ['เขียนงานวิชาการ ต้องการเสนอผลอย่างระมัดระวัง (hedging)','The findings would appear to suggest a link between the two factors.',['This proves 100% that the two are linked.','Obviously everyone knows they’re linked.','I feel like they’re kinda linked.'],'งานวิชาการใช้ภาษาที่ไม่ฟันธงเกินหลักฐาน: would appear to, suggest, may'],
+    ['ปฏิเสธข้อเสนอทางธุรกิจอย่างสุภาพแต่ชัดเจน','Thank you for the offer; however, we have decided not to proceed at this stage.',['No thanks, not interested.','Maybe, we’ll see, who knows.','Your offer is unacceptable and insulting.'],'ขอบคุณก่อน แล้วปฏิเสธชัดเจนด้วยภาษาทางการ (not to proceed)'],
+    ['ระหว่างนำเสนอ มีคนถามคำถามที่คุณไม่รู้คำตอบ','That’s a good question. I’ll need to check the data and get back to you.',['I don’t know. Next question.','It’s definitely 42%, I’m sure.','That’s not relevant.'],'ยอมรับอย่างมืออาชีพและเสนอให้ข้อมูลภายหลัง (get back to you) ดีกว่าเดา'],
+    ['เขียนจดหมายร้องเรียนทางการเรื่องบริการไม่ดี','I am writing to express my dissatisfaction with the service I received.',['Your service sucks.','I’m a bit sad about stuff.','I demand that you fire everyone immediately.'],'I am writing to express my dissatisfaction with ... = ประโยคเปิดจดหมายร้องเรียนแบบทางการ'],
+    ['บอกเพื่อนร่วมงานอย่างนุ่มนวลว่างานของเขามีปัญหาหลายจุด','There are a couple of areas we might want to revisit before it goes out.',['This is a disaster.','It’s perfect!','Did you even try?'],'ภาษาแบบ diplomatic: ใช้ we แทน you และ might want to แทนคำสั่ง']
+  ],
+  errors: [
+    ['Not only | he forgot | the tickets, | but he also lost his wallet.',1,'did he forget','Not only ขึ้นต้นประโยค ต้อง inversion: did he forget'],
+    ['The committee | insisted | that he | resigns.',3,'resign','insist that + ประธาน + V1 ไม่ผัน (subjunctive)'],
+    ['No sooner | had we | left | when it began to snow.',3,'than it began to snow','No sooner ... than (ไม่ใช่ when)'],
+    ['It’s | the first time | I | visit this city.',3,'have visited','It’s the first time + Present Perfect'],
+    ['She | is believed | to leave | the country last week.',2,'to have left','เหตุการณ์ในอดีตก่อนเวลาที่ "เชื่อ" ใช้ to have + V3'],
+    ['Should | you will need | any help, | please call.',1,'you need','Should + ประธาน + V1 (ไม่ใช้ will)']
+  ],
+  build: [
+    ['เขียนใหม่โดยใช้คำที่กำหนด (3–6 คำ)','It was only when I got home that I noticed the mistake.','UNTIL','Not','home did I notice the mistake.',['until i got']],
+    ['เขียนใหม่โดยใช้คำที่กำหนด (3–6 คำ)','I didn’t know she was married.','IDEA','I','she was married.',['had no idea']],
+    ['เขียนใหม่โดยใช้คำที่กำหนด (3–6 คำ)','If you need any assistance, please ask.','SHOULD','','any assistance, please ask.',['should you need','should you require']],
+    ['เขียนใหม่โดยใช้คำที่กำหนด (3–6 คำ)','The strike caused the meeting to be cancelled.','DUE','The meeting was cancelled','the strike.',['due to']],
+    ['เขียนใหม่โดยใช้คำที่กำหนด (3–6 คำ)','Applicants must not, under any circumstances, contact the panel.','ACCOUNT','On','contact the panel.',['no account should applicants','no account must applicants','no account are applicants to']],
+    ['เขียนใหม่โดยใช้คำที่กำหนด (3–6 คำ)','People think the painting was stolen in 1990.','THOUGHT','The painting','in 1990.',['is thought to have been stolen']]
+  ]
+},
+C2: {
+  interpret: [
+    ['"Far be it from me to criticise, but the proposal seems somewhat half-baked."','What is the speaker really doing?','Criticising while pretending not to',['Praising the proposal','Refusing to comment','Saying the proposal is fully developed'],'Far be it from me to ... but = ไม่อยากจะ...หรอกนะ แต่... (แล้วก็ทำสิ่งนั้น), half-baked = คิดมาไม่รอบคอบ'],
+    ['Critic: "The novel is, to put it charitably, an acquired taste."','What does the critic think of the novel?','Not much – most readers won’t enjoy it.',['It is a masterpiece.','They haven’t read it.','It is extremely popular.'],'to put it charitably = พูดให้นุ่มที่สุดแล้ว (จริงๆ แย่กว่านั้น)'],
+    ['"His apology was, shall we say, less than wholehearted."','What is implied?','The apology seemed insincere.',['The apology was very sincere.','The apology was very long.','He apologised twice.'],'less than wholehearted = ไม่เต็มใจนัก; shall we say บอกว่ากำลังเลือกคำอย่างระวัง'],
+    ['Leader article: "To call the outcome a victory would be stretching the truth to breaking point."','What does the writer believe?','The outcome was not really a victory.',['It was a clear victory.','Nobody knows the truth.','The outcome broke a record.'],'stretch the truth = พูดเกินจริง; to breaking point = จนแทบเป็นเท็จ'],
+    ['"I’m not one to gossip, but…"','What usually comes next?','The speaker starts gossiping.',['The speaker changes the subject.','The speaker refuses to say more.','The speaker criticises gossip.'],'วลีนี้มักใช้นำก่อนนินทา (ขัดกับสิ่งที่พูด)'],
+    ['Journal article: "These findings, while suggestive, fall some way short of conclusive."','How strong is the evidence?','Interesting, but not proof',['It proves the theory.','It is irrelevant.','It disproves the theory.'],'suggestive = ชวนให้คิดว่า, fall short of conclusive = ยังไม่ถึงขั้นสรุปได้']
+  ],
+  situation: [
+    ['เขียนจดหมายทางการแสดงความเสียใจต่อการสูญเสียของครอบครัวผู้ร่วมงาน','Please accept my deepest condolences on your loss.',['Sorry about that, these things happen.','Congratulations on your loss.','Cheer up, it’ll be fine!'],'condolences = การแสดงความเสียใจ เป็นคำเฉพาะสำหรับการสูญเสีย'],
+    ['บนเวทีสัมมนาวิชาการ คุณต้องการโต้แย้งคำวิจารณ์อย่างสุภาพแต่หนักแน่น','I take your point, but I’d contend that the data tell a rather different story.',['You obviously haven’t read my paper.','Fine, you’re right, whatever.','Let’s not talk about the data.'],'I take your point แสดงว่ารับฟัง, I’d contend that เป็นการแย้งแบบวิชาการ'],
+    ['แถลงการณ์บริษัทแจ้งการลดพนักงาน ต้องเป็นทางการและแสดงความเห็นใจ','This difficult decision was not taken lightly, and we are committed to supporting affected staff.',['We’re letting loads of people go, sorry!','Staff cuts will boost profits – great news!','Some people have to go. That’s business.'],'not taken lightly = ไตร่ตรองอย่างหนัก, affected staff = พนักงานที่ได้รับผลกระทบ'],
+    ['กล่าวสุนทรพจน์อำลาเพื่อนร่วมงานที่เกษียณ','Her dedication has left an indelible mark on everyone who worked with her.',['She was OK, I guess.','She worked here for ages, didn’t she?','Finally, she’s leaving!'],'indelible mark = ร่องรอยที่ลบไม่ได้ ใช้ยกย่องอย่างสง่างาม'],
+    ['เจรจาสัญญา ทั้งสองฝ่ายยังไม่ลงตัว คุณเสนอทางประนีประนอม','Perhaps we could meet halfway: a shorter contract at the original rate?',['Take it or leave it.','Fine, we’ll give you everything you want.','That’s your problem, not ours.'],'meet halfway = พบกันครึ่งทาง; Perhaps we could ... เป็นข้อเสนอที่ไม่กดดัน'],
+    ['ส่งข้อความถึงเพื่อนสนิทชาวอังกฤษ ขอโทษที่หายไปนาน (ภาษาเป็นกันเองแบบเจ้าของภาษา)','Sorry I’ve been so rubbish at keeping in touch – life’s been mad!',['I hereby apologise for the lapse in correspondence.','Communication was not done by me.','I regret to inform you that I have been busy.'],'rubbish at ... = ห่วยเรื่อง..., life’s been mad = ช่วงนี้วุ่นมาก (บริติชแบบเป็นกันเอง)']
+  ],
+  errors: [
+    ['Were it | not | for his help, | we will have failed.',3,'we would have failed','Were it not for ... ใช้คู่กับ would (สมมุติ)'],
+    ['Little | they knew | what | lay ahead.',1,'did they know','Little ขึ้นต้นประโยคในความหมายปฏิเสธ ต้อง inversion'],
+    ['Try | as | he might, | but he couldn’t open it.',3,'he couldn’t open it','Try as he might มีความหมาย "แม้" อยู่แล้ว ไม่ต้องใช้ but'],
+    ['Such | was | his anger | so he couldn’t speak.',3,'that he couldn’t speak','Such was ... that ...'],
+    ['Only after | the results came out | they realised | their mistake.',2,'did they realise','Only after ... ขึ้นต้นประโยค ต้อง inversion ในประโยคหลัก'],
+    ['Be | that | as it may, | the decision stand.',3,'the decision stands','ประธานเอกพจน์ (the decision) ใน Present Simple เติม -s']
+  ],
+  build: [
+    ['เขียนใหม่โดยใช้คำที่กำหนด (3–8 คำ)','I’d prefer you not to mention it.','SOONER','I’d','mention it.',['sooner you did not','sooner you would not']],
+    ['เขียนใหม่โดยใช้คำที่กำหนด (3–8 คำ)','He tried hard, but he couldn’t solve it.','AS','Try',', he couldn’t solve it.',['as he might','as he did','as he would']],
+    ['เขียนใหม่โดยใช้คำที่กำหนด (3–8 คำ)','Without her support, we would have failed.','BEEN','Had it','her support, we would have failed.',['not been for']],
+    ['ขึ้นต้นด้วย inversion','The rumour spread so quickly that everyone knew by noon.','SO','','the rumour spread that everyone knew by noon.',['so quickly did']],
+    ['เขียนใหม่โดยใช้คำที่กำหนด (3–8 คำ)','It’s pointless to argue with him.','POINT','There’s','with him.',['no point in arguing','no point arguing']],
+    ['เขียนใหม่โดยใช้คำที่กำหนด (3–8 คำ)','She is extremely determined.','NOTHING','She is','determined.',['nothing if not']]
+  ]
+}
+};
+for (const l of LEVELS) Object.assign(DATA[l], EXTRA[l]);
+
+const SKILLS = [
+  { key: 'understand', th: 'เข้าใจ', en: 'Reading & Listening', modes: ['reading', 'interpret', 'listen'] },
+  { key: 'knowledge',  th: 'ความรู้ภาษา', en: 'Vocabulary & Grammar', modes: ['vocab', 'grammar', 'errors'] },
+  { key: 'produce',    th: 'สร้างประโยค', en: 'Writing', modes: ['order', 'build'] },
+  { key: 'use',        th: 'ใช้ตามสถานการณ์', en: 'Real-life use', modes: ['situation'] }
+];
+
 const MODES = {
-  vocab:   { th: 'คำศัพท์', tag: 'VOCAB', desc: 'เลือกความหมายที่ถูกต้อง' },
-  grammar: { th: 'ไวยากรณ์', tag: 'GRAMMAR', desc: 'เติมคำในช่องว่าง พร้อมคำอธิบาย' },
-  order:   { th: 'เรียงประโยค', tag: 'WORD ORDER', desc: 'แตะคำเรียงให้เป็นประโยค' },
-  listen:  { th: 'ฟังแล้วพิมพ์', tag: 'DICTATION', desc: 'ฟังเสียงแล้วพิมพ์สิ่งที่ได้ยิน' },
-  reading: { th: 'อ่านจับใจความ', tag: 'READING', desc: 'อ่านบทความสั้นแล้วตอบคำถาม' }
+  vocab:     { th: 'คำศัพท์', tag: 'VOCAB', desc: 'เลือกความหมายที่ถูกต้อง' },
+  grammar:   { th: 'ไวยากรณ์', tag: 'GRAMMAR', desc: 'เติมคำในช่องว่าง พร้อมคำอธิบาย' },
+  errors:    { th: 'หาจุดผิด', tag: 'ERROR HUNT', desc: 'แตะส่วนที่ผิดในประโยค แล้วดูวิธีแก้' },
+  reading:   { th: 'อ่านจับใจความ', tag: 'READING', desc: 'อ่านบทความสั้นแล้วตอบคำถาม' },
+  interpret: { th: 'อ่านตีความ', tag: 'INFERENCE', desc: 'ความหมายแฝง น้ำเสียง สำนวน และสิ่งที่ไม่ได้พูดตรงๆ' },
+  listen:    { th: 'ฟังแล้วพิมพ์', tag: 'DICTATION', desc: 'ฟังเสียงแล้วพิมพ์สิ่งที่ได้ยิน' },
+  order:     { th: 'เรียงประโยค', tag: 'WORD ORDER', desc: 'แตะคำเรียงให้เป็นประโยค' },
+  build:     { th: 'แต่งประโยค', tag: 'SENTENCE BUILD', desc: 'พิมพ์ประโยคใหม่ตามโครงสร้างที่กำหนด' },
+  situation: { th: 'ใช้ตามสถานการณ์', tag: 'REAL-LIFE', desc: 'เลือกคำพูดที่เหมาะกับสถานการณ์และระดับภาษา' },
+  mix:       { th: 'ฝึกรวมทุกทักษะ', tag: 'ALL SKILLS', desc: '' },
+  exam:      { th: 'สอบผ่านระดับ', tag: 'LEVEL EXAM', desc: '' }
 };
 
 /* ------------------------------------------------------------------ */
@@ -618,6 +865,9 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const pick = (a, n) => shuffle(a).slice(0, n);
 const lvIndex = l => LEVELS.indexOf(l);
+const expand = s => norm(s).replace(/\bcan't\b/g, 'cannot').replace(/\bwon't\b/g, 'will not').replace(/\bshan't\b/g, 'shall not')
+  .replace(/n't\b/g, ' not').replace(/'re\b/g, ' are').replace(/\bi'm\b/g, 'i am').replace(/'ve\b/g, ' have').replace(/'ll\b/g, ' will')
+  .replace(/\bcannot\b/g, 'can not').replace(/\s+/g, ' ').trim();
 const norm = s => s.toLowerCase().replace(/[‘’]/g, "'").replace(/[.,!?;:"“”]/g, '').replace(/\s+/g, ' ').trim();
 function setLv(l) { document.documentElement.style.setProperty('--lv', 'var(--' + l + ')'); }
 
@@ -683,6 +933,23 @@ function build(id) {
     const P = D.reading[i], [qq, ans, wrong] = P.qs[+b];
     return { id, lv, mode, type: 'mc', passage: P.p, prompt: qq, answer: ans, choices: shuffle([ans, ...wrong]), speakPassage: P.p };
   }
+  if (mode === 'interpret') {
+    const [text, qq, ans, wrong, note] = D.interpret[i];
+    return { id, lv, mode, type: 'mc', passage: text, quote: true, prompt: qq, answer: ans, choices: shuffle([ans, ...wrong]), explain: esc(note), speakPassage: text.replace(/^[A-Z][a-z]*:\s*/gm, '') };
+  }
+  if (mode === 'situation') {
+    const [sit, ans, wrong, note] = D.situation[i];
+    return { id, lv, mode, type: 'mc', prompt: sit, sub: 'เลือกคำพูดที่เหมาะสมที่สุดกับสถานการณ์นี้', answer: ans, choices: shuffle([ans, ...wrong]), explain: esc(note), speakAnswer: true };
+  }
+  if (mode === 'errors') {
+    const [raw, wi, fix, note] = D.errors[i];
+    const segs = raw.split(' | ');
+    return { id, lv, mode, type: 'spot', prompt: segs.join(' '), segs, wi, answer: segs[wi] + ' \u2192 ' + fix, fix, explain: esc(note) };
+  }
+  if (mode === 'build') {
+    const [task, orig, key, start, end, answers] = D.build[i];
+    return { id, lv, mode, type: 'gap', prompt: task, orig, key, start, end, answers, answer: (start ? start + ' ' : '') + answers[0] + (/^[.,?!]/.test(end) ? '' : ' ') + end };
+  }
 }
 
 function ids(lv, mode) {
@@ -692,12 +959,14 @@ function ids(lv, mode) {
   if (mode === 'order') return D.order.map((_, i) => `${lv}|order|${i}`);
   if (mode === 'listen') return [...D.order.map((_, i) => `${lv}|listen|s${i}`), ...D.vocab.map((_, i) => `${lv}|listen|w${i}`)];
   if (mode === 'reading') return D.reading.flatMap((P, i) => P.qs.map((_, j) => `${lv}|reading|${i}|${j}`));
+  if (['interpret', 'situation', 'errors', 'build'].includes(mode)) return D[mode].map((_, i) => `${lv}|${mode}|${i}`);
+  return [];
 }
-function totalItems(lv) { return ['vocab','grammar','order','reading'].reduce((n, m) => n + ids(lv, m).length, 0); }
-function mastery(lv) {
-  const all = ['vocab','grammar','order','reading'].flatMap(m => ids(lv, m));
-  return all.filter(id => S.mastered[id]).length / all.length;
-}
+const PRACTICE = ['vocab', 'grammar', 'errors', 'reading', 'interpret', 'listen', 'order', 'build', 'situation'];
+function share(list) { return list.length ? list.filter(id => S.mastered[id]).length / list.length : 0; }
+function totalItems(lv) { return PRACTICE.reduce((n, m) => n + ids(lv, m).length, 0); }
+function mastery(lv) { return share(PRACTICE.flatMap(m => ids(lv, m))); }
+function skillMastery(lv, sk) { return share(sk.modes.flatMap(m => ids(lv, m))); }
 
 function roundIds(lv, mode) {
   if (mode === 'reading') return ids(lv, 'reading');
@@ -707,12 +976,19 @@ function roundIds(lv, mode) {
     return shuffle([...s, ...w]);
   }
   if (mode === 'exam') {
-    const P = DATA[lv].reading[Math.floor(Math.random() * DATA[lv].reading.length)];
-    const pi = DATA[lv].reading.indexOf(P);
+    // 15 questions covering every skill
+    const pi = Math.floor(Math.random() * DATA[lv].reading.length);
     return [
-      ...pick(ids(lv, 'vocab'), 5), ...pick(ids(lv, 'grammar'), 5), ...pick(ids(lv, 'order'), 3),
-      `${lv}|reading|${pi}|0`, `${lv}|reading|${pi}|1`
+      ...pick(ids(lv, 'vocab'), 2), ...pick(ids(lv, 'grammar'), 2), ...pick(ids(lv, 'errors'), 1),
+      `${lv}|reading|${pi}|0`, `${lv}|reading|${pi}|1`, ...pick(ids(lv, 'interpret'), 2),
+      ...pick(ids(lv, 'listen').filter(x => x.includes('|s')), 1),
+      ...pick(ids(lv, 'order'), 1), ...pick(ids(lv, 'build'), 2), ...pick(ids(lv, 'situation'), 2)
     ];
+  }
+  if (mode === 'mix') {
+    const one = PRACTICE.map(m => pick(ids(lv, m), 1)[0]);
+    const extra = pick(ids(lv, pick(['situation', 'interpret', 'build'], 1)[0]).filter(x => !one.includes(x)), 1);
+    return shuffle([...one, ...extra]);
   }
   return pick(ids(lv, mode), 10);
 }
@@ -782,7 +1058,10 @@ function level(lv) {
   sheet = lv; setLv(lv);
   const m = Math.round(mastery(lv) * 100);
   const best = S.best[lv] != null ? `คะแนนสอบสูงสุด ${S.best[lv]}/15` : 'ผ่านเมื่อได้ 12/15 ขึ้นไป';
-  const counts = { vocab: DATA[lv].vocab.length, grammar: DATA[lv].grammar.length, order: DATA[lv].order.length, listen: DATA[lv].vocab.length + DATA[lv].order.length, reading: ids(lv, 'reading').length };
+  const modeBtn = k => `
+        <button class="mode" data-mode="${k}" id="mode-${k}">
+          <span class="tag">${MODES[k].tag} · ${ids(lv, k).length}</span><b>${MODES[k].th}</b><small>${k === 'listen' && !hasTTS ? 'ดูคำแปลแล้วสะกดคำภาษาอังกฤษ' : MODES[k].desc}</small>
+        </button>`;
   app.innerHTML = `
     <div class="playbar"><button class="x" id="back" aria-label="กลับหน้าหลัก">←</button><span class="muted">ทุกระดับ</span></div>
     <header class="lvhead">
@@ -793,13 +1072,23 @@ function level(lv) {
       </div>
     </header>
     <div class="cando"><p class="eyebrow">ผู้เรียนระดับนี้ทำอะไรได้</p><p>${INFO[lv].can}</p></div>
+    <section class="profile" aria-label="ความคืบหน้าแต่ละทักษะ">
+      ${SKILLS.map(sk => { const v = Math.round(skillMastery(lv, sk) * 100); return `
+        <div class="skillrow"><span>${sk.th}</span><span class="bar"><i style="width:${v}%"></i></span><span class="num">${v}%</span></div>`; }).join('')}
+    </section>
     <div class="modes">
-      ${Object.entries(MODES).map(([k, M]) => `
-        <button class="mode" data-mode="${k}" id="mode-${k}">
-          <span class="tag">${M.tag} · ${counts[k]}</span><b>${M.th}</b><small>${k === 'listen' && !hasTTS ? 'ดูคำแปลแล้วสะกดคำภาษาอังกฤษ' : M.desc}</small>
-        </button>`).join('')}
+      <button class="mode exam" data-mode="mix" id="mode-mix" style="background:var(--surface);color:var(--ink)">
+        <span class="tag" style="color:var(--lv)">ALL SKILLS · 10</span><b>ฝึกรวมทุกทักษะ</b><small style="color:var(--muted)">ทุกโหมดรอบเดียว เหมาะกับฝึกประจำวัน</small>
+      </button>
+    </div>
+    ${SKILLS.map(sk => `
+      <section class="skill">
+        <div class="skillhead"><h3>${sk.th}</h3><span class="eyebrow">${sk.en}</span></div>
+        <div class="modes">${sk.modes.map(modeBtn).join('')}</div>
+      </section>`).join('')}
+    <div class="modes">
       <button class="mode exam" data-mode="exam" id="mode-exam">
-        <span class="tag">LEVEL EXAM · 15</span><b>สอบผ่านระดับ ${lv}</b><small>${S.passed[lv] ? 'ผ่านแล้ว ✓ · ' : ''}${best} · ผสมทุกทักษะ ไม่มีหัวใจ</small>
+        <span class="tag">LEVEL EXAM · 15</span><b>สอบผ่านระดับ ${lv}</b><small>${S.passed[lv] ? 'ผ่านแล้ว ✓ · ' : ''}${best} · ครบทั้ง 4 ทักษะ ไม่มีหัวใจ</small>
       </button>
     </div>`;
   $('#back').onclick = home;
@@ -826,7 +1115,7 @@ function startPlacement() {
 }
 function placementId() {
   const lv = LEVELS[G.cur];
-  const pool = [...ids(lv, 'vocab'), ...ids(lv, 'grammar')].filter(x => !G.used[x]);
+  const pool = [...ids(lv, 'vocab'), ...ids(lv, 'grammar'), ...ids(lv, 'interpret'), ...ids(lv, 'situation')].filter(x => !G.used[x]);
   const id = pool[Math.floor(Math.random() * pool.length)];
   G.used[id] = 1;
   return id;
@@ -858,7 +1147,7 @@ function render(q) {
   if (q.type === 'mc') {
     const prompt = q.gap ? esc(q.prompt).replace('___', '<span class="gap"></span>') : esc(q.prompt);
     body = `
-      ${q.passage ? `<div class="passage" tabindex="0">${esc(q.passage)}</div>` : ''}
+      ${q.passage ? `<div class="passage ${q.quote ? 'quote' : ''}" tabindex="0">${esc(q.passage)}</div>` : ''}
       <div style="display:flex;flex-direction:column;gap:6px">
         <p class="prompt ${q.big ? 'word' : ''}">${prompt}</p>
         ${q.sub ? `<p class="sub">${q.sub}</p>` : ''}
@@ -872,6 +1161,16 @@ function render(q) {
       <div class="answer-zone" id="zone" aria-label="ประโยคของคุณ"></div>
       <div class="bank" id="bank">${q.tiles.map((t, k) => `<button class="tile" data-k="${k}" id="t${k}">${esc(t)}</button>`).join('')}</div>
       <div class="row"><button class="btn ghost" id="clear">ล้าง</button><button class="btn lv" id="check" disabled>ตรวจคำตอบ</button></div>`;
+  } else if (q.type === 'spot') {
+    body = `
+      <div style="display:flex;flex-direction:column;gap:6px"><p class="prompt">แตะส่วนที่ผิด</p><p class="sub">ประโยคนี้มีที่ผิด 1 จุด</p></div>
+      <div class="segs">${q.segs.map((t, k) => `<button class="seg" data-k="${k}" id="s${k}">${esc(t)}</button>`).join('')}</div>`;
+  } else if (q.type === 'gap') {
+    body = `
+      <div style="display:flex;flex-direction:column;gap:6px"><p class="sub">${esc(q.prompt)}</p><p class="prompt">${esc(q.orig)}</p></div>
+      ${q.key ? `<div><span class="keyword">${esc(q.key)}</span> <span class="sub">ต้องใช้คำนี้ และห้ามเปลี่ยนรูปคำ</span></div>` : ''}
+      <label class="gapline" for="typed">${q.start ? `<span>${esc(q.start)}</span>` : ''}<input class="textin" id="typed" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="พิมพ์ส่วนที่หายไป"><span>${esc(q.end)}</span></label>
+      <button class="btn lv block" id="check">ตรวจคำตอบ</button>`;
   } else if (q.type === 'type') {
     const tts = hasTTS;
     body = `
@@ -909,6 +1208,13 @@ function render(q) {
     $('#clear').onclick = () => { if (G.answered) return; placed.length = 0; draw(); };
     check.onclick = () => { if (!G.answered) answerOrder(placed.map(k => q.tiles[k]).join(' ')); };
   }
+  if (q.type === 'spot') app.querySelectorAll('.seg').forEach(b => b.onclick = () => answerSpot(+b.dataset.k));
+  if (q.type === 'gap') {
+    const inp = $('#typed');
+    $('#check').onclick = () => { if (!G.answered) answerGap(inp.value); };
+    inp.onkeydown = e => { if (e.key === 'Enter' && !G.answered) { e.preventDefault(); answerGap(inp.value); } };
+    inp.focus();
+  }
   if (q.type === 'type') {
     if ($('#say')) { $('#say').onclick = () => speak(q.answer); $('#saySlow').onclick = () => speak(q.answer, true); }
     const inp = $('#typed');
@@ -928,7 +1234,7 @@ function answerMC(k) {
     if (q.choices[j] === q.answer) b.classList.add('ok');
     else if (j === k) b.classList.add('no');
   });
-  if (hasTTS && q.speakAfter) speak(q.answer);
+  if (hasTTS && (q.speakAfter || q.speakAnswer)) speak(q.answer);
   let extra = q.explain || '';
   if (q.full) extra = '<i>' + esc(q.full) + '</i><br>' + extra;
   finish(ok, chosen, extra);
@@ -936,6 +1242,19 @@ function answerMC(k) {
 function answerOrder(given) {
   const q = G.q, ok = given === q.answer;
   finish(ok, given, '<i>' + esc(q.answer) + '</i>');
+  if (hasTTS) speak(q.answer);
+}
+function answerSpot(k) {
+  if (G.answered) return;
+  const q = G.q, ok = k === q.wi;
+  app.querySelectorAll('.seg').forEach((b, j) => { b.disabled = true; if (j === q.wi) b.classList.add('ok'); else if (j === k) b.classList.add('no'); });
+  finish(ok, q.segs[k], `แก้ <s>${esc(q.segs[q.wi])}</s> เป็น <b>${esc(q.fix)}</b><br>${q.explain}`);
+}
+function answerGap(given) {
+  const q = G.q, g = expand(given), ok = !!g && q.answers.some(a => expand(a) === g);
+  $('#typed').readOnly = true;
+  const others = q.answers.length > 1 ? '<br>คำตอบอื่นที่ถูก: ' + q.answers.slice(1).map(a => '<i>' + esc(a) + '</i>').join(', ') : '';
+  finish(ok, given, '<i>' + esc(q.answer) + '</i>' + others);
   if (hasTTS) speak(q.answer);
 }
 function answerType(given) {
@@ -960,7 +1279,7 @@ function finish(ok, given, detail) {
     G.right++; G.combo++;
     const gain = Math.round((10 + 4 * li) * Math.min(2, 1 + Math.max(0, G.combo - 1) * 0.1));
     G.xp += gain; S.xp += gain;
-    if (q.mode !== 'listen') S.mastered[q.id] = true;
+    S.mastered[q.id] = true;
     if (G.kind === 'review') delete S.mistakes[q.id];
   } else {
     G.combo = 0;
@@ -972,7 +1291,7 @@ function finish(ok, given, detail) {
   const last = G.kind === 'placement' ? G.i + 1 >= G.total : (G.i + 1 >= G.queue.length || G.hearts === 0);
   $('#fb').innerHTML = `<div class="feedback ${ok ? 'ok' : 'no'}" role="status">
       <h3>${ok ? pickOne(['ถูกต้อง!', 'เยี่ยม!', 'แม่นมาก!', 'Excellent!']) : 'ยังไม่ถูก'}</h3>
-      ${!ok && q.type === 'mc' ? `<p>คำตอบที่ถูก: <b>${esc(q.answer)}</b></p>` : ''}
+      ${!ok && (q.type === 'mc' || q.type === 'gap') ? `<p>คำตอบที่ถูก: <b>${esc(q.answer)}</b></p>` : ''}
       ${detail ? `<p>${detail}</p>` : ''}
       <button class="btn lv block" id="next">${last ? 'ดูผล' : 'ข้อต่อไป'}</button>
     </div>`;
@@ -986,15 +1305,15 @@ function finish(ok, given, detail) {
 const pickOne = a => a[Math.floor(Math.random() * a.length)];
 
 document.addEventListener('keydown', e => {
-  if (!G || !G.q || e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
-  if (G.answered && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); G.i++; next(); return; }
+  if (!G || !G.q || e.target.tagName === 'INPUT') return;
+  if (G.answered && e.target.tagName !== 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); G.i++; next(); return; }
   if (!G.answered && G.q.type === 'mc' && /^[1-4]$/.test(e.key)) answerMC(+e.key - 1);
 });
 
 function missList() {
   if (!G.misses.length) return '';
   return `<section class="list"><p class="eyebrow">ข้อที่ตอบผิด · เก็บไว้ในรายการทบทวนแล้ว</p>
-    ${G.misses.map(m => `<div class="miss"><span class="muted">${esc(m.q.lv)} · ${esc(m.q.prompt || (m.q.isWord ? 'ฟังคำศัพท์' : 'ฟังประโยค'))}</span>
+    ${G.misses.map(m => `<div class="miss"><span class="muted">${esc(m.q.lv)} · ${esc(m.q.orig || m.q.prompt || (m.q.isWord ? 'ฟังคำศัพท์' : 'ฟังประโยค'))}</span>
       <span>คำตอบที่ถูก: <b>${esc(m.q.answer)}</b></span></div>`).join('')}</section>`;
 }
 
@@ -1016,7 +1335,7 @@ function result() {
   }
   app.innerHTML = `
     <header style="display:flex;flex-direction:column;gap:8px">
-      <p class="eyebrow">${G.kind === 'review' ? 'ทบทวน' : G.lv + ' · ' + (G.kind === 'exam' ? 'สอบผ่านระดับ' : MODES[G.mode].th)}</p>
+      <p class="eyebrow">${G.kind === 'review' ? 'ทบทวน' : G.lv + ' · ' + MODES[G.mode].th}</p>
       <h1>${headline}</h1>
     </header>
     <div class="row" style="align-items:flex-end">
