@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CEFR Ladder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one narrow app column; home is a ladder of six CEFR rungs, C2 at the top. */
+:root {
+  --bg: #eef1f6;
+  --surface: #ffffff;
+  --ink: #16213a;
+  --muted: #5b6680;
+  --line: #d5dbe7;
+  --chip: #e3e8f2;
+  --good: #1f8a4c;
+  --good-bg: #e2f4ea;
+  --bad: #c92a3a;
+  --bad-bg: #fbe5e7;
+  --A1: #2b9348; --A2: #6a9f1a; --B1: #0a72b5; --B2: #1d3f94; --C1: #8a45cc; --C2: #6a1fa8;
+  --display: "Bricolage Grotesque", "IBM Plex Sans Thai", system-ui, sans-serif;
+  --body: "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --lv: var(--B1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1424; --surface: #182036; --ink: #e8ecf5; --muted: #9aa6c0; --line: #2b3550; --chip: #222b44;
+    --good: #4fd187; --good-bg: #173a2a; --bad: #ff7083; --bad-bg: #42202a;
+    --A1: #4cc46f; --A2: #9ccc3a; --B1: #40a6ec; --B2: #7b9cff; --C1: #b98af0; --C2: #d08cff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1424; --surface: #182036; --ink: #e8ecf5; --muted: #9aa6c0; --line: #2b3550; --chip: #222b44;
+  --good: #4fd187; --good-bg: #173a2a; --bad: #ff7083; --bad-bg: #42202a;
+  --A1: #4cc46f; --A2: #9ccc3a; --B1: #40a6ec; --B2: #7b9cff; --C1: #b98af0; --C2: #d08cff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--body); font-size: 16px; line-height: 1.55;
+  -webkit-tap-highlight-color: transparent;
+}
+.app {
+  max-width: 640px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; line-height: 1.15; }
+h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 1.35rem; font-weight: 700; }
+p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--lv); outline-offset: 2px; }
+.muted { color: var(--muted); }
+.eyebrow { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* header */
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.stats { display: flex; gap: 8px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px; display: flex; flex-direction: column; align-items: flex-end; }
+.stat b { font-family: var(--mono); font-size: 1.05rem; }
+.stat span { font-size: .7rem; color: var(--muted); }
+
+.btn {
+  border: 0; border-radius: 12px; padding: 12px 18px; font-weight: 600;
+  background: var(--ink); color: var(--bg); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform .08s ease;
+}
+.btn:active { transform: scale(.98); }
+.btn.lv { background: var(--lv); color: #fff; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn:disabled { opacity: .4; cursor: default; }
+.btn.block { width: 100%; }
+
+.banner {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px;
+  display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+}
+.banner > div { min-width: 0; flex: 1 1 240px; display: flex; flex-direction: column; gap: 4px; }
+
+/* the ladder */
+.ladder { display: flex; flex-direction: column; gap: 10px; position: relative; }
+.rung {
+  --lv: var(--A1);
+  display: grid; grid-template-columns: 64px 1fr auto; gap: 14px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px;
+  text-align: left; width: 100%;
+}
+.rung:hover { border-color: var(--lv); }
+.rung .code {
+  font-family: var(--display); font-weight: 800; font-size: 1.7rem; color: var(--lv);
+  border-right: 2px solid var(--lv); line-height: 1; padding-block: 6px;
+}
+.rung .info { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.rung .info b { font-weight: 600; }
+.rung .info small { color: var(--muted); font-size: .82rem; line-height: 1.4; }
+.bar { height: 6px; background: var(--chip); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--lv); border-radius: 3px; transition: width .4s ease; }
+.seal {
+  font-family: var(--mono); font-size: .7rem; padding: 3px 8px; border-radius: 999px;
+  border: 1.5px solid var(--lv); color: var(--lv); white-space: nowrap;
+}
+.seal.off { border-style: dashed; color: var(--muted); border-color: var(--line); }
+.here { background: var(--lv); color: #fff; border-color: var(--lv); }
+
+/* level sheet */
+.lvhead { display: flex; gap: 16px; align-items: center; }
+.bigcode { font-family: var(--display); font-weight: 800; font-size: 3.4rem; color: var(--lv); line-height: 1; letter-spacing: -0.03em; }
+.modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mode {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px;
+  text-align: left; display: flex; flex-direction: column; gap: 4px; min-height: 96px;
+}
+.mode:hover { border-color: var(--lv); }
+.mode b { font-weight: 600; }
+.mode small { color: var(--muted); font-size: .8rem; line-height: 1.4; }
+.mode .tag { font-family: var(--mono); font-size: .72rem; color: var(--lv); }
+.mode.exam { grid-column: 1 / -1; background: var(--lv); color: #fff; border-color: var(--lv); }
+.mode.exam small, .mode.exam .tag { color: rgba(255,255,255,.85); }
+
+/* play */
+.playbar { display: flex; align-items: center; gap: 12px; }
+.x { border: 0; background: none; font-size: 1.5rem; line-height: 1; padding: 4px 6px; color: var(--muted); }
+.progress { flex: 1; height: 10px; background: var(--chip); border-radius: 5px; overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--lv); transition: width .3s ease; }
+.hearts { font-family: var(--mono); color: var(--bad); white-space: nowrap; }
+.combo { font-family: var(--mono); font-size: .8rem; color: var(--lv); min-height: 1.2em; text-align: right; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.kind { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.pill { font-family: var(--mono); font-size: .72rem; padding: 3px 9px; border-radius: 999px; background: var(--lv); color: #fff; }
+.prompt { font-size: 1.3rem; font-weight: 500; line-height: 1.45; overflow-wrap: anywhere; }
+.prompt.word { font-family: var(--display); font-size: 2.1rem; font-weight: 700; letter-spacing: -0.01em; }
+.prompt .gap { display: inline-block; min-width: 3.5em; border-bottom: 2px solid var(--lv); }
+.sub { color: var(--muted); font-size: .92rem; }
+.passage { background: var(--chip); border-radius: 12px; padding: 14px; font-size: .97rem; line-height: 1.65; max-height: 42vh; overflow-y: auto; }
+
+.choices { display: flex; flex-direction: column; gap: 10px; }
+.choice {
+  border: 1.5px solid var(--line); background: var(--surface); border-radius: 12px; padding: 12px 14px;
+  text-align: left; display: flex; gap: 12px; align-items: baseline; overflow-wrap: anywhere;
+}
+.choice:hover:not(:disabled) { border-color: var(--lv); }
+.choice kbd { font-family: var(--mono); font-size: .72rem; color: var(--muted); border: 1px solid var(--line); border-radius: 5px; padding: 0 5px; }
+.choice.ok { border-color: var(--good); background: var(--good-bg); }
+.choice.no { border-color: var(--bad); background: var(--bad-bg); }
+.choice:disabled { cursor: default; }
+
+.speak { border: 1px solid var(--line); background: var(--chip); border-radius: 10px; padding: 8px 12px; font-size: .9rem; }
+.speakrow { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.answer-zone { min-height: 64px; border: 1.5px dashed var(--line); border-radius: 12px; padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; }
+.bank { display: flex; flex-wrap: wrap; gap: 8px; }
+.tile { border: 1.5px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 12px; font-size: 1rem; }
+.tile:hover { border-color: var(--lv); }
+.tile.used { visibility: hidden; }
+
+.textin { width: 100%; font: inherit; font-size: 1.1rem; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); }
+
+.feedback { border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.feedback.ok { background: var(--good-bg); }
+.feedback.no { background: var(--bad-bg); }
+.feedback h3 { font-size: 1.1rem; }
+.feedback.ok h3 { color: var(--good); }
+.feedback.no h3 { color: var(--bad); }
+.feedback p { font-size: .93rem; }
+
+/* result */
+.score { font-family: var(--display); font-weight: 800; font-size: 4rem; line-height: 1; color: var(--lv); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+.row > * { flex: 1 1 140px; }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.miss { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; font-size: .9rem; display: flex; flex-direction: column; gap: 2px; overflow-wrap: anywhere; }
+.miss b { color: var(--good); font-weight: 600; }
+.cando { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.confirm { background: var(--bad-bg); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.settings { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line); padding-top: 16px; }
+.settings label { display: flex; justify-content: space-between; gap: 12px; align-items: center; font-size: .9rem; }
+.foot { font-size: .8rem; color: var(--muted); }
+@media (max-width: 420px) {
+  .modes { grid-template-columns: 1fr; }
+  .rung { grid-template-columns: 52px 1fr; }
+  .rung .seal { grid-column: 2; justify-self: start; }
+  h1 { font-size: 1.7rem; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+@keyframes pop { from { transform: scale(.97); opacity: .6; } to { transform: none; opacity: 1; } }
+.card { animation: pop .18s ease-out; }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+/* ------------------------------------------------------------------ */
+/* Content bank. Each level has vocab, grammar, word order and reading. */
+/* vocab: [word, Thai meaning, English definition]                     */
+/* grammar: [sentence with ___, answer, [wrong options], Thai note]    */
+/* order: [English sentence, Thai translation]                         */
+/* reading: {p: passage, qs: [[question, answer, [wrong options]]]}    */
+/* ------------------------------------------------------------------ */
+const LEVELS = ['A1','A2','B1','B2','C1','C2'];
+const INFO = {
+  A1: { name: 'Beginner', th: 'ระดับเริ่มต้น', can: 'แนะนำตัว ถาม-ตอบเรื่องใกล้ตัวด้วยประโยคสั้นๆ' },
+  A2: { name: 'Elementary', th: 'ระดับพื้นฐาน', can: 'สื่อสารเรื่องประจำวัน ซื้อของ เดินทาง เล่าเรื่องที่ผ่านมาแบบง่าย' },
+  B1: { name: 'Intermediate', th: 'ระดับกลาง', can: 'เล่าประสบการณ์ ให้เหตุผลสั้นๆ เข้าใจใจความเรื่องที่คุ้นเคย' },
+  B2: { name: 'Upper-Intermediate', th: 'ระดับกลางตอนปลาย', can: 'อภิปรายเรื่องซับซ้อน โต้แย้งข้อดีข้อเสียได้คล่อง' },
+  C1: { name: 'Advanced', th: 'ระดับสูง', can: 'ใช้ภาษายืดหยุ่นในงานวิชาการและวิชาชีพ เข้าใจความหมายแฝง' },
+  C2: { name: 'Proficiency', th: 'ระดับเชี่ยวชาญ', can: 'เข้าใจแทบทุกสิ่งที่อ่านและฟัง แยกแยะความหมายละเอียดอ่อนได้แม่นยำ' }
+};
+
+const DATA = {
+A1: {
+  vocab: [
+    ['apple','แอปเปิล','a round fruit with red or green skin'],
+    ['house','บ้าน','a building where people live'],
+    ['water','น้ำ','the clear liquid that we drink'],
+    ['book','หนังสือ','pages with words that you read'],
+    ['happy','มีความสุข','feeling good and pleased'],
+    ['eat','กิน','to put food in your mouth'],
+    ['run','วิ่ง','to move fast on your feet'],
+    ['cold','หนาว, เย็น','having a low temperature'],
+    ['family','ครอบครัว','parents and their children'],
+    ['teacher','ครู','a person who helps students learn'],
+    ['big','ใหญ่','large in size'],
+    ['small','เล็ก','little in size'],
+    ['friend','เพื่อน','a person you know well and like'],
+    ['morning','ตอนเช้า','the early part of the day'],
+    ['buy','ซื้อ','to get something by paying money'],
+    ['sleep','นอนหลับ','to rest with your eyes closed'],
+    ['red','สีแดง','the colour of blood'],
+    ['dog','สุนัข','an animal that barks'],
+    ['open','เปิด','to move something so it is not closed'],
+    ['cheap','ราคาถูก','costing little money'],
+    ['kitchen','ห้องครัว','the room where you cook'],
+    ['tired','เหนื่อย','needing rest or sleep'],
+    ['weekend','สุดสัปดาห์','Saturday and Sunday'],
+    ['hungry','หิว','wanting to eat']
+  ],
+  grammar: [
+    ['She ___ to school every day.','goes',['go','going','gone'],'ประธานเอกพจน์บุรุษที่ 3 (he/she/it) ใน Present Simple ต้องเติม -s/-es ที่กริยา'],
+    ['I ___ a student.','am',['is','are','be'],'ประธาน I ใช้ verb to be ว่า am'],
+    ['There ___ two cats in the garden.','are',['is','am','be'],'นามพหูพจน์ (two cats) ใช้ there are'],
+    ["He doesn't ___ coffee.",'like',['likes','liking','liked'],"หลัง doesn't / don't ใช้กริยาช่อง 1 ไม่เติม s"],
+    ['I have ___ umbrella.','an',['a','the','some'],'ใช้ an หน้าคำที่ขึ้นต้นด้วยเสียงสระ (umbrella)'],
+    ['We ___ TV now.','are watching',['watch','watches','watched'],'now = กำลังทำอยู่ ใช้ Present Continuous (am/is/are + V-ing)'],
+    ['___ you like pizza?','Do',['Does','Are','Is'],'คำถาม Present Simple กับ you ใช้ Do'],
+    ['This is ___ book.','my',['me','I','mine'],'หน้าคำนามใช้ possessive adjective (my) ส่วน mine ใช้แทนนามทั้งก้อน'],
+    ['Yesterday I ___ to the park.','went',['go','goes','going'],'yesterday = อดีต ใช้ Past Simple: go → went'],
+    ['The cat is ___ the table.','on',['at','of','to'],'on = อยู่บนพื้นผิว'],
+    ['My birthday is ___ May.','in',['on','at','by'],'เดือน ปี ฤดู ใช้ in; วันที่หรือวันในสัปดาห์ใช้ on'],
+    ['Can you ___ English?','speak',['speaks','speaking','to speak'],'หลัง modal verb (can, must, will) ใช้กริยาช่อง 1 ไม่มี to']
+  ],
+  order: [
+    ['I like to drink milk.','ฉันชอบดื่มนม'],
+    ['She has a big dog.','เธอมีสุนัขตัวใหญ่'],
+    ['We go to school by bus.','พวกเราไปโรงเรียนโดยรถบัส'],
+    ['My brother is ten years old.','พี่ชาย/น้องชายของฉันอายุสิบขวบ'],
+    ['Where is the bathroom?','ห้องน้ำอยู่ที่ไหน'],
+    ['I am very hungry now.','ตอนนี้ฉันหิวมาก'],
+    ['They play football on Sunday.','พวกเขาเล่นฟุตบอลวันอาทิตย์'],
+    ['Can I have some water?','ขอน้ำหน่อยได้ไหม']
+  ],
+  reading: [
+    { p: 'Tom is eight years old. He lives in a small house with his mother, his father and his sister, Amy. Every morning, Tom eats bread and drinks milk. Then he walks to school with Amy.',
+      qs: [['How old is Tom?','Eight',['Ten','Six','Eighteen']],
+           ['How does Tom go to school?','He walks.',['By bus.','By car.','By bike.']]] },
+    { p: "Hello! My name is Lina. I am from Thailand. I like cats, but I don't like dogs. On Saturday, I go to the market with my mum. We buy fruit and fish.",
+      qs: [['Which animal does Lina like?','Cats',['Dogs','Fish','Birds']],
+           ['When does Lina go to the market?','On Saturday',['On Sunday','Every day','On Monday']]] }
+  ]
+},
+A2: {
+  vocab: [
+    ['borrow','ยืม','to take something and give it back later'],
+    ['journey','การเดินทาง','travelling from one place to another'],
+    ['healthy','มีสุขภาพดี','good for your body; not ill'],
+    ['receipt','ใบเสร็จ','a piece of paper that shows you have paid'],
+    ['neighbour','เพื่อนบ้าน','a person who lives near you'],
+    ['expensive','แพง','costing a lot of money'],
+    ['improve','พัฒนา, ทำให้ดีขึ้น','to make or become better'],
+    ['invite','เชิญ','to ask someone to come to an event'],
+    ['luggage','กระเป๋าเดินทาง','the bags you take when you travel'],
+    ['nervous','ประหม่า','a little afraid or worried'],
+    ['prefer','ชอบมากกว่า','to like one thing more than another'],
+    ['weather','สภาพอากาศ','rain, sun, wind and temperature'],
+    ['arrive','มาถึง','to reach a place'],
+    ['forget','ลืม','to not remember'],
+    ['quiet','เงียบ','making very little noise'],
+    ['dangerous','อันตราย','able to hurt you'],
+    ['appointment','การนัดหมาย','a time arranged to meet someone'],
+    ['choose','เลือก','to pick one thing from several'],
+    ['celebrate','ฉลอง','to do something enjoyable on a special day'],
+    ['museum','พิพิธภัณฑ์','a place where you can see old or important objects'],
+    ['polite','สุภาพ','having good manners'],
+    ['fix','ซ่อม','to repair something that is broken'],
+    ['noisy','เสียงดัง','making a lot of noise'],
+    ['spend','ใช้ (เงิน, เวลา)','to use money or time']
+  ],
+  grammar: [
+    ['I ___ to Japan twice.','have been',['was','am','had be'],'Present Perfect (have + V3) ใช้พูดถึงประสบการณ์ที่ไม่ระบุเวลา'],
+    ['She is ___ than her sister.','taller',['more tall','tallest','tall'],'คำคุณศัพท์สั้นเปรียบเทียบขั้นกว่าเติม -er + than'],
+    ['If it rains, we ___ at home.','will stay',['stayed','would stay','staying'],'First Conditional: If + Present Simple, will + V1'],
+    ['I was reading when the phone ___.','rang',['rings','was ringing','ring'],'เหตุการณ์ที่แทรกเข้ามาระหว่าง Past Continuous ใช้ Past Simple'],
+    ["You ___ wear a seatbelt. It's the law.",'must',["mustn't",'might','could'],'must = จำเป็นต้อง (กฎ, ข้อบังคับ)'],
+    ['How ___ water do you drink?','much',['many','lot','few'],'นามนับไม่ได้ (water) ใช้ how much'],
+    ["He's interested ___ music.",'in',['on','at','about'],'interested in = สนใจใน'],
+    ["I've lived here ___ 2015.",'since',['for','from','ago'],'since + จุดเวลาเริ่มต้น; for + ช่วงเวลา'],
+    ["This is the ___ film I've ever seen.",'best',['better','good','most good'],'ขั้นสูงสุดของ good คือ the best'],
+    ['We ___ visit Grandma tomorrow. We planned it last week.','are going to',['will going','going','goes to'],'be going to ใช้กับแผนที่ตัดสินใจไว้แล้ว'],
+    ['She asked me ___ the door.','to close',['close','closing','closed'],'ask somebody + to + V1'],
+    ["I don't have ___ money left.",'any',['some','many','no'],'ประโยคปฏิเสธใช้ any'],
+  ],
+  order: [
+    ['I have never been to London.','ฉันไม่เคยไปลอนดอน'],
+    ['It was raining when I left home.','ฝนกำลังตกตอนที่ฉันออกจากบ้าน'],
+    ['She is going to visit her grandmother.','เธอจะไปเยี่ยมยาย'],
+    ['This bag is heavier than that one.','กระเป๋าใบนี้หนักกว่าใบนั้น'],
+    ['You should see a doctor.','คุณควรไปหาหมอ'],
+    ['How long have you lived here?','คุณอาศัยอยู่ที่นี่มานานเท่าไรแล้ว'],
+    ['We stayed at a hotel near the beach.','เราพักที่โรงแรมใกล้ชายหาด'],
+    ['I forgot to bring my keys.','ฉันลืมเอากุญแจมา']
+  ],
+  reading: [
+    { p: 'Last summer, Maria went to Spain with her friends. They stayed in a small hotel near the sea. The weather was hot, so they swam every day. On the last day, Maria lost her phone on the beach, but a kind man found it and gave it back to her.',
+      qs: [['Where did they stay?','In a small hotel near the sea',['With Maria’s family','In a tent','In a big city hotel']],
+           ["What happened to Maria's phone?",'A man found it and gave it back.',['It broke in the sea.','She sold it.','Someone stole it.']]] },
+    { p: 'Dear residents, the swimming pool will be closed from Monday to Wednesday for cleaning. It will open again on Thursday at 7 a.m. Children under 12 must be with an adult. Thank you for your understanding.',
+      qs: [['When will the pool open again?','Thursday morning',['Monday morning','Wednesday evening','Thursday evening']],
+           ['Who must come with an adult?','Children under 12',['All swimmers','Children over 12','Cleaning staff']]] }
+  ]
+},
+B1: {
+  vocab: [
+    ['achieve','บรรลุ, ทำสำเร็จ','to succeed in doing something after a lot of effort'],
+    ['advantage','ข้อได้เปรียบ','something that helps you to be more successful'],
+    ['apologise','ขอโทษ','to say that you are sorry'],
+    ['confident','มั่นใจ','sure of your own abilities'],
+    ['convince','โน้มน้าว','to make someone believe that something is true'],
+    ['deadline','กำหนดส่ง','the time by which work must be finished'],
+    ['environment','สิ่งแวดล้อม','the natural world of land, air and water'],
+    ['encourage','ให้กำลังใจ','to give someone support or confidence'],
+    ['opportunity','โอกาส','a chance to do something'],
+    ['reliable','เชื่อถือได้','able to be trusted or depended on'],
+    ['suggest','เสนอแนะ','to put forward an idea for others to consider'],
+    ['avoid','หลีกเลี่ยง','to stay away from someone or something'],
+    ['complain','บ่น, ร้องเรียน','to say that you are not satisfied'],
+    ['experience','ประสบการณ์','knowledge or skill you get from doing things'],
+    ['increase','เพิ่มขึ้น','to become larger in amount or number'],
+    ['responsible','รับผิดชอบ','having the duty of dealing with something'],
+    ['solution','วิธีแก้ปัญหา','a way of solving a problem'],
+    ['volunteer','อาสาสมัคร','a person who does work without being paid'],
+    ['recognise','จำได้','to know someone or something you have seen before'],
+    ['patient','อดทน','able to wait calmly without getting annoyed'],
+    ['generous','มีน้ำใจ','happy to give more than is expected'],
+    ['disappointed','ผิดหวัง','sad because something was not as good as you hoped'],
+    ['afford','มีเงินพอจ่าย','to have enough money to pay for something'],
+    ['challenge','ความท้าทาย','something difficult that tests your ability']
+  ],
+  grammar: [
+    ['If I ___ rich, I would travel the world.','were',['am','will be','would be'],'Second Conditional (สมมุติปัจจุบัน): If + Past Simple, would + V1 และนิยมใช้ were กับทุกประธาน'],
+    ['The letter ___ yesterday.','was sent',['sent','is sent','has sent'],'Passive voice อดีต: was/were + V3'],
+    ['She said that she ___ tired.','was',['is being','has','will'],'Reported speech ถอยกาลจาก am → was'],
+    ["I'm used to ___ up early.",'getting',['get','got','have got'],'be used to + V-ing = เคยชินกับ'],
+    ['By the time we arrived, the film ___.','had started',['started','has started','was start'],'Past Perfect ใช้กับเหตุการณ์ที่เกิดก่อนอีกเหตุการณ์ในอดีต'],
+    ['He ___ smoke, but he quit last year.','used to',['use to','was used to','uses to'],'used to + V1 = เคยทำเป็นประจำในอดีต (ปัจจุบันไม่ทำแล้ว)'],
+    ['The man ___ car was stolen called the police.','whose',['who','which','whom'],'whose ใช้แสดงความเป็นเจ้าของ (รถของผู้ชายคนนั้น)'],
+    ['You ___ have told me! I would have helped.','should',['must','can','will'],'should have + V3 = ควรจะทำ (แต่ไม่ได้ทำ)'],
+    ["I'm looking forward to ___ you.",'seeing',['see','saw','be seen'],'look forward to — to ตรงนี้เป็นบุพบท จึงตามด้วย V-ing'],
+    ['Despite ___ tired, she finished the race.','being',['she was','of being','to be'],'despite + นาม/V-ing (ไม่มี of)'],
+    ['I wish I ___ speak French.','could',['can','will','would can'],'wish + Past Simple / could สำหรับสิ่งที่อยากให้เป็นในปัจจุบัน'],
+    ['Neither Tom ___ Anna came to the party.','nor',['or','and','but'],'neither ... nor ... = ไม่ทั้ง ... และ ...']
+  ],
+  order: [
+    ['If I were you, I would accept the offer.','ถ้าฉันเป็นคุณ ฉันจะรับข้อเสนอนั้น'],
+    ['The museum was built in the 19th century.','พิพิธภัณฑ์นี้สร้างขึ้นในศตวรรษที่ 19'],
+    ['She asked me where I was going.','เธอถามฉันว่าฉันกำลังจะไปไหน'],
+    ["I'm not used to working at night.",'ฉันไม่ชินกับการทำงานตอนกลางคืน'],
+    ['He has been learning English for three years.','เขาเรียนภาษาอังกฤษมาสามปีแล้ว'],
+    ['The book that you lent me was fascinating.','หนังสือที่คุณให้ฉันยืมน่าสนใจมาก'],
+    ['We had already eaten when they arrived.','เรากินข้าวไปแล้วตอนที่พวกเขามาถึง'],
+    ["You don't have to come if you're busy.",'คุณไม่จำเป็นต้องมาถ้าคุณยุ่ง']
+  ],
+  reading: [
+    { p: 'More and more people are working from home. Many say they save time and money because they do not have to travel to an office. However, some workers feel lonely and find it hard to separate work from free time. Experts suggest having a fixed daily routine and a separate space for work.',
+      qs: [['Which problem with working from home is mentioned?','Some people feel lonely.',['It costs more money.','The internet is slow.','Managers do not trust workers.']],
+           ['What do experts recommend?','Keeping a routine and a separate work space',['Going back to the office','Working longer hours','Travelling more often']]] },
+    { p: "Hi Sam, thanks for inviting me to your party on Friday. Unfortunately, I've got an important exam on Saturday morning, so I'll need to stay at home and revise. Could we meet up next week instead? I'd love to hear about your new job. Best wishes, Kate",
+      qs: [["Why can't Kate go to the party?",'She has an exam the next day.',['She is starting a new job.','She is ill.','She is going away.']],
+           ['What does Kate suggest?','Meeting next week',['Moving the party to Saturday','Studying together','Calling on Friday']]] }
+  ]
+},
+B2: {
+  vocab: [
+    ['ambiguous','กำกวม','having more than one possible meaning'],
+    ['consequence','ผลที่ตามมา','a result of an action, often a bad one'],
+    ['reluctant','ไม่เต็มใจ','unwilling and hesitant to do something'],
+    ['thorough','ละเอียดถี่ถ้วน','complete and careful about every detail'],
+    ['undermine','บ่อนทำลาย','to gradually make something weaker or less effective'],
+    ['feasible','ทำได้จริง','possible and practical to do'],
+    ['inevitable','หลีกเลี่ยงไม่ได้','certain to happen and impossible to avoid'],
+    ['substantial','มากพอสมควร','large in amount, size or importance'],
+    ['cope','รับมือ','to deal successfully with a difficult situation'],
+    ['bias','อคติ','an unfair preference for or against someone or something'],
+    ['emphasise','เน้นย้ำ','to give special importance to something'],
+    ['sustainable','ยั่งยืน','able to continue for a long time without harming the environment'],
+    ['tendency','แนวโน้ม','a likelihood to behave or develop in a particular way'],
+    ['acknowledge','ยอมรับ','to accept or admit that something is true'],
+    ['compromise','การประนีประนอม','an agreement in which each side gives up something'],
+    ['deteriorate','เสื่อมลง','to become worse over time'],
+    ['priority','สิ่งที่สำคัญเป็นอันดับแรก','something considered more important than other things'],
+    ['assess','ประเมิน','to judge the quality, value or nature of something'],
+    ['vulnerable','เปราะบาง','easily hurt physically or emotionally'],
+    ['widespread','แพร่หลาย','existing or happening in many places or among many people'],
+    ['resilient','ฟื้นตัวได้เร็ว','able to recover quickly from difficulties'],
+    ['controversial','เป็นที่ถกเถียง','causing a lot of public disagreement'],
+    ['overwhelming','ท่วมท้น','very great in amount or effect'],
+    ['justify','ให้เหตุผลรองรับ','to show that a decision or action is reasonable']
+  ],
+  grammar: [
+    ['If I had studied harder, I ___ the exam.','would have passed',['would pass','had passed','will have passed'],'Third Conditional (สมมุติอดีต): If + had V3, would have + V3'],
+    ['She ___ have left already; her coat is gone.','must',["can't",'should','would'],'must have + V3 = คงจะ...แน่ๆ (อนุมานจากหลักฐาน)'],
+    ['Hardly had I sat down ___ the phone rang.','when',['than','then','that'],'Hardly / Scarcely ... when ... = ทันทีที่ ... ก็'],
+    ["I'd rather you ___ smoke in here.",'didn’t',["don't",'not',"won't"],"would rather + ประธานอื่น + Past Simple (ความหมายปัจจุบัน)"],
+    ["It's high time we ___ home.",'went',['go','will go','have gone'],"It's (high) time + ประธาน + Past Simple = ถึงเวลาที่ควร...แล้ว"],
+    ['The project is said ___ over budget.','to be',['being','be','that it is'],'is said + to + V1 = กล่าวกันว่า'],
+    ['___ the bad weather, the match was cancelled.','Owing to',['Despite','Although','Because'],'owing to + นาม = เนื่องจาก; because ต้องตามด้วยประโยค'],
+    ['She denied ___ the money.','taking',['to take','take','to have take'],'deny + V-ing'],
+    ['By next year, I ___ here for ten years.','will have worked',['will work','am working','have worked'],'Future Perfect: by + เวลาในอนาคต → will have + V3'],
+    ['Not only ___ late, but he also forgot the tickets.','was he',['he was','he is','did he was'],'Not only ขึ้นต้นประโยค → สลับกริยาช่วยมาหน้าประธาน (inversion)'],
+    ["I'd like to have my hair ___.",'cut',['cutting','to cut','cuts'],'Causative: have + สิ่งของ + V3 = ให้คนอื่นทำให้'],
+    ['Had I known, I ___ differently.','would have acted',['would act','will act','acted'],'Had I known = If I had known (Third Conditional แบบ inversion)']
+  ],
+  order: [
+    ["If she had left earlier, she wouldn't have missed the train.",'ถ้าเธอออกเร็วกว่านี้ เธอคงไม่พลาดรถไฟ'],
+    ['The report is expected to be published next month.','คาดว่ารายงานจะได้รับการตีพิมพ์เดือนหน้า'],
+    ["I'd rather you didn't mention it to anyone.",'ฉันอยากให้คุณไม่บอกเรื่องนี้กับใคร'],
+    ['He must have forgotten about the meeting.','เขาคงลืมเรื่องการประชุมแน่ๆ'],
+    ['Despite the heavy rain, the concert went ahead.','แม้ฝนตกหนัก คอนเสิร์ตก็ยังจัดต่อ'],
+    ['By the end of the year, we will have finished the project.','ภายในสิ้นปี เราจะทำโปรเจกต์เสร็จแล้ว'],
+    ["It's time we took climate change seriously.",'ถึงเวลาแล้วที่เราต้องจริงจังกับการเปลี่ยนแปลงสภาพภูมิอากาศ'],
+    ['She had her car repaired at the garage.','เธอนำรถไปให้อู่ซ่อม']
+  ],
+  reading: [
+    { p: 'Urban green spaces are often seen as a luxury, yet research increasingly suggests they are essential. Parks reduce air temperature, absorb rainwater and lower stress levels among residents. Critics argue that the land could be used for much-needed housing. A growing number of planners, however, believe the two goals are not mutually exclusive and are designing high-density neighbourhoods built around shared gardens.',
+      qs: [["What is the critics' main concern?",'The land could be used for housing.',['Parks are expensive to clean.','Parks increase air temperature.','Residents do not use parks.']],
+           ['What do many planners believe?','Housing and green space can exist together.',['Parks should replace housing.','Green spaces are a luxury.','Cities should stop building.']]] },
+    { p: 'The four-day working week has been trialled by companies in several countries. Supporters claim it boosts productivity and wellbeing, as employees return to work refreshed. Sceptics point out that results vary by industry: in sectors such as healthcare, reduced hours may simply mean understaffing.',
+      qs: [['Why are sceptics unconvinced?','It may not suit every industry.',['Workers dislike it.','It has never been tested.','It reduces wellbeing.']],
+           ['In the text, "refreshed" is closest in meaning to …','full of energy again',['exhausted','confused','bored']]] }
+  ]
+},
+C1: {
+  vocab: [
+    ['meticulous','พิถีพิถัน','showing great attention to every small detail'],
+    ['pragmatic','เน้นความเป็นจริง','dealing with problems in a sensible, realistic way'],
+    ['scrutinise','พิจารณาอย่างละเอียด','to examine something very carefully'],
+    ['alleviate','บรรเทา','to make pain or a problem less severe'],
+    ['unprecedented','ไม่เคยเกิดขึ้นมาก่อน','never having happened or existed before'],
+    ['discrepancy','ความไม่สอดคล้องกัน','a difference between things that should be the same'],
+    ['detrimental','ก่อให้เกิดผลเสีย','causing harm or damage'],
+    ['coherent','สอดคล้องเป็นเหตุเป็นผล','logical, clear and consistent'],
+    ['advocate','สนับสนุนอย่างเปิดเผย','to publicly support a policy or idea'],
+    ['complacent','ชะล่าใจ','too satisfied with yourself to notice possible danger'],
+    ['conducive','เอื้ออำนวย','making a particular outcome likely or possible'],
+    ['elusive','จับต้องได้ยาก','difficult to find, catch or achieve'],
+    ['inherent','มีอยู่ในตัว','existing as a natural and permanent part of something'],
+    ['ostensibly','ดูภายนอกเหมือนว่า','apparently, though perhaps not actually'],
+    ['plausible','ฟังดูมีเหตุผล','seeming reasonable or probably true'],
+    ['profound','ลึกซึ้ง','very great or intense; showing deep insight'],
+    ['redundant','ไม่จำเป็น, ซ้ำซ้อน','no longer needed or useful'],
+    ['tentative','ยังไม่แน่นอน','not certain or fixed; done without confidence'],
+    ['versatile','อเนกประสงค์','able to adapt to many different functions or activities'],
+    ['consensus','ฉันทามติ','general agreement among a group of people'],
+    ['deter','ยับยั้ง','to discourage someone from doing something'],
+    ['exacerbate','ทำให้แย่ลง','to make a bad situation worse'],
+    ['intricate','ซับซ้อนประณีต','having many small parts arranged in a complicated way'],
+    ['notorious','ฉาวโฉ่','famous for something bad']
+  ],
+  grammar: [
+    ['Little ___ that he was being watched.','did he know',['he knew','he did know','knew he'],'Little ขึ้นต้นประโยคในความหมายปฏิเสธ → inversion (did + ประธาน + V1)'],
+    ['___ it not been for your help, I would have failed.','Had',['If','Were','Should'],'Had it not been for = If it had not been for (หากไม่ใช่เพราะ...)'],
+    ['The committee recommended that he ___ dismissed.','be',['is','was','will be'],'Subjunctive: recommend/insist/suggest that + ประธาน + V1 ไม่ผัน (be)'],
+    ["___ you need any help, don't hesitate to call.",'Should',['Would','Unless','Did'],'Should you need = If you should need (ภาษาทางการ)'],
+    ['It was not until midnight ___ she returned.','that',['when','which','then'],'โครงสร้าง It was not until ... that ... = กว่าจะ ... ก็'],
+    ['What I need ___ a long holiday.','is',['are','being','to be'],'Cleft sentence: What-clause เป็นประธานเอกพจน์ → is'],
+    ['She is believed ___ the country last week.','to have left',['to leave','leaving','having left'],'is believed + to have V3 สำหรับเหตุการณ์ที่เกิดก่อนเวลาที่ "เชื่อ"'],
+    ['___ though it may seem, the theory is correct.','Strange',['Strangely','Stranger','So strange'],'Adjective + though/as + ประธาน + verb = แม้จะ...'],
+    ['So complex ___ the problem that no one could solve it.','was',['it was','did','had'],'So + adj ขึ้นต้นประโยค → inversion (was + ประธาน)'],
+    ['On no account ___ leave this door unlocked.','should you',['you should','you must not','do you'],'On no account ขึ้นต้นประโยค → inversion และมีความหมายปฏิเสธในตัวแล้ว'],
+    ['The more you practise, ___ you become.','the better',['better','the best','more better'],'The + ขั้นกว่า ..., the + ขั้นกว่า ... = ยิ่ง...ยิ่ง...'],
+    ['The new policy has come ___ heavy criticism.','under',['over','across','through'],'come under criticism/attack = ถูกวิจารณ์/โจมตี (collocation)']
+  ],
+  order: [
+    ['Never before had the city seen such a crowd.','ไม่เคยมาก่อนที่เมืองนี้จะได้เห็นฝูงชนมากขนาดนี้'],
+    ['Had I known the truth, I would have acted differently.','หากฉันรู้ความจริง ฉันคงทำต่างไปจากนี้'],
+    ['What surprised me most was his lack of interest.','สิ่งที่ทำให้ฉันประหลาดใจที่สุดคือการที่เขาไม่สนใจเลย'],
+    ['It is essential that every voice be heard.','จำเป็นอย่างยิ่งที่ทุกเสียงจะต้องได้รับการรับฟัง'],
+    ['Not until the results came out did we celebrate.','เราไม่ได้ฉลองจนกระทั่งผลออกมา'],
+    ['The more you read, the wider your vocabulary becomes.','ยิ่งอ่านมาก คลังคำศัพท์ก็ยิ่งกว้างขึ้น'],
+    ['Should you require further assistance, please contact us.','หากท่านต้องการความช่วยเหลือเพิ่มเติม โปรดติดต่อเรา'],
+    ['She is thought to have been living abroad for years.','เชื่อกันว่าเธออาศัยอยู่ต่างประเทศมาหลายปีแล้ว']
+  ],
+  reading: [
+    { p: 'The notion that multitasking enhances efficiency has been largely discredited. Cognitive scientists argue that what we perceive as doing several things at once is in fact rapid switching between tasks, each switch incurring a small but cumulative cost in attention. Paradoxically, those who consider themselves adept multitaskers often perform worst in controlled tests, perhaps because their confidence makes them less aware of their own errors.',
+      qs: [['According to cognitive scientists, multitasking is really …','rapid switching between tasks',['a skill most people can learn','the best use of attention','doing two tasks at exactly the same time']],
+           ['Why might self-described multitaskers perform badly?','Their confidence makes them miss their mistakes.',['They are given harder tests.','They avoid switching tasks.','They have less experience.']]] },
+    { p: 'Few inventions have been as quietly transformative as the shipping container. Before its standardisation in the 1960s, loading a cargo ship could take days and required large teams of dockworkers. The container cut costs so dramatically that it arguably did more to globalise trade than any trade agreement. Its impact, however, was not uniformly welcomed: port cities that failed to adapt saw entire communities lose their livelihoods.',
+      qs: [['What does the writer suggest about the container?','It may have done more for global trade than trade agreements.',['It was invented by dockworkers.','It made loading ships slower.','It was welcomed by every port city.']],
+           ['"Not uniformly welcomed" implies that …','some people suffered because of the change.',['nobody used containers at first.','everyone opposed the container.','the container was too expensive.']]] }
+  ]
+},
+C2: {
+  vocab: [
+    ['ubiquitous','มีอยู่ทุกหนแห่ง','seeming to be everywhere at the same time'],
+    ['ephemeral','อยู่เพียงชั่วครู่','lasting for a very short time'],
+    ['obfuscate','ทำให้คลุมเครือ','to deliberately make something unclear or hard to understand'],
+    ['perfunctory','ขอไปที','done quickly, with little care or interest'],
+    ['sycophant','คนประจบสอพลอ','a person who flatters powerful people to gain advantage'],
+    ['equivocate','พูดกำกวมเลี่ยงคำตอบ','to use vague language to avoid committing yourself'],
+    ['recalcitrant','ดื้อดึง','stubbornly refusing to obey authority or rules'],
+    ['quintessential','เป็นแบบฉบับที่สมบูรณ์','representing the most perfect example of a type'],
+    ['magnanimous','ใจกว้าง (แม้ต่อคู่แข่ง)','generous and forgiving, especially towards a rival'],
+    ['verisimilitude','ความสมจริง','the quality of seeming true or real'],
+    ['pernicious','ร้ายกาจอย่างค่อยเป็นค่อยไป','having a harmful effect in a gradual or subtle way'],
+    ['laconic','พูดน้อยได้ใจความ','using very few words'],
+    ['esoteric','รู้กันเฉพาะกลุ่ม','understood only by a small group with special knowledge'],
+    ['vicarious','ผ่านประสบการณ์ของผู้อื่น','experienced through the actions of another person'],
+    ['juxtaposition','การวางเทียบเคียง','placing two contrasting things side by side'],
+    ['serendipity','ความบังเอิญที่โชคดี','finding something good without looking for it'],
+    ['idiosyncratic','เฉพาะตัวแปลกๆ','peculiar to one individual'],
+    ['cogent','หนักแน่นน่าเชื่อถือ','clear, logical and convincing'],
+    ['acquiesce','ยอมตามโดยไม่โต้แย้ง','to accept something reluctantly but without protest'],
+    ['panacea','ยาครอบจักรวาล','a solution claimed to solve every problem'],
+    ['truculent','ชอบหาเรื่อง','eager to argue or fight'],
+    ['inexorable','ไม่อาจหยุดยั้งได้','impossible to stop or prevent'],
+    ['didactic','มุ่งสั่งสอน','intended to teach, often in a preachy way'],
+    ['mendacious','ไม่ซื่อสัตย์, โกหก','not telling the truth; lying']
+  ],
+  grammar: [
+    ['___ he to resign, the company would collapse.','Were',['If','Had','Did'],'Were + ประธาน + to V1 = If + ประธาน + were to V1 (สมมุติอนาคตที่ไม่น่าเกิด)'],
+    ['Come what ___, I will stand by you.','may',['might','will','can'],'สำนวนตายตัว come what may = ไม่ว่าอะไรจะเกิดขึ้น'],
+    ["___ it ever so humble, there's no place like home.",'Be',['Being','Was','Is'],'Subjunctive แบบเก่า Be it ever so ... = ต่อให้ ... เพียงใด'],
+    ['The proposal, ___ merits are debatable, was approved.','whose',['which','its','that'],'whose ใช้กับสิ่งของได้ด้วย (ข้อดีของข้อเสนอนั้น)'],
+    ['Such ___ his influence that nobody dared oppose him.','was',['did','had','it was'],'Such + be + นาม + that ... = inversion เน้นระดับ'],
+    ["Were it ___ for the rain, we'd have finished.",'not',['no','nor','none'],'Were it not for = If it were not for (หากไม่ใช่เพราะ...)'],
+    ['He is nothing ___ not persistent.','if',['but','as','so'],'nothing if not + adj = ...เป็นที่สุด (สำนวน)'],
+    ["I'd just as soon ___ at home tonight.",'stay',['staying','to stay','stayed'],'would just as soon + V1 = ขอ...ดีกว่า'],
+    ['The less said about it, ___.','the better',['better','the best','so better'],'สำนวน The less said (about it), the better = ยิ่งพูดน้อยยิ่งดี'],
+    ["Try ___ he might, he couldn't open the jar.",'as',['though','so','how'],'Try as he might = ไม่ว่าเขาจะพยายามเท่าไร'],
+    ["His explanation doesn't hold ___.",'water',['air','ground','fire'],'hold water = (ข้อโต้แย้ง) ฟังขึ้น มีเหตุผล'],
+    ['Only by working together ___ solve this crisis.','can we',['we can','we will','do we can'],'Only by ... ขึ้นต้นประโยค → inversion (can + we)']
+  ],
+  order: [
+    ['Were it not for her tenacity, the project would have collapsed.','หากไม่ใช่เพราะความมุ่งมั่นของเธอ โปรเจกต์คงล่มไปแล้ว'],
+    ['Rarely does one encounter such a cogent argument.','น้อยครั้งนักที่จะได้พบข้อโต้แย้งที่หนักแน่นเช่นนี้'],
+    ['So pervasive was the rumour that even sceptics began to believe it.','ข่าวลือแพร่สะพัดมากจนแม้แต่คนที่ไม่เชื่อง่ายก็เริ่มเชื่อ'],
+    ['Try as he might, he could not shake off the feeling.','ไม่ว่าจะพยายามเท่าไร เขาก็สลัดความรู้สึกนั้นไม่หลุด'],
+    ['Little did they realise how ephemeral their success would be.','พวกเขาแทบไม่รู้เลยว่าความสำเร็จนั้นจะอยู่ได้ไม่นาน'],
+    ['Be that as it may, the decision stands.','ถึงอย่างไรก็ตาม การตัดสินใจนั้นยังคงเดิม'],
+    ['Only in retrospect did the significance become apparent.','เมื่อมองย้อนกลับไปเท่านั้น ความสำคัญจึงปรากฏชัด'],
+    ['Far from being a setback, the delay proved a blessing in disguise.','ความล่าช้าไม่ได้เป็นอุปสรรคเลย กลับกลายเป็นโชคดีที่แฝงมา']
+  ],
+  reading: [
+    { p: 'There is a certain irony in the fact that the more information we can access, the less we seem to agree on what is true. One might have supposed that ubiquitous access to facts would foster consensus; instead, the sheer abundance of sources allows each of us to curate a reality that flatters our existing convictions. The problem, then, is not a scarcity of knowledge but a surfeit of it, coupled with an all-too-human disinclination to have our assumptions challenged.',
+      qs: [['What is the irony the writer describes?','More information has led to less agreement.',['Facts have become harder to find.','People now agree on most issues.','Experts no longer trust information.']],
+           ['The writer attributes the problem mainly to …','too much information plus reluctance to question our beliefs',['a lack of reliable sources','poor education systems','deliberate censorship']]] },
+    { p: 'Translation is often described as a compromise, but that description concedes too much to the idea of an original that is somehow pure. Every text is itself already an act of selection, shaped by the conventions of its language and era. The translator, far from betraying a fixed meaning, participates in the ongoing life of a work, revealing nuances that its first readers may never have perceived.',
+      qs: [["What is the writer's view of translation?",'It continues and enriches a work rather than diminishing it.',['It always betrays the original meaning.','It should be avoided whenever possible.','It is a purely technical task.']],
+           ['Which assumption does the writer challenge?','That an original text is pure and fixed',['That translators need training','That old texts are hard to read','That readers prefer originals']]] }
+  ]
+}
+};
+
+const MODES = {
+  vocab:   { th: 'คำศัพท์', tag: 'VOCAB', desc: 'เลือกความหมายที่ถูกต้อง' },
+  grammar: { th: 'ไวยากรณ์', tag: 'GRAMMAR', desc: 'เติมคำในช่องว่าง พร้อมคำอธิบาย' },
+  order:   { th: 'เรียงประโยค', tag: 'WORD ORDER', desc: 'แตะคำเรียงให้เป็นประโยค' },
+  listen:  { th: 'ฟังแล้วพิมพ์', tag: 'DICTATION', desc: 'ฟังเสียงแล้วพิมพ์สิ่งที่ได้ยิน' },
+  reading: { th: 'อ่านจับใจความ', tag: 'READING', desc: 'อ่านบทความสั้นแล้วตอบคำถาม' }
+};
+
+/* ------------------------------------------------------------------ */
+/* Saved progress (this browser only)                                  */
+/* ------------------------------------------------------------------ */
+const KEY = 'cefr-ladder-v1';
+const fresh = () => ({ xp: 0, streak: 0, lastDay: '', mastered: {}, mistakes: {}, passed: {}, best: {}, placement: '', rate: 0.9 });
+let S = fresh();
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(fresh(), JSON.parse(raw)); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+function today() { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+function touchStreak() {
+  const t = today();
+  if (S.lastDay === t) return;
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const yk = y.getFullYear() + '-' + (y.getMonth() + 1) + '-' + y.getDate();
+  S.streak = S.lastDay === yk ? S.streak + 1 : 1;
+  S.lastDay = t;
+}
+
+/* ------------------------------------------------------------------ */
+/* Helpers                                                             */
+/* ------------------------------------------------------------------ */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = (a, n) => shuffle(a).slice(0, n);
+const lvIndex = l => LEVELS.indexOf(l);
+const norm = s => s.toLowerCase().replace(/[‘’]/g, "'").replace(/[.,!?;:"“”]/g, '').replace(/\s+/g, ' ').trim();
+function setLv(l) { document.documentElement.style.setProperty('--lv', 'var(--' + l + ')'); }
+
+let voice = null;
+const hasTTS = 'speechSynthesis' in window;
+function loadVoice() {
+  if (!hasTTS) return;
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v => /en[-_]GB/i.test(v.lang)) || vs.find(v => /en[-_]US/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null;
+}
+if (hasTTS) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+function speak(text, slow) {
+  if (!hasTTS) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = voice ? voice.lang : 'en-GB';
+    if (voice) u.voice = voice;
+    u.rate = slow ? 0.6 : S.rate;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+/* ------------------------------------------------------------------ */
+/* Question builders. Every question has a stable id so mistakes can   */
+/* be rebuilt later in Review.  id = level|mode|index[|sub]            */
+/* ------------------------------------------------------------------ */
+function build(id) {
+  const [lv, mode, a, b] = id.split('|');
+  const D = DATA[lv], li = lvIndex(lv), i = +a;
+  if (mode === 'vocab') {
+    const [w, th, def] = D.vocab[i];
+    const others = D.vocab.filter((_, k) => k !== i);
+    const dir = li <= 2 ? (Math.random() < .6 ? 'en-th' : 'th-en') : (Math.random() < .6 ? 'word-def' : 'def-word');
+    const q = { id, lv, mode, type: 'mc', speakText: w };
+    if (dir === 'en-th') Object.assign(q, { prompt: w, big: true, sub: 'คำนี้แปลว่าอะไร', answer: th, choices: shuffle([th, ...pick(others, 3).map(x => x[1])]) });
+    if (dir === 'th-en') Object.assign(q, { prompt: th, big: true, sub: 'ภาษาอังกฤษคือคำไหน', answer: w, choices: shuffle([w, ...pick(others, 3).map(x => x[0])]), speakAfter: true });
+    if (dir === 'word-def') Object.assign(q, { prompt: w, big: true, sub: 'Choose the best definition.', answer: def, choices: shuffle([def, ...pick(others, 3).map(x => x[2])]) });
+    if (dir === 'def-word') Object.assign(q, { prompt: '“' + def + '”', sub: 'Which word matches this definition?', answer: w, choices: shuffle([w, ...pick(others, 3).map(x => x[0])]), speakAfter: true });
+    q.explain = '<b>' + esc(w) + '</b> = ' + esc(th) + ' — <i>' + esc(def) + '</i>';
+    return q;
+  }
+  if (mode === 'grammar') {
+    const [s, ans, wrong, note] = D.grammar[i];
+    return { id, lv, mode, type: 'mc', prompt: s, gap: true, sub: 'เลือกคำที่เติมแล้วถูกต้อง', answer: ans, choices: shuffle([ans, ...wrong]),
+      explain: esc(note), full: s.replace('___', ans) };
+  }
+  if (mode === 'order') {
+    const [en, th] = D.order[i];
+    const words = en.split(' ');
+    let tiles = shuffle(words);
+    for (let t = 0; t < 5 && tiles.join(' ') === en; t++) tiles = shuffle(words);
+    return { id, lv, mode, type: 'order', prompt: th, sub: 'เรียงคำให้ได้ความหมายนี้', answer: en, tiles };
+  }
+  if (mode === 'listen') {
+    // a = 'w' + vocab index or 's' + sentence index
+    const isWord = a[0] === 'w', k = +a.slice(1);
+    const text = isWord ? D.vocab[k][0] : D.order[k][0];
+    const th = isWord ? D.vocab[k][1] : D.order[k][1];
+    return { id, lv, mode, type: 'type', answer: text, th, isWord };
+  }
+  if (mode === 'reading') {
+    const P = D.reading[i], [qq, ans, wrong] = P.qs[+b];
+    return { id, lv, mode, type: 'mc', passage: P.p, prompt: qq, answer: ans, choices: shuffle([ans, ...wrong]), speakPassage: P.p };
+  }
+}
+
+function ids(lv, mode) {
+  const D = DATA[lv];
+  if (mode === 'vocab') return D.vocab.map((_, i) => `${lv}|vocab|${i}`);
+  if (mode === 'grammar') return D.grammar.map((_, i) => `${lv}|grammar|${i}`);
+  if (mode === 'order') return D.order.map((_, i) => `${lv}|order|${i}`);
+  if (mode === 'listen') return [...D.order.map((_, i) => `${lv}|listen|s${i}`), ...D.vocab.map((_, i) => `${lv}|listen|w${i}`)];
+  if (mode === 'reading') return D.reading.flatMap((P, i) => P.qs.map((_, j) => `${lv}|reading|${i}|${j}`));
+}
+function totalItems(lv) { return ['vocab','grammar','order','reading'].reduce((n, m) => n + ids(lv, m).length, 0); }
+function mastery(lv) {
+  const all = ['vocab','grammar','order','reading'].flatMap(m => ids(lv, m));
+  return all.filter(id => S.mastered[id]).length / all.length;
+}
+
+function roundIds(lv, mode) {
+  if (mode === 'reading') return ids(lv, 'reading');
+  if (mode === 'listen') {
+    const s = pick(ids(lv, 'listen').filter(x => x.includes('|s')), 4);
+    const w = pick(ids(lv, 'listen').filter(x => x.includes('|w')), 4);
+    return shuffle([...s, ...w]);
+  }
+  if (mode === 'exam') {
+    const P = DATA[lv].reading[Math.floor(Math.random() * DATA[lv].reading.length)];
+    const pi = DATA[lv].reading.indexOf(P);
+    return [
+      ...pick(ids(lv, 'vocab'), 5), ...pick(ids(lv, 'grammar'), 5), ...pick(ids(lv, 'order'), 3),
+      `${lv}|reading|${pi}|0`, `${lv}|reading|${pi}|1`
+    ];
+  }
+  return pick(ids(lv, mode), 10);
+}
+
+/* ------------------------------------------------------------------ */
+/* Screens                                                             */
+/* ------------------------------------------------------------------ */
+const app = $('#app');
+let G = null;        // current game
+let sheet = null;    // level currently open on the level screen
+let confirmReset = false;
+
+function home() {
+  G = null; sheet = null; setLv(S.placement || 'B1');
+  if (hasTTS) speechSynthesis.cancel();
+  const missCount = Object.keys(S.mistakes).length;
+  const rungs = LEVELS.slice().reverse().map(l => {
+    const m = Math.round(mastery(l) * 100);
+    const seal = S.passed[l] ? `<span class="seal">ผ่าน ${l} ✓</span>` : (S.placement === l ? `<span class="seal here">ระดับของคุณ</span>` : `<span class="seal off">ยังไม่สอบ</span>`);
+    return `<button class="rung" style="--lv:var(--${l})" data-lv="${l}" id="rung-${l}">
+      <span class="code">${l}</span>
+      <span class="info"><b>${INFO[l].name} · ${INFO[l].th}</b><small>${INFO[l].can}</small>
+        <span class="bar" aria-label="เชี่ยวชาญ ${m}%"><i style="width:${m}%"></i></span></span>
+      ${seal}</button>`;
+  }).join('');
+  app.innerHTML = `
+    <header class="top">
+      <div><p class="eyebrow">English · CEFR A1 → C2</p><h1>CEFR Ladder</h1></div>
+      <div class="stats">
+        <div class="stat"><b>${S.xp}</b><span>XP</span></div>
+        <div class="stat"><b>${S.streak}</b><span>วันติดต่อกัน</span></div>
+      </div>
+    </header>
+    <section class="banner">
+      <div>
+        <b>${S.placement ? 'ระดับโดยประมาณของคุณ: ' + S.placement : 'ยังไม่รู้ว่าเริ่มที่ระดับไหน?'}</b>
+        <span class="muted" style="font-size:.9rem">แบบทดสอบวัดระดับ 15 ข้อ ปรับความยากตามคำตอบ ใช้เวลาราว 5 นาที</span>
+      </div>
+      <button class="btn lv" id="placement">${S.placement ? 'ทดสอบใหม่' : 'วัดระดับ'}</button>
+    </section>
+    ${missCount ? `<section class="banner"><div><b>คำที่เคยตอบผิด ${missCount} ข้อ</b><span class="muted" style="font-size:.9rem">ทบทวนจนตอบถูก แล้วข้อนั้นจะหายจากรายการ</span></div><button class="btn ghost" id="review">ทบทวน</button></section>` : ''}
+    <section style="display:flex;flex-direction:column;gap:10px">
+      <p class="eyebrow">เลือกระดับ · แถบสีคือความคืบหน้าของแต่ละระดับ</p>
+      <div class="ladder">${rungs}</div>
+    </section>
+    <section class="settings">
+      <label for="rate">ความเร็วเสียงอ่าน <input type="range" id="rate" min="0.6" max="1.2" step="0.1" value="${S.rate}"></label>
+      ${hasTTS ? '' : '<p class="foot">เบราว์เซอร์นี้ไม่มีระบบอ่านออกเสียง โหมดฟังจะเปลี่ยนเป็นโหมดสะกดคำแทน</p>'}
+      ${confirmReset
+        ? `<div class="confirm"><b>ลบความคืบหน้าทั้งหมด?</b><span style="font-size:.9rem">XP, ระดับที่ผ่าน และรายการคำผิดจะหายไป ย้อนกลับไม่ได้</span><div class="row"><button class="btn ghost" id="cancelReset">ยกเลิก</button><button class="btn" id="doReset" style="background:var(--bad);color:#fff">ลบเลย</button></div></div>`
+        : `<button class="btn ghost" id="reset">เริ่มใหม่ทั้งหมด</button>`}
+      <p class="foot">ความคืบหน้าบันทึกไว้ในเบราว์เซอร์นี้เท่านั้น</p>
+    </section>`;
+  app.querySelectorAll('.rung').forEach(b => b.onclick = () => level(b.dataset.lv));
+  $('#placement').onclick = startPlacement;
+  if (missCount) $('#review').onclick = startReview;
+  $('#rate').oninput = e => { S.rate = +e.target.value; save(); };
+  $('#rate').onchange = () => speak('This is how fast I will read.');
+  if (confirmReset) {
+    $('#cancelReset').onclick = () => { confirmReset = false; home(); };
+    $('#doReset').onclick = () => { S = fresh(); save(); confirmReset = false; home(); };
+  } else $('#reset').onclick = () => { confirmReset = true; home(); $('#cancelReset').focus(); };
+  window.scrollTo(0, 0);
+}
+
+function level(lv) {
+  sheet = lv; setLv(lv);
+  const m = Math.round(mastery(lv) * 100);
+  const best = S.best[lv] != null ? `คะแนนสอบสูงสุด ${S.best[lv]}/15` : 'ผ่านเมื่อได้ 12/15 ขึ้นไป';
+  const counts = { vocab: DATA[lv].vocab.length, grammar: DATA[lv].grammar.length, order: DATA[lv].order.length, listen: DATA[lv].vocab.length + DATA[lv].order.length, reading: ids(lv, 'reading').length };
+  app.innerHTML = `
+    <div class="playbar"><button class="x" id="back" aria-label="กลับหน้าหลัก">←</button><span class="muted">ทุกระดับ</span></div>
+    <header class="lvhead">
+      <span class="bigcode">${lv}</span>
+      <div style="min-width:0;display:flex;flex-direction:column;gap:4px">
+        <h2>${INFO[lv].name}</h2>
+        <span class="muted" style="font-size:.9rem">${INFO[lv].th} · เชี่ยวชาญแล้ว ${m}% จาก ${totalItems(lv)} ข้อ</span>
+      </div>
+    </header>
+    <div class="cando"><p class="eyebrow">ผู้เรียนระดับนี้ทำอะไรได้</p><p>${INFO[lv].can}</p></div>
+    <div class="modes">
+      ${Object.entries(MODES).map(([k, M]) => `
+        <button class="mode" data-mode="${k}" id="mode-${k}">
+          <span class="tag">${M.tag} · ${counts[k]}</span><b>${M.th}</b><small>${k === 'listen' && !hasTTS ? 'ดูคำแปลแล้วสะกดคำภาษาอังกฤษ' : M.desc}</small>
+        </button>`).join('')}
+      <button class="mode exam" data-mode="exam" id="mode-exam">
+        <span class="tag">LEVEL EXAM · 15</span><b>สอบผ่านระดับ ${lv}</b><small>${S.passed[lv] ? 'ผ่านแล้ว ✓ · ' : ''}${best} · ผสมทุกทักษะ ไม่มีหัวใจ</small>
+      </button>
+    </div>`;
+  $('#back').onclick = home;
+  app.querySelectorAll('.mode').forEach(b => b.onclick = () => startRound(lv, b.dataset.mode));
+  window.scrollTo(0, 0);
+}
+
+/* ---------------- game loop ---------------- */
+function startRound(lv, mode) {
+  touchStreak(); save();
+  G = { kind: mode === 'exam' ? 'exam' : 'practice', lv, mode, queue: roundIds(lv, mode), i: 0, right: 0, hearts: mode === 'exam' ? null : 3, combo: 0, xp: 0, misses: [] };
+  next();
+}
+function startReview() {
+  touchStreak(); save();
+  const q = pick(Object.keys(S.mistakes), 10);
+  G = { kind: 'review', lv: null, mode: 'review', queue: q, i: 0, right: 0, hearts: null, combo: 0, xp: 0, misses: [] };
+  next();
+}
+function startPlacement() {
+  touchStreak(); save();
+  G = { kind: 'placement', lv: 'B1', cur: 2, mode: 'placement', queue: [], i: 0, right: 0, hearts: null, combo: 0, xp: 0, misses: [], total: 15, tally: LEVELS.map(() => [0, 0]), used: {} };
+  next();
+}
+function placementId() {
+  const lv = LEVELS[G.cur];
+  const pool = [...ids(lv, 'vocab'), ...ids(lv, 'grammar')].filter(x => !G.used[x]);
+  const id = pool[Math.floor(Math.random() * pool.length)];
+  G.used[id] = 1;
+  return id;
+}
+
+function next() {
+  if (G.kind === 'placement') {
+    if (G.i >= G.total) return placementResult();
+    G.queue[G.i] = placementId();
+  } else if (G.i >= G.queue.length || G.hearts === 0) return result();
+  const q = build(G.queue[G.i]);
+  G.q = q; G.answered = false;
+  setLv(q.lv);
+  render(q);
+}
+
+function header() {
+  const total = G.kind === 'placement' ? G.total : G.queue.length;
+  const pct = Math.round(G.i / total * 100);
+  const right = G.hearts == null ? `<span class="num muted">${G.i + 1}/${total}</span>` : `<span class="hearts" aria-label="หัวใจเหลือ ${G.hearts}">${'♥'.repeat(G.hearts)}${'♡'.repeat(3 - G.hearts)}</span>`;
+  return `<div class="playbar"><button class="x" id="quit" aria-label="ออก">×</button>
+    <div class="progress"><i style="width:${pct}%"></i></div>${right}</div>
+    <div class="combo">${G.combo >= 3 ? 'คอมโบ ×' + G.combo : ''}</div>`;
+}
+
+function render(q) {
+  const label = G.kind === 'placement' ? 'วัดระดับ' : G.kind === 'exam' ? 'สอบผ่านระดับ' : G.kind === 'review' ? 'ทบทวน' : MODES[q.mode].th;
+  let body = '';
+  if (q.type === 'mc') {
+    const prompt = q.gap ? esc(q.prompt).replace('___', '<span class="gap"></span>') : esc(q.prompt);
+    body = `
+      ${q.passage ? `<div class="passage" tabindex="0">${esc(q.passage)}</div>` : ''}
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <p class="prompt ${q.big ? 'word' : ''}">${prompt}</p>
+        ${q.sub ? `<p class="sub">${q.sub}</p>` : ''}
+      </div>
+      ${hasTTS && q.speakText && !q.speakAfter ? `<div class="speakrow"><button class="speak" id="say">🔊 ฟังเสียง</button></div>` : ''}
+      ${hasTTS && q.speakPassage ? `<div class="speakrow"><button class="speak" id="sayP">🔊 ฟังบทความ</button></div>` : ''}
+      <div class="choices">${q.choices.map((c, k) => `<button class="choice" data-k="${k}" id="c${k}"><kbd>${k + 1}</kbd><span>${esc(c)}</span></button>`).join('')}</div>`;
+  } else if (q.type === 'order') {
+    body = `
+      <div style="display:flex;flex-direction:column;gap:6px"><p class="prompt">${esc(q.prompt)}</p><p class="sub">${q.sub}</p></div>
+      <div class="answer-zone" id="zone" aria-label="ประโยคของคุณ"></div>
+      <div class="bank" id="bank">${q.tiles.map((t, k) => `<button class="tile" data-k="${k}" id="t${k}">${esc(t)}</button>`).join('')}</div>
+      <div class="row"><button class="btn ghost" id="clear">ล้าง</button><button class="btn lv" id="check" disabled>ตรวจคำตอบ</button></div>`;
+  } else if (q.type === 'type') {
+    const tts = hasTTS;
+    body = `
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <p class="prompt">${tts ? (q.isWord ? 'ฟังคำศัพท์แล้วพิมพ์ให้ถูกต้อง' : 'ฟังประโยคแล้วพิมพ์ให้ครบทุกคำ') : 'สะกดเป็นภาษาอังกฤษ: ' + esc(q.th)}</p>
+        <p class="sub">${tts ? 'ไม่ต้องสนใจตัวพิมพ์ใหญ่และเครื่องหมายวรรคตอน' : 'ตัวอักษรแรกคือ “' + esc(q.answer[0]) + '” · ' + q.answer.length + ' ตัวอักษร'}</p>
+      </div>
+      ${tts ? `<div class="speakrow"><button class="speak" id="say">🔊 เล่นเสียง</button><button class="speak" id="saySlow">🐢 ช้าลง</button></div>` : ''}
+      <input class="textin" id="typed" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="พิมพ์ที่นี่" aria-label="คำตอบ">
+      <button class="btn lv block" id="check">ตรวจคำตอบ</button>`;
+  }
+  app.innerHTML = `${header()}
+    <article class="card">
+      <div class="kind"><span class="pill">${q.lv} · ${MODES[q.mode].tag}</span><span class="muted" style="font-size:.85rem">${label}</span></div>
+      ${body}
+      <div id="fb"></div>
+    </article>`;
+  $('#quit').onclick = () => (G.kind === 'practice' || G.kind === 'exam') ? level(G.lv) : home();
+
+  if (q.type === 'mc') {
+    app.querySelectorAll('.choice').forEach(b => b.onclick = () => answerMC(+b.dataset.k));
+    if ($('#say')) $('#say').onclick = () => speak(q.speakText);
+    if ($('#sayP')) $('#sayP').onclick = () => speak(q.speakPassage);
+  }
+  if (q.type === 'order') {
+    const placed = [];
+    const zone = $('#zone'), check = $('#check');
+    const draw = () => {
+      zone.innerHTML = placed.map((k, p) => `<button class="tile" data-p="${p}">${esc(q.tiles[k])}</button>`).join('');
+      app.querySelectorAll('#bank .tile').forEach(t => t.classList.toggle('used', placed.includes(+t.dataset.k)));
+      zone.querySelectorAll('.tile').forEach(t => t.onclick = () => { if (G.answered) return; placed.splice(+t.dataset.p, 1); draw(); });
+      check.disabled = placed.length !== q.tiles.length;
+    };
+    app.querySelectorAll('#bank .tile').forEach(t => t.onclick = () => { if (G.answered || placed.includes(+t.dataset.k)) return; placed.push(+t.dataset.k); draw(); });
+    $('#clear').onclick = () => { if (G.answered) return; placed.length = 0; draw(); };
+    check.onclick = () => { if (!G.answered) answerOrder(placed.map(k => q.tiles[k]).join(' ')); };
+  }
+  if (q.type === 'type') {
+    if ($('#say')) { $('#say').onclick = () => speak(q.answer); $('#saySlow').onclick = () => speak(q.answer, true); }
+    const inp = $('#typed');
+    $('#check').onclick = () => { if (!G.answered) answerType(inp.value); };
+    inp.onkeydown = e => { if (e.key === 'Enter' && !G.answered) { e.preventDefault(); answerType(inp.value); } };
+    if (hasTTS) setTimeout(() => speak(q.answer), 250);
+    inp.focus();
+  }
+  window.scrollTo(0, 0);
+}
+
+function answerMC(k) {
+  if (G.answered) return;
+  const q = G.q, chosen = q.choices[k], ok = chosen === q.answer;
+  app.querySelectorAll('.choice').forEach((b, j) => {
+    b.disabled = true;
+    if (q.choices[j] === q.answer) b.classList.add('ok');
+    else if (j === k) b.classList.add('no');
+  });
+  if (hasTTS && q.speakAfter) speak(q.answer);
+  let extra = q.explain || '';
+  if (q.full) extra = '<i>' + esc(q.full) + '</i><br>' + extra;
+  finish(ok, chosen, extra);
+}
+function answerOrder(given) {
+  const q = G.q, ok = given === q.answer;
+  finish(ok, given, '<i>' + esc(q.answer) + '</i>');
+  if (hasTTS) speak(q.answer);
+}
+function answerType(given) {
+  const q = G.q, ok = norm(given) === norm(q.answer);
+  $('#typed').readOnly = true;
+  let detail = '<i>' + esc(q.answer) + '</i> — ' + esc(q.th);
+  if (!ok && given.trim()) {
+    const want = norm(q.answer).split(' '), got = norm(given).split(' ');
+    detail += '<br>คุณพิมพ์: ' + got.map((w, j) => w === want[j] ? esc(w) : '<b style="color:var(--bad)">' + esc(w) + '</b>').join(' ');
+  }
+  finish(ok, given, detail);
+}
+
+function finish(ok, given, detail) {
+  G.answered = true;
+  const q = G.q, li = lvIndex(q.lv);
+  if (G.kind === 'placement') {
+    G.tally[li][1]++; if (ok) G.tally[li][0]++;
+    G.cur = ok ? Math.min(5, G.cur + 1) : Math.max(0, G.cur - 1);
+  }
+  if (ok) {
+    G.right++; G.combo++;
+    const gain = Math.round((10 + 4 * li) * Math.min(2, 1 + Math.max(0, G.combo - 1) * 0.1));
+    G.xp += gain; S.xp += gain;
+    if (q.mode !== 'listen') S.mastered[q.id] = true;
+    if (G.kind === 'review') delete S.mistakes[q.id];
+  } else {
+    G.combo = 0;
+    if (G.hearts != null) G.hearts--;
+    S.mistakes[q.id] = 1;
+    G.misses.push({ q, given });
+  }
+  save();
+  const last = G.kind === 'placement' ? G.i + 1 >= G.total : (G.i + 1 >= G.queue.length || G.hearts === 0);
+  $('#fb').innerHTML = `<div class="feedback ${ok ? 'ok' : 'no'}" role="status">
+      <h3>${ok ? pickOne(['ถูกต้อง!', 'เยี่ยม!', 'แม่นมาก!', 'Excellent!']) : 'ยังไม่ถูก'}</h3>
+      ${!ok && q.type === 'mc' ? `<p>คำตอบที่ถูก: <b>${esc(q.answer)}</b></p>` : ''}
+      ${detail ? `<p>${detail}</p>` : ''}
+      <button class="btn lv block" id="next">${last ? 'ดูผล' : 'ข้อต่อไป'}</button>
+    </div>`;
+  const nb = $('#next');
+  nb.onclick = () => { G.i++; next(); };
+  nb.focus({ preventScroll: true });
+  $('#fb').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  const c = $('.combo'); if (c) c.textContent = G.combo >= 3 ? 'คอมโบ ×' + G.combo : '';
+  const h = $('.hearts'); if (h) h.textContent = '♥'.repeat(G.hearts) + '♡'.repeat(3 - G.hearts);
+}
+const pickOne = a => a[Math.floor(Math.random() * a.length)];
+
+document.addEventListener('keydown', e => {
+  if (!G || !G.q || e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+  if (G.answered && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); G.i++; next(); return; }
+  if (!G.answered && G.q.type === 'mc' && /^[1-4]$/.test(e.key)) answerMC(+e.key - 1);
+});
+
+function missList() {
+  if (!G.misses.length) return '';
+  return `<section class="list"><p class="eyebrow">ข้อที่ตอบผิด · เก็บไว้ในรายการทบทวนแล้ว</p>
+    ${G.misses.map(m => `<div class="miss"><span class="muted">${esc(m.q.lv)} · ${esc(m.q.prompt || (m.q.isWord ? 'ฟังคำศัพท์' : 'ฟังประโยค'))}</span>
+      <span>คำตอบที่ถูก: <b>${esc(m.q.answer)}</b></span></div>`).join('')}</section>`;
+}
+
+function result() {
+  const total = G.queue.length, done = Math.max(1, G.i);
+  const pct = total ? Math.round(G.right / done * 100) : 0;
+  let headline = G.hearts === 0 ? 'หัวใจหมดแล้ว' : pct >= 90 ? 'ยอดเยี่ยม' : pct >= 70 ? 'ทำได้ดี' : 'ฝึกต่ออีกนิด';
+  let extra = '';
+  if (G.kind === 'exam') {
+    const pass = G.right >= 12;
+    S.best[G.lv] = Math.max(S.best[G.lv] || 0, G.right);
+    if (pass) S.passed[G.lv] = true;
+    save();
+    const nextLv = LEVELS[lvIndex(G.lv) + 1];
+    headline = pass ? `ผ่านระดับ ${G.lv}` : `ยังไม่ผ่าน ${G.lv}`;
+    extra = `<div class="cando"><p>${pass
+      ? (nextLv ? `คุณใช้ภาษาอังกฤษได้ในระดับ ${G.lv} แล้ว ลองฝึกระดับ ${nextLv} ต่อได้เลย` : 'คุณผ่านระดับสูงสุด C2 Proficiency แล้ว')
+      : `ต้องได้ 12 จาก 15 ข้อ ลองฝึกโหมดที่ผิดบ่อยแล้วกลับมาสอบใหม่`}</p></div>`;
+  }
+  app.innerHTML = `
+    <header style="display:flex;flex-direction:column;gap:8px">
+      <p class="eyebrow">${G.kind === 'review' ? 'ทบทวน' : G.lv + ' · ' + (G.kind === 'exam' ? 'สอบผ่านระดับ' : MODES[G.mode].th)}</p>
+      <h1>${headline}</h1>
+    </header>
+    <div class="row" style="align-items:flex-end">
+      <div><div class="score num">${G.right}<span style="font-size:1.6rem;color:var(--muted)">/${G.kind === 'exam' ? total : done}</span></div><span class="muted">ตอบถูก ${pct}%</span></div>
+      <div style="text-align:right"><div class="num" style="font-size:1.6rem;font-weight:500">+${G.xp} XP</div><span class="muted">รวม ${S.xp} XP</span></div>
+    </div>
+    ${extra}
+    ${missList()}
+    <div class="row">
+      <button class="btn ghost" id="toHome">หน้าหลัก</button>
+      ${G.kind === 'review'
+        ? (Object.keys(S.mistakes).length ? '<button class="btn lv" id="again">ทบทวนต่อ</button>' : '')
+        : `<button class="btn lv" id="again">${G.kind === 'exam' ? 'สอบอีกครั้ง' : 'เล่นอีกรอบ'}</button>`}
+    </div>`;
+  $('#toHome').onclick = home;
+  if ($('#again')) $('#again').onclick = () => G.kind === 'review' ? startReview() : startRound(G.lv, G.mode);
+  window.scrollTo(0, 0);
+}
+
+function placementResult() {
+  // Highest level answered at least twice with two thirds or more correct.
+  let est = 0;
+  G.tally.forEach(([r, n], k) => { if (n >= 2 && r / n >= 2 / 3) est = Math.max(est, k); });
+  const lv = LEVELS[est];
+  S.placement = lv; save(); setLv(lv);
+  const rows = G.tally.map(([r, n], k) => n ? `<div class="miss" style="flex-direction:row;justify-content:space-between"><span><b style="color:var(--${LEVELS[k]})">${LEVELS[k]}</b> ${INFO[LEVELS[k]].name}</span><span class="num">${r}/${n}</span></div>` : '').join('');
+  app.innerHTML = `
+    <header style="display:flex;flex-direction:column;gap:8px">
+      <p class="eyebrow">ผลการวัดระดับ</p>
+      <h1>ระดับโดยประมาณของคุณ</h1>
+    </header>
+    <div class="lvhead"><span class="bigcode" style="font-size:5rem">${lv}</span>
+      <div style="display:flex;flex-direction:column;gap:4px;min-width:0"><h2>${INFO[lv].name}</h2><span class="muted">${INFO[lv].th}</span></div></div>
+    <div class="cando"><p class="eyebrow">คุณน่าจะทำสิ่งนี้ได้แล้ว</p><p>${INFO[lv].can}</p></div>
+    <section class="list"><p class="eyebrow">ตอบถูกในแต่ละระดับ</p>${rows}</section>
+    <p class="foot">ผลนี้เป็นการประมาณจากคำศัพท์และไวยากรณ์ 15 ข้อ ใช้เป็นจุดเริ่มฝึก ไม่ใช่ผลสอบอย่างเป็นทางการ</p>
+    <div class="row"><button class="btn ghost" id="toHome">หน้าหลัก</button><button class="btn lv" id="go">เริ่มฝึก ${lv}</button></div>`;
+  $('#toHome').onclick = home;
+  $('#go').onclick = () => level(lv);
+  window.scrollTo(0, 0);
+}
+
+home();
+</script>
+</body>
+</html>
