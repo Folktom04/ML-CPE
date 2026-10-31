@@ -194,6 +194,35 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--lv); outlin
 .gapline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 1.1rem; }
 .gapline .textin { flex: 1 1 12em; width: auto; min-width: 0; }
 
+/* grammar rule panel */
+.rule { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0; }
+.feedback .rule { border-color: transparent; }
+.rule summary { cursor: pointer; padding: 10px 14px; list-style-position: inside; font-size: .95rem; }
+.rule summary::marker { color: var(--lv); }
+.rule .crumb { color: var(--muted); font-size: .82rem; }
+.rbody { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 12px; }
+.rbody .form { font-family: var(--mono); font-size: .85rem; white-space: pre-line; background: var(--chip); border-radius: 8px; padding: 8px 10px; overflow-wrap: anywhere; }
+.rbody .use { white-space: pre-line; font-size: .93rem; }
+.exs { display: flex; flex-direction: column; gap: 8px; }
+.ex { display: flex; gap: 10px; align-items: flex-start; }
+.ex > div { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.ex small { color: var(--muted); font-size: .85rem; }
+.ex mark { background: none; color: var(--lv); font-weight: 600; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.exsay { border: 1px solid var(--line); background: var(--chip); border-radius: 8px; padding: 2px 7px; font-size: .85rem; flex: none; }
+.gridwrap { overflow-x: auto; }
+.tgrid { border-collapse: separate; border-spacing: 3px; width: 100%; font-size: .72rem; table-layout: fixed; }
+.skill .rule .crumb { display: none; }
+@media (max-width: 420px) { .feedback { padding: 12px; } .rbody { padding: 0 10px 12px; } .rule summary { padding: 10px; } }
+.tgrid th { font-weight: 600; text-align: center; padding: 4px 2px; line-height: 1.2; }
+.tgrid th small { display: block; font-weight: 400; color: var(--muted); font-size: .64rem; }
+.tgrid thead th:first-child, .tgrid tbody th { text-align: left; width: 3.6em; padding-left: 0; }
+.tgrid td { background: var(--chip); border-radius: 6px; height: 34px; text-align: center; color: var(--lv); }
+.tgrid td.on { background: var(--lv); color: #fff; }
+.tgrid .cell { border: 0; background: none; width: 100%; height: 100%; font-size: .72rem; line-height: 1.2; padding: 4px 2px; color: var(--ink); }
+.tgrid td:has(.cell) { background: var(--surface); border: 1px solid var(--line); }
+.lvchips { display: inline-flex; gap: 4px; margin-left: 4px; vertical-align: middle; }
+.lvchips i { font-style: normal; font-family: var(--mono); font-size: .65rem; color: var(--lv); border: 1px solid var(--lv); border-radius: 4px; padding: 0 4px; }
+
 /* result */
 .score { font-family: var(--display); font-weight: 800; font-size: 4rem; line-height: 1; color: var(--lv); }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -817,6 +846,267 @@ C2: {
 };
 for (const l of LEVELS) Object.assign(DATA[l], EXTRA[l]);
 
+/* ------------------------------------------------------------------ */
+/* Grammar rules. Every grammar-type question links to one rule, so a  */
+/* wrong answer can show the structure, when to use it, easy examples */
+/* and where it sits on the 12-tense chart.                            */
+/* ex: [English with {highlight}, Thai]                                */
+/* cells: tense cells this rule uses, e.g. 'present-perfect'           */
+/* ------------------------------------------------------------------ */
+const TIMES = [['past', 'อดีต'], ['present', 'ปัจจุบัน'], ['future', 'อนาคต']];
+const ASPECTS = [['simple', 'Simple', 'ธรรมดา'], ['continuous', 'Continuous', 'กำลังทำ'], ['perfect', 'Perfect', 'ทำเสร็จแล้ว'], ['perfect-continuous', 'Perfect Continuous', 'ทำต่อเนื่องมาจนถึง']];
+const GROUPS = {
+  tense: 'Tenses · กาล', basic: 'พื้นฐานประโยค', modal: 'Modal verbs', noun: 'คำนามและคำนำหน้า',
+  compare: 'การเปรียบเทียบ', verbform: 'รูปกริยา (to V / V-ing)', cond: 'ประโยคเงื่อนไข', voice: 'Passive และ Reported speech',
+  clause: 'การเชื่อมประโยค', emphasis: 'การเน้นและการสลับคำ (C1–C2)', idiom: 'สำนวนและวลีตายตัว'
+};
+const RULES = {
+  'pres-simple': { g: 'tense', name: 'Present Simple', cells: ['present-simple'],
+    form: 'S + V1 (he/she/it เติม -s/-es)\nปฏิเสธ: S + don’t/doesn’t + V1',
+    use: 'ความจริงทั่วไป นิสัย และสิ่งที่ทำเป็นประจำ (every day, usually, always)',
+    ex: [['He {drinks} milk every morning.', 'เขาดื่มนมทุกเช้า'], ['She {doesn’t eat} meat.', 'เธอไม่กินเนื้อสัตว์'], ['The sun {rises} in the east.', 'พระอาทิตย์ขึ้นทางทิศตะวันออก']] },
+  'pres-cont': { g: 'tense', name: 'Present Continuous', cells: ['present-continuous'],
+    form: 'S + am/is/are + V-ing',
+    use: 'กำลังทำอยู่ตอนนี้ (now, at the moment) หรือแผนที่นัดหมายไว้แล้ว',
+    ex: [['I {am eating} now.', 'ตอนนี้ฉันกำลังกินข้าว'], ['They {are playing} outside.', 'พวกเขากำลังเล่นอยู่ข้างนอก'], ['We {are meeting} Tom tonight.', 'คืนนี้เรานัดเจอทอม']] },
+  'pres-perf': { g: 'tense', name: 'Present Perfect', cells: ['present-perfect'],
+    form: 'S + have/has + V3',
+    use: 'ประสบการณ์ (ever, never, twice), สิ่งที่เริ่มในอดีตและยังเป็นอยู่ (for, since), ผลที่ยังเห็นอยู่ตอนนี้\nห้ามใช้กับเวลาอดีตที่ระบุชัด (yesterday, last year) ให้ใช้ Past Simple แทน',
+    ex: [['I {have visited} Chiang Mai twice.', 'ฉันเคยไปเชียงใหม่สองครั้ง'], ['She {has lived} here since 2020.', 'เธออาศัยอยู่ที่นี่ตั้งแต่ปี 2020'], ['I {have lost} my keys.', 'ฉันทำกุญแจหาย (ตอนนี้ยังหาไม่เจอ)']] },
+  'pres-perf-cont': { g: 'tense', name: 'Present Perfect Continuous', cells: ['present-perfect-continuous'],
+    form: 'S + have/has been + V-ing',
+    use: 'ทำต่อเนื่องมาตั้งแต่อดีตจนถึงตอนนี้ เน้นความยาวนาน',
+    ex: [['I {have been waiting} for an hour.', 'ฉันรอมาชั่วโมงหนึ่งแล้ว'], ['It {has been raining} all day.', 'ฝนตกมาทั้งวันแล้ว']] },
+  'past-simple': { g: 'tense', name: 'Past Simple', cells: ['past-simple'],
+    form: 'S + V2\nปฏิเสธ: S + didn’t + V1',
+    use: 'เหตุการณ์ที่จบแล้วในอดีต มักมีเวลาบอก (yesterday, last week, in 2019, ago)',
+    ex: [['I {watched} TV last night.', 'เมื่อคืนฉันดูทีวี'], ['We {didn’t go} out yesterday.', 'เมื่อวานเราไม่ได้ออกไปไหน'], ['She {saw} him two days ago.', 'เธอเห็นเขาเมื่อสองวันก่อน']] },
+  'past-cont': { g: 'tense', name: 'Past Continuous', cells: ['past-continuous', 'past-simple'],
+    form: 'S + was/were + V-ing',
+    use: 'กำลังทำอยู่ ณ เวลาหนึ่งในอดีต เหตุการณ์สั้นที่แทรกเข้ามาใช้ Past Simple (when ...)',
+    ex: [['I {was cooking} when you {called}.', 'ฉันกำลังทำอาหารตอนที่คุณโทรมา'], ['They {were sleeping} at 10 p.m.', 'ตอนสี่ทุ่มพวกเขากำลังนอนอยู่']] },
+  'past-perf': { g: 'tense', name: 'Past Perfect', cells: ['past-perfect', 'past-simple'],
+    form: 'S + had + V3',
+    use: 'เหตุการณ์ที่เกิดก่อนอีกเหตุการณ์หนึ่งในอดีต (อดีตของอดีต) มักใช้กับ by the time, already, before',
+    ex: [['The bus {had left} when I {got} there.', 'รถบัสออกไปแล้วตอนที่ฉันไปถึง'], ['She {had eaten} before she came.', 'เธอกินข้าวมาแล้วก่อนจะมา']] },
+  'fut-simple': { g: 'tense', name: 'Future Simple (will)', cells: ['future-simple'],
+    form: 'S + will + V1',
+    use: 'ตัดสินใจทันที คาดการณ์ สัญญา และใช้ในประโยคหลักของ First Conditional',
+    ex: [['I{’ll help} you.', 'ฉันจะช่วยคุณเอง'], ['It {will be} hot tomorrow.', 'พรุ่งนี้อากาศจะร้อน']] },
+  'going-to': { g: 'tense', name: 'be going to', cells: ['future-simple'],
+    form: 'S + am/is/are going to + V1',
+    use: 'แผนที่ตั้งใจไว้ก่อนแล้ว หรือคาดการณ์จากสิ่งที่เห็นอยู่ (ต่างจาก will ที่ตัดสินใจทันที)',
+    ex: [['I{’m going to buy} a car next month.', 'เดือนหน้าฉันจะซื้อรถ (ตั้งใจไว้แล้ว)'], ['Look at the clouds. It{’s going to rain}.', 'ดูเมฆสิ ฝนกำลังจะตก']] },
+  'fut-perf': { g: 'tense', name: 'Future Perfect', cells: ['future-perfect'],
+    form: 'S + will have + V3',
+    use: 'จะทำเสร็จแล้วก่อนจุดเวลาหนึ่งในอนาคต (by + เวลา, by the time)',
+    ex: [['I {will have finished} by 6 p.m.', 'ฉันจะทำเสร็จก่อนหกโมงเย็น'], ['By June, she {will have graduated}.', 'ภายในมิถุนายน เธอจะเรียนจบแล้ว']] },
+
+  'be': { g: 'basic', name: 'Verb to be', cells: ['present-simple'],
+    form: 'I am · he/she/it is · you/we/they are\nอดีต: was / were',
+    use: 'บอกว่าเป็นอะไร อยู่ที่ไหน รู้สึกอย่างไร อายุเท่าไร (ภาษาไทยไม่มีคำนี้ จึงมักลืม)',
+    ex: [['I {am} ten years old.', 'ฉันอายุสิบขวบ'], ['They {are} at home.', 'พวกเขาอยู่บ้าน'], ['She {is} hungry.', 'เธอหิว']] },
+  'there-be': { g: 'basic', name: 'There is / There are', cells: ['present-simple'],
+    form: 'There is + นามเอกพจน์ / นามนับไม่ได้\nThere are + นามพหูพจน์',
+    use: 'บอกว่า "มี" สิ่งใดอยู่ที่ไหน (ไม่ใช่ "มี" แบบเป็นเจ้าของ ซึ่งใช้ have)',
+    ex: [['{There is} a pen on the desk.', 'มีปากกาอยู่บนโต๊ะ'], ['{There are} five apples.', 'มีแอปเปิลห้าลูก']] },
+  'questions': { g: 'basic', name: 'การสร้างคำถามและปฏิเสธ', cells: ['present-simple', 'past-simple'],
+    form: 'Do/Does/Did + S + V1 ?\nS + don’t/doesn’t/didn’t + V1\nWh- + กริยาช่วย + S + V ?',
+    use: 'หลัง do/does/did กริยาหลักกลับเป็นช่อง 1 เสมอ (ไม่เติม s, ไม่เป็นช่อง 2)',
+    ex: [['{Do} you {like} tea?', 'คุณชอบชาไหม'], ['He {doesn’t like} tea.', 'เขาไม่ชอบชา'], ['Where {did} you {go}?', 'คุณไปไหนมา']] },
+  'word-order': { g: 'basic', name: 'การเรียงคำในประโยค', cells: [],
+    form: 'ประธาน + กริยา + กรรม + สถานที่ + เวลา',
+    use: 'ภาษาอังกฤษเรียงคำค่อนข้างตายตัว สถานที่มาก่อนเวลา',
+    ex: [['I play football {in the park} {on Sundays}.', 'ฉันเล่นฟุตบอลที่สวนทุกวันอาทิตย์'], ['She goes to work {by bus}.', 'เธอไปทำงานโดยรถบัส']] },
+  'prepositions': { g: 'basic', name: 'Prepositions (in / on / at)', cells: [],
+    form: 'เวลา: in + เดือน/ปี · on + วัน/วันที่ · at + เวลา\nสถานที่: in = ข้างใน · on = บนพื้นผิว · at = ที่จุดหนึ่ง',
+    use: 'เลือก preposition จากขนาดของเวลาหรือพื้นที่: ใหญ่ (in) → กลาง (on) → จุดเดียว (at)',
+    ex: [['My birthday is {in} May.', 'วันเกิดฉันอยู่ในเดือนพฤษภาคม'], ['See you {on} Monday {at} 9.', 'เจอกันวันจันทร์ตอนเก้าโมง'], ['The book is {on} the table.', 'หนังสืออยู่บนโต๊ะ']] },
+  'collocations': { g: 'basic', name: 'คำที่ใช้คู่กับ preposition', cells: [],
+    form: 'interested in · good at · afraid of · depend on · agree with',
+    use: 'preposition หลังคำเหล่านี้ตายตัว ต้องจำเป็นคู่',
+    ex: [['I’m good {at} maths.', 'ฉันเก่งคณิต'], ['She’s afraid {of} dogs.', 'เธอกลัวหมา'], ['He’s interested {in} art.', 'เขาสนใจศิลปะ']] },
+
+  'modal-base': { g: 'modal', name: 'Modal + V1', cells: [],
+    form: 'can / could / must / should / will / may + V1\n(ไม่มี to, ไม่เติม s)\nhave to / don’t have to = ต้อง / ไม่จำเป็นต้อง',
+    use: 'บอกความสามารถ (can) ข้อบังคับ (must) คำแนะนำ (should) และการขออย่างสุภาพ (Can I ...?)',
+    ex: [['She {can swim}.', 'เธอว่ายน้ำได้'], ['You {should rest}.', 'คุณควรพัก'], ['{Can I have} some water?', 'ขอน้ำหน่อยได้ไหม']] },
+  'modal-perfect': { g: 'modal', name: 'Modal + have + V3', cells: [],
+    form: 'must have V3 = คงจะ...แน่ๆ\ncan’t have V3 = ไม่น่าจะ...\nshould have V3 = ควรจะ...(แต่ไม่ได้ทำ)\nmight have V3 = อาจจะ...',
+    use: 'คาดเดาหรือติเตียนเหตุการณ์ในอดีต',
+    ex: [['The ground is wet. It {must have rained}.', 'พื้นเปียก ฝนคงตกแน่ๆ'], ['You {should have told} me.', 'คุณน่าจะบอกฉัน']] },
+
+  'articles': { g: 'noun', name: 'a / an / the', cells: [],
+    form: 'a + เสียงพยัญชนะ · an + เสียงสระ\n(ดูที่เสียง ไม่ใช่ตัวอักษร)',
+    use: 'a/an = สิ่งหนึ่งที่ไม่เจาะจง · the = สิ่งที่รู้กันว่าหมายถึงอันไหน',
+    ex: [['{an} apple, {an} hour', 'hour ออกเสียง h ไม่ชัด จึงใช้ an'], ['{a} car, {a} university', 'university ขึ้นต้นด้วยเสียง "ยู" จึงใช้ a']] },
+  'possessive': { g: 'noun', name: 'my / mine', cells: [],
+    form: 'my / your / his / her / our / their + นาม\nmine / yours / his / hers / ours / theirs (ใช้เดี่ยวๆ)',
+    use: 'ถ้ามีคำนามตามหลังใช้ my ถ้าไม่มีใช้ mine',
+    ex: [['This is {my} bag.', 'นี่คือกระเป๋าของฉัน'], ['This bag is {mine}.', 'กระเป๋าใบนี้เป็นของฉัน']] },
+  'countable': { g: 'noun', name: 'นามนับได้ / นับไม่ได้', cells: [],
+    form: 'many / few + นามนับได้\nmuch / little + นามนับไม่ได้\ninformation, advice, money, water = นับไม่ได้ (ใช้กริยาเอกพจน์)',
+    use: 'นามนับไม่ได้ไม่มีรูปพหูพจน์และไม่ใช้ a/an',
+    ex: [['How {many} eggs?', 'ไข่กี่ฟอง'], ['How {much} milk?', 'นมเท่าไร'], ['This information {is} useful.', 'ข้อมูลนี้มีประโยชน์']] },
+  'some-any': { g: 'noun', name: 'some / any', cells: [],
+    form: 'some ในประโยคบอกเล่าและการขอ/เสนอ\nany ในประโยคปฏิเสธและคำถาม',
+    use: 'ใช้บอกจำนวนที่ไม่ระบุแน่ชัด',
+    ex: [['I have {some} bread.', 'ฉันมีขนมปังอยู่บ้าง'], ['I don’t have {any} eggs.', 'ฉันไม่มีไข่เลย']] },
+
+  'comparison': { g: 'compare', name: 'ขั้นกว่าและขั้นสูงสุด', cells: [],
+    form: 'คำสั้น: -er than / the -est\nคำยาว: more ... than / the most ...\ngood → better → the best · bad → worse → the worst',
+    use: 'เปรียบเทียบสองสิ่ง (ขั้นกว่า) หรือเลือกที่สุดในกลุ่ม (ขั้นสูงสุด)',
+    ex: [['A cat is {smaller than} a dog.', 'แมวตัวเล็กกว่าหมา'], ['This is {the most beautiful} beach.', 'นี่คือชายหาดที่สวยที่สุด'], ['Today is {better than} yesterday.', 'วันนี้ดีกว่าเมื่อวาน']] },
+  'too-enough': { g: 'compare', name: 'too / enough', cells: [],
+    form: 'too + adj + to V = ...เกินกว่าจะ...\nadj + enough + to V = ...พอที่จะ...',
+    use: 'บอกว่ามากเกินไปหรือเพียงพอ',
+    ex: [['The box is {too heavy to} lift.', 'กล่องหนักเกินกว่าจะยก'], ['She is {old enough to} drive.', 'เธออายุถึงที่จะขับรถได้แล้ว']] },
+  'the-more': { g: 'compare', name: 'The more ..., the more ...', cells: [],
+    form: 'The + ขั้นกว่า + S + V, the + ขั้นกว่า + S + V',
+    use: 'ยิ่ง...ยิ่ง... (ต้องมี the ทั้งสองส่วน)',
+    ex: [['{The more} you sleep, {the better} you feel.', 'ยิ่งนอนมาก ยิ่งรู้สึกดี'], ['{The sooner}, {the better}.', 'ยิ่งเร็วยิ่งดี']] },
+
+  'verb-patterns': { g: 'verbform', name: 'to V หรือ V-ing', cells: [],
+    form: 'V-ing หลัง: enjoy, avoid, deny, suggest, mind, look forward to, no point (in)\nto V หลัง: want, decide, hope, would like, ask/tell someone to\nlike, love, start ใช้ได้ทั้งสองแบบ',
+    use: 'กริยาบางตัวกำหนดว่ากริยาที่ตามมาต้องเป็นรูปไหน ต้องจำทีละคำ',
+    ex: [['I enjoy {reading}.', 'ฉันชอบอ่านหนังสือ'], ['I want {to read}.', 'ฉันอยากอ่าน'], ['I look forward to {seeing} you.', 'ฉันตั้งตารอที่จะเจอคุณ']] },
+  'used-to': { g: 'verbform', name: 'used to / be used to', cells: ['past-simple'],
+    form: 'used to + V1 = เคยทำในอดีต (ตอนนี้ไม่ทำแล้ว)\nbe used to + V-ing = เคยชินกับ',
+    use: 'ดูให้ดีว่ามี be หรือไม่ เพราะความหมายต่างกันมาก',
+    ex: [['I {used to live} in Bangkok.', 'ฉันเคยอยู่กรุงเทพฯ (ตอนนี้ไม่ได้อยู่แล้ว)'], ['I{’m used to living} alone.', 'ฉันชินกับการอยู่คนเดียว']] },
+
+  'cond-1': { g: 'cond', name: 'First Conditional', cells: ['present-simple', 'future-simple'],
+    form: 'If + Present Simple, will + V1',
+    use: 'เงื่อนไขที่เกิดขึ้นได้จริงในอนาคต (ห้ามใช้ will ในส่วน If)',
+    ex: [['If it {rains}, I{’ll take} an umbrella.', 'ถ้าฝนตก ฉันจะเอาร่มไป'], ['If you {study}, you {will pass}.', 'ถ้าคุณตั้งใจเรียน คุณจะสอบผ่าน']] },
+  'cond-2': { g: 'cond', name: 'Second Conditional', cells: ['past-simple'],
+    form: 'If + Past Simple (were), would + V1',
+    use: 'สมมุติสิ่งที่ไม่จริงในปัจจุบัน ใช้รูปอดีตแต่ความหมายเป็นปัจจุบัน',
+    ex: [['If I {were} a bird, I {would fly}.', 'ถ้าฉันเป็นนก ฉันจะบิน'], ['If I {had} money, I{’d buy} it.', 'ถ้าฉันมีเงิน ฉันจะซื้อ (แต่ตอนนี้ไม่มี)']] },
+  'cond-3': { g: 'cond', name: 'Third Conditional', cells: ['past-perfect'],
+    form: 'If + had V3, would have + V3',
+    use: 'สมมุติย้อนอดีตถึงสิ่งที่ไม่ได้เกิดขึ้นจริง (มักเป็นความเสียดาย)',
+    ex: [['If I {had woken} up early, I {would have caught} the bus.', 'ถ้าฉันตื่นเช้า ฉันคงขึ้นรถบัสทัน (แต่ตื่นสาย)'], ['If she {had asked}, I {would have helped}.', 'ถ้าเธอขอ ฉันคงช่วยไปแล้ว']] },
+  'cond-inv': { g: 'cond', name: 'Conditional แบบไม่มี If (inversion)', cells: ['past-perfect'],
+    form: 'Had + S + V3 = If + S + had V3\nWere + S + to V / Were it not for = If ... were\nShould + S + V1 = If + S + V1 (ทางการ)',
+    use: 'ตัด If แล้วย้ายกริยาช่วยขึ้นหน้า เป็นภาษาทางการและเขียน',
+    ex: [['{Had I known}, I would have come.', 'ถ้าฉันรู้ ฉันคงมาแล้ว'], ['{Should you have} questions, call me.', 'หากมีคำถาม โทรหาฉันได้'], ['{Were it not for} you, I’d be lost.', 'ถ้าไม่ใช่เพราะคุณ ฉันคงหลงทาง']] },
+
+  'passive': { g: 'voice', name: 'Passive voice', cells: [],
+    form: 'be + V3 (be ผันตาม tense)\nis made · was made · has been made · will be made',
+    use: 'เน้นสิ่งที่ถูกกระทำ หรือไม่รู้/ไม่สำคัญว่าใครทำ',
+    ex: [['The cake {was made} by my mum.', 'เค้กนี้แม่ฉันทำ'], ['English {is spoken} here.', 'ที่นี่พูดภาษาอังกฤษ']] },
+  'passive-report': { g: 'voice', name: 'is said / believed to', cells: [],
+    form: 'S + is said/believed/thought + to V1 (ปัจจุบัน)\nS + is said/believed/thought + to have V3 (อดีต)',
+    use: 'รายงานสิ่งที่คนทั่วไปพูดหรือเชื่อ ใช้มากในข่าว',
+    ex: [['He {is said to be} rich.', 'ว่ากันว่าเขารวย'], ['She {is believed to have left}.', 'เชื่อกันว่าเธอออกไปแล้ว']] },
+  'causative': { g: 'voice', name: 'have something done', cells: [],
+    form: 'have/get + สิ่งของ + V3',
+    use: 'ให้คนอื่นทำบางอย่างให้เรา (เราไม่ได้ทำเอง)',
+    ex: [['I {had} my hair {cut}.', 'ฉันไปตัดผมมา (ช่างตัดให้)'], ['She {gets} her car {washed} every week.', 'เธอเอารถไปล้างทุกสัปดาห์']] },
+  'reported': { g: 'voice', name: 'Reported speech', cells: ['past-simple', 'past-perfect'],
+    form: 'ถอย tense 1 ขั้น: am/is → was · will → would · V1 → V2 · V2 → had V3\nsay (that) ... · tell + คน + (that) ...',
+    use: 'เล่าต่อว่าคนอื่นพูดอะไร',
+    ex: [['"I am hungry." → He said he {was} hungry.', 'เขาบอกว่าเขาหิว'], ['She {told me} she {was} busy.', 'เธอบอกฉันว่าเธอยุ่ง']] },
+
+  'relative': { g: 'clause', name: 'Relative clauses', cells: [],
+    form: 'who = คน · which = สิ่งของ · that = ทั้งคนและสิ่งของ · whose = ของ (คนหรือสิ่งของ)',
+    use: 'ขยายคำนามด้วยประโยคย่อย แทนการพูดสองประโยค',
+    ex: [['The man {who} lives next door is a doctor.', 'ผู้ชายที่อยู่ข้างบ้านเป็นหมอ'], ['The girl {whose} bag was lost is crying.', 'เด็กผู้หญิงที่กระเป๋าหายกำลังร้องไห้']] },
+  'linking': { g: 'clause', name: 'คำเชื่อม', cells: [],
+    form: 'although / because + ประโยค (S + V)\ndespite / in spite of / because of / due to / owing to + นาม หรือ V-ing\nunless = if ... not · neither ... nor · not only ... but also',
+    use: 'ดูว่าหลังคำเชื่อมเป็นประโยคเต็มหรือเป็นคำนาม',
+    ex: [['{Although} it was cold, we swam.', 'แม้จะหนาว เราก็ว่ายน้ำ'], ['{Despite} the cold, we swam.', 'แม้อากาศหนาว เราก็ว่ายน้ำ'], ['{Unless} you hurry, you’ll be late.', 'ถ้าไม่รีบ คุณจะสาย']] },
+  'wish': { g: 'clause', name: 'wish / would rather / it’s time', cells: ['past-simple', 'past-perfect'],
+    form: 'wish + Past Simple = อยากให้ตอนนี้เป็นอย่างนั้น\nwish + had V3 = เสียดายอดีต\nwould rather + คนอื่น + Past Simple · it’s time + S + Past Simple',
+    use: 'ใช้รูปอดีตแต่หมายถึงปัจจุบัน เพื่อบอกว่าไม่ใช่ความจริง',
+    ex: [['I wish I {were} taller.', 'อยากสูงกว่านี้จัง'], ['I wish I {had studied}.', 'เสียดายที่ไม่ได้อ่านหนังสือ'], ['It’s time we {went} home.', 'ได้เวลากลับบ้านแล้ว']] },
+
+  'inversion': { g: 'emphasis', name: 'Inversion (สลับกริยาช่วยกับประธาน)', cells: [],
+    form: 'Never / Rarely / Little / Hardly / No sooner / Not only / Not until / Only + ... / On no account / So + adj / Such\n+ กริยาช่วย + ประธาน + กริยา',
+    use: 'เมื่อคำเชิงปฏิเสธหรือคำจำกัดขึ้นต้นประโยค ให้เรียงเหมือนประโยคคำถาม เพื่อเน้นอย่างทางการ',
+    ex: [['Never {have I} seen such a big fish.', 'ฉันไม่เคยเห็นปลาตัวใหญ่ขนาดนี้'], ['Not only {is she} smart, but she is also kind.', 'เธอไม่เพียงฉลาด แต่ยังใจดีด้วย'], ['So tired {was he} that he fell asleep.', 'เขาเหนื่อยมากจนหลับไป']] },
+  'cleft': { g: 'emphasis', name: 'Cleft sentences (ประโยคเน้น)', cells: [],
+    form: 'What + S + V + is/was + ...\nIt is/was + ส่วนที่เน้น + that ...',
+    use: 'แยกประโยคเพื่อเน้นข้อมูลส่วนหนึ่ง',
+    ex: [['{What I want is} a holiday.', 'สิ่งที่ฉันต้องการคือวันหยุด'], ['{It was} Tom {that} broke the window.', 'คนที่ทำหน้าต่างแตกคือทอม']] },
+  'subjunctive': { g: 'emphasis', name: 'Subjunctive', cells: [],
+    form: 'suggest / insist / recommend / demand / it is essential + that + S + V1 (ไม่ผัน)\nใช้ be กับทุกประธาน',
+    use: 'บอกความจำเป็นหรือข้อเรียกร้องแบบทางการ กริยาไม่เติม s และไม่เปลี่ยนตาม tense',
+    ex: [['I suggest that he {see} a doctor.', 'ฉันแนะนำให้เขาไปหาหมอ'], ['It is vital that she {be} on time.', 'จำเป็นมากที่เธอต้องมาตรงเวลา']] },
+  'concession': { g: 'emphasis', name: 'Adj/V + as/though + S + V (แม้จะ...)', cells: [],
+    form: 'Adj + as/though + S + be\nTry as + S + might',
+    use: 'อีกวิธีพูดว่า although แบบสละสลวย',
+    ex: [['{Tired as she was}, she kept working.', 'แม้จะเหนื่อย เธอก็ทำงานต่อ'], ['{Try as I might}, I couldn’t sleep.', 'ไม่ว่าจะพยายามแค่ไหน ฉันก็นอนไม่หลับ']] },
+
+  'idiom': { g: 'idiom', name: 'สำนวนและวลีตายตัว', cells: [],
+    form: 'วลีที่ใช้เป็นชุด แปลตรงตัวไม่ได้ และเปลี่ยนคำไม่ได้',
+    use: 'จำทั้งวลีพร้อมสถานการณ์ที่ใช้ ดีกว่าจำทีละคำ',
+    ex: [['Let’s {break the ice}.', 'มาทำให้บรรยากาศผ่อนคลายกันเถอะ'], ['It’s {a piece of cake}.', 'ง่ายมาก']] }
+};
+
+/* Which rule each question uses, in the same order as the content bank. */
+const TAGS = {
+  A1: {
+    grammar: ['pres-simple','be','there-be','questions','articles','pres-cont','questions','possessive','past-simple','prepositions','prepositions','modal-base'],
+    errors: ['questions','be','pres-simple','there-be','verb-patterns','articles'],
+    build: ['questions','questions','past-simple','pres-simple','pres-cont','modal-base'],
+    order: ['verb-patterns','pres-simple','word-order','be','questions','be','word-order','modal-base']
+  },
+  A2: {
+    grammar: ['pres-perf','comparison','cond-1','past-cont','modal-base','countable','collocations','pres-perf','comparison','going-to','verb-patterns','some-any'],
+    errors: ['past-simple','comparison','pres-perf','countable','cond-1','collocations'],
+    build: ['pres-perf','comparison','going-to','modal-base','too-enough','pres-perf'],
+    order: ['pres-perf','past-cont','going-to','comparison','modal-base','pres-perf','past-simple','verb-patterns']
+  },
+  B1: {
+    grammar: ['cond-2','passive','reported','used-to','past-perf','used-to','relative','modal-perfect','verb-patterns','linking','wish','linking'],
+    errors: ['verb-patterns','cond-2','reported','linking','relative','pres-simple'],
+    build: ['passive','reported','used-to','cond-2','relative','linking'],
+    order: ['cond-2','passive','reported','used-to','pres-perf-cont','relative','past-perf','modal-base']
+  },
+  B2: {
+    grammar: ['cond-3','modal-perfect','inversion','wish','wish','passive-report','linking','verb-patterns','fut-perf','inversion','causative','cond-inv'],
+    errors: ['inversion','wish','verb-patterns','countable','past-perf','verb-patterns'],
+    build: ['wish','modal-perfect','passive-report','cond-3','causative','linking'],
+    order: ['cond-3','passive-report','wish','modal-perfect','linking','fut-perf','wish','causative']
+  },
+  C1: {
+    grammar: ['inversion','cond-inv','subjunctive','cond-inv','cleft','cleft','passive-report','concession','inversion','inversion','the-more','idiom'],
+    errors: ['inversion','subjunctive','inversion','pres-perf','passive-report','cond-inv'],
+    build: ['inversion','idiom','cond-inv','linking','inversion','passive-report'],
+    order: ['inversion','cond-inv','cleft','subjunctive','inversion','the-more','cond-inv','passive-report']
+  },
+  C2: {
+    grammar: ['cond-inv','idiom','idiom','relative','inversion','cond-inv','idiom','wish','the-more','concession','idiom','inversion'],
+    errors: ['cond-inv','inversion','concession','inversion','inversion','pres-simple'],
+    build: ['wish','concession','cond-inv','inversion','verb-patterns','idiom'],
+    order: ['cond-inv','inversion','inversion','concession','inversion','idiom','inversion','idiom']
+  }
+};
+/* Easier example sentences for idioms, which a general rule can't cover. */
+const OWN_EX = {
+  'C1|grammar|11': [['The plan {came under} attack from teachers.', 'แผนนี้ถูกครูโจมตี'], ['The company {came under} pressure to cut prices.', 'บริษัทถูกกดดันให้ลดราคา']],
+  'C1|build|1': [['I {had no idea} it was your birthday!', 'ฉันไม่รู้เลยว่าวันนี้วันเกิดคุณ'], ['She {had no idea} where to go.', 'เธอไม่รู้เลยว่าจะไปไหน']],
+  'C2|grammar|1': [['{Come what may}, we’ll finish on time.', 'ไม่ว่าอะไรจะเกิดขึ้น เราจะทำเสร็จทันเวลา']],
+  'C2|grammar|2': [['{Be it ever so} small, a gift shows you care.', 'ของขวัญต่อให้เล็กแค่ไหนก็แสดงว่าคุณใส่ใจ']],
+  'C2|grammar|6': [['The film is {nothing if not} long.', 'หนังเรื่องนี้ยาวสุดๆ'], ['He is {nothing if not} honest.', 'เขาซื่อสัตย์ที่สุดแล้ว']],
+  'C2|grammar|10': [['Your excuse doesn’t {hold water}.', 'ข้ออ้างของคุณฟังไม่ขึ้น']],
+  'C2|build|5': [['She is {nothing if not} patient.', 'เธอใจเย็นที่สุดแล้ว']],
+  'C2|order|5': [['It’s expensive. {Be that as it may}, I want it.', 'มันแพง ถึงอย่างนั้นฉันก็ยังอยากได้']],
+  'C2|order|7': [['Missing the train was {a blessing in disguise}.', 'การตกรถไฟกลายเป็นโชคดีที่แฝงมา']]
+};
+function ruleOf(q) {
+  if (!q) return null;
+  const [lv, mode, a] = q.id.split('|');
+  let m = mode, i = +a;
+  if (mode === 'listen') { if (a[0] !== 's') return null; m = 'order'; i = +a.slice(1); }
+  const key = TAGS[lv] && TAGS[lv][m] && TAGS[lv][m][i];
+  if (!key) return null;
+  const own = OWN_EX[`${lv}|${m}|${i}`];
+  return Object.assign({ key }, RULES[key], own ? { ex: own } : {});
+}
+
 const SKILLS = [
   { key: 'understand', th: 'เข้าใจ', en: 'Reading & Listening', modes: ['reading', 'interpret', 'listen'] },
   { key: 'knowledge',  th: 'ความรู้ภาษา', en: 'Vocabulary & Grammar', modes: ['vocab', 'grammar', 'errors'] },
@@ -1029,6 +1319,7 @@ function home() {
       </div>
       <button class="btn lv" id="placement">${S.placement ? 'ทดสอบใหม่' : 'วัดระดับ'}</button>
     </section>
+    <section class="banner"><div><b>คู่มือไวยากรณ์</b><span class="muted" style="font-size:.9rem">ตาราง 12 tense และกฎทั้งหมด ${Object.keys(RULES).length} ข้อ พร้อมตัวอย่างง่ายๆ</span></div><button class="btn ghost" id="handbook">เปิดคู่มือ</button></section>
     ${missCount ? `<section class="banner"><div><b>คำที่เคยตอบผิด ${missCount} ข้อ</b><span class="muted" style="font-size:.9rem">ทบทวนจนตอบถูก แล้วข้อนั้นจะหายจากรายการ</span></div><button class="btn ghost" id="review">ทบทวน</button></section>` : ''}
     <section style="display:flex;flex-direction:column;gap:10px">
       <p class="eyebrow">เลือกระดับ · แถบสีคือความคืบหน้าของแต่ละระดับ</p>
@@ -1044,6 +1335,7 @@ function home() {
     </section>`;
   app.querySelectorAll('.rung').forEach(b => b.onclick = () => level(b.dataset.lv));
   $('#placement').onclick = startPlacement;
+  $('#handbook').onclick = handbook;
   if (missCount) $('#review').onclick = startReview;
   $('#rate').oninput = e => { S.rate = +e.target.value; save(); };
   $('#rate').onchange = () => speak('This is how fast I will read.');
@@ -1093,6 +1385,56 @@ function level(lv) {
     </div>`;
   $('#back').onclick = home;
   app.querySelectorAll('.mode').forEach(b => b.onclick = () => startRound(lv, b.dataset.mode));
+  window.scrollTo(0, 0);
+}
+
+/* ---------------- grammar rule panels ---------------- */
+const mark = t => esc(t).replace(/\{([^}]*)\}/g, '<mark>$1</mark>');
+const plain = t => t.replace(/[{}]/g, '');
+function tenseGrid(cells, linkable) {
+  const head = ASPECTS.map(a => `<th scope="col">${a[1].replace('Continuous', 'Cont.')}<small>${a[2]}</small></th>`).join('');
+  const rows = TIMES.map(([t, th]) => `<tr><th scope="row">${th}<small>${t[0].toUpperCase() + t.slice(1)}</small></th>${ASPECTS.map(([a]) => {
+    const c = t + '-' + a, on = cells.includes(c);
+    const target = linkable && Object.keys(RULES).find(k => RULES[k].g === 'tense' && RULES[k].cells[0] === c);
+    return `<td class="${on ? 'on' : ''}">${target ? `<button class="cell" data-rule="${target}">${RULES[target].name.replace(/ \(will\)/, '')}</button>` : (on ? '●' : '')}</td>`;
+  }).join('')}</tr>`).join('');
+  return `<div class="gridwrap"><table class="tgrid"><thead><tr><th></th>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function ruleHTML(r, open) {
+  const where = r.cells.length
+    ? `<p class="eyebrow">ตำแหน่งในตาราง 12 tense</p>${tenseGrid(r.cells)}`
+    : `<p class="sub">กฎนี้อยู่ในหมวด <b>${GROUPS[r.g]}</b> ไม่ได้ขึ้นกับ tense ใด tense หนึ่ง</p>`;
+  return `<details class="rule" ${open ? 'open' : ''}>
+    <summary><span class="crumb">${GROUPS[r.g]} ›</span> <b>${esc(r.name)}</b></summary>
+    <div class="rbody">
+      <div><p class="eyebrow">โครงสร้าง</p><p class="form">${esc(r.form)}</p></div>
+      <div><p class="eyebrow">ใช้เมื่อ</p><p class="use">${esc(r.use)}</p></div>
+      <div><p class="eyebrow">ตัวอย่างง่ายๆ</p><div class="exs">${r.ex.map(([en, th]) => `
+        <div class="ex">${hasTTS ? `<button class="exsay" data-say="${esc(plain(en))}" aria-label="ฟังเสียง">🔊</button>` : ''}<div><span>${mark(en)}</span><small>${esc(th)}</small></div></div>`).join('')}</div></div>
+      ${where}
+    </div></details>`;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.exsay'); if (b) speak(b.dataset.say);
+  const c = e.target.closest('.cell'); if (c) { const d = document.getElementById('rule-' + c.dataset.rule); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); } }
+});
+
+function handbook() {
+  G = null; setLv(S.placement || 'B1');
+  const levelsOf = key => LEVELS.filter(l => Object.values(TAGS[l]).some(a => a.includes(key)));
+  app.innerHTML = `
+    <div class="playbar"><button class="x" id="back" aria-label="กลับหน้าหลัก">←</button><span class="muted">หน้าหลัก</span></div>
+    <header style="display:flex;flex-direction:column;gap:8px"><p class="eyebrow">Grammar handbook</p><h1>คู่มือไวยากรณ์</h1>
+      <p class="muted">ทุกกฎที่ใช้ในเกม พร้อมโครงสร้างและตัวอย่าง แตะช่องในตารางเพื่อเปิดกฎของ tense นั้น</p></header>
+    <section class="cando"><p class="eyebrow">ตาราง 12 tense · เวลา × ลักษณะ</p>${tenseGrid([], true)}
+      <p class="foot">ช่องที่ว่างเป็น tense ที่ยังไม่มีในแบบฝึก (Past/Future Perfect Continuous, Future Continuous)</p></section>
+    ${Object.entries(GROUPS).map(([g, name]) => `
+      <section class="skill"><div class="skillhead"><h3>${name}</h3></div>
+        ${Object.keys(RULES).filter(k => RULES[k].g === g).map(k => ruleHTML(Object.assign({ key: k }, RULES[k]), false)
+          .replace('<details class="rule"', `<details class="rule" id="rule-${k}"`)
+          .replace('</summary>', ` <span class="lvchips">${levelsOf(k).map(l => `<i style="--lv:var(--${l})">${l}</i>`).join('')}</span></summary>`)).join('')}
+      </section>`).join('')}`;
+  $('#back').onclick = home;
   window.scrollTo(0, 0);
 }
 
@@ -1288,17 +1630,19 @@ function finish(ok, given, detail) {
     G.misses.push({ q, given });
   }
   save();
+  const rq = ruleOf(q);
   const last = G.kind === 'placement' ? G.i + 1 >= G.total : (G.i + 1 >= G.queue.length || G.hearts === 0);
   $('#fb').innerHTML = `<div class="feedback ${ok ? 'ok' : 'no'}" role="status">
       <h3>${ok ? pickOne(['ถูกต้อง!', 'เยี่ยม!', 'แม่นมาก!', 'Excellent!']) : 'ยังไม่ถูก'}</h3>
       ${!ok && (q.type === 'mc' || q.type === 'gap') ? `<p>คำตอบที่ถูก: <b>${esc(q.answer)}</b></p>` : ''}
       ${detail ? `<p>${detail}</p>` : ''}
+      ${rq ? ruleHTML(rq, !ok) : ''}
       <button class="btn lv block" id="next">${last ? 'ดูผล' : 'ข้อต่อไป'}</button>
     </div>`;
   const nb = $('#next');
   nb.onclick = () => { G.i++; next(); };
   nb.focus({ preventScroll: true });
-  $('#fb').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  $('#fb').scrollIntoView({ behavior: 'smooth', block: !ok && rq ? 'start' : 'nearest' });
   const c = $('.combo'); if (c) c.textContent = G.combo >= 3 ? 'คอมโบ ×' + G.combo : '';
   const h = $('.hearts'); if (h) h.textContent = '♥'.repeat(G.hearts) + '♡'.repeat(3 - G.hearts);
 }
