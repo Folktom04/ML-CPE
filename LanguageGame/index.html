@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CEFR Ladder</title>
+<meta name="theme-color" content="#16213a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CEFR Ladder">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -288,6 +295,13 @@ details.again summary { cursor: pointer; color: var(--lv); font-size: .9rem; pad
 .dot.known { background: var(--good); border-color: var(--good); }
 .oxbadge { font-family: var(--mono); font-size: .7rem; padding: 2px 8px; border-radius: 999px; border: 1.5px solid var(--lv); color: var(--lv); white-space: nowrap; }
 .banner .bar { margin-top: 6px; }
+
+/* offline */
+.offhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.netchip { font-family: var(--mono); font-size: .7rem; padding: 2px 8px; border-radius: 999px; text-transform: none; letter-spacing: 0; }
+.netchip.on { background: var(--good-bg); color: var(--good); }
+.netchip.off { background: var(--bad-bg); color: var(--bad); }
+.okline { color: var(--good); font-size: .9rem; }
 
 /* result */
 .score { font-family: var(--display); font-weight: 800; font-size: 4rem; line-height: 1; color: var(--lv); }
@@ -6450,7 +6464,11 @@ const hasTTS = 'speechSynthesis' in window;
 function loadVoice() {
   if (!hasTTS) return;
   const vs = speechSynthesis.getVoices();
-  voice = vs.find(v => /en[-_]GB/i.test(v.lang)) || vs.find(v => /en[-_]US/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null;
+  // Voices stored on the device keep working offline, so try those first.
+  const local = vs.filter(v => v.localService);
+  const pickEn = list => list.find(v => /en[-_]GB/i.test(v.lang)) || list.find(v => /en[-_]US/i.test(v.lang)) || list.find(v => /^en/i.test(v.lang));
+  voice = pickEn(local) || pickEn(vs) || null;
+  if (typeof refreshOffline === 'function') refreshOffline();
 }
 if (hasTTS) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
 function speak(text, slow) {
@@ -6592,7 +6610,7 @@ function home() {
   }).join('');
   app.innerHTML = `
     <header class="top">
-      <div><p class="eyebrow">English · CEFR A1 → C2</p><h1>CEFR Ladder</h1></div>
+      <div><p class="eyebrow">English · CEFR A1 → C2 <span class="netchip off" id="netTop" ${navigator.onLine !== false ? 'hidden' : ''}>ออฟไลน์</span></p><h1>CEFR Ladder</h1></div>
       <div class="stats">
         <div class="stat"><b>${S.xp}</b><span>XP</span></div>
         <div class="stat"><b>${S.streak}</b><span>วันติดต่อกัน</span></div>
@@ -6620,7 +6638,9 @@ function home() {
         ? `<div class="confirm"><b>ลบความคืบหน้าทั้งหมด?</b><span style="font-size:.9rem">XP, ระดับที่ผ่าน และรายการคำผิดจะหายไป ย้อนกลับไม่ได้</span><div class="row"><button class="btn ghost" id="cancelReset">ยกเลิก</button><button class="btn" id="doReset" style="background:var(--bad);color:#fff">ลบเลย</button></div></div>`
         : `<button class="btn ghost" id="reset">เริ่มใหม่ทั้งหมด</button>`}
       <p class="foot">ความคืบหน้าบันทึกไว้ในเบราว์เซอร์นี้เท่านั้น</p>
-    </section>`;
+    </section>
+    <section class="settings" id="offline" aria-live="polite"></section>`;
+  refreshOffline();
   app.querySelectorAll('.rung').forEach(b => b.onclick = () => level(b.dataset.lv));
   $('#placement').onclick = startPlacement;
   $('#handbook').onclick = handbook;
@@ -7063,6 +7083,48 @@ function oxford(lv) {
   if ($('#oxMore')) $('#oxMore').onclick = () => { const y = window.scrollY; OXV.show += 120; oxford(); window.scrollTo(0, y); };
   if (!lv) return;
   window.scrollTo(0, 0);
+}
+
+/* ---------------- offline: install as an app and keep working with no internet ---------------- */
+const OFF = { sw: false, install: null, standalone: (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true };
+const isFile = location.protocol === 'file:';
+try {
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    navigator.serviceWorker.register('sw.js').then(() => navigator.serviceWorker.ready).then(() => { OFF.sw = true; refreshOffline(); }).catch(() => {});
+  }
+} catch (e) {}
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); OFF.install = e; refreshOffline(); });
+addEventListener('appinstalled', () => { OFF.install = null; OFF.standalone = true; refreshOffline(); });
+addEventListener('online', () => refreshOffline());
+addEventListener('offline', () => refreshOffline());
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function offlineHTML() {
+  const online = navigator.onLine !== false;
+  const ready = OFF.sw || isFile;
+  const appLine = OFF.sw
+    ? `<p class="okline">✓ บันทึกเกมไว้ในเครื่องแล้ว เปิดเล่นได้โดยไม่ต้องต่ออินเทอร์เน็ต</p>`
+    : isFile
+      ? `<p class="okline">✓ เปิดจากไฟล์ในเครื่อง เล่นได้โดยไม่ต้องต่ออินเทอร์เน็ต</p>`
+      : `<p class="sub">เปิดผ่านหน้าเว็บนี้: ถ้าเน็ตหลุดระหว่างเล่นยังเล่นต่อได้ แต่การเปิดใหม่ต้องต่อเน็ต ถ้าจะเล่นออฟไลน์เต็มรูปแบบ ให้ติดตั้งจากเว็บของเกม หรือเปิดไฟล์ index.html ในเครื่อง (ดูวิธีใน README)</p>`;
+  const voiceLine = !hasTTS ? `<p class="sub">เครื่องนี้ไม่มีเสียงอ่าน โหมดฟังจะเปลี่ยนเป็นสะกดคำ</p>`
+    : voice && voice.localService ? `<p class="okline">✓ เสียงอ่านภาษาอังกฤษอยู่ในเครื่อง (${esc(voice.name)}) ใช้ได้ตอนออฟไลน์</p>`
+    : `<p class="sub">เสียงอ่านอาจต้องใช้เน็ต ถ้าจะใช้ตอนออฟไลน์ ให้ดาวน์โหลดเสียงภาษาอังกฤษในการตั้งค่าเครื่อง (Android: ตั้งค่า → การช่วยเหลือพิเศษ → ข้อความเป็นคำพูด · iPhone: ตั้งค่า → การช่วยการเข้าถึง → เนื้อหาที่พูด → เสียง)</p>`;
+  const install = OFF.standalone ? '<p class="okline">✓ ติดตั้งเป็นแอปบนหน้าจอแล้ว</p>'
+    : OFF.install ? '<button class="btn lv" id="installApp">ติดตั้งเป็นแอปบนหน้าจอ</button>'
+    : OFF.sw && isIOS ? '<p class="sub">iPhone/iPad: กดปุ่มแชร์ใน Safari แล้วเลือก "เพิ่มไปยังหน้าจอโฮม" เพื่อเปิดเหมือนแอป</p>' : '';
+  return `<div class="offhead"><b>ใช้งานออฟไลน์</b><span class="netchip ${online ? 'on' : 'off'}">${online ? 'ออนไลน์' : 'ออฟไลน์'}</span></div>
+    ${appLine}${voiceLine}${install}
+    <p class="foot">ความคืบหน้า คำที่จำได้ และคะแนนทั้งหมดเก็บในเครื่องนี้ ไม่ต้องใช้เน็ต${ready && !online ? ' · ตอนนี้ออฟไลน์อยู่ ทุกโหมดยังใช้ได้' : ''}</p>`;
+}
+function refreshOffline() {
+  const box = document.getElementById('offline');
+  if (box) {
+    box.innerHTML = offlineHTML();
+    const b = document.getElementById('installApp');
+    if (b) b.onclick = async () => { const ev = OFF.install; if (!ev) return; OFF.install = null; try { ev.prompt(); await ev.userChoice; } catch (e) {} refreshOffline(); };
+  }
+  const chip = document.getElementById('netTop');
+  if (chip) chip.hidden = navigator.onLine !== false;
 }
 
 /* ---------------- game loop ---------------- */

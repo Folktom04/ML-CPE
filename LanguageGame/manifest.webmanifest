@@ -1,0 +1,18 @@
+{
+  "name": "CEFR Ladder · ฝึกภาษาอังกฤษ A1–C2",
+  "short_name": "CEFR Ladder",
+  "description": "เกมฝึกภาษาอังกฤษ A1 ถึง C2 ใช้ได้แม้ออฟไลน์",
+  "lang": "th",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef1f6",
+  "theme_color": "#16213a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
