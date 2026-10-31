@@ -4,8 +4,9 @@ from __future__ import annotations
 import json
 import re
 import xml.etree.ElementTree as ET
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 from urllib.parse import quote_plus
@@ -22,6 +23,24 @@ QUERIES_EN = [
     "bombing OR \"terror attack\" OR \"mass shooting\" OR explosion",
     "coup OR \"martial law\" OR \"state of emergency\" OR junta",
 ]
+# Google News editions used for the English queries, so coverage is not
+# only what US outlets report.
+EDITIONS_EN = [("en-US", "US"), ("en-GB", "GB"), ("en-IN", "IN"), ("en-NG", "NG")]
+
+# World news feeds read directly (title only; the classifier drops the
+# non-unrest stories).
+DIRECT_FEEDS = {
+    "BBC World": "https://feeds.bbci.co.uk/news/world/rss.xml",
+    "Al Jazeera": "https://www.aljazeera.com/xml/rss/all.xml",
+    "DW": "https://rss.dw.com/rdf/rss-en-world",
+    "France 24": "https://www.france24.com/en/rss",
+    "The Guardian": "https://www.theguardian.com/world/rss",
+    "Sky News": "https://feeds.skynews.com/feeds/rss/world.xml",
+    "UN News": "https://news.un.org/feed/subscribe/en/news/all/rss.xml",
+    "ReliefWeb": "https://reliefweb.int/updates/rss.xml",
+    "Crisis Group": "https://www.crisisgroup.org/rss.xml",
+}
+
 QUERIES_TH = [
     "ชุมนุม OR ประท้วง OR ม็อบ",
     "ปะทะ OR จลาจล OR เคอร์ฟิว OR สลายการชุมนุม",
@@ -60,55 +79,111 @@ def _split_source(title: str) -> tuple[str, str]:
     return " | ".join(parts), source
 
 
-def parse_rss(xml_bytes: bytes) -> list[Article]:
+def _local(tag: str) -> str:
+    return tag.rsplit("}", 1)[-1]
+
+
+def _child(el: ET.Element, *names: str) -> ET.Element | None:
+    for c in el:
+        if _local(c.tag) in names:
+            return c
+    return None
+
+
+def _parse_date(text: str) -> datetime:
+    text = (text or "").strip()
+    try:
+        d = parsedate_to_datetime(text)  # RSS 2.0
+    except (TypeError, ValueError):
+        try:
+            d = datetime.fromisoformat(text.replace("Z", "+00:00"))  # RDF / Atom
+        except ValueError:
+            d = datetime.now(timezone.utc)
+    return d if d.tzinfo else d.replace(tzinfo=timezone.utc)
+
+
+def parse_rss(xml_bytes: bytes, default_source: str = "") -> list[Article]:
+    """Reads RSS 2.0, RSS 1.0 (RDF) and Atom feeds."""
     root = ET.fromstring(xml_bytes)
     out = []
-    for item in root.iter("item"):
-        raw = item.findtext("title") or ""
-        title, source = _split_source(raw)
-        src_el = item.find("source")
+    for item in root.iter():
+        if _local(item.tag) not in ("item", "entry"):
+            continue
+        t = _child(item, "title")
+        raw = (t.text or "").strip() if t is not None else ""
+        if default_source:  # direct feed: no " - Source" suffix to split off
+            title, source = raw, default_source
+        else:
+            title, source = _split_source(raw)
+        src_el = _child(item, "source")
         if src_el is not None and src_el.text:
             source = src_el.text.strip()
-        try:
-            published = parsedate_to_datetime(item.findtext("pubDate") or "")
-        except (TypeError, ValueError):
-            published = datetime.now(timezone.utc)
-        if published.tzinfo is None:
-            published = published.replace(tzinfo=timezone.utc)
-        out.append(Article(title, source, item.findtext("link") or "", published))
+        link_el = _child(item, "link")
+        link = ""
+        if link_el is not None:
+            link = (link_el.text or link_el.get("href") or "").strip()
+        date_el = _child(item, "pubDate", "date", "published", "updated")
+        published = _parse_date(date_el.text if date_el is not None else "")
+        if title:
+            out.append(Article(title, source, link, published))
     return out
 
 
-def fetch_query(query: str, thai: bool = False, days: int = 3, timeout: float = 15) -> list[Article]:
-    q = quote_plus(f"{query} when:{days}d")
-    url = RSS_URL.format(q=q, hl="th" if thai else "en-US", gl="TH" if thai else "US",
-                         lang="th" if thai else "en")
-    r = requests.get(url, timeout=timeout, headers={"User-Agent": "unrest-watch/0.1"})
+def _get(url: str, timeout: float) -> bytes:
+    r = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0 (compatible; unrest-watch/0.2)"})
     r.raise_for_status()
-    return parse_rss(r.content)
+    return r.content
+
+
+def fetch_query(query: str, thai: bool = False, days: int = 3, timeout: float = 15,
+                edition: tuple[str, str] = ("en-US", "US")) -> list[Article]:
+    q = quote_plus(f"{query} when:{days}d")
+    hl, gl = ("th", "TH") if thai else edition
+    url = RSS_URL.format(q=q, hl=hl, gl=gl, lang="th" if thai else "en")
+    return parse_rss(_get(url, timeout))
+
+
+def fetch_feed(name: str, url: str, timeout: float = 15) -> list[Article]:
+    return parse_rss(_get(url, timeout), default_source=name)
 
 
 def _norm(title: str) -> str:
     return re.sub(r"\W+", " ", title.lower()).strip()
 
 
-def collect(days: int = 3, extra_queries: list[str] | None = None,
-            log=lambda msg: None) -> list[Article]:
-    """Fetch all queries; skip ones that fail so one bad feed doesn't stop the run."""
-    jobs = [(q, False) for q in QUERIES_EN] + [(q, True) for q in QUERIES_TH]
-    jobs += [(q, bool(re.search(r"[฀-๿]", q))) for q in (extra_queries or [])]
-    seen, out = set(), []
-    for query, thai in jobs:
+def collect(days: int = 3, extra_queries: list[str] | None = None, world: bool = False,
+            log=lambda msg: None, workers: int = 8) -> list[Article]:
+    """Fetch every source in parallel; a failing source is skipped, not fatal.
+
+    world=True adds more Google News editions and the direct world news feeds.
+    """
+    editions = EDITIONS_EN if world else EDITIONS_EN[:1]
+    jobs = [(f"Google News {ed[1]}: {q}", lambda q=q, ed=ed: fetch_query(q, days=days, edition=ed))
+            for ed in editions for q in QUERIES_EN]
+    jobs += [(f"Google News TH: {q}", lambda q=q: fetch_query(q, thai=True, days=days))
+             for q in QUERIES_TH + [q for q in (extra_queries or []) if re.search(r"[\u0E00-\u0E7F]", q)]]
+    jobs += [(f"Google News: {q}", lambda q=q: fetch_query(q, days=days))
+             for q in (extra_queries or []) if not re.search(r"[\u0E00-\u0E7F]", q)]
+    if world:
+        jobs += [(name, lambda n=name, u=url: fetch_feed(n, u)) for name, url in DIRECT_FEEDS.items()]
+
+    def run(job):
+        name, fn = job
         try:
-            articles = fetch_query(query, thai=thai, days=days)
+            return fn()
         except (requests.RequestException, ET.ParseError) as e:
-            log(f"ข้ามคำค้น '{query}': {e}")
-            continue
-        for a in articles:
-            key = _norm(a.title)
-            if key and key not in seen:
-                seen.add(key)
-                out.append(a)
+            log(f"ข้ามแหล่ง '{name}': {e}")
+            return []
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    seen, out = set(), []
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for articles in pool.map(run, jobs):
+            for a in articles:
+                key = _norm(a.title)
+                if key and key not in seen and a.published >= cutoff:
+                    seen.add(key)
+                    out.append(a)
     return out
 
 

@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 import requests
 
-from . import collector, supplies
+from . import collector, supplies, world
 from .geo import default_gazetteer
 from .model import LABELS_TH, UnrestClassifier, evaluate
 from .pipeline import build_events
@@ -100,6 +100,9 @@ def parse_args(argv=None):
     hh.add_argument("--elderly", type=int, default=0)
     ap.add_argument("--days", type=int, help="จำนวนวันที่อยากกักตุน (ค่าเริ่มต้นตามระดับภัย)")
     ap.add_argument("--inventory", help='ไฟล์ JSON ของที่มีอยู่ เช่น {"rice": 1, "canned_fish": 10, "water": 3}')
+    ap.add_argument("--world", action="store_true",
+                    help="โหมดข่าวทั่วโลก: แสดงทุกเหตุการณ์ (ไม่กรองตามตำแหน่ง) ใช้กับ --watch เพื่อดูแบบสด")
+    ap.add_argument("--hours", type=float, default=24, help="โหมด --world: แสดงเหตุการณ์ย้อนหลังกี่ชั่วโมง")
     ap.add_argument("--offline", action="store_true", help="ใช้ข่าวตัวอย่างแทนการดึงข่าวจริง")
     ap.add_argument("--news-days", type=int, default=3, help="ดึงข่าวย้อนหลังกี่วัน")
     ap.add_argument("--top", type=int, default=8)
@@ -111,20 +114,72 @@ def parse_args(argv=None):
     return ap.parse_args(argv)
 
 
-def run_once(args, model, lat, lon, household):
+def fetch(args, model):
+    """Returns (events, dropped, n_articles, now)."""
     log = lambda m: print(m, file=sys.stderr)
     if args.offline:
         articles = collector.load_sample()
         now = max(a.published for a in articles)
     else:
-        articles = collector.collect(days=args.news_days, log=log)
+        articles = collector.collect(days=args.news_days, world=args.world, log=log)
         now = datetime.now(timezone.utc)
         if not articles:
             log("ดึงข่าวไม่ได้ ใช้ข่าวตัวอย่างแทน")
             articles = collector.load_sample()
             now = max(a.published for a in articles)
     events, dropped = build_events(articles, model)
+    return events, dropped, len(articles), now
+
+
+def run_once(args, model, lat, lon, household):
+    events, dropped, _, now = fetch(args, model)
     return assess(events, lat, lon, now=now), len(events), dropped
+
+
+def notify_event(topic: str, e) -> None:
+    where = e.place.name if e.place else ""
+    body = f"{world.TYPE_ICON[e.label]} {e.title}\n📍 {where} · รุนแรง {e.severity:.1f}/5 · {e.n_sources} แหล่ง"
+    requests.post(f"https://ntfy.sh/{topic}", data=body.encode("utf-8"),
+                  headers={"Title": "Unrest Watch - World", "Priority": "4"}, timeout=10)
+
+
+def world_loop(args, model) -> int:
+    tracker = world.LiveTracker()
+    first = True
+    while True:
+        events, dropped, n_articles, now = fetch(args, model)
+        shown = world.recent(events, now, args.hours)
+        changes = tracker.update(shown)
+        if args.json:
+            print(json.dumps([{
+                "title": c.event.title, "type": c.event.label, "severity": round(c.event.severity, 1),
+                "place": c.event.place.name if c.event.place else None,
+                "country": c.event.place.country if c.event.place else None,
+                "region": world.region(c.event), "sources": c.event.n_sources,
+                "published": c.event.published.isoformat(), "planned": c.event.planned,
+                "new": c.is_new, "urls": c.event.urls[:3],
+            } for c in changes], ensure_ascii=False, indent=1), flush=True)
+        elif first:
+            print(world.render_world(events, dropped, n_articles, now, args.hours, args.top), flush=True)
+        else:
+            stamp = f"{now.astimezone(world.BANGKOK):%H:%M} น."
+            if changes:
+                print(f"\n── {stamp} · มีความเคลื่อนไหว {len(changes)} รายการ ──", flush=True)
+                for c in sorted(changes, key=lambda c: -world.importance(c.event, now))[: args.top]:
+                    print(world.fmt_event(c.event, now, "🆕 " if c.is_new else "🔄 "), flush=True)
+            else:
+                print(f"── {stamp} · ยังไม่มีข่าวใหม่", flush=True)
+        if args.ntfy and not first:
+            for c in changes:
+                if c.is_new and c.event.severity >= 4:
+                    try:
+                        notify_event(args.ntfy, c.event)
+                    except requests.RequestException as e:
+                        print(f"ส่งแจ้งเตือนไม่สำเร็จ: {e}", file=sys.stderr)
+        first = False
+        if not args.watch:
+            return 0
+        time.sleep(max(2.0, args.watch) * 60)  # be polite to the news sites
 
 
 def main(argv=None) -> int:
@@ -158,6 +213,8 @@ def main(argv=None) -> int:
             inventory = json.load(f)
 
     model = UnrestClassifier().fit()
+    if args.world:
+        return world_loop(args, model)
     last_level = None
     while True:
         a, n_events, dropped = run_once(args, model, lat, lon, household)
