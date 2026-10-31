@@ -223,6 +223,54 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--lv); outlin
 .lvchips { display: inline-flex; gap: 4px; margin-left: 4px; vertical-align: middle; }
 .lvchips i { font-style: normal; font-family: var(--mono); font-size: .65rem; color: var(--lv); border: 1px solid var(--lv); border-radius: 4px; padding: 0 4px; }
 
+/* stories */
+.stories { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.storycard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; text-align: left; display: flex; flex-direction: column; gap: 4px; }
+.storycard:hover { border-color: var(--lv); }
+.sc-top { display: flex; gap: 8px; align-items: center; font-size: .78rem; flex-wrap: wrap; }
+.sc-top .seal { margin-left: auto; }
+.sc-title { font-family: var(--display); font-size: 1.15rem; font-weight: 700; line-height: 1.2; }
+.storycard small { color: var(--muted); }
+.sc-len { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; font-size: .75rem; color: var(--muted); }
+.storyhead { display: flex; flex-direction: column; gap: 4px; }
+.storyhead h1 { color: var(--lv); }
+.tabs { display: flex; gap: 6px; overflow-x: auto; border-bottom: 1px solid var(--line); padding-bottom: 0; scrollbar-width: none; }
+.tab { border: 0; background: none; padding: 10px 12px; font-size: .9rem; color: var(--muted); border-bottom: 3px solid transparent; white-space: nowrap; }
+.tab.on { color: var(--ink); border-bottom-color: var(--lv); font-weight: 600; }
+.tools { align-items: center; }
+.tools > * { flex: 0 1 auto; }
+.toggle { display: inline-flex; gap: 8px; align-items: center; font-size: .9rem; }
+.storytext { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; font-size: 1.12rem; line-height: 1.85; display: flex; flex-direction: column; gap: 14px; }
+.storytext p { margin: 0; }
+.w { cursor: pointer; border-radius: 4px; padding: 0 1px; }
+.w:hover { background: var(--chip); }
+.w.on { background: var(--lv); color: #fff; }
+.sent-th { display: block; font-size: .88rem; color: var(--muted); line-height: 1.5; margin: 2px 0 8px; }
+.trlist { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; counter-reset: s; }
+.tr { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; counter-increment: s; }
+.tr::before { content: counter(s); font-family: var(--mono); font-size: .72rem; color: var(--lv); }
+.tr.flash { border-color: var(--lv); box-shadow: 0 0 0 2px var(--lv); }
+.tr-en { display: flex; gap: 10px; align-items: flex-start; }
+.tr-en p { font-size: 1.06rem; font-weight: 500; overflow-wrap: anywhere; min-width: 0; }
+.tr mark, .tr-note mark { background: none; color: var(--lv); font-weight: 600; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.tr-th { color: var(--muted); }
+.tr-note { background: var(--chip); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; font-size: .92rem; }
+.tr .rule { border-color: var(--line); }
+table.vocab { width: 100%; border-collapse: collapse; font-size: .92rem; }
+table.vocab th { text-align: left; font-size: .75rem; color: var(--muted); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+table.vocab td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.vocab td:first-child { white-space: nowrap; }
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; justify-content: center;
+  padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+.sheet-in { width: 100%; max-width: 620px; background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--lv); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 -8px 30px rgba(10, 20, 40, .18); }
+.sheet-top { display: flex; align-items: center; gap: 10px; }
+.sheet-w { font-family: var(--display); font-size: 1.6rem; }
+.sheet-top .x { margin-left: auto; }
+.sheet-ph { border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 2px; font-size: .92rem; }
+.sheet-s { font-size: .85rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
+details.again summary { cursor: pointer; color: var(--lv); font-size: .9rem; padding: 4px 0; }
+@media (max-width: 420px) { .stories { grid-template-columns: 1fr; } .storytext { padding: 14px; font-size: 1.06rem; } }
+
 /* result */
 .score { font-family: var(--display); font-weight: 800; font-size: 4rem; line-height: 1; color: var(--lv); }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -1107,6 +1155,219 @@ function ruleOf(q) {
   return Object.assign({ key }, RULES[key], own ? { ex: own } : {});
 }
 
+/* ------------------------------------------------------------------ */
+/* Stories: learn by reading. Two per level, longer and harder as the  */
+/* level rises. Each sentence: [English, Thai, structure note, rule].  */
+/* Notes mark key parts with {braces}; those parts are highlighted in  */
+/* the sentence too. glos: "word|part of speech|Thai; ..."              */
+/* qs: [question, answer, [wrong], Thai note]                          */
+/* ------------------------------------------------------------------ */
+const STORIES = {
+A1: [
+  { title: 'My Morning', th: 'เช้าของฉัน', topic: 'ชีวิตประจำวัน',
+    paras: [
+      [['My name is Ploy.', 'ฉันชื่อพลอย', '{My name is} + ชื่อ ใช้แนะนำตัว · my = ของฉัน วางหน้าคำนาม', 'possessive'],
+       ['I am twelve years old.', 'ฉันอายุสิบสองปี', 'บอกอายุใช้ {I am} + ตัวเลข + years old (ไม่ใช้ have แบบภาษาไทย)', 'be'],
+       ['I live in a small house in Chiang Mai.', 'ฉันอาศัยอยู่ในบ้านหลังเล็กที่เชียงใหม่', 'คำคุณศัพท์ {small} วางหน้าคำนาม {house} (ภาษาไทยวางหลัง: บ้านเล็ก) · in + ชื่อเมือง', 'word-order']],
+      [['Every morning, I get up at six o’clock.', 'ทุกเช้าฉันตื่นนอนตอนหกโมง', '{Every morning} = ทำเป็นประจำ จึงใช้ Present Simple · {at} + เวลา · get up = ลุกจากเตียง', 'pres-simple'],
+       ['I wash my face and brush my teeth.', 'ฉันล้างหน้าและแปรงฟัน', '{and} เชื่อมกริยาสองตัวที่มีประธานเดียวกัน ไม่ต้องพูด I ซ้ำ · teeth เป็นพหูพจน์ของ tooth', 'pres-simple'],
+       ['Then I eat rice and eggs with my family.', 'จากนั้นฉันกินข้าวกับไข่กับครอบครัว', '{Then} = จากนั้น ใช้เล่าเรื่องตามลำดับ · eggs เติม s เพราะมีมากกว่าหนึ่งฟอง', 'word-order'],
+       ['My mother drinks coffee, but I drink milk.', 'แม่ของฉันดื่มกาแฟ แต่ฉันดื่มนม', 'My mother = she จึงเติม s: {drinks} · ส่วน I ไม่เติม s: {drink} · {but} = แต่', 'pres-simple']],
+      [['At seven o’clock, I walk to school with my brother.', 'ตอนเจ็ดโมง ฉันเดินไปโรงเรียนกับพี่ชาย', 'ขึ้นต้นประโยคด้วยเวลาได้แล้วคั่นด้วยจุลภาค · {walk to school} = เดินไปโรงเรียน (ไม่ต้องมี the)', 'word-order'],
+       ['We are happy because we see our friends there.', 'พวกเรามีความสุขเพราะได้เจอเพื่อนที่นั่น', 'ประธาน + {are} + คำคุณศัพท์ ต้องมี verb to be เสมอ · {because} + ประโยค = เพราะว่า', 'be']]
+    ],
+    glos: 'name|n.|ชื่อ; twelve|num.|สิบสอง; years|n.|ปี; old|adj.|อายุ…, แก่; live|v.|อาศัยอยู่; small|adj.|เล็ก; house|n.|บ้าน; every|det.|ทุกๆ; morning|n.|ตอนเช้า; get up|phr. v.|ตื่นนอน, ลุกจากเตียง; get|v.|ได้, ไป (ดู get up); six|num.|หก; o’clock|adv.|นาฬิกา (บอกเวลาตรง); wash|v.|ล้าง; face|n.|หน้า, ใบหน้า; brush|v.|แปรง; teeth|n.|ฟัน (พหูพจน์ของ tooth); then|adv.|จากนั้น; eat|v.|กิน; rice|n.|ข้าว; eggs|n.|ไข่; family|n.|ครอบครัว; mother|n.|แม่; drinks|v.|ดื่ม; drink|v.|ดื่ม; coffee|n.|กาแฟ; milk|n.|นม; seven|num.|เจ็ด; walk|v.|เดิน; school|n.|โรงเรียน; brother|n.|พี่ชาย, น้องชาย; happy|adj.|มีความสุข; see|v.|เห็น, พบ; friends|n.|เพื่อน; there|adv.|ที่นั่น; Chiang Mai|n.|เชียงใหม่',
+    qs: [['What time does Ploy get up?', 'At six o’clock', ['At seven o’clock', 'At eight o’clock', 'At five o’clock'], 'ประโยค “Every morning, I get up at six o’clock.”'],
+         ['What does Ploy drink in the morning?', 'Milk', ['Coffee', 'Tea', 'Water'], 'แม่ดื่มกาแฟ แต่พลอยดื่มนม: “but I drink milk”'],
+         ['How does Ploy go to school?', 'She walks with her brother.', ['She goes by bus.', 'Her mother drives her.', 'She rides a bike alone.'], '“I walk to school with my brother.”']] },
+  { title: 'At the Market', th: 'ที่ตลาด', topic: 'ซื้อของ',
+    paras: [
+      [['It is Saturday.', 'วันนี้วันเสาร์', 'บอกวัน เวลา หรืออากาศใช้ {It is} (it ในที่นี้ไม่ได้แปลว่า "มัน")', 'be'],
+       ['Ben and his dad go to the market.', 'เบนกับพ่อไปตลาด', 'ประธานสองคน (Ben and his dad) = they จึงใช้ {go} ไม่เติม s · go {to} + สถานที่', 'pres-simple'],
+       ['The market is big and busy.', 'ตลาดใหญ่และคึกคัก', 'The market {is} + คำคุณศัพท์ {and} คำคุณศัพท์ · busy ใช้กับสถานที่ = คนเยอะ คึกคัก', 'be']],
+      [['Ben sees red apples and yellow bananas.', 'เบนเห็นแอปเปิลสีแดงและกล้วยสีเหลือง', 'สีเป็นคำคุณศัพท์ วางหน้าคำนาม: {red apples} · Ben = he → {sees}', 'word-order'],
+       ['“How much are the apples?” asks Dad.', '"แอปเปิลราคาเท่าไร" พ่อถาม', 'ถามราคา: {How much are} + ของหลายชิ้น? / How much is + ของชิ้นเดียว?', 'questions'],
+       ['“Ten baht each,” says the woman.', '"ลูกละสิบบาท" ผู้หญิงคนนั้นพูด', '{each} = ต่อชิ้น ต่อลูก · ในการเล่าเรื่อง says / asks มักวางหลังคำพูด', 'pres-simple'],
+       ['Dad buys six apples and some bananas.', 'พ่อซื้อแอปเปิลหกลูกและกล้วยจำนวนหนึ่ง', '{some} + คำนาม = จำนวนหนึ่ง (ไม่ระบุ) ใช้ในประโยคบอกเล่า', 'some-any']],
+      [['Ben is hungry, so Dad buys him a sandwich too.', 'เบนหิว พ่อจึงซื้อแซนด์วิชให้เขาด้วย', '{so} = จึง (บอกผลลัพธ์) · {buys him a sandwich} = ซื้อ + คน + ของ (ซื้อแซนด์วิชให้เขา) · {too} ท้ายประโยค = ด้วย', 'linking'],
+       ['They go home at noon with two heavy bags.', 'พวกเขากลับบ้านตอนเที่ยงพร้อมถุงหนักสองใบ', '{go home} ไม่ต้องมี to · {at noon} = ตอนเที่ยง', 'prepositions']]
+    ],
+    glos: 'Saturday|n.|วันเสาร์; dad|n.|พ่อ; go|v.|ไป; market|n.|ตลาด; big|adj.|ใหญ่; busy|adj.|คึกคัก, ยุ่ง; sees|v.|เห็น; red|adj.|สีแดง; apples|n.|แอปเปิล; yellow|adj.|สีเหลือง; bananas|n.|กล้วย; how much|phr.|เท่าไร (ราคา, ปริมาณ); asks|v.|ถาม; ten|num.|สิบ; baht|n.|บาท; each|adv.|แต่ละ, ต่อชิ้น; says|v.|พูด; woman|n.|ผู้หญิง; buys|v.|ซื้อ; six|num.|หก; hungry|adj.|หิว; him|pron.|เขา (ใช้เป็นกรรม); sandwich|n.|แซนด์วิช; too|adv.|ด้วย; home|adv.|บ้าน (กลับบ้าน); noon|n.|เที่ยงวัน; two|num.|สอง; heavy|adj.|หนัก; bags|n.|ถุง, กระเป๋า',
+    qs: [['What day is it?', 'Saturday', ['Sunday', 'Monday', 'Friday'], 'ประโยคแรก “It is Saturday.”'],
+         ['How much is one apple?', 'Ten baht', ['Six baht', 'Sixty baht', 'Two baht'], '“Ten baht each” = ลูกละสิบบาท (six คือจำนวนที่พ่อซื้อ)'],
+         ['Why does Dad buy a sandwich?', 'Ben is hungry.', ['Ben is tired.', 'Dad is hungry.', 'The woman asks him to.'], '“Ben is hungry, so Dad buys him a sandwich too.” so บอกผลของการที่เบนหิว']] }
+],
+A2: [
+  { title: 'A Rainy Holiday', th: 'วันหยุดที่ฝนตก', topic: 'ท่องเที่ยว',
+    paras: [
+      [['Last summer, Anna and her family went to the beach for a week.', 'ฤดูร้อนที่แล้ว แอนนากับครอบครัวไปเที่ยวทะเลหนึ่งสัปดาห์', '{Last summer} = เวลาในอดีตที่ระบุชัด → Past Simple {went} (go → went) · {for} + ช่วงเวลา', 'past-simple'],
+       ['They wanted to swim and lie in the sun every day.', 'พวกเขาอยากว่ายน้ำและนอนอาบแดดทุกวัน', '{wanted to} + V1 = อยาก… (want ตามด้วย to V) · lie in the sun = นอนอาบแดด', 'verb-patterns'],
+       ['Unfortunately, it rained for the first four days.', 'โชคไม่ดีที่ฝนตกในสี่วันแรก', '{Unfortunately} ขึ้นต้นประโยคเพื่อบอกความรู้สึกต่อเหตุการณ์ · rain → {rained} (กริยาปกติเติม -ed)', 'past-simple']],
+      [['Anna was bored, so she went to the town library.', 'แอนนาเบื่อ เธอจึงไปห้องสมุดของเมือง', '{was bored} = รู้สึกเบื่อ (bored ใช้กับคนที่รู้สึก ส่วน boring ใช้กับสิ่งที่น่าเบื่อ) · {so} = จึง', 'past-simple'],
+       ['There, she found an old book about the history of the town.', 'ที่นั่น เธอเจอหนังสือเก่าเล่มหนึ่งเกี่ยวกับประวัติศาสตร์ของเมือง', 'find → {found} (กริยาอปกติ) · {an old book} ใช้ an เพราะ old ขึ้นต้นด้วยเสียงสระ · about = เกี่ยวกับ', 'articles'],
+       ['She enjoyed it so much that she read it in two days.', 'เธอชอบมันมากจนอ่านจบภายในสองวัน', '{so much that} + ประโยค = มากจน… · read ในอดีตเขียนเหมือนเดิม แต่ออกเสียงว่า "เร้ด"', 'past-simple']],
+      [['On the fifth day, the sun came out at last.', 'ในวันที่ห้า ในที่สุดแดดก็ออก', '{On} + วัน · come out → {came out} · {at last} = ในที่สุด (หลังจากรอมานาน)', 'prepositions'],
+       ['Anna swam in the sea and had a great time.', 'แอนนาว่ายน้ำในทะเลและสนุกมาก', 'swim → {swam} · {had a great time} = สนุกมาก (วลีที่ใช้บ่อย)', 'past-simple'],
+       ['However, when she remembers that holiday now, she thinks about the book, not the beach.', 'อย่างไรก็ตาม ตอนนี้เมื่อเธอนึกถึงวันหยุดครั้งนั้น เธอกลับคิดถึงหนังสือ ไม่ใช่ทะเล', '{now} → กลับมาใช้ Present Simple ({remembers}, {thinks}) เพราะพูดถึงปัจจุบัน · {However} = อย่างไรก็ตาม (ขัดกับที่คาด)', 'pres-simple']]
+    ],
+    glos: 'last|adj.|ที่แล้ว, ล่าสุด; summer|n.|ฤดูร้อน; family|n.|ครอบครัว; went|v.|ไป (อดีตของ go); beach|n.|ชายหาด, ทะเล; week|n.|สัปดาห์; wanted|v.|ต้องการ, อยาก; swim|v.|ว่ายน้ำ; lie|v.|นอน (เอนตัวลง); sun|n.|ดวงอาทิตย์, แดด; every|det.|ทุกๆ; day|n.|วัน; days|n.|วัน; unfortunately|adv.|โชคไม่ดีที่; rained|v.|ฝนตก; first|adj.|แรก; four|num.|สี่; bored|adj.|เบื่อ; town|n.|เมือง (ขนาดเล็ก); library|n.|ห้องสมุด; found|v.|พบ (อดีตของ find); old|adj.|เก่า; book|n.|หนังสือ; history|n.|ประวัติศาสตร์; enjoyed|v.|ชอบ, สนุกกับ; so much that|phr.|มากจน…; read|v.|อ่าน; fifth|adj.|ที่ห้า; came out|phr. v.|ออกมา (อดีตของ come out); came|v.|มา (อดีตของ come); at last|phr.|ในที่สุด; swam|v.|ว่ายน้ำ (อดีตของ swim); sea|n.|ทะเล; had a great time|phr.|สนุกมาก; great|adj.|ยอดเยี่ยม; time|n.|เวลา; however|adv.|อย่างไรก็ตาม; remembers|v.|นึกถึง, จำได้; holiday|n.|วันหยุด; now|adv.|ตอนนี้; thinks|v.|คิด',
+    qs: [['What was the weather like for the first four days?', 'It rained.', ['It was sunny.', 'It snowed.', 'It was windy.'], '“Unfortunately, it rained for the first four days.”'],
+         ['What did Anna find in the library?', 'An old book about the town’s history', ['A map of the beach', 'Her lost phone', 'A new novel'], '“she found an old book about the history of the town”'],
+         ['What does Anna remember most about the holiday?', 'The book', ['The beach', 'The hotel', 'The rain'], 'ประโยคสุดท้าย “she thinks about the book, not the beach”']] },
+  { title: 'The Lost Phone', th: 'โทรศัพท์หาย', topic: 'เหตุการณ์ประจำวัน',
+    paras: [
+      [['Yesterday, Sam was waiting for the bus when he noticed his phone wasn’t in his pocket.', 'เมื่อวาน แซมกำลังรอรถบัสอยู่ แล้วเขาก็สังเกตว่าโทรศัพท์ไม่ได้อยู่ในกระเป๋า', '{was waiting} (Past Continuous = กำลังรอ) + {when} + {noticed} (Past Simple = เหตุการณ์ที่แทรกเข้ามา)', 'past-cont'],
+       ['He looked in his bag, but it wasn’t there either.', 'เขาดูในกระเป๋าสะพายแล้ว แต่ก็ไม่อยู่ที่นั่นเหมือนกัน', '{either} ท้ายประโยคปฏิเสธ = …เหมือนกัน (ประโยคบอกเล่าใช้ too)', 'past-simple']],
+      [['He ran back to the café where he had lunch.', 'เขาวิ่งกลับไปที่ร้านกาแฟที่เขากินข้าวกลางวัน', 'run → {ran} · {where} = ที่ซึ่ง ใช้ขยายสถานที่ (the café)', 'relative'],
+       ['“Excuse me, have you seen a black phone?” he asked the waiter.', '"ขอโทษครับ เห็นโทรศัพท์สีดำบ้างไหมครับ" เขาถามพนักงานเสิร์ฟ', '{have you seen} = Present Perfect ถามว่าเห็นบ้างไหม (ไม่ระบุเวลา) · Excuse me = ขอโทษ (ใช้เรียกความสนใจ)', 'pres-perf'],
+       ['“Yes, someone found one on the table near the window,” she answered.', '"ค่ะ มีคนเจอเครื่องหนึ่งบนโต๊ะริมหน้าต่าง" เธอตอบ', '{one} ใช้แทนคำนามที่พูดไปแล้ว (a phone) ไม่ต้องพูดซ้ำ · near the window = ใกล้หน้าต่าง', 'past-simple'],
+       ['She gave it to him, and Sam thanked her many times.', 'เธอส่งให้เขา และแซมขอบคุณเธอหลายครั้ง', 'give → {gave} · {gave it to him} = ให้ (ของ) แก่ (คน)', 'past-simple']],
+      [['Since that day, Sam always checks his pockets before he leaves a place.', 'ตั้งแต่วันนั้น แซมตรวจกระเป๋าทุกครั้งก่อนออกจากที่ไหนก็ตาม', '{always} + Present Simple = นิสัยที่ทำทุกครั้ง · {before} + ประโยค = ก่อนที่…', 'pres-simple'],
+       ['He has learned an important lesson.', 'เขาได้เรียนรู้บทเรียนสำคัญ', '{has learned} = Present Perfect บทเรียนจากอดีตที่ยังติดตัวอยู่ตอนนี้ · {an important} ใช้ an เพราะเสียงสระ', 'pres-perf']]
+    ],
+    glos: 'yesterday|adv.|เมื่อวาน; waiting for|phr. v.|รอ…; waiting|v.|รอ; bus|n.|รถบัส; noticed|v.|สังเกตเห็น; phone|n.|โทรศัพท์; wasn’t|v.|ไม่ได้ (was not); pocket|n.|กระเป๋าเสื้อ/กางเกง; pockets|n.|กระเป๋าเสื้อ/กางเกง; looked|v.|มอง, ดู; bag|n.|กระเป๋า, ถุง; either|adv.|เช่นกัน (ในประโยคปฏิเสธ); ran|v.|วิ่ง (อดีตของ run); back|adv.|กลับ; café|n.|ร้านกาแฟ; where|adv.|ที่ซึ่ง; lunch|n.|อาหารกลางวัน; excuse me|phr.|ขอโทษ (เรียกความสนใจ); seen|v.|เห็น (V3 ของ see); black|adj.|สีดำ; asked|v.|ถาม; waiter|n.|พนักงานเสิร์ฟ; someone|pron.|ใครบางคน; found|v.|พบ (อดีตของ find); one|pron.|อันหนึ่ง (แทนคำนามที่พูดไปแล้ว); table|n.|โต๊ะ; near|prep.|ใกล้; window|n.|หน้าต่าง; answered|v.|ตอบ; gave|v.|ให้ (อดีตของ give); thanked|v.|ขอบคุณ; many|det.|หลาย; times|n.|ครั้ง; since|prep.|ตั้งแต่; always|adv.|เสมอ, ทุกครั้ง; checks|v.|ตรวจ; before|conj.|ก่อนที่; leaves|v.|ออกจาก; place|n.|สถานที่; learned|v.|เรียนรู้; important|adj.|สำคัญ; lesson|n.|บทเรียน',
+    qs: [['Where was Sam when he noticed the problem?', 'At the bus stop', ['In the café', 'At home', 'On the bus'], '“Sam was waiting for the bus when he noticed…”'],
+         ['Who gave Sam his phone back?', 'The waiter at the café', ['A police officer', 'His friend', 'The bus driver'], 'พนักงานเสิร์ฟตอบว่ามีคนเจอ แล้ว “She gave it to him”'],
+         ['What does Sam do now?', 'He checks his pockets before leaving a place.', ['He never takes his phone out.', 'He eats lunch at home.', 'He takes a taxi.'], '“Sam always checks his pockets before he leaves a place.”']] }
+],
+B1: [
+  { title: 'Learning to Cook', th: 'หัดทำอาหาร', topic: 'ชีวิตนักศึกษา',
+    paras: [
+      [['When Mai moved to a new city for university, she realised she couldn’t cook anything except instant noodles.', 'เมื่อไหม่ย้ายไปเมืองใหม่เพื่อเรียนมหาวิทยาลัย เธอก็รู้ตัวว่าทำอาหารอะไรไม่เป็นเลยนอกจากบะหมี่กึ่งสำเร็จรูป', '{When} + ประโยคอดีต, ประโยคหลักอดีต · {couldn’t} = ทำไม่ได้ในอดีต (can → could) · {except} = ยกเว้น', 'past-simple'],
+       ['At first, she ate in cheap restaurants, but after a few months she had spent most of her money.', 'ตอนแรกเธอกินที่ร้านราคาถูก แต่ผ่านไปไม่กี่เดือน เธอก็ใช้เงินไปเกือบหมดแล้ว', '{had spent} = Past Perfect ใช้เงินหมดไปก่อนจุดเวลานั้นในอดีต · {a few} + นามนับได้ = สองสาม', 'past-perf']],
+      [['She decided to teach herself by watching online videos.', 'เธอตัดสินใจหัดทำอาหารเองโดยดูวิดีโอออนไลน์', '{decided to} + V1 · {teach herself} = สอนตัวเอง (-self) · {by} + V-ing = โดยการ…', 'verb-patterns'],
+       ['Her first attempt, a simple vegetable soup, was a disaster because she had added far too much salt.', 'ความพยายามครั้งแรกคือซุปผักง่ายๆ ซึ่งออกมาเป็นหายนะ เพราะเธอใส่เกลือมากเกินไปมาก', '{had added} = Past Perfect (ใส่เกลือก่อนที่ซุปจะออกมาแย่) · {far too much} = มากเกินไปมาก · วลีระหว่างจุลภาคขยาย attempt', 'past-perf'],
+       ['Instead of giving up, she tried again the next day and paid more attention to the recipe.', 'แทนที่จะยอมแพ้ เธอลองใหม่ในวันรุ่งขึ้นและใส่ใจกับสูตรมากขึ้น', '{Instead of} + V-ing = แทนที่จะ · give up = ยอมแพ้ · {paid attention to} = ใส่ใจ (pay → paid)', 'verb-patterns']],
+      [['Gradually, her cooking improved.', 'ฝีมือทำอาหารของเธอค่อยๆ ดีขึ้น', '{Gradually} = ค่อยๆ · improve → {improved} ใช้ได้โดยไม่มีกรรม (สิ่งนั้นดีขึ้นเอง)', 'past-simple'],
+       ['Now she cooks dinner for her flatmates every Sunday, and they say her green curry is better than the one at the restaurant down the road.', 'ตอนนี้เธอทำอาหารเย็นให้เพื่อนร่วมห้องทุกวันอาทิตย์ และพวกเขาบอกว่าแกงเขียวหวานของเธออร่อยกว่าของร้านที่อยู่ถัดไปตามถนน', '{Now} และ {every Sunday} → Present Simple · {better than} = ดีกว่า · {the one} ใช้แทน the green curry', 'comparison'],
+       ['Mai often jokes that running out of money was the best thing that ever happened to her.', 'ไหม่มักพูดติดตลกว่า การที่เงินหมดเป็นเรื่องดีที่สุดที่เคยเกิดขึ้นกับเธอ', '{running out of money} = V-ing ทำหน้าที่เป็นประธาน (การที่เงินหมด) · {the best thing that ever happened} = ดีที่สุดที่เคยเกิดขึ้น', 'verb-patterns']]
+    ],
+    glos: 'moved|v.|ย้าย; new|adj.|ใหม่; city|n.|เมือง; university|n.|มหาวิทยาลัย; realised|v.|ตระหนัก, รู้ตัว; couldn’t|v.|ไม่สามารถ (could not); cook|v.|ทำอาหาร; anything|pron.|อะไรก็ตาม (ประโยคปฏิเสธ = อะไรเลย); except|prep.|ยกเว้น; instant noodles|n.|บะหมี่กึ่งสำเร็จรูป; instant|adj.|สำเร็จรูป; noodles|n.|บะหมี่, ก๋วยเตี๋ยว; at first|phr.|ตอนแรก; ate|v.|กิน (อดีตของ eat); cheap|adj.|ราคาถูก; restaurants|n.|ร้านอาหาร; restaurant|n.|ร้านอาหาร; after|prep.|หลังจาก; a few|det.|สองสาม, ไม่กี่; months|n.|เดือน; spent|v.|ใช้ (เงิน, เวลา) V2/V3 ของ spend; most|det.|ส่วนใหญ่; money|n.|เงิน; decided|v.|ตัดสินใจ; teach|v.|สอน; herself|pron.|ตัวเธอเอง; watching|v.|ดู; online|adj.|ออนไลน์; videos|n.|วิดีโอ; first|adj.|แรก; attempt|n.|ความพยายาม, การลองทำ; simple|adj.|ง่าย; vegetable|n.|ผัก; soup|n.|ซุป; disaster|n.|หายนะ; added|v.|เติม, ใส่; far too much|phr.|มากเกินไปมาก; salt|n.|เกลือ; instead of|prep.|แทนที่จะ; giving up|phr. v.|ยอมแพ้ (give up); tried|v.|ลอง, พยายาม; again|adv.|อีกครั้ง; next|adj.|ถัดไป; paid attention to|phr.|ใส่ใจ (pay attention to); attention|n.|ความสนใจ; recipe|n.|สูตรอาหาร; gradually|adv.|ทีละน้อย, ค่อยๆ; cooking|n.|การทำอาหาร, ฝีมือทำอาหาร; improved|v.|ดีขึ้น; cooks|v.|ทำอาหาร; dinner|n.|อาหารเย็น; flatmates|n.|เพื่อนร่วมห้อง/ร่วมแฟลต; Sunday|n.|วันอาทิตย์; say|v.|พูด, บอก; green curry|n.|แกงเขียวหวาน; better|adj.|ดีกว่า (ขั้นกว่าของ good); down the road|phr.|ถัดไปตามถนน (อยู่ใกล้ๆ); often|adv.|บ่อยๆ; jokes|v.|พูดติดตลก; running out of|phr. v.|…หมด (run out of); best|adj.|ดีที่สุด; thing|n.|สิ่ง, เรื่อง; ever|adv.|เคย; happened|v.|เกิดขึ้น',
+    qs: [['Why did Mai start cooking for herself?', 'She had spent most of her money.', ['Her mother asked her to.', 'Restaurants were closed.', 'She wanted to open a restaurant.'], '“after a few months she had spent most of her money” แล้วจึง “decided to teach herself”'],
+         ['What went wrong with her first soup?', 'She added too much salt.', ['She burned it.', 'She forgot the vegetables.', 'It was too cold.'], '“because she had added far too much salt”'],
+         ['What did Mai do after her first failure?', 'She tried again and followed the recipe more carefully.', ['She gave up cooking.', 'She asked her flatmates to cook.', 'She went back to restaurants.'], '“Instead of giving up, she tried again … and paid more attention to the recipe.”']] },
+  { title: 'The Job Interview', th: 'สัมภาษณ์งาน', topic: 'การทำงาน',
+    paras: [
+      [['Tom had been looking for a job for three months when he finally got an interview at a large travel company.', 'ทอมหางานมาสามเดือนแล้ว ในที่สุดก็ได้สัมภาษณ์งานกับบริษัทท่องเที่ยวขนาดใหญ่', '{had been looking} = Past Perfect Continuous ทำต่อเนื่องมาจนถึงจุดหนึ่งในอดีต · {for three months} = เป็นเวลาสามเดือน', 'past-perf'],
+       ['The night before, he was so nervous that he could hardly sleep.', 'คืนก่อนวันสัมภาษณ์ เขาประหม่ามากจนแทบนอนไม่หลับ', '{so} + คำคุณศัพท์ + {that} = …มากจน… · {hardly} = แทบจะไม่ (มีความหมายปฏิเสธในตัว ไม่ต้องใส่ not)', 'linking']],
+      [['He arrived twenty minutes early, which gave him time to calm down.', 'เขามาถึงก่อนเวลายี่สิบนาที ซึ่งทำให้มีเวลาทำใจให้สงบ', '{, which} ขยายทั้งประโยคก่อนหน้า (การที่มาถึงก่อนเวลา) · calm down = สงบลง', 'relative'],
+       ['The interviewer asked him why he wanted to work in tourism.', 'ผู้สัมภาษณ์ถามเขาว่าทำไมจึงอยากทำงานด้านการท่องเที่ยว', 'คำถามซ้อนในประโยค: {why he wanted} เรียงแบบประโยคบอกเล่า (ไม่ใช่ why did he want) และถอย tense เป็นอดีต', 'reported'],
+       ['Tom explained that he had travelled around Asia after finishing school and had loved helping other travellers plan their trips.', 'ทอมอธิบายว่าเขาเคยเดินทางทั่วเอเชียหลังเรียนจบ และชอบช่วยนักเดินทางคนอื่นวางแผนทริปมาก', '{had travelled} = Past Perfect (เกิดก่อนการสัมภาษณ์) · after + {finishing} · help + คน + {plan} (help ตามด้วย V1 ได้)', 'reported'],
+       ['He also admitted that he didn’t have much office experience, but said he learned quickly.', 'เขายอมรับด้วยว่าไม่ค่อยมีประสบการณ์งานออฟฟิศ แต่บอกว่าเขาเรียนรู้ได้เร็ว', '{admitted that} = ยอมรับว่า · {much} + นามนับไม่ได้ (experience) ในประโยคปฏิเสธ', 'countable']],
+      [['A week later, the company called him.', 'หนึ่งสัปดาห์ต่อมา บริษัทโทรหาเขา', '{A week later} = หนึ่งสัปดาห์ต่อมา (ใช้ later เวลาเล่าเรื่องในอดีต)', 'past-simple'],
+       ['They told Tom that although another candidate had more experience, they had chosen him because of his enthusiasm and honesty.', 'พวกเขาบอกทอมว่า แม้ผู้สมัครอีกคนจะมีประสบการณ์มากกว่า แต่พวกเขาเลือกเขาเพราะความกระตือรือร้นและความซื่อสัตย์', '{although} + ประโยค · {because of} + คำนาม · {had chosen} (choose → chose → chosen)', 'linking'],
+       ['He starts next Monday.', 'เขาจะเริ่มงานวันจันทร์หน้า', 'Present Simple ใช้กับตารางเวลาที่กำหนดแน่นอนในอนาคตได้: {starts next Monday}', 'pres-simple']]
+    ],
+    glos: 'looking for|phr. v.|มองหา, หา; looking|v.|มอง, หา; job|n.|งาน; three|num.|สาม; months|n.|เดือน; finally|adv.|ในที่สุด; got|v.|ได้รับ (อดีตของ get); interview|n.|การสัมภาษณ์; large|adj.|ใหญ่; travel|n.|การเดินทาง, การท่องเที่ยว; company|n.|บริษัท; night|n.|กลางคืน; before|adv.|ก่อนหน้านั้น; nervous|adj.|ประหม่า, ตื่นเต้น; hardly|adv.|แทบจะไม่; sleep|v.|นอนหลับ; arrived|v.|มาถึง; twenty|num.|ยี่สิบ; minutes|n.|นาที; early|adv.|ก่อนเวลา; which|pron.|ซึ่ง; gave|v.|ให้ (อดีตของ give); time|n.|เวลา; calm down|phr. v.|สงบลง; calm|adj.|สงบ; interviewer|n.|ผู้สัมภาษณ์; asked|v.|ถาม; wanted|v.|ต้องการ; work|v.|ทำงาน; tourism|n.|การท่องเที่ยว (อุตสาหกรรม); explained|v.|อธิบาย; travelled|v.|เดินทาง; around|prep.|ทั่ว, รอบๆ; Asia|n.|เอเชีย; finishing|v.|ทำเสร็จ, เรียนจบ; loved|v.|รัก, ชอบมาก; helping|v.|ช่วย; other|adj.|อื่นๆ; travellers|n.|นักเดินทาง; plan|v.|วางแผน; trips|n.|การเดินทาง, ทริป; also|adv.|ด้วย, อีกทั้ง; admitted|v.|ยอมรับ; office|n.|สำนักงาน; experience|n.|ประสบการณ์; said|v.|พูด, บอก (อดีตของ say); learned|v.|เรียนรู้; quickly|adv.|อย่างรวดเร็ว; week|n.|สัปดาห์; later|adv.|ต่อมา; called|v.|โทรหา; told|v.|บอก (อดีตของ tell); although|conj.|แม้ว่า; another|det.|อีก (หนึ่ง); candidate|n.|ผู้สมัคร; more|det.|มากกว่า; chosen|v.|เลือก (V3 ของ choose); because of|prep.|เพราะ (+ คำนาม); enthusiasm|n.|ความกระตือรือร้น; honesty|n.|ความซื่อสัตย์; starts|v.|เริ่ม; next|adj.|หน้า, ถัดไป; Monday|n.|วันจันทร์',
+    qs: [['How long had Tom been looking for a job?', 'Three months', ['Three weeks', 'One year', 'Twenty days'], '“had been looking for a job for three months”'],
+         ['What did arriving early give Tom?', 'Time to calm down', ['A free coffee', 'A shorter interview', 'A chance to meet the boss'], '“which gave him time to calm down” which หมายถึงการมาถึงก่อนเวลา'],
+         ['Why did the company choose Tom?', 'Because of his enthusiasm and honesty', ['Because he had the most experience', 'Because he arrived early', 'Because he knew the manager'], '“they had chosen him because of his enthusiasm and honesty” ทั้งที่อีกคนมีประสบการณ์มากกว่า']] }
+],
+B2: [
+  { title: 'The Plastic-Free Village', th: 'หมู่บ้านไร้พลาสติก', topic: 'สิ่งแวดล้อม',
+    paras: [
+      [['When the residents of a small coastal village decided to ban single-use plastic, many outsiders dismissed the idea as unrealistic.', 'เมื่อชาวบ้านในหมู่บ้านริมทะเลเล็กๆ แห่งหนึ่งตัดสินใจห้ามใช้พลาสติกแบบใช้ครั้งเดียวทิ้ง คนนอกจำนวนมากต่างปัดตกว่าความคิดนี้ไม่สมจริง', '{dismissed} + สิ่งนั้น + {as} + คำคุณศัพท์ = ปัดตกว่า… · {single-use} คำคุณศัพท์ประสมที่เชื่อมด้วยขีด', 'past-simple'],
+       ['Shops, they argued, would lose customers, and tourists would simply go elsewhere.', 'พวกเขาแย้งว่าร้านค้าจะเสียลูกค้า และนักท่องเที่ยวก็จะไปที่อื่นแทน', '{, they argued,} แทรกกลางประโยคเพื่อบอกว่าใครพูด · {would} = will ในรูปอดีต (การคาดการณ์ที่พูดไว้ในอดีต)', 'reported']],
+      [['Two years on, however, the results have surprised even the sceptics.', 'แต่สองปีผ่านไป ผลลัพธ์กลับทำให้แม้แต่คนที่ไม่เชื่อก็ยังประหลาดใจ', '{have surprised} = Present Perfect ผลที่ยังเห็นอยู่ตอนนี้ · {Two years on} = สองปีต่อมา · {even} = แม้แต่', 'pres-perf'],
+       ['Local businesses replaced plastic bags with paper ones and began offering discounts to customers who brought their own containers.', 'ธุรกิจท้องถิ่นเปลี่ยนถุงพลาสติกเป็นถุงกระดาษ และเริ่มให้ส่วนลดกับลูกค้าที่นำภาชนะมาเอง', '{replaced} A {with} B = เปลี่ยน A เป็น B · {paper ones} ones ใช้แทน bags · {customers who} = relative clause ขยายลูกค้า', 'relative'],
+       ['Rather than driving visitors away, the scheme attracted media attention, and the number of tourists actually rose by fifteen per cent.', 'แทนที่จะไล่นักท่องเที่ยวไป โครงการนี้กลับดึงดูดความสนใจจากสื่อ และจำนวนนักท่องเที่ยวกลับเพิ่มขึ้นถึงสิบห้าเปอร์เซ็นต์', '{Rather than} + V-ing = แทนที่จะ · {rose by} = เพิ่มขึ้น (ตัวเลข) rise → rose · {actually} = ที่จริงแล้ว (ตรงข้ามกับที่คาด)', 'verb-patterns']],
+      [['That is not to say the transition was easy.', 'นั่นไม่ได้หมายความว่าการเปลี่ยนผ่านจะง่าย', '{That is not to say} = นั่นไม่ได้แปลว่า… ใช้ลดน้ำหนักของสิ่งที่พูดไปก่อนหน้า', 'idiom'],
+       ['Some older residents struggled to change long-established habits, and a few shopkeepers complained about the higher cost of alternatives.', 'ชาวบ้านสูงวัยบางคนลำบากกับการเปลี่ยนนิสัยที่ทำมานาน และเจ้าของร้านบางคนก็บ่นเรื่องต้นทุนที่สูงกว่าของทางเลือกอื่น', '{struggled to} + V1 = ลำบากที่จะ… · {long-established} = มีมานาน · {a few} = มีจำนวนหนึ่ง (ต่างจาก few = แทบไม่มี)', 'verb-patterns'],
+       ['Nevertheless, the village council believes that, had they waited for perfect conditions, nothing would ever have changed.', 'อย่างไรก็ตาม สภาหมู่บ้านเชื่อว่า หากพวกเขารอให้ทุกอย่างพร้อมสมบูรณ์ ก็คงไม่มีอะไรเปลี่ยนแปลงเลย', '{had they waited} = If they had waited (Third Conditional แบบไม่มี If) + {would ever have changed}', 'cond-inv']],
+      [['Other communities are now following their example, proving that small places can sometimes lead the way.', 'ตอนนี้ชุมชนอื่นๆ กำลังทำตามแบบอย่างของพวกเขา ซึ่งพิสูจน์ว่าบางครั้งสถานที่เล็กๆ ก็เป็นผู้นำได้', '{are now following} = Present Continuous สิ่งที่กำลังเกิดในช่วงนี้ · {, proving that} = V-ing บอกผลของประโยคหน้า', 'pres-cont']]
+    ],
+    glos: 'residents|n.|ผู้อยู่อาศัย, ชาวบ้าน; coastal|adj.|ริมชายฝั่ง; village|n.|หมู่บ้าน; decided|v.|ตัดสินใจ; ban|v.|ห้าม; single-use|adj.|ใช้ครั้งเดียวทิ้ง; plastic|n.|พลาสติก; outsiders|n.|คนนอก; dismissed|v.|ปัดตก, ไม่ให้ความสำคัญ; idea|n.|ความคิด; unrealistic|adj.|ไม่สมจริง; shops|n.|ร้านค้า; argued|v.|โต้แย้ง; lose|v.|เสีย, สูญเสีย; customers|n.|ลูกค้า; tourists|n.|นักท่องเที่ยว; simply|adv.|เพียงแค่; elsewhere|adv.|ที่อื่น; years|n.|ปี; on|adv.|ผ่านไป (two years on = สองปีต่อมา); results|n.|ผลลัพธ์; surprised|v.|ทำให้ประหลาดใจ; even|adv.|แม้แต่; sceptics|n.|คนที่ไม่เชื่อง่าย; local|adj.|ท้องถิ่น; businesses|n.|ธุรกิจ; replaced|v.|แทนที่, เปลี่ยน; bags|n.|ถุง; paper|n.|กระดาษ; ones|pron.|อัน (แทนคำนามที่พูดไปแล้ว); began|v.|เริ่ม (อดีตของ begin); offering|v.|เสนอให้; discounts|n.|ส่วนลด; brought|v.|นำมา (อดีตของ bring); own|adj.|ของตัวเอง; containers|n.|ภาชนะ, กล่อง; rather than|phr.|แทนที่จะ; driving away|phr. v.|ขับไล่ไป (drive … away); driving|v.|ขับ, ผลัก; away|adv.|ออกไป; visitors|n.|ผู้มาเยือน; scheme|n.|โครงการ; attracted|v.|ดึงดูด; media|n.|สื่อ; attention|n.|ความสนใจ; number|n.|จำนวน; actually|adv.|ที่จริงแล้ว; rose|v.|เพิ่มขึ้น (อดีตของ rise); fifteen|num.|สิบห้า; per cent|n.|เปอร์เซ็นต์; that is not to say|phr.|นั่นไม่ได้หมายความว่า; transition|n.|การเปลี่ยนผ่าน; easy|adj.|ง่าย; older|adj.|อายุมากกว่า, สูงวัย; struggled|v.|ดิ้นรน, ลำบาก; change|v.|เปลี่ยน; long-established|adj.|ที่มีมานาน; habits|n.|นิสัย, ความเคยชิน; a few|det.|จำนวนหนึ่ง; shopkeepers|n.|เจ้าของร้าน; complained|v.|บ่น, ร้องเรียน; higher|adj.|สูงกว่า; cost|n.|ต้นทุน, ราคา; alternatives|n.|ทางเลือกอื่น; nevertheless|adv.|อย่างไรก็ตาม; council|n.|สภา; believes|v.|เชื่อ; waited|v.|รอ; perfect|adj.|สมบูรณ์แบบ; conditions|n.|สภาพ, เงื่อนไข; nothing|pron.|ไม่มีอะไร; ever|adv.|เคย, เลย; changed|v.|เปลี่ยนแปลง; communities|n.|ชุมชน; following|v.|ทำตาม; example|n.|ตัวอย่าง, แบบอย่าง; proving|v.|พิสูจน์; places|n.|สถานที่; sometimes|adv.|บางครั้ง; lead the way|phr.|เป็นผู้นำ, บุกเบิก',
+    qs: [['What did outsiders predict at first?', 'Shops would lose customers and tourists would go elsewhere.', ['The village would become famous.', 'Plastic would become cheaper.', 'Residents would leave the village.'], '“Shops, they argued, would lose customers, and tourists would simply go elsewhere.”'],
+         ['What happened to the number of tourists?', 'It rose by fifteen per cent.', ['It fell by fifteen per cent.', 'It stayed the same.', 'Tourists stopped coming.'], '“the number of tourists actually rose by fifteen per cent” actually บอกว่าตรงข้ามกับที่คาด'],
+         ['What does the village council believe?', 'Waiting for perfect conditions would have meant no change.', ['The ban was a mistake.', 'Plastic bags should return.', 'Other villages should not copy them.'], '“had they waited for perfect conditions, nothing would ever have changed”']] },
+  { title: 'Why We Forget Our Dreams', th: 'ทำไมเราจึงลืมความฝัน', topic: 'วิทยาศาสตร์',
+    paras: [
+      [['Most of us have had the frustrating experience of waking up from a vivid dream, only to find that within minutes it has completely vanished.', 'คนส่วนใหญ่คงเคยมีประสบการณ์น่าหงุดหงิด คือตื่นจากความฝันที่ชัดเจนมาก แต่กลับพบว่าภายในไม่กี่นาทีมันหายไปหมด', '{have had} = Present Perfect (ประสบการณ์) · {, only to find that} = แต่กลับพบว่า (ผลที่ผิดคาด)', 'pres-perf'],
+       ['Scientists have proposed several explanations for this common phenomenon.', 'นักวิทยาศาสตร์เสนอคำอธิบายไว้หลายแบบสำหรับปรากฏการณ์ทั่วไปนี้', '{have proposed} = Present Perfect งานที่ทำไว้แล้วและยังใช้อ้างอิงอยู่ · phenomenon (เอกพจน์) / phenomena (พหูพจน์)', 'pres-perf']],
+      [['One theory suggests that the brain chemicals responsible for storing memories are at their lowest levels during the deepest stages of sleep.', 'ทฤษฎีหนึ่งเสนอว่า สารเคมีในสมองที่ทำหน้าที่เก็บความจำจะอยู่ในระดับต่ำที่สุดในช่วงที่หลับลึกที่สุด', 'ประธานยาว {the brain chemicals responsible for storing memories} (responsible for + V-ing) แล้วจึงตามด้วยกริยาหลัก {are}', 'verb-patterns'],
+       ['In other words, we may be experiencing dreams at a time when our brains are simply not recording them.', 'พูดอีกอย่างก็คือ เราอาจกำลังฝันอยู่ในช่วงที่สมองไม่ได้บันทึกความฝันไว้เลย', '{may be experiencing} = modal + be + V-ing (อาจกำลัง…) · {In other words} = พูดอีกอย่างคือ · {a time when} = ช่วงเวลาที่…', 'modal-base'],
+       ['Another explanation focuses on the nature of dreams themselves: because they are often illogical and disconnected, they are harder to organise into a story we can remember.', 'อีกคำอธิบายเน้นที่ธรรมชาติของความฝันเอง: เพราะความฝันมักไร้เหตุผลและไม่ต่อเนื่อง จึงยากที่จะเรียบเรียงเป็นเรื่องที่เราจำได้', '{themselves} เน้นว่า "ตัวความฝันเอง" · {harder to} + V1 = ยากกว่าที่จะ… · {a story we can remember} ละ that ไว้ได้', 'comparison']],
+      [['Interestingly, people who wake up frequently during the night tend to recall more dreams.', 'ที่น่าสนใจคือ คนที่ตื่นบ่อยกลางดึกมักจำความฝันได้มากกว่า', '{people who} = relative clause ขยายคน · {tend to} + V1 = มีแนวโน้มที่จะ…', 'relative'],
+       ['Researchers believe this is because brief awakenings give the brain a chance to store what it has just experienced.', 'นักวิจัยเชื่อว่าเป็นเพราะการตื่นสั้นๆ ทำให้สมองมีโอกาสเก็บสิ่งที่มันเพิ่งประสบมา', '{give the brain a chance to} = ให้โอกาสสมองที่จะ… · {what it has just experienced} = สิ่งที่มันเพิ่ง… (what = สิ่งที่)', 'pres-perf'],
+       ['If you would like to remember your dreams, experts recommend keeping a notebook beside your bed and writing down whatever you can recall the moment you open your eyes.', 'ถ้าคุณอยากจำความฝันได้ ผู้เชี่ยวชาญแนะนำให้วางสมุดไว้ข้างเตียง และจดทุกอย่างที่นึกออกทันทีที่ลืมตา', '{recommend} + V-ing ({keeping}, {writing down}) · {whatever} = อะไรก็ตามที่ · {the moment} + ประโยค = ทันทีที่…', 'verb-patterns']]
+    ],
+    glos: 'most|det.|ส่วนใหญ่; frustrating|adj.|น่าหงุดหงิด; experience|n.|ประสบการณ์; waking up|phr. v.|ตื่นนอน (wake up); waking|v.|ตื่น; vivid|adj.|ชัดเจน สดใส; dream|n.|ความฝัน; dreams|n.|ความฝัน; only to find|phr.|แต่กลับพบว่า; find|v.|พบ; within|prep.|ภายใน; minutes|n.|นาที; completely|adv.|ทั้งหมด, อย่างสิ้นเชิง; vanished|v.|หายไป; scientists|n.|นักวิทยาศาสตร์; proposed|v.|เสนอ; several|det.|หลาย; explanations|n.|คำอธิบาย; explanation|n.|คำอธิบาย; common|adj.|ทั่วไป, พบบ่อย; phenomenon|n.|ปรากฏการณ์; theory|n.|ทฤษฎี; suggests|v.|ชี้ว่า, เสนอว่า; brain|n.|สมอง; brains|n.|สมอง; chemicals|n.|สารเคมี; responsible for|adj.|ทำหน้าที่…, รับผิดชอบ; responsible|adj.|รับผิดชอบ; storing|v.|เก็บ; memories|n.|ความทรงจำ; lowest|adj.|ต่ำที่สุด; levels|n.|ระดับ; during|prep.|ระหว่าง; deepest|adj.|ลึกที่สุด; stages|n.|ช่วง, ขั้น; sleep|n.|การนอนหลับ; in other words|phr.|พูดอีกอย่างคือ; words|n.|คำ; may|v.|อาจจะ; experiencing|v.|ประสบ, เผชิญ; time|n.|เวลา, ช่วง; simply|adv.|เพียงแค่, เลย; recording|v.|บันทึก; another|det.|อีก (หนึ่ง); focuses on|phr. v.|เน้นที่; focuses|v.|เน้น; nature|n.|ธรรมชาติ, ลักษณะ; themselves|pron.|ตัวมันเอง; often|adv.|บ่อยๆ; illogical|adj.|ไม่มีเหตุผล; disconnected|adj.|ไม่ต่อเนื่อง; harder|adj.|ยากกว่า; organise|v.|จัดระเบียบ, เรียบเรียง; story|n.|เรื่องราว; remember|v.|จำ; interestingly|adv.|ที่น่าสนใจคือ; people|n.|ผู้คน; wake up|phr. v.|ตื่นนอน; wake|v.|ตื่น; frequently|adv.|บ่อยๆ; night|n.|กลางคืน; tend to|phr.|มีแนวโน้มที่จะ; tend|v.|มีแนวโน้ม; recall|v.|นึกออก, จำได้; researchers|n.|นักวิจัย; believe|v.|เชื่อ; brief|adj.|สั้นๆ; awakenings|n.|การตื่น; chance|n.|โอกาส; store|v.|เก็บ; just|adv.|เพิ่ง; experienced|v.|ประสบ; would like|phr.|อยาก (สุภาพ); experts|n.|ผู้เชี่ยวชาญ; recommend|v.|แนะนำ; keeping|v.|เก็บไว้, วางไว้; notebook|n.|สมุดบันทึก; beside|prep.|ข้างๆ; bed|n.|เตียง; writing down|phr. v.|จดลงไป (write down); writing|v.|เขียน; whatever|pron.|อะไรก็ตามที่; moment|n.|ขณะ (the moment = ทันทีที่); open|v.|เปิด; eyes|n.|ตา',
+    qs: [['According to the first theory, why do we forget dreams?', 'Memory chemicals are at their lowest in deep sleep.', ['Dreams are too short.', 'We sleep too little.', 'Dreams are always boring.'], '“the brain chemicals responsible for storing memories are at their lowest levels during the deepest stages of sleep”'],
+         ['Who tends to remember more dreams?', 'People who wake up often during the night', ['People who sleep very deeply', 'People who never wake up', 'Scientists'], '“people who wake up frequently during the night tend to recall more dreams”'],
+         ['What do experts recommend?', 'Keeping a notebook by the bed and writing dreams down', ['Sleeping for longer', 'Avoiding sleep at night', 'Taking brain chemicals'], '“experts recommend keeping a notebook beside your bed and writing down…”']] }
+],
+C1: [
+  { title: 'The Paradox of Choice', th: 'ความย้อนแย้งของการมีทางเลือก', topic: 'จิตวิทยา',
+    paras: [
+      [['It seems self-evident that having more options should make us happier.', 'ดูเหมือนเป็นเรื่องชัดเจนในตัวเองว่า การมีตัวเลือกมากขึ้นน่าจะทำให้เรามีความสุขขึ้น', '{It seems} + คำคุณศัพท์ + {that} = ดูเหมือนว่า… · {having more options} = V-ing เป็นประธาน · should = น่าจะ (สิ่งที่คาดไว้)', 'verb-patterns'],
+       ['After all, the more choices we have, the more likely we are to find something that suits us perfectly.', 'ก็แน่ล่ะ ยิ่งเรามีตัวเลือกมากเท่าไร เราก็ยิ่งมีโอกาสเจอสิ่งที่เหมาะกับเราอย่างลงตัวมากเท่านั้น', '{the more …, the more likely …} = ยิ่ง…ยิ่ง… · {After all} = ก็แน่ล่ะ, อย่าลืมว่า (ให้เหตุผลสนับสนุน)', 'the-more'],
+       ['Yet a growing body of research suggests that, beyond a certain point, an abundance of choice can be paralysing rather than liberating.', 'ทว่างานวิจัยที่เพิ่มขึ้นเรื่อยๆ ชี้ว่า เมื่อเกินจุดหนึ่งไป ตัวเลือกที่ล้นเหลืออาจทำให้เราตัดสินใจไม่ได้ แทนที่จะทำให้รู้สึกเป็นอิสระ', '{a growing body of research} = งานวิจัยจำนวนมากขึ้นเรื่อยๆ (collocation) · {rather than} เทียบคำคุณศัพท์สองคำ', 'linking']],
+      [['In one frequently cited study, shoppers who were offered twenty-four varieties of jam were far less likely to make a purchase than those presented with just six.', 'ในงานศึกษาที่ถูกอ้างถึงบ่อยชิ้นหนึ่ง ผู้ซื้อที่ได้เห็นแยมยี่สิบสี่ชนิดมีแนวโน้มจะซื้อน้อยกว่ามาก เมื่อเทียบกับคนที่เห็นเพียงหกชนิด', '{shoppers who were offered} = relative clause + passive · {far less likely … than} = มีโอกาสน้อยกว่ามาก · {those presented with} = คนที่ได้รับการนำเสนอ (ละ who were)', 'comparison'],
+       ['Faced with so many alternatives, consumers apparently found it harder to commit, fearing they might pick the wrong one.', 'เมื่อเผชิญกับทางเลือกมากมาย ผู้บริโภคดูเหมือนจะตัดสินใจได้ยากขึ้น เพราะกลัวว่าจะเลือกผิด', '{Faced with} = participle clause (= Because they were faced with) · {found it harder to} = รู้สึกว่ายากขึ้นที่จะ · {fearing} = V-ing บอกความรู้สึกที่เกิดพร้อมกัน', 'passive'],
+       ['Even those who did buy something reported feeling less satisfied, haunted by the nagging suspicion that a better option had been within reach.', 'แม้แต่คนที่ซื้อจริงก็บอกว่ารู้สึกพอใจน้อยลง เพราะยังค้างคาใจว่าตัวเลือกที่ดีกว่าอยู่แค่เอื้อม', '{did buy} = did + V1 เน้นว่า "ซื้อจริงๆ" · {reported feeling} = report + V-ing · {haunted by} = ถูกหลอกหลอนด้วย (participle) · {had been} = Past Perfect', 'past-perf']],
+      [['Psychologists distinguish between “maximisers”, who feel compelled to examine every possibility, and “satisficers”, who settle for the first option that meets their criteria.', 'นักจิตวิทยาแยกคนสองกลุ่ม คือ "maximisers" ที่รู้สึกว่าต้องตรวจทุกความเป็นไปได้ กับ "satisficers" ที่พอใจกับตัวเลือกแรกที่ตรงตามเกณฑ์', '{distinguish between} A and B · {, who} = relative clause แบบให้ข้อมูลเพิ่ม (มีจุลภาค) · {settle for} = ยอมรับ, พอใจกับ', 'relative'],
+       ['Somewhat counterintuitively, it is the latter group that tends to report greater contentment.', 'ค่อนข้างขัดกับความรู้สึก กลุ่มหลังนี่เองที่มักบอกว่าพึงพอใจมากกว่า', 'Cleft sentence: {it is the latter group that} = เน้นว่า "กลุ่มหลังนี่แหละ" · the latter = อันหลัง / the former = อันแรก', 'cleft'],
+       ['The lesson, it would seem, is not that choice is inherently bad, but that knowing when to stop searching may be a skill worth cultivating.', 'บทเรียนดูเหมือนจะไม่ใช่ว่าการมีตัวเลือกเป็นเรื่องแย่โดยตัวมันเอง แต่การรู้ว่าเมื่อไรควรหยุดค้นหาอาจเป็นทักษะที่ควรฝึกฝน', '{not that …, but that …} = ไม่ใช่ว่า… แต่ว่า… · {it would seem} = ดูเหมือนว่า (พูดอย่างระมัดระวัง) · {worth} + V-ing = คุ้มค่าที่จะ', 'linking']]
+    ],
+    glos: 'seems|v.|ดูเหมือน; self-evident|adj.|ชัดเจนในตัวเอง; having|v.|การมี; options|n.|ตัวเลือก; option|n.|ตัวเลือก; should|v.|น่าจะ, ควร; happier|adj.|มีความสุขกว่า; after all|phr.|ก็แน่ล่ะ, ท้ายที่สุดแล้ว; choices|n.|ตัวเลือก; choice|n.|การเลือก, ตัวเลือก; likely|adj.|มีแนวโน้ม; find|v.|พบ; suits|v.|เหมาะกับ; perfectly|adv.|อย่างลงตัว; yet|conj.|ทว่า; growing|adj.|ที่เพิ่มขึ้นเรื่อยๆ; body of research|n.|งานวิจัยจำนวนมาก; body|n.|กลุ่ม, ปริมาณ (ในวลีนี้); research|n.|งานวิจัย; suggests|v.|ชี้ว่า; beyond|prep.|เกินกว่า; certain|adj.|บางอย่าง, หนึ่ง; point|n.|จุด; abundance|n.|ความล้นเหลือ; paralysing|adj.|ทำให้ชะงัก ตัดสินใจไม่ได้; rather than|phr.|แทนที่จะ; liberating|adj.|ทำให้เป็นอิสระ; frequently|adv.|บ่อยๆ; cited|adj.|ถูกอ้างถึง; study|n.|งานศึกษา, งานวิจัย; shoppers|n.|ผู้ซื้อ; offered|v.|เสนอให้; twenty-four|num.|ยี่สิบสี่; varieties|n.|ชนิด, แบบ; jam|n.|แยม; far|adv.|มาก (เน้นขั้นกว่า); less|adv.|น้อยกว่า; make a purchase|phr.|ซื้อ (ทางการ); purchase|n.|การซื้อ; those|pron.|คนเหล่านั้น; presented with|phr.|ได้รับการนำเสนอ; just|adv.|เพียง; faced with|phr.|เผชิญกับ; alternatives|n.|ทางเลือกอื่น; consumers|n.|ผู้บริโภค; apparently|adv.|ดูเหมือนว่า; found|v.|พบว่า (อดีตของ find); commit|v.|ตัดสินใจแน่วแน่, ผูกมัด; fearing|v.|กลัว; might|v.|อาจจะ; pick|v.|เลือก; wrong|adj.|ผิด; even|adv.|แม้แต่; reported|v.|รายงาน, บอก; feeling|v.|รู้สึก; satisfied|adj.|พอใจ; haunted by|phr.|ถูกหลอกหลอนด้วย; nagging|adj.|ค้างคาใจ, รบกวนไม่หยุด; suspicion|n.|ความสงสัย, ความระแวง; better|adj.|ดีกว่า; within reach|phr.|อยู่แค่เอื้อม; psychologists|n.|นักจิตวิทยา; distinguish between|phr. v.|แยกแยะระหว่าง; maximisers|n.|คนที่ต้องการตัวเลือกที่ดีที่สุดเสมอ; compelled|adj.|รู้สึกว่าจำเป็นต้อง; examine|v.|ตรวจสอบ; possibility|n.|ความเป็นไปได้; satisficers|n.|คนที่พอใจกับตัวเลือกที่ดีพอ; settle for|phr. v.|ยอมรับ, พอใจกับ; meets|v.|ตรงตาม; criteria|n.|เกณฑ์ (พหูพจน์ของ criterion); somewhat|adv.|ค่อนข้าง; counterintuitively|adv.|อย่างขัดกับความรู้สึก; latter|n.|อันหลัง; group|n.|กลุ่ม; tends to|phr.|มีแนวโน้มที่จะ; report|v.|รายงาน, บอก; greater|adj.|มากกว่า; contentment|n.|ความพึงพอใจ; lesson|n.|บทเรียน; seem|v.|ดูเหมือน; inherently|adv.|โดยเนื้อแท้; knowing|v.|การรู้; stop|v.|หยุด; searching|v.|ค้นหา; skill|n.|ทักษะ; worth|adj.|คุ้มค่า; cultivating|v.|บ่มเพาะ, ฝึกฝน',
+    qs: [['What happened in the jam study?', 'Fewer people bought jam when there were 24 types.', ['More people bought jam when there were 24 types.', 'Nobody bought any jam.', 'Shoppers preferred cheaper jam.'], '“were far less likely to make a purchase than those presented with just six”'],
+         ['How did buyers in the large-choice group feel afterwards?', 'Less satisfied with what they bought', ['Proud of their choice', 'Completely indifferent', 'Grateful for the variety'], '“reported feeling less satisfied, haunted by the nagging suspicion that a better option had been within reach”'],
+         ['Which group reports greater contentment?', 'People who settle for an option that is good enough', ['People who examine every possibility', 'People who never choose', 'People with the most money'], '“it is the latter group that tends to report greater contentment” the latter = satisficers']] },
+  { title: 'The Last Lighthouse Keeper', th: 'ผู้เฝ้าประภาคารคนสุดท้าย', topic: 'เรื่องเล่าชีวิต',
+    paras: [
+      [['For thirty-one years, Elias Morgan climbed the hundred and twelve steps of the Carrick Point lighthouse every evening at dusk.', 'ตลอดสามสิบเอ็ดปี อีไลอัส มอร์แกนปีนบันได 112 ขั้นของประภาคารแคร์ริกพอยต์ทุกเย็นในยามพลบค่ำ', '{For thirty-one years} + Past Simple = ช่วงเวลาที่จบไปแล้วในอดีต · {at dusk} = ตอนพลบค่ำ', 'past-simple'],
+       ['By the time the lamp was finally automated in 1998, he had become something of a local legend, credited with guiding countless vessels safely through one of the most treacherous stretches of coastline in the country.', 'เมื่อดวงไฟถูกเปลี่ยนเป็นระบบอัตโนมัติในปี 1998 เขาก็กลายเป็นตำนานท้องถิ่นไปแล้ว ได้รับการยกย่องว่านำทางเรือนับไม่ถ้วนให้ผ่านแนวชายฝั่งที่อันตรายที่สุดแห่งหนึ่งของประเทศได้อย่างปลอดภัย', '{By the time} + Past Simple, {had become} = Past Perfect · {credited with guiding} = ได้รับเครดิตว่า… (V3 + with + V-ing) · {one of the most} + adj + นามพหูพจน์', 'past-perf']],
+      [['Yet when journalists arrived to interview him on his final night, they found him strangely reluctant to talk about rescues or storms.', 'แต่เมื่อนักข่าวมาสัมภาษณ์ในคืนสุดท้ายของเขา พวกเขากลับพบว่าเขาไม่อยากพูดถึงการช่วยชีวิตหรือพายุเลย ซึ่งแปลกมาก', '{found him} + คำคุณศัพท์ = พบว่าเขา… · {reluctant to} + V1 = ไม่เต็มใจที่จะ…', 'verb-patterns'],
+       ['Instead, he wanted to discuss the silence.', 'เขากลับอยากพูดถึงความเงียบแทน', '{Instead} ขึ้นต้นประโยค = แทนที่จะเป็นอย่างนั้น (ต่างจาก instead of + คำนาม)', 'linking'],
+       ['“People imagine it must have been lonely,” he told them, gazing out at the darkening sea.', '"ผู้คนคิดว่ามันคงเหงามากแน่ๆ" เขาบอกพลางมองออกไปยังทะเลที่ค่อยๆ มืดลง', '{must have been} = คงจะ…แน่ๆ (คาดเดาเรื่องในอดีต) · {, gazing out} = participle บอกการกระทำที่เกิดพร้อมกัน', 'modal-perfect'],
+       ['“But solitude and loneliness are not the same thing.', '"แต่ความสันโดษกับความเหงาไม่ใช่สิ่งเดียวกัน', '{solitude} = การอยู่คนเดียว (มักเป็นความหมายบวก) ต่างจาก {loneliness} = ความเหงา (ลบ) · {the same thing} = สิ่งเดียวกัน', 'be'],
+       ['Out here, I never once felt cut off from the world.', 'อยู่ที่นี่ ผมไม่เคยรู้สึกถูกตัดขาดจากโลกเลยสักครั้ง', '{never once} = ไม่เคยเลยสักครั้ง (เน้นกว่า never) · {cut off from} = ถูกตัดขาดจาก', 'idiom'],
+       ['If anything, I felt more connected to it.”', 'ถ้าจะว่าไป ผมกลับรู้สึกเชื่อมโยงกับมันมากกว่าเดิมเสียอีก"', '{If anything} = ถ้าจะว่าไปแล้ว (ใช้บอกว่าความจริงตรงกันข้ามด้วยซ้ำ)', 'idiom']],
+      [['He retired to a cottage within sight of the lighthouse, and for the rest of his life, he reportedly glanced at the beam each night before going to bed, as if to reassure himself that it was still doing his job.', 'เขาเกษียณไปอยู่กระท่อมที่มองเห็นประภาคาร และว่ากันว่าตลอดชีวิตที่เหลือ เขาจะเหลือบมองลำแสงทุกคืนก่อนเข้านอน ราวกับจะบอกตัวเองให้มั่นใจว่ามันยังทำหน้าที่แทนเขาอยู่', '{reportedly} = ว่ากันว่า (ข้อมูลที่ไม่ได้ยืนยัน) · {as if to} + V1 = ราวกับจะ… · {within sight of} = อยู่ในระยะที่มองเห็น', 'passive-report']]
+    ],
+    glos: 'thirty-one|num.|สามสิบเอ็ด; years|n.|ปี; climbed|v.|ปีน; hundred|num.|ร้อย; twelve|num.|สิบสอง; steps|n.|ขั้นบันได; lighthouse|n.|ประภาคาร; every|det.|ทุกๆ; evening|n.|ตอนเย็น; dusk|n.|ตอนพลบค่ำ; by the time|phr.|เมื่อถึงตอนที่; lamp|n.|ดวงไฟ, ตะเกียง; finally|adv.|ในที่สุด; automated|adj.|เป็นระบบอัตโนมัติ; become|v.|กลายเป็น (V3); something of|phr.|ค่อนข้างจะเป็น…; local|adj.|ท้องถิ่น; legend|n.|ตำนาน; credited with|phr.|ได้รับการยกย่องว่า…; guiding|v.|นำทาง; countless|adj.|นับไม่ถ้วน; vessels|n.|เรือ; safely|adv.|อย่างปลอดภัย; through|prep.|ผ่าน; most|adv.|ที่สุด; treacherous|adj.|อันตรายแบบแฝงเร้น; stretches|n.|ช่วง, แนว; coastline|n.|แนวชายฝั่ง; country|n.|ประเทศ; yet|conj.|ทว่า; journalists|n.|นักข่าว; arrived|v.|มาถึง; interview|v.|สัมภาษณ์; final|adj.|สุดท้าย; night|n.|คืน; found|v.|พบว่า (อดีตของ find); strangely|adv.|อย่างแปลกประหลาด; reluctant|adj.|ไม่เต็มใจ; talk|v.|พูดคุย; rescues|n.|การช่วยชีวิต; storms|n.|พายุ; instead|adv.|แทน; wanted|v.|ต้องการ; discuss|v.|พูดถึง, อภิปราย; silence|n.|ความเงียบ; people|n.|ผู้คน; imagine|v.|จินตนาการ, คิดเอาว่า; must|v.|คงจะ (คาดเดา); lonely|adj.|เหงา; told|v.|บอก (อดีตของ tell); gazing out|phr. v.|มองออกไป (อย่างครุ่นคิด); gazing|v.|จ้องมอง; darkening|adj.|ที่ค่อยๆ มืดลง; sea|n.|ทะเล; solitude|n.|ความสันโดษ; loneliness|n.|ความเหงา; same|adj.|เดียวกัน; thing|n.|สิ่ง; out here|phr.|ที่นี่ (ที่ห่างไกล); never once|phr.|ไม่เคยเลยสักครั้ง; felt|v.|รู้สึก (อดีตของ feel); cut off|adj.|ถูกตัดขาด; world|n.|โลก; if anything|phr.|ถ้าจะว่าไป (ตรงกันข้ามด้วยซ้ำ); connected|adj.|เชื่อมโยง; retired|v.|เกษียณ; cottage|n.|กระท่อม, บ้านหลังเล็กในชนบท; within sight of|phr.|อยู่ในระยะมองเห็น; sight|n.|การมองเห็น; rest|n.|ส่วนที่เหลือ; life|n.|ชีวิต; reportedly|adv.|ว่ากันว่า; glanced at|phr. v.|เหลือบมอง; glanced|v.|เหลือบมอง; beam|n.|ลำแสง; each|det.|แต่ละ; going to bed|phr.|เข้านอน; bed|n.|เตียง; as if|phr.|ราวกับว่า; reassure|v.|ทำให้มั่นใจ, ให้ความอุ่นใจ; himself|pron.|ตัวเขาเอง; still|adv.|ยังคง; doing|v.|ทำ; job|n.|งาน, หน้าที่',
+    qs: [['What had Elias become by 1998?', 'A local legend', ['A famous journalist', 'A ship captain', 'A lonely old man nobody knew'], '“he had become something of a local legend”'],
+         ['What did Elias want to talk about on his last night?', 'The silence', ['Rescues', 'Storms', 'His retirement plans'], '“reluctant to talk about rescues or storms. Instead, he wanted to discuss the silence.”'],
+         ['What distinction does Elias make?', 'Being alone is not the same as feeling lonely.', ['Storms are worse than silence.', 'The lighthouse was better before automation.', 'Journalists do not understand the sea.'], '“solitude and loneliness are not the same thing” และเขากลับรู้สึกเชื่อมโยงกับโลกมากขึ้น']] }
+],
+C2: [
+  { title: 'In Defence of Nostalgia', th: 'ว่าด้วยความโหยหาอดีต', topic: 'บทความความคิด',
+    paras: [
+      [['Nostalgia was once regarded not as a pleasant reverie but as a disease.', 'ครั้งหนึ่ง ความโหยหาอดีตเคยถูกมองว่าไม่ใช่ภวังค์อันรื่นรมย์ แต่เป็นโรคชนิดหนึ่ง', '{was regarded} = passive (ถูกมองว่า) · {not as} X {but as} Y = ไม่ใช่ X แต่เป็น Y', 'passive'],
+       ['The term, coined by a Swiss physician in the late seventeenth century, was used to describe the debilitating homesickness afflicting soldiers stationed far from home, whose symptoms were thought to include fever, fainting and even death.', 'คำนี้ซึ่งแพทย์ชาวสวิสบัญญัติขึ้นในปลายศตวรรษที่สิบเจ็ด ใช้อธิบายอาการคิดถึงบ้านอย่างรุนแรงที่เกิดกับทหารซึ่งประจำการอยู่ไกลบ้าน โดยเชื่อกันว่าอาการรวมถึงไข้ เป็นลม และถึงขั้นเสียชีวิต', '{, coined by …,} = participle แทรก (= which was coined by) · {afflicting} = ที่เกิดกับ (= which afflicted) · {whose symptoms were thought to include} = whose + passive', 'passive-report']],
+      [['Only in recent decades has nostalgia undergone something of a rehabilitation.', 'เพิ่งไม่กี่ทศวรรษหลังนี้เองที่ความโหยหาอดีตได้รับการกู้ภาพลักษณ์', '{Only in recent decades has nostalgia undergone} = Only + วลีเวลาขึ้นต้น → inversion (has + ประธาน + V3)', 'inversion'],
+       ['Far from being a symptom of maladjustment, it now appears to serve a distinctly adaptive function.', 'แทนที่จะเป็นอาการของการปรับตัวไม่ได้ ตอนนี้มันกลับดูเหมือนจะช่วยให้คนปรับตัวได้อย่างชัดเจน', '{Far from being} = ไม่ใช่เลย, ห่างไกลจากการเป็น · {appears to} + V1 = ดูเหมือนจะ…', 'verb-patterns'],
+       ['Experiments suggest that when people are induced to feel lonely or anxious, recalling cherished memories bolsters their sense of social connectedness and lends their lives a greater sense of continuity and meaning.', 'การทดลองชี้ว่า เมื่อผู้คนถูกกระตุ้นให้รู้สึกเหงาหรือกังวล การระลึกถึงความทรงจำอันเป็นที่รักจะเสริมความรู้สึกเชื่อมโยงกับผู้อื่น และทำให้ชีวิตมีความต่อเนื่องและมีความหมายมากขึ้น', '{are induced to feel} = ถูกกระตุ้นให้รู้สึก (passive + to V) · ประธาน {recalling cherished memories} เป็น V-ing · {lends their lives a … sense of} = ทำให้ชีวิตมี…', 'passive']],
+      [['That is not to say nostalgia is without its pitfalls.', 'นั่นไม่ได้หมายความว่าความโหยหาอดีตจะไม่มีหลุมพราง', '{That is not to say} = นั่นไม่ได้หมายความว่า · {without its pitfalls} = ปราศจากข้อเสียที่ซ่อนอยู่', 'idiom'],
+       ['Collective nostalgia, in particular, can curdle into a yearning for a mythologised past that never truly existed, one conveniently stripped of the hardships and injustices that accompanied it.', 'โดยเฉพาะความโหยหาอดีตร่วมกันของสังคม อาจเน่าเสียกลายเป็นความใฝ่หาอดีตในตำนานที่ไม่เคยมีอยู่จริง อดีตที่ถูกตัดความยากลำบากและความอยุติธรรมที่มาพร้อมกันทิ้งไปอย่างง่ายดาย', '{curdle into} = (อุปมา) เสื่อมกลายเป็น · {, one conveniently stripped of} = one แทน a past + participle (= which was stripped of)', 'relative'],
+       ['Politicians of every stripe have been quick to exploit such sentiment, promising a return to a golden age whose lustre owes more to selective memory than to historical fact.', 'นักการเมืองทุกฝักฝ่ายต่างรีบฉวยประโยชน์จากความรู้สึกนี้ สัญญาว่าจะพากลับสู่ยุคทอง ซึ่งความรุ่งโรจน์ของมันมาจากความทรงจำที่เลือกจำมากกว่าข้อเท็จจริงทางประวัติศาสตร์', '{of every stripe} = ทุกฝักทุกฝ่าย (สำนวน) · {whose lustre owes more to} X {than to} Y = ความรุ่งโรจน์มาจาก X มากกว่า Y', 'relative']],
+      [['Perhaps, then, the healthiest relationship with the past is one of affectionate scepticism: cherishing what was good without succumbing to the illusion that it was better.', 'ถ้าเช่นนั้น ความสัมพันธ์กับอดีตที่ดีที่สุดอาจเป็นการสงสัยอย่างอ่อนโยน คือหวงแหนสิ่งที่ดีโดยไม่หลงเชื่อภาพลวงว่ามันดีกว่าปัจจุบัน', '{one of affectionate scepticism} one แทน relationship · {without succumbing to} = without + V-ing; succumb to = ยอมจำนนต่อ', 'verb-patterns']]
+    ],
+    glos: 'nostalgia|n.|ความโหยหาอดีต; once|adv.|ครั้งหนึ่ง; regarded|v.|มองว่า, ถือว่า; pleasant|adj.|น่ารื่นรมย์; reverie|n.|ภวังค์, การเพ้อฝัน; disease|n.|โรค; term|n.|คำศัพท์; coined|v.|บัญญัติ (คำ); Swiss|adj.|ชาวสวิส; physician|n.|แพทย์; late|adj.|ปลาย (ช่วงเวลา); seventeenth|adj.|ที่สิบเจ็ด; century|n.|ศตวรรษ; used|v.|ใช้; describe|v.|บรรยาย, อธิบาย; debilitating|adj.|ทำให้อ่อนแรง, รุนแรง; homesickness|n.|อาการคิดถึงบ้าน; afflicting|v.|ทำให้ทุกข์ทรมาน; soldiers|n.|ทหาร; stationed|adj.|ประจำการ; far|adv.|ไกล; home|n.|บ้าน; whose|pron.|ซึ่ง…ของมัน/ของเขา; symptoms|n.|อาการ; symptom|n.|อาการ; thought|v.|เชื่อ, คิด (V3 ของ think); include|v.|รวมถึง; fever|n.|ไข้; fainting|n.|การเป็นลม; even|adv.|แม้แต่, ถึงขั้น; death|n.|ความตาย; only|adv.|เพียง, เพิ่ง; recent|adj.|ไม่นานมานี้; decades|n.|ทศวรรษ; undergone|v.|ผ่าน, ได้รับ (V3 ของ undergo); something of|phr.|ค่อนข้างจะเป็น…; rehabilitation|n.|การฟื้นฟู (ชื่อเสียง, ภาพลักษณ์); far from|phr.|ไม่ใช่เลย, ห่างไกลจาก; being|v.|การเป็น; maladjustment|n.|การปรับตัวไม่ได้; appears|v.|ดูเหมือน; serve|v.|ทำหน้าที่; distinctly|adv.|อย่างชัดเจน; adaptive|adj.|ที่ช่วยการปรับตัว; function|n.|หน้าที่; experiments|n.|การทดลอง; suggest|v.|ชี้ว่า; induced|v.|ถูกกระตุ้น, ชักนำ; feel|v.|รู้สึก; lonely|adj.|เหงา; anxious|adj.|กังวล; recalling|v.|ระลึกถึง; cherished|adj.|เป็นที่รัก, หวงแหน; memories|n.|ความทรงจำ; bolsters|v.|เสริมกำลัง, ค้ำจุน; sense|n.|ความรู้สึก; social|adj.|ทางสังคม; connectedness|n.|ความเชื่อมโยง; lends|v.|ให้, เพิ่ม (คุณสมบัติ); lives|n.|ชีวิต (พหูพจน์ของ life); greater|adj.|มากกว่า; continuity|n.|ความต่อเนื่อง; meaning|n.|ความหมาย; that is not to say|phr.|นั่นไม่ได้หมายความว่า; without|prep.|โดยไม่มี; pitfalls|n.|หลุมพราง, ข้อเสียที่ซ่อนอยู่; collective|adj.|ร่วมกัน, ของส่วนรวม; in particular|phr.|โดยเฉพาะ; curdle|v.|บูดเน่า (อุปมา: เสื่อมลง); yearning|n.|ความโหยหา; mythologised|adj.|ถูกทำให้เป็นตำนาน; past|n.|อดีต; truly|adv.|อย่างแท้จริง; existed|v.|มีอยู่; conveniently|adv.|อย่างสะดวก (เกินไป); stripped of|phr.|ถูกตัดออก, ถูกปลดออก; hardships|n.|ความยากลำบาก; injustices|n.|ความอยุติธรรม; accompanied|v.|มาพร้อมกับ; politicians|n.|นักการเมือง; of every stripe|phr.|ทุกฝักทุกฝ่าย; stripe|n.|แถบ, ประเภท; quick|adj.|รวดเร็ว; exploit|v.|ฉวยประโยชน์; such|det.|เช่นนั้น; sentiment|n.|ความรู้สึก, อารมณ์ร่วม; promising|v.|สัญญา; return|n.|การกลับคืน; golden age|n.|ยุคทอง; lustre|n.|ความเงางาม, ความรุ่งโรจน์; owes|v.|เป็นผลมาจาก (owe … to); selective|adj.|ที่เลือกเฉพาะบางส่วน; memory|n.|ความทรงจำ; historical|adj.|ทางประวัติศาสตร์; fact|n.|ข้อเท็จจริง; perhaps|adv.|บางที; then|adv.|ถ้าเช่นนั้น; healthiest|adj.|ดีต่อจิตใจที่สุด; relationship|n.|ความสัมพันธ์; affectionate|adj.|อย่างรักใคร่, อ่อนโยน; scepticism|n.|ความสงสัย, การไม่เชื่อง่าย; cherishing|v.|ทะนุถนอม, หวงแหน; succumbing to|phr. v.|ยอมจำนนต่อ; illusion|n.|ภาพลวงตา',
+    qs: [['How was nostalgia first viewed?', 'As a disease', ['As a pleasant pastime', 'As a sign of intelligence', 'As a political tool'], '“once regarded not as a pleasant reverie but as a disease”'],
+         ['According to experiments, what can recalling cherished memories do?', 'Strengthen people’s sense of connection and meaning', ['Make people more anxious', 'Cause fever and fainting', 'Help people forget the past'], '“bolsters their sense of social connectedness and lends their lives a greater sense of continuity and meaning”'],
+         ['What attitude to the past does the writer recommend?', 'Valuing the good without believing the past was better', ['Rejecting the past completely', 'Trying to return to a golden age', 'Avoiding all memories'], '“cherishing what was good without succumbing to the illusion that it was better”']] },
+  { title: 'The Translator’s Dilemma', th: 'ทางแพร่งของนักแปล', topic: 'เรื่องสั้น',
+    paras: [
+      [['Hana had translated diplomatic correspondence for the better part of two decades, and she prided herself on never having allowed her own convictions to colour a single sentence.', 'ฮานะแปลเอกสารทางการทูตมาเกือบตลอดสองทศวรรษ และภูมิใจที่ไม่เคยปล่อยให้ความเชื่อส่วนตัวแต่งแต้มแม้แต่ประโยคเดียว', '{had translated} = Past Perfect (ก่อนเหตุการณ์ในเรื่อง) · {prided herself on never having allowed} = pride oneself on + V-ing (having + V3 = เรื่องที่ทำมาแล้ว) · colour (กริยา) = แต่งแต้ม, บิดเบือน', 'past-perf'],
+       ['So when a draft communiqué landed on her desk late one Friday evening, she read it with the same detached precision she brought to every assignment.', 'ดังนั้นเมื่อร่างแถลงการณ์ฉบับหนึ่งมาถึงโต๊ะของเธอในเย็นวันศุกร์ เธอก็อ่านด้วยความแม่นยำอย่างเป็นกลางแบบเดียวกับที่ใช้กับงานทุกชิ้น', '{landed on her desk} = มาถึงโต๊ะ (สำนวน) · {the same … she brought to} = the same + คำนาม + (that) ละไว้', 'relative']],
+      [['It was only on the third reading that she noticed it.', 'กว่าจะอ่านรอบที่สาม เธอจึงสังเกตเห็น', 'Cleft sentence: {It was only on the third reading that} = กว่าจะ… ก็ตอน… (เน้นเวลา)', 'cleft'],
+       ['In the original, the minister had expressed “regret” over the incident at the border — a word carefully chosen, she suspected, to stop just short of an apology.', 'ในต้นฉบับ รัฐมนตรีแสดง "ความเสียใจ" ต่อเหตุการณ์ที่ชายแดน ซึ่งเธอสงสัยว่าเป็นคำที่ถูกเลือกมาอย่างระวัง ให้หยุดก่อนถึงขั้นขอโทษเพียงนิดเดียว', '{— a word carefully chosen …} = วลีขยายด้วย participle · {, she suspected,} แทรกความเห็น · {stop just short of} = หยุดก่อนถึง…เพียงนิดเดียว', 'idiom'],
+       ['The English term her superiors had pencilled into the margin, however, was “remorse”, which carried an altogether heavier moral charge.', 'แต่คำภาษาอังกฤษที่ผู้บังคับบัญชาเขียนดินสอไว้ตรงขอบกระดาษคือ "remorse" ซึ่งมีน้ำหนักทางศีลธรรมหนักกว่าโดยสิ้นเชิง', '{her superiors had pencilled} = relative clause ที่ละ that · {, which} ขยายคำว่า remorse · {altogether} = โดยสิ้นเชิง', 'relative'],
+       ['Rendered that way, the statement would read as an admission of guilt, something the minister had conspicuously avoided.', 'หากแปลแบบนั้น แถลงการณ์จะอ่านได้ว่าเป็นการยอมรับผิด ซึ่งเป็นสิ่งที่รัฐมนตรีจงใจเลี่ยงอย่างเห็นได้ชัด', '{Rendered that way} = participle clause แทน If it were rendered that way · {would read as} = จะอ่านได้ความว่า', 'cond-2']],
+      [['Hana hesitated, aware that raising the matter might be construed as insubordination.', 'ฮานะลังเล เพราะรู้ว่าการยกเรื่องนี้ขึ้นมาอาจถูกตีความว่าเป็นการไม่เชื่อฟังผู้บังคับบัญชา', '{aware that} = (because she was) aware that · {raising the matter} = V-ing เป็นประธาน · {might be construed as} = modal + passive', 'passive'],
+       ['Yet to let it pass would be to put words into a government’s mouth — a far graver breach of the trust her profession depended upon.', 'แต่การปล่อยผ่านก็เท่ากับยัดคำพูดใส่ปากรัฐบาล ซึ่งเป็นการละเมิดความไว้วางใจที่อาชีพของเธอต้องพึ่งพา และร้ายแรงกว่ามาก', '{to let it pass would be to put} = การ… ก็เท่ากับการ… (to V เป็นทั้งประธานและส่วนเติมเต็ม) · {put words into a government’s mouth} = ยัดคำพูดใส่ปาก (สำนวน) · {depended upon} preposition ไว้ท้ายประโยค', 'idiom'],
+       ['She drafted a brief note explaining the discrepancy, attached it to the file and, after a moment’s deliberation, sent it.', 'เธอร่างบันทึกสั้นๆ อธิบายความไม่ตรงกันนั้น แนบไว้กับแฟ้ม และหลังจากไตร่ตรองครู่หนึ่ง ก็ส่งไป', 'กริยาสามตัวเรียงกัน {drafted} …, {attached} … and … {sent} · {a moment’s deliberation} = การไตร่ตรองชั่วครู่ (’s กับเวลา)', 'past-simple']],
+      [['The reply, when it came the following Monday, was a single line: “Use your version.”', 'คำตอบที่มาถึงในวันจันทร์ถัดมามีเพียงบรรทัดเดียว: "ใช้ฉบับของคุณ"', '{, when it came the following Monday,} แทรกเวลา · {the following} = ถัดมา (ใช้เล่าเรื่องในอดีต แทน next)', 'past-simple'],
+       ['She never learned whether the alteration had been an oversight or a test, and she suspected she never would.', 'เธอไม่เคยรู้ว่าการเปลี่ยนคำนั้นเป็นความพลั้งเผลอหรือการทดสอบ และเธอคิดว่าคงไม่มีวันได้รู้', '{whether} … {or} … = ว่า… หรือ… · {had been} = Past Perfect · {she never would} = ละ learn ไว้ท้ายประโยค (ellipsis)', 'past-perf']]
+    ],
+    glos: 'translated|v.|แปล; diplomatic|adj.|ทางการทูต; correspondence|n.|จดหมายโต้ตอบ; the better part of|phr.|เกือบทั้งหมดของ; decades|n.|ทศวรรษ; prided herself on|phr.|ภูมิใจใน… (pride oneself on); prided|v.|ภูมิใจ; herself|pron.|ตัวเธอเอง; never|adv.|ไม่เคย; having|v.|(having + V3 = ได้…มาแล้ว); allowed|v.|ปล่อยให้, อนุญาต; own|adj.|ของตัวเอง; convictions|n.|ความเชื่อมั่น, หลักการ; colour|v.|แต่งแต้ม, ทำให้มีอคติ; single|adj.|เดียว; sentence|n.|ประโยค; draft|n.|ร่าง; communiqué|n.|แถลงการณ์ทางการ; landed on|phr.|มาถึง, ตกลงบน; landed|v.|ลงจอด, มาถึง; desk|n.|โต๊ะทำงาน; late|adv.|ดึก, ช่วงท้าย; Friday|n.|วันศุกร์; evening|n.|ตอนเย็น; read|v.|อ่าน (อดีต ออกเสียง "เร้ด"); same|adj.|เดียวกัน; detached|adj.|ไม่ใส่อารมณ์, เป็นกลาง; precision|n.|ความแม่นยำ; brought|v.|นำมาใช้ (อดีตของ bring); assignment|n.|งานที่ได้รับมอบหมาย; third|adj.|ที่สาม; reading|n.|การอ่าน (รอบ); noticed|v.|สังเกตเห็น; original|n.|ต้นฉบับ; minister|n.|รัฐมนตรี; expressed|v.|แสดงออก; regret|n.|ความเสียใจ; incident|n.|เหตุการณ์ (มักไม่ดี); border|n.|ชายแดน; word|n.|คำ; carefully|adv.|อย่างระมัดระวัง; chosen|v.|ถูกเลือก (V3 ของ choose); suspected|v.|สงสัย, คาดว่า; stop short of|phr.|หยุดก่อนถึงขั้น…; short|adj.|สั้น, ไม่ถึง; apology|n.|คำขอโทษ; English|adj.|ภาษาอังกฤษ; term|n.|คำศัพท์; superiors|n.|ผู้บังคับบัญชา; pencilled|v.|เขียนด้วยดินสอ; margin|n.|ขอบกระดาษ; remorse|n.|ความสำนึกผิด; carried|v.|มี, แบก (ความหมาย); altogether|adv.|โดยสิ้นเชิง; heavier|adj.|หนักกว่า; moral|adj.|ทางศีลธรรม; charge|n.|น้ำหนัก, ความหมายแฝง; rendered|v.|ถ่ายทอด, แปล; way|n.|วิธี, แบบ; statement|n.|แถลงการณ์; read as|phr.|อ่านได้ความว่า; admission|n.|การยอมรับ; guilt|n.|ความผิด; something|pron.|สิ่งที่; conspicuously|adv.|อย่างเห็นได้ชัด; avoided|v.|หลีกเลี่ยง; hesitated|v.|ลังเล; aware|adj.|รู้ตัว, ตระหนัก; raising|v.|ยกขึ้นมาพูด; matter|n.|เรื่อง; construed as|phr.|ถูกตีความว่า; construed|v.|ตีความ; insubordination|n.|การไม่เชื่อฟังผู้บังคับบัญชา; yet|conj.|ทว่า; let it pass|phr.|ปล่อยผ่าน; let|v.|ปล่อยให้; pass|v.|ผ่านไป; put words into someone’s mouth|phr.|ยัดคำพูดใส่ปาก; put|v.|ใส่, วาง; words|n.|คำพูด; government’s|n.|ของรัฐบาล; mouth|n.|ปาก; far|adv.|มาก (เน้นขั้นกว่า); graver|adj.|ร้ายแรงกว่า (grave); breach|n.|การละเมิด; trust|n.|ความไว้วางใจ; profession|n.|อาชีพ; depended upon|phr. v.|พึ่งพา (depend on); drafted|v.|ร่าง; brief|adj.|สั้นๆ; note|n.|บันทึก; explaining|v.|อธิบาย; discrepancy|n.|ความไม่สอดคล้องกัน; attached|v.|แนบ; file|n.|แฟ้ม; moment’s|n.|ชั่วครู่ (ของเวลาหนึ่งขณะ); deliberation|n.|การไตร่ตรอง; sent|v.|ส่ง (อดีตของ send); reply|n.|คำตอบ; came|v.|มาถึง (อดีตของ come); following|adj.|ถัดมา; Monday|n.|วันจันทร์; line|n.|บรรทัด; use|v.|ใช้; version|n.|ฉบับ; learned|v.|ได้รู้; whether|conj.|ว่า…หรือไม่; alteration|n.|การเปลี่ยนแปลง; oversight|n.|ความพลั้งเผลอ; test|n.|การทดสอบ; would|v.|จะ (ในที่นี้ = would learn)',
+    qs: [['What change did Hana notice?', '“Regret” had been changed to “remorse”.', ['The minister’s name was wrong.', 'The date of the incident was missing.', 'The communiqué was in the wrong language.'], 'ต้นฉบับใช้ “regret” แต่ผู้บังคับบัญชาเขียน “remorse” ไว้ที่ขอบกระดาษ'],
+         ['Why did the difference matter?', '“Remorse” would sound like an admission of guilt.', ['“Remorse” is a rude word.', '“Regret” is too informal.', 'Both words mean exactly the same.'], '“the statement would read as an admission of guilt, something the minister had conspicuously avoided”'],
+         ['What did Hana finally do?', 'She sent a note explaining the problem.', ['She changed nothing and stayed silent.', 'She resigned from her job.', 'She called the minister directly.'], '“She drafted a brief note explaining the discrepancy … and … sent it.”']] }
+]
+};
+
 const SKILLS = [
   { key: 'understand', th: 'เข้าใจ', en: 'Reading & Listening', modes: ['reading', 'interpret', 'listen'] },
   { key: 'knowledge',  th: 'ความรู้ภาษา', en: 'Vocabulary & Grammar', modes: ['vocab', 'grammar', 'errors'] },
@@ -1125,6 +1386,8 @@ const MODES = {
   build:     { th: 'แต่งประโยค', tag: 'SENTENCE BUILD', desc: 'พิมพ์ประโยคใหม่ตามโครงสร้างที่กำหนด' },
   situation: { th: 'ใช้ตามสถานการณ์', tag: 'REAL-LIFE', desc: 'เลือกคำพูดที่เหมาะกับสถานการณ์และระดับภาษา' },
   mix:       { th: 'ฝึกรวมทุกทักษะ', tag: 'ALL SKILLS', desc: '' },
+  story:     { th: 'คำถามจากเรื่องอ่าน', tag: 'STORY', desc: '' },
+  sword:     { th: 'คำศัพท์จากเรื่องอ่าน', tag: 'STORY WORDS', desc: '' },
   exam:      { th: 'สอบผ่านระดับ', tag: 'LEVEL EXAM', desc: '' }
 };
 
@@ -1187,6 +1450,7 @@ function speak(text, slow) {
 /* ------------------------------------------------------------------ */
 function build(id) {
   const [lv, mode, a, b] = id.split('|');
+  if (mode === 'story' || mode === 'sword') return buildStory(id);
   const D = DATA[lv], li = lvIndex(lv), i = +a;
   if (mode === 'vocab') {
     const [w, th, def] = D.vocab[i];
@@ -1292,7 +1556,7 @@ let sheet = null;    // level currently open on the level screen
 let confirmReset = false;
 
 function home() {
-  G = null; sheet = null; setLv(S.placement || 'B1');
+  G = null; sheet = null; RD = null; closeSheet(); setLv(S.placement || 'B1');
   if (hasTTS) speechSynthesis.cancel();
   const missCount = Object.keys(S.mistakes).length;
   const rungs = LEVELS.slice().reverse().map(l => {
@@ -1319,6 +1583,7 @@ function home() {
       </div>
       <button class="btn lv" id="placement">${S.placement ? 'ทดสอบใหม่' : 'วัดระดับ'}</button>
     </section>
+    <section class="banner"><div><b>คลังเรื่องอ่าน</b><span class="muted" style="font-size:.9rem">${LEVELS.reduce((n, l) => n + STORIES[l].length, 0)} เรื่อง เรียงจากสั้นไปยาว แตะคำเพื่อดูคำแปล พร้อมคำแปลและโครงสร้างทุกประโยค</span></div><button class="btn lv" id="library">เปิดคลังเรื่อง</button></section>
     <section class="banner"><div><b>คู่มือไวยากรณ์</b><span class="muted" style="font-size:.9rem">ตาราง 12 tense และกฎทั้งหมด ${Object.keys(RULES).length} ข้อ พร้อมตัวอย่างง่ายๆ</span></div><button class="btn ghost" id="handbook">เปิดคู่มือ</button></section>
     ${missCount ? `<section class="banner"><div><b>คำที่เคยตอบผิด ${missCount} ข้อ</b><span class="muted" style="font-size:.9rem">ทบทวนจนตอบถูก แล้วข้อนั้นจะหายจากรายการ</span></div><button class="btn ghost" id="review">ทบทวน</button></section>` : ''}
     <section style="display:flex;flex-direction:column;gap:10px">
@@ -1336,6 +1601,7 @@ function home() {
   app.querySelectorAll('.rung').forEach(b => b.onclick = () => level(b.dataset.lv));
   $('#placement').onclick = startPlacement;
   $('#handbook').onclick = handbook;
+  $('#library').onclick = library;
   if (missCount) $('#review').onclick = startReview;
   $('#rate').oninput = e => { S.rate = +e.target.value; save(); };
   $('#rate').onchange = () => speak('This is how fast I will read.');
@@ -1368,6 +1634,10 @@ function level(lv) {
       ${SKILLS.map(sk => { const v = Math.round(skillMastery(lv, sk) * 100); return `
         <div class="skillrow"><span>${sk.th}</span><span class="bar"><i style="width:${v}%"></i></span><span class="num">${v}%</span></div>`; }).join('')}
     </section>
+    <section class="skill">
+      <div class="skillhead"><h3>เรียนผ่านเรื่องอ่าน</h3><span class="eyebrow">Graded reading</span></div>
+      <div class="stories">${STORIES[lv].map((_, i) => storyCard(lv, i, maxStoryWords())).join('')}</div>
+    </section>
     <div class="modes">
       <button class="mode exam" data-mode="mix" id="mode-mix" style="background:var(--surface);color:var(--ink)">
         <span class="tag" style="color:var(--lv)">ALL SKILLS · 10</span><b>ฝึกรวมทุกทักษะ</b><small style="color:var(--muted)">ทุกโหมดรอบเดียว เหมาะกับฝึกประจำวัน</small>
@@ -1385,6 +1655,7 @@ function level(lv) {
     </div>`;
   $('#back').onclick = home;
   app.querySelectorAll('.mode').forEach(b => b.onclick = () => startRound(lv, b.dataset.mode));
+  bindStoryCards();
   window.scrollTo(0, 0);
 }
 
@@ -1436,6 +1707,213 @@ function handbook() {
       </section>`).join('')}`;
   $('#back').onclick = home;
   window.scrollTo(0, 0);
+}
+
+/* ---------------- stories: reader, word lookup, quizzes ---------------- */
+/* Common words every story shares, so any tapped word gets a meaning. */
+const BASIC = parseGlos('a|det.|หนึ่ง (ไม่เจาะจง); an|det.|หนึ่ง (หน้าเสียงสระ); the|det.|(คำนำหน้านามที่เจาะจง); i|pron.|ฉัน, ผม; you|pron.|คุณ; he|pron.|เขา (ผู้ชาย); she|pron.|เธอ, เขา (ผู้หญิง); it|pron.|มัน; we|pron.|พวกเรา; they|pron.|พวกเขา; me|pron.|ฉัน (กรรม); him|pron.|เขา (กรรม); her|pron.|เธอ, ของเธอ; us|pron.|พวกเรา (กรรม); them|pron.|พวกเขา (กรรม); my|det.|ของฉัน; your|det.|ของคุณ; his|det.|ของเขา; its|det.|ของมัน; our|det.|ของพวกเรา; their|det.|ของพวกเขา; is|v.|เป็น, อยู่, คือ; am|v.|เป็น, อยู่, คือ; are|v.|เป็น, อยู่, คือ; was|v.|เป็น, อยู่ (อดีต); were|v.|เป็น, อยู่ (อดีต); be|v.|เป็น, อยู่; been|v.|เป็น, อยู่ (V3 ของ be); have|v.|มี; has|v.|มี; had|v.|มี (อดีต), ได้…แล้ว; do|v.|ทำ; does|v.|ทำ; did|v.|ทำ (อดีต); not|adv.|ไม่; no|det.|ไม่มี; and|conj.|และ; but|conj.|แต่; or|conj.|หรือ; so|conj.|ดังนั้น, จึง, มาก; because|conj.|เพราะว่า; to|prep.|ไปยัง, เพื่อ; of|prep.|ของ; in|prep.|ใน; on|prep.|บน, ในวัน; at|prep.|ที่, ตอน; for|prep.|สำหรับ, เป็นเวลา; with|prep.|กับ, ด้วย; from|prep.|จาก; by|prep.|โดย, ภายใน; about|prep.|เกี่ยวกับ; as|conj.|ในฐานะ, ขณะที่, เหมือน; into|prep.|เข้าไปใน; up|adv.|ขึ้น; out|adv.|ออก; this|det.|นี้; that|det.|นั้น, ว่า, ที่; these|det.|เหล่านี้; those|det.|เหล่านั้น; there|adv.|ที่นั่น; here|adv.|ที่นี่; what|pron.|อะไร, สิ่งที่; who|pron.|ใคร, ผู้ซึ่ง; when|conj.|เมื่อ, ตอนที่; where|adv.|ที่ไหน, ที่ซึ่ง; why|adv.|ทำไม; how|adv.|อย่างไร; which|pron.|ซึ่ง, อันไหน; if|conj.|ถ้า; than|conj.|กว่า; then|adv.|จากนั้น; very|adv.|มาก; too|adv.|ด้วย, เกินไป; can|v.|สามารถ; could|v.|สามารถ (อดีต), อาจ; will|v.|จะ; would|v.|จะ (อดีต / สมมุติ); should|v.|ควร; must|v.|ต้อง, คงจะ; may|v.|อาจ; might|v.|อาจจะ; all|det.|ทั้งหมด; some|det.|บ้าง, จำนวนหนึ่ง; any|det.|ใดๆ; one|num.|หนึ่ง; more|det.|มากกว่า; every|det.|ทุกๆ; just|adv.|เพียง, เพิ่ง; also|adv.|ด้วย, อีกทั้ง; after|prep.|หลังจาก; before|prep.|ก่อน; again|adv.|อีกครั้ง; it’s|phr.|it is / it has; don’t|v.|ไม่ (do not); didn’t|v.|ไม่ได้ (did not); never|adv.|ไม่เคย; now|adv.|ตอนนี้; always|adv.|เสมอ; once|adv.|ครั้งหนึ่ง; each|det.|แต่ละ; other|adj.|อื่น; such|det.|เช่นนั้น; only|adv.|เพียง, เท่านั้น; still|adv.|ยังคง; even|adv.|แม้แต่; however|adv.|อย่างไรก็ตาม; something|pron.|บางสิ่ง; people|n.|ผู้คน; time|n.|เวลา, ครั้ง; day|n.|วัน; night|n.|กลางคืน; year|n.|ปี; years|n.|ปี; two|num.|สอง; six|num.|หก; yes|adv.|ใช่; school|n.|โรงเรียน; much|det.|มาก (นามนับไม่ได้); many|det.|มาก, หลาย (นามนับได้); small|adj.|เล็ก; go|v.|ไป; give|v.|ให้; buy|v.|ซื้อ; feel|v.|รู้สึก; first|adj.|แรก; good|adj.|ดี; better|adj.|ดีกว่า (ขั้นกว่าของ good); bad|adj.|แย่, ไม่ดี; hard|adj.|ยาก, แข็ง; harder|adj.|ยากกว่า; over|prep.|เหนือ, เกี่ยวกับ, เกิน');
+function parseGlos(str) {
+  const m = new Map();
+  str.split(';').map(x => x.trim()).filter(Boolean).forEach(e => {
+    const [w, pos, th] = e.split('|').map(x => x.trim());
+    if (w && !m.has(key(w))) m.set(key(w), { w, pos, th });
+  });
+  return m;
+}
+function key(w) { return w.toLowerCase().replace(/[‘’]/g, "'"); }
+const glosCache = {};
+function glosOf(lv, i) { const id = lv + i; return glosCache[id] || (glosCache[id] = parseGlos(STORIES[lv][i].glos)); }
+function sentencesOf(st) { return st.paras.flat(); }
+function storyText(st) { return st.paras.map(p => p.map(s => s[0]).join(' ')).join('\n\n'); }
+function wordCount(st) { return (storyText(st).match(/[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’-]*/g) || []).length; }
+function readMinutes(st, lv) { return Math.max(1, Math.round(wordCount(st) / [70, 85, 110, 130, 150, 160][lvIndex(lv)])); }
+
+// Find a word's meaning: the story's own list first, then common words, then simple word endings.
+function lookup(raw, G1) {
+  const w = key(raw).replace(/^[-']+|[-']+$/g, '');
+  const tries = [[w, '']];
+  const base = w.replace(/'s$/, '');
+  if (base !== w) tries.push([base, '’s แสดงความเป็นเจ้าของ']);
+  const stems = [];
+  if (/ies$/.test(base)) stems.push(base.slice(0, -3) + 'y');
+  if (/es$/.test(base)) stems.push(base.slice(0, -2));
+  if (/s$/.test(base)) stems.push(base.slice(0, -1));
+  if (/ied$/.test(base)) stems.push(base.slice(0, -3) + 'y');
+  if (/ed$/.test(base)) stems.push(base.slice(0, -2), base.slice(0, -1), base.slice(0, -3));
+  if (/ing$/.test(base)) stems.push(base.slice(0, -3), base.slice(0, -3) + 'e', base.slice(0, -4));
+  if (/er$/.test(base)) stems.push(base.slice(0, -2), base.slice(0, -1));
+  if (/est$/.test(base)) stems.push(base.slice(0, -3), base.slice(0, -2));
+  if (/ly$/.test(base)) stems.push(base.slice(0, -2));
+  stems.forEach(s => tries.push([s, 'รูปที่เปลี่ยนจาก']));
+  for (const [t, why] of tries) for (const dict of [G1, BASIC]) {
+    const e = dict.get(t);
+    if (e) return Object.assign({}, e, { how: why === 'รูปที่เปลี่ยนจาก' ? `${raw} เป็นรูปที่เปลี่ยนจาก ${e.w}` : why ? raw + ': ' + why : '' });
+  }
+  return null;
+}
+function phrasesWith(raw, G1) {
+  const w = key(raw).replace(/'s$/, '');
+  return [...G1.values()].filter(e => / /.test(e.w) && key(e.w).split(/\s+/).some(p => p === w || p.replace(/'s$/, '') === w));
+}
+
+function wordsHTML(en, si) {
+  return esc(en).replace(/([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’-]*)/g, m => `<span class="w" data-w="${m}" data-s="${si}">${m}</span>`);
+}
+function markIn(en, note) {
+  let html = esc(en);
+  (note.match(/\{([^}]*)\}/g) || []).map(x => x.slice(1, -1)).sort((a, b) => b.length - a.length).forEach(p => {
+    const e = esc(p), at = html.indexOf(e);
+    if (p.length > 1 && at >= 0 && !/<mark>[^<]*$/.test(html.slice(0, at))) html = html.slice(0, at) + '<mark>' + e + '</mark>' + html.slice(at + e.length);
+  });
+  return html;
+}
+function speakAll(list) {
+  if (!hasTTS) return;
+  try {
+    speechSynthesis.cancel();
+    list.forEach(t => { const u = new SpeechSynthesisUtterance(t); u.lang = voice ? voice.lang : 'en-GB'; if (voice) u.voice = voice; u.rate = S.rate; speechSynthesis.speak(u); });
+  } catch (e) {}
+}
+
+let RD = null; // open story: { lv, i, tab, th }
+function storyCard(lv, i, maxWords) {
+  const st = STORIES[lv][i], n = wordCount(st), rec = (S.stories || {})[lv + '-' + i] || {};
+  return `<button class="storycard" style="--lv:var(--${lv})" data-lv="${lv}" data-i="${i}" id="story-${lv}-${i}">
+    <span class="sc-top"><span class="pill">${lv}</span><span class="muted">${esc(st.topic)}</span>${rec.best != null ? `<span class="seal">${rec.best}/${st.qs.length}</span>` : rec.read ? '<span class="seal off">อ่านแล้ว</span>' : ''}</span>
+    <b class="sc-title">${esc(st.title)}</b><small>${esc(st.th)}</small>
+    <span class="sc-len"><span class="bar"><i style="width:${Math.round(n / maxWords * 100)}%"></i></span><span class="num">${n} คำ · ~${readMinutes(st, lv)} นาที</span></span>
+  </button>`;
+}
+const maxStoryWords = () => Math.max(...LEVELS.flatMap(l => STORIES[l].map(wordCount)));
+function bindStoryCards() { app.querySelectorAll('.storycard').forEach(b => b.onclick = () => openStory(b.dataset.lv, +b.dataset.i, 'read')); }
+
+function library() {
+  G = null; RD = null; setLv(S.placement || 'B1');
+  const mx = maxStoryWords();
+  app.innerHTML = `
+    <div class="playbar"><button class="x" id="back" aria-label="กลับหน้าหลัก">←</button><span class="muted">หน้าหลัก</span></div>
+    <header style="display:flex;flex-direction:column;gap:8px"><p class="eyebrow">Graded readers · A1 → C2</p><h1>คลังเรื่องอ่าน</h1>
+      <p class="muted">เรียงจากสั้นและง่ายไปยาวและยาก แตะคำไหนก็ได้ในเรื่องเพื่อดูคำแปล และดูคำแปลพร้อมโครงสร้างได้ทุกประโยค</p></header>
+    ${LEVELS.map(l => `<section class="skill"><div class="skillhead"><h3 style="color:var(--${l})">${l} · ${INFO[l].name}</h3><span class="eyebrow">${INFO[l].th}</span></div>
+      <div class="stories">${STORIES[l].map((_, i) => storyCard(l, i, mx)).join('')}</div></section>`).join('')}`;
+  $('#back').onclick = home;
+  bindStoryCards();
+  window.scrollTo(0, 0);
+}
+
+function openStory(lv, i, tab, focusSentence) {
+  G = null; setLv(lv);
+  RD = Object.assign({ th: false }, RD && RD.lv === lv && RD.i === i ? RD : {}, { lv, i, tab });
+  S.stories = S.stories || {};
+  const sid = lv + '-' + i;
+  S.stories[sid] = Object.assign({}, S.stories[sid], { read: true }); save();
+  const st = STORIES[lv][i], sents = sentencesOf(st), Gl = glosOf(lv, i);
+  const tabs = [['read', 'อ่าน'], ['tr', 'แปลและโครงสร้าง'], ['words', `คำศัพท์ (${Gl.size})`], ['quiz', 'แบบฝึก']];
+  let body = '';
+  if (tab === 'read') {
+    let si = 0;
+    body = `
+      <div class="row tools">
+        ${hasTTS ? `<button class="btn ghost" id="playAll">🔊 ฟังทั้งเรื่อง</button><button class="btn ghost" id="stopAll">⏹ หยุด</button>` : ''}
+        <label class="toggle" for="showTh"><input type="checkbox" id="showTh" ${RD.th ? 'checked' : ''}> แสดงคำแปลใต้ประโยค</label>
+      </div>
+      <p class="sub">แตะคำไหนก็ได้เพื่อดูคำแปล</p>
+      <article class="storytext">${st.paras.map(p => `<p>${p.map(s => { const k = si++; return `<span class="sent" id="sent-${k}">${wordsHTML(s[0], k)}${RD.th ? `<span class="sent-th">${esc(s[1])}</span>` : ''}</span>`; }).join(' ')}</p>`).join('')}</article>
+      <button class="btn lv block" id="toTr">ดูคำแปลและโครงสร้างทีละประโยค →</button>`;
+  } else if (tab === 'tr') {
+    body = `<p class="sub">ส่วนที่ขีดเส้นใต้ในประโยคคือส่วนที่อธิบายในหัวข้อ "โครงสร้าง"</p>
+      <ol class="trlist">${sents.map((s, k) => {
+        const r = s[3] && RULES[s[3]] ? Object.assign({ key: s[3] }, RULES[s[3]]) : null;
+        return `<li class="tr" id="tr-${k}">
+          <div class="tr-en">${hasTTS ? `<button class="exsay" data-say="${esc(s[0])}" aria-label="ฟังเสียง">🔊</button>` : ''}<p>${markIn(s[0], s[2])}</p></div>
+          <p class="tr-th">${esc(s[1])}</p>
+          <div class="tr-note"><span class="eyebrow">โครงสร้าง</span><p>${mark(s[2])}</p></div>
+          ${r ? ruleHTML(r, false) : ''}
+        </li>`; }).join('')}</ol>
+      <button class="btn lv block" id="toQuiz">ทำแบบฝึกของเรื่องนี้ →</button>`;
+  } else if (tab === 'words') {
+    const list = [...Gl.values()].sort((a, b) => (/ /.test(a.w) - / /.test(b.w)));
+    body = `<p class="sub">คำศัพท์ทุกคำในเรื่องนี้ (ไม่รวมคำพื้นฐานอย่าง the, is, and) เรียงตามลำดับที่พบ วลีอยู่ท้ายรายการ</p>
+      <div class="gridwrap"><table class="vocab"><thead><tr><th>คำ</th><th>ชนิด</th><th>คำแปล</th></tr></thead>
+      <tbody>${list.map(e => `<tr><td>${hasTTS ? `<button class="exsay" data-say="${esc(e.w)}" aria-label="ฟังเสียง">🔊</button> ` : ''}<b>${esc(e.w)}</b></td><td class="num muted">${esc(e.pos)}</td><td>${esc(e.th)}</td></tr>`).join('')}</tbody></table></div>
+      <p class="foot">n. คำนาม · v. กริยา · adj. คุณศัพท์ · adv. กริยาวิเศษณ์ · prep. บุพบท · conj. คำเชื่อม · pron. สรรพนาม · det. คำนำหน้านาม · num. ตัวเลข · phr. วลี · phr. v. กริยาวลี</p>
+      <button class="btn lv block" id="wordQuiz">ฝึกคำศัพท์ของเรื่องนี้ (10 คำ)</button>`;
+  } else {
+    const rec = S.stories[sid] || {};
+    body = `
+      <div class="modes">
+        <button class="mode" id="storyQuiz"><span class="tag">COMPREHENSION · ${st.qs.length}</span><b>คำถามความเข้าใจ</b><small>${rec.best != null ? `คะแนนสูงสุด ${rec.best}/${st.qs.length} · ` : ''}ตอบแล้วมีคำอธิบายว่าคำตอบอยู่ประโยคไหน</small></button>
+        <button class="mode" id="wordQuiz"><span class="tag">STORY WORDS · 10</span><b>คำศัพท์จากเรื่อง</b><small>เลือกคำแปล พร้อมประโยคจากเรื่องเป็นตัวอย่าง</small></button>
+      </div>`;
+  }
+  app.innerHTML = `
+    <div class="playbar"><button class="x" id="back" aria-label="กลับ">←</button><span class="muted">${lv} · เรื่องอ่าน</span></div>
+    <header class="storyhead">
+      <p class="eyebrow">${esc(st.topic)} · ${wordCount(st)} คำ · ~${readMinutes(st, lv)} นาที</p>
+      <h1>${esc(st.title)}</h1><p class="muted">${esc(st.th)}</p>
+    </header>
+    <nav class="tabs" role="tablist">${tabs.map(([k, t]) => `<button role="tab" aria-selected="${k === tab}" class="tab ${k === tab ? 'on' : ''}" data-tab="${k}" id="tab-${k}">${t}</button>`).join('')}</nav>
+    ${body}`;
+  $('#back').onclick = () => { if (hasTTS) speechSynthesis.cancel(); closeSheet(); level(lv); };
+  app.querySelectorAll('.tab').forEach(b => b.onclick = () => openStory(lv, i, b.dataset.tab));
+  if ($('#playAll')) { $('#playAll').onclick = () => speakAll(sents.map(s => s[0])); $('#stopAll').onclick = () => speechSynthesis.cancel(); }
+  if ($('#showTh')) $('#showTh').onchange = e => { RD.th = e.target.checked; openStory(lv, i, 'read'); };
+  if ($('#toTr')) $('#toTr').onclick = () => openStory(lv, i, 'tr');
+  if ($('#toQuiz')) $('#toQuiz').onclick = () => openStory(lv, i, 'quiz');
+  if ($('#storyQuiz')) $('#storyQuiz').onclick = () => startStoryQuiz(lv, i, 'story');
+  if ($('#wordQuiz')) $('#wordQuiz').onclick = () => startStoryQuiz(lv, i, 'sword');
+  if (focusSentence != null && $('#tr-' + focusSentence)) {
+    const el = $('#tr-' + focusSentence); el.classList.add('flash'); el.scrollIntoView({ block: 'start' });
+  } else window.scrollTo(0, 0);
+}
+
+// Word popup
+function closeSheet() { const s = $('#sheet'); if (s) s.remove(); app.querySelectorAll('.w.on').forEach(x => x.classList.remove('on')); }
+document.addEventListener('click', e => {
+  const w = e.target.closest('.w');
+  if (w && RD) {
+    closeSheet(); w.classList.add('on');
+    const Gl = glosOf(RD.lv, RD.i), info = lookup(w.dataset.w, Gl), ph = phrasesWith(w.dataset.w, Gl), si = +w.dataset.s;
+    const el = document.createElement('div');
+    el.id = 'sheet'; el.className = 'sheet'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'คำแปล');
+    el.innerHTML = `
+      <div class="sheet-in">
+        <div class="sheet-top"><b class="sheet-w">${esc(w.dataset.w)}</b>${hasTTS ? `<button class="exsay" data-say="${esc(w.dataset.w)}">🔊</button>` : ''}<button class="x" id="sheetX" aria-label="ปิด">×</button></div>
+        ${info ? `<p><span class="num muted">${esc(info.pos)}</span> ${esc(info.th)}</p>${info.how ? `<p class="sub">${esc(info.how)}</p>` : ''}` : (/^[A-Z]/.test(w.dataset.w) ? '<p><span class="num muted">n.</span> ชื่อเฉพาะ (ชื่อคนหรือสถานที่) ไม่ต้องแปล</p>' : '<p class="sub">ไม่มีคำนี้ในรายการคำศัพท์</p>')}
+        ${ph.length ? `<div class="sheet-ph"><span class="eyebrow">วลีในเรื่องที่มีคำนี้</span>${ph.map(p => `<p><b>${esc(p.w)}</b> = ${esc(p.th)}</p>`).join('')}</div>` : ''}
+        <p class="sheet-s">${esc(sentencesOf(STORIES[RD.lv][RD.i])[si][1])}</p>
+        <button class="btn lv block" id="sheetGo">ดูโครงสร้างของประโยคนี้</button>
+      </div>`;
+    document.body.appendChild(el);
+    $('#sheetX').onclick = closeSheet;
+    $('#sheetGo').onclick = () => { closeSheet(); openStory(RD.lv, RD.i, 'tr', si); };
+    return;
+  }
+  if (!e.target.closest('#sheet')) closeSheet();
+});
+
+// Quizzes reuse the game loop. ids: lv|story|storyIndex|q and lv|sword|storyIndex|word
+function storyIds(lv, i, mode) {
+  if (mode === 'story') return STORIES[lv][i].qs.map((_, q) => `${lv}|story|${i}|${q}`);
+  const words = [...glosOf(lv, i).values()].filter(e => !/ /.test(e.w) && /^[a-z]/i.test(e.w));
+  return pick(words.map(e => `${lv}|sword|${i}|${e.w}`), 10);
+}
+function startStoryQuiz(lv, i, mode) {
+  touchStreak(); save(); closeSheet();
+  G = { kind: 'practice', lv, mode, story: i, queue: storyIds(lv, i, mode), i: 0, right: 0, hearts: null, combo: 0, xp: 0, misses: [] };
+  next();
+}
+function buildStory(id) {
+  const [lv, mode, a, b] = id.split('|'), i = +a, st = STORIES[lv][i];
+  if (mode === 'story') {
+    const [qq, ans, wrong, note] = st.qs[+b];
+    return { id, lv, mode, type: 'mc', storyText: storyText(st), prompt: qq, answer: ans, choices: shuffle([ans, ...wrong]), explain: esc(note) };
+  }
+  const Gl = glosOf(lv, i), e = Gl.get(key(b));
+  const others = shuffle([...Gl.values()].filter(x => x.th !== e.th && !/ /.test(x.w))).map(x => x.th).filter((t, k, arr) => arr.indexOf(t) === k).slice(0, 3);
+  const s = sentencesOf(st).find(x => new RegExp('\\b' + b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i').test(x[0]));
+  return { id, lv, mode, type: 'mc', prompt: e.w, big: true, speakText: e.w, sub: `คำนี้ในเรื่อง “${st.title}” แปลว่าอะไร`, answer: e.th, choices: shuffle([e.th, ...others]),
+    explain: `<b>${esc(e.w)}</b> (${esc(e.pos)}) = ${esc(e.th)}` + (s ? `<br>ในเรื่อง: <i>${esc(s[0]).replace(new RegExp('\\b(' + esc(b).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')\\b', 'i'), '<mark>$1</mark>')}</i><br>${esc(s[1])}` : '') };
 }
 
 /* ---------------- game loop ---------------- */
@@ -1490,6 +1968,7 @@ function render(q) {
     const prompt = q.gap ? esc(q.prompt).replace('___', '<span class="gap"></span>') : esc(q.prompt);
     body = `
       ${q.passage ? `<div class="passage ${q.quote ? 'quote' : ''}" tabindex="0">${esc(q.passage)}</div>` : ''}
+      ${q.storyText ? `<details class="again"><summary>อ่านเรื่องอีกครั้ง</summary><div class="passage" style="white-space:pre-line">${esc(q.storyText)}</div></details>` : ''}
       <div style="display:flex;flex-direction:column;gap:6px">
         <p class="prompt ${q.big ? 'word' : ''}">${prompt}</p>
         ${q.sub ? `<p class="sub">${q.sub}</p>` : ''}
@@ -1530,7 +2009,7 @@ function render(q) {
       ${body}
       <div id="fb"></div>
     </article>`;
-  $('#quit').onclick = () => (G.kind === 'practice' || G.kind === 'exam') ? level(G.lv) : home();
+  $('#quit').onclick = () => G.story != null ? openStory(G.lv, G.story, 'quiz') : (G.kind === 'practice' || G.kind === 'exam') ? level(G.lv) : home();
 
   if (q.type === 'mc') {
     app.querySelectorAll('.choice').forEach(b => b.onclick = () => answerMC(+b.dataset.k));
@@ -1677,6 +2156,12 @@ function result() {
       ? (nextLv ? `คุณใช้ภาษาอังกฤษได้ในระดับ ${G.lv} แล้ว ลองฝึกระดับ ${nextLv} ต่อได้เลย` : 'คุณผ่านระดับสูงสุด C2 Proficiency แล้ว')
       : `ต้องได้ 12 จาก 15 ข้อ ลองฝึกโหมดที่ผิดบ่อยแล้วกลับมาสอบใหม่`}</p></div>`;
   }
+  if (G.mode === 'story') {
+    S.stories = S.stories || {};
+    const sid = G.lv + '-' + G.story;
+    S.stories[sid] = Object.assign({ read: true }, S.stories[sid]);
+    S.stories[sid].best = Math.max(S.stories[sid].best || 0, G.right); save();
+  }
   app.innerHTML = `
     <header style="display:flex;flex-direction:column;gap:8px">
       <p class="eyebrow">${G.kind === 'review' ? 'ทบทวน' : G.lv + ' · ' + MODES[G.mode].th}</p>
@@ -1695,7 +2180,8 @@ function result() {
         : `<button class="btn lv" id="again">${G.kind === 'exam' ? 'สอบอีกครั้ง' : 'เล่นอีกรอบ'}</button>`}
     </div>`;
   $('#toHome').onclick = home;
-  if ($('#again')) $('#again').onclick = () => G.kind === 'review' ? startReview() : startRound(G.lv, G.mode);
+  if ($('#again')) $('#again').onclick = () => G.kind === 'review' ? startReview() : G.story != null ? startStoryQuiz(G.lv, G.story, G.mode) : startRound(G.lv, G.mode);
+  if (G.story != null) { const b = document.createElement('button'); b.className = 'btn ghost'; b.id = 'backStory'; b.textContent = 'กลับไปที่เรื่อง'; const lv = G.lv, i = G.story; b.onclick = () => openStory(lv, i, 'tr'); $('#toHome').after(b); }
   window.scrollTo(0, 0);
 }
 
