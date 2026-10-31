@@ -5,7 +5,7 @@ import math
 import re
 from collections import Counter
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from .geo import region_of
@@ -100,24 +100,33 @@ class Change:
 
 
 class LiveTracker:
-    """Remembers what was already shown, so each poll only prints what changed."""
+    """Remembers what was already shown, so each poll only prints what changed.
+
+    News feeds return a slightly different set of articles on every request,
+    so "a headline I haven't seen" is not enough: a change needs a report
+    published after the newest one already seen for that situation.
+    """
+
+    SLACK = timedelta(minutes=30)  # feeds publish a little late
 
     def __init__(self) -> None:
-        self.seen_titles: set[str] = set()
-        self.seen_situations: set[tuple] = set()
+        self.latest: dict[tuple, datetime] = {}
+        self.last_poll: datetime | None = None
 
     @staticmethod
     def _situation(e: Event) -> tuple:
         return (e.place.name if e.place else _key(e.title), e.label)
 
-    def update(self, events: list[Event]) -> list[Change]:
+    def update(self, events: list[Event], now: datetime) -> list[Change]:
         changes = []
         for e in events:
-            fresh = [h for h in e.headlines if _key(h) not in self.seen_titles]
-            if not fresh:
-                continue
             sit = self._situation(e)
-            changes.append(Change(e, sit not in self.seen_situations))
-            self.seen_situations.add(sit)
-            self.seen_titles.update(_key(h) for h in e.headlines)
+            seen = self.latest.get(sit)
+            if seen is None:
+                if self.last_poll is None or e.published >= self.last_poll - self.SLACK:
+                    changes.append(Change(e, True))
+            elif e.published > seen:
+                changes.append(Change(e, False))
+            self.latest[sit] = max(seen or e.published, e.published)
+        self.last_poll = now
         return changes

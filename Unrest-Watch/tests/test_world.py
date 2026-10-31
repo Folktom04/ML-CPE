@@ -52,13 +52,19 @@ def test_recent_ranks_severe_first():
 
 def test_live_tracker_reports_only_changes():
     t = LiveTracker()
-    first = [ev("Clashes in Paris")]
-    assert [c.is_new for c in t.update(first)] == [True]
-    assert t.update(first) == []  # nothing changed
-    more = Event("Clashes in Paris", "riot", 0.9, 3.5, False, G.find("Paris"), NOW, ["A", "B", "C"],
-                 headlines=["Clashes in Paris", "Paris riots spread"])
-    changes = t.update([more, ev("Bomb in Taiz", label="terrorism", place="Taiz")])
-    assert {(c.event.title, c.is_new) for c in changes} == {("Clashes in Paris", False), ("Bomb in Taiz", True)}
+    first = [ev("Clashes in Paris", hours=1)]
+    assert [c.is_new for c in t.update(first, NOW)] == [True]
+    assert t.update(first, NOW + timedelta(minutes=5)) == []  # nothing changed
+
+    later = NOW + timedelta(minutes=10)
+    newer_report = Event("Clashes in Paris", "riot", 0.9, 3.5, False, G.find("Paris"),
+                         later, ["A", "B", "C"], headlines=["Clashes in Paris", "Paris riots spread"])
+    fresh = Event("Bomb in Taiz", "terrorism", 0.9, 5.0, False, G.find("Taiz"), later, ["A"],
+                  headlines=["Bomb in Taiz"])
+    old_but_unseen = ev("Old protest in Rome", label="protest", place="Rome", hours=10)
+    changes = t.update([newer_report, fresh, old_but_unseen], later)
+    assert {(c.event.title, c.is_new) for c in changes} == {("Clashes in Paris", False),
+                                                            ("Bomb in Taiz", True)}
 
 
 def test_ago_th():

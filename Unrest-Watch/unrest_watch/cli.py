@@ -149,7 +149,7 @@ def world_loop(args, model) -> int:
     while True:
         events, dropped, n_articles, now = fetch(args, model)
         shown = world.recent(events, now, args.hours)
-        changes = tracker.update(shown)
+        changes = tracker.update(shown, now)
         if args.json:
             print(json.dumps([{
                 "title": c.event.title, "type": c.event.label, "severity": round(c.event.severity, 1),
