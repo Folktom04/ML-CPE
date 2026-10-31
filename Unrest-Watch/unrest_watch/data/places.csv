@@ -1,0 +1,150 @@
+name,kind,country,lat,lon,radius_km,aliases
+Thailand,country,Thailand,13.75,100.50,600,ประเทศไทย|ฝั่งไทย
+Bangkok,city,Thailand,13.7563,100.5018,40,กรุงเทพ|กรุงเทพฯ|กรุงเทพมหานคร|กทม
+Chiang Mai,city,Thailand,18.7883,98.9853,30,เชียงใหม่
+Chiang Rai,city,Thailand,19.9105,99.8406,30,เชียงราย
+Khon Kaen,city,Thailand,16.4322,102.8236,30,ขอนแก่น
+Nakhon Ratchasima,city,Thailand,14.9799,102.0978,30,Korat|โคราช|นครราชสีมา
+Udon Thani,city,Thailand,17.4138,102.7870,30,อุดรธานี
+Phuket,city,Thailand,7.8804,98.3923,25,ภูเก็ต
+Hat Yai,city,Thailand,7.0084,100.4747,25,หาดใหญ่
+Songkhla,city,Thailand,7.1756,100.6143,40,สงขลา
+Pattani,city,Thailand,6.8695,101.2501,40,ปัตตานี
+Yala,city,Thailand,6.5411,101.2804,40,ยะลา
+Narathiwat,city,Thailand,6.4255,101.8253,40,นราธิวาส
+Mae Sot,city,Thailand,16.7131,98.5747,25,แม่สอด
+Sa Kaeo,city,Thailand,13.8140,102.0720,40,สระแก้ว|อรัญประเทศ|Aranyaprathet
+Surin,city,Thailand,14.8818,103.4936,40,สุรินทร์
+Si Sa Ket,city,Thailand,15.1186,104.3220,40,Sisaket|ศรีสะเกษ
+Ubon Ratchathani,city,Thailand,15.2287,104.8564,30,อุบลราชธานี|อุบลฯ
+Pattaya,city,Thailand,12.9236,100.8825,25,พัทยา
+Myanmar,country,Myanmar,19.7633,96.0785,600,Burma|Burmese|เมียนมา|พม่า
+Yangon,city,Myanmar,16.8409,96.1735,40,Rangoon|ย่างกุ้ง
+Mandalay,city,Myanmar,21.9588,96.0891,40,มัณฑะเลย์
+Myawaddy,city,Myanmar,16.6878,98.5085,25,เมียวดี
+Cambodia,country,Cambodia,11.5564,104.9282,300,Cambodian|กัมพูชา|เขมร
+Phnom Penh,city,Cambodia,11.5564,104.9282,30,พนมเปญ
+Laos,country,Laos,17.9757,102.6331,400,Lao|ลาว
+Malaysia,country,Malaysia,3.1390,101.6869,600,Malaysian|มาเลเซีย
+Kuala Lumpur,city,Malaysia,3.1390,101.6869,30,กัวลาลัมเปอร์
+Vietnam,country,Vietnam,21.0278,105.8342,600,Vietnamese|เวียดนาม
+Hanoi,city,Vietnam,21.0278,105.8342,30,ฮานอย
+Ho Chi Minh City,city,Vietnam,10.8231,106.6297,30,Saigon|โฮจิมินห์
+Indonesia,country,Indonesia,-6.2088,106.8456,1500,Indonesian|อินโดนีเซีย
+Jakarta,city,Indonesia,-6.2088,106.8456,40,จาการ์ตา
+Philippines,country,Philippines,14.5995,120.9842,700,Filipino|Philippine|ฟิลิปปินส์
+Manila,city,Philippines,14.5995,120.9842,30,มะนิลา
+Mindanao,city,Philippines,7.5,125.0,250,มินดาเนา
+Singapore,country,Singapore,1.3521,103.8198,30,สิงคโปร์
+China,country,China,39.9042,116.4074,1500,Chinese|จีน
+Beijing,city,China,39.9042,116.4074,40,ปักกิ่ง
+Hong Kong,city,China,22.3193,114.1694,30,ฮ่องกง
+Taiwan,country,Taiwan,25.0330,121.5654,200,Taiwanese|ไต้หวัน
+Japan,country,Japan,35.6762,139.6503,800,Japanese|ญี่ปุ่น
+Tokyo,city,Japan,35.6762,139.6503,40,โตเกียว
+South Korea,country,South Korea,37.5665,126.9780,250,Korea|Korean|เกาหลีใต้
+Seoul,city,South Korea,37.5665,126.9780,30,โซล
+North Korea,country,North Korea,39.0392,125.7625,250,Pyongyang|เกาหลีเหนือ
+India,country,India,28.6139,77.2090,1500,Indian|อินเดีย
+New Delhi,city,India,28.6139,77.2090,40,Delhi|นิวเดลี
+Mumbai,city,India,19.0760,72.8777,40,มุมไบ
+Kashmir,city,India,34.0837,74.7973,200,Manipur|แคชเมียร์
+Pakistan,country,Pakistan,33.6844,73.0479,800,Pakistani|ปากีสถาน
+Karachi,city,Pakistan,24.8607,67.0011,40,การาจี
+Balochistan,city,Pakistan,29.5,66.5,300,Baluchistan|บาลูจิสถาน
+Bangladesh,country,Bangladesh,23.8103,90.4125,300,Bangladeshi|บังกลาเทศ
+Dhaka,city,Bangladesh,23.8103,90.4125,30,ธากา
+Nepal,country,Nepal,27.7172,85.3240,300,Nepali|Nepalese|เนปาล
+Kathmandu,city,Nepal,27.7172,85.3240,25,กาฐมาณฑุ
+Sri Lanka,country,Sri Lanka,6.9271,79.8612,250,Sri Lankan|ศรีลังกา
+Afghanistan,country,Afghanistan,34.5553,69.2075,600,Afghan|Taliban|อัฟกานิสถาน|ตาลีบัน
+Kabul,city,Afghanistan,34.5553,69.2075,30,คาบูล
+Iran,country,Iran,35.6892,51.3890,900,Iranian|Tehran|อิหร่าน|เตหะราน
+Iraq,country,Iraq,33.3152,44.3661,500,Iraqi|Baghdad|อิรัก|แบกแดด
+Syria,country,Syria,33.5138,36.2765,350,Syrian|Damascus|ซีเรีย|ดามัสกัส
+Aleppo,city,Syria,36.2021,37.1343,30,อเลปโป
+Lebanon,country,Lebanon,33.8938,35.5018,120,Lebanese|Beirut|Hezbollah|เลบานอน|เบรุต
+Israel,country,Israel,31.7683,35.2137,200,Israeli|Jerusalem|Tel Aviv|อิสราเอล|เยรูซาเล็ม
+Gaza,city,Palestine,31.5017,34.4668,40,กาซา|Hamas|ฮามาส
+West Bank,city,Palestine,31.95,35.25,70,เวสต์แบงก์|Palestinian|ปาเลสไตน์
+Jordan,country,Jordan,31.9454,35.9284,250,Jordanian|Amman|จอร์แดน
+Saudi Arabia,country,Saudi Arabia,24.7136,46.6753,1000,Saudi|Riyadh|ซาอุดีอาระเบีย|ซาอุฯ
+Yemen,country,Yemen,15.3694,44.1910,500,Yemeni|Houthi|Houthis|Sanaa|เยเมน|ฮูตี
+United Arab Emirates,country,United Arab Emirates,24.4539,54.3773,250,UAE|Dubai|Emirati|ดูไบ|ยูเออี
+Qatar,country,Qatar,25.2854,51.5310,100,Qatari|Doha|กาตาร์
+Turkey,country,Turkey,39.9334,32.8597,800,Turkish|Türkiye|Ankara|ตุรกี|ทูร์เคีย
+Istanbul,city,Turkey,41.0082,28.9784,40,อิสตันบูล
+Egypt,country,Egypt,30.0444,31.2357,600,Egyptian|Cairo|อียิปต์|ไคโร
+Libya,country,Libya,32.8872,13.1913,800,Libyan|Tripoli|ลิเบีย
+Tunisia,country,Tunisia,36.8065,10.1815,300,Tunisian|ตูนิเซีย
+Algeria,country,Algeria,36.7538,3.0588,1000,Algerian|แอลจีเรีย
+Morocco,country,Morocco,34.0209,-6.8416,500,Moroccan|โมร็อกโก
+Sudan,country,Sudan,15.5007,32.5599,900,Sudanese|Khartoum|RSF|ซูดาน
+Darfur,city,Sudan,13.5,24.0,400,ดาร์ฟูร์|El Fasher
+South Sudan,country,South Sudan,4.8594,31.5713,500,Juba|ซูดานใต้
+Ethiopia,country,Ethiopia,9.0300,38.7400,700,Ethiopian|Addis Ababa|Amhara|Tigray|เอธิโอเปีย
+Somalia,country,Somalia,2.0469,45.3182,700,Somali|Mogadishu|al-Shabaab|โซมาเลีย
+Kenya,country,Kenya,-1.2921,36.8219,500,Kenyan|Nairobi|เคนยา
+Uganda,country,Uganda,0.3476,32.5825,300,Ugandan|Kampala|ยูกันดา
+DR Congo,country,DR Congo,-4.4419,15.2663,1000,Congo|Congolese|Kinshasa|Goma|M23|คองโก
+Nigeria,country,Nigeria,9.0765,7.3986,700,Nigerian|Abuja|Lagos|Boko Haram|ไนจีเรีย
+Niger,country,Niger,13.5116,2.1254,700,Niamey|ไนเจอร์
+Mali,country,Mali,12.6392,-8.0029,800,Malian|Bamako|มาลี
+Burkina Faso,country,Burkina Faso,12.3714,-1.5197,400,Burkinabe|Ouagadougou|บูร์กินาฟาโซ
+Chad,country,Chad,12.1348,15.0557,700,Chadian|N'Djamena|ชาด
+Cameroon,country,Cameroon,3.8480,11.5021,500,Cameroonian|แคเมอรูน
+Mozambique,country,Mozambique,-25.9692,32.5732,800,Cabo Delgado|โมซัมบิก
+South Africa,country,South Africa,-25.7479,28.2293,800,South African|Johannesburg|Pretoria|Cape Town|แอฟริกาใต้
+Madagascar,country,Madagascar,-18.8792,47.5079,600,Malagasy|Antananarivo|มาดากัสการ์
+Haiti,country,Haiti,18.5944,-72.3074,150,Haitian|Port-au-Prince|เฮติ
+Mexico,country,Mexico,19.4326,-99.1332,1000,Mexican|Mexico City|Sinaloa|เม็กซิโก
+United States,country,United States,38.9072,-77.0369,2500,US|U.S.|USA|American|Washington|สหรัฐ|สหรัฐฯ|อเมริกา
+New York,city,United States,40.7128,-74.0060,40,นิวยอร์ก
+Los Angeles,city,United States,34.0522,-118.2437,50,ลอสแองเจลิส
+Chicago,city,United States,41.8781,-87.6298,40,ชิคาโก
+Portland,city,United States,45.5152,-122.6784,30,
+Puerto Rico,country,Puerto Rico,18.4655,-66.1057,100,Puerto Ricans|Puerto Rican|เปอร์โตริโก
+Canada,country,Canada,45.4215,-75.6972,2000,Canadian|Ottawa|Toronto|แคนาดา
+Colombia,country,Colombia,4.7110,-74.0721,600,Colombian|Bogota|Bogotá|โคลอมเบีย
+Venezuela,country,Venezuela,10.4806,-66.9036,600,Venezuelan|Caracas|เวเนซุเอลา
+Ecuador,country,Ecuador,-0.1807,-78.4678,300,Ecuadorian|Quito|Guayaquil|เอกวาดอร์
+Peru,country,Peru,-12.0464,-77.0428,700,Peruvian|Lima|เปรู
+Bolivia,country,Bolivia,-16.4897,-68.1193,600,Bolivian|La Paz|โบลิเวีย
+Chile,country,Chile,-33.4489,-70.6693,1000,Chilean|Santiago|ชิลี
+Argentina,country,Argentina,-34.6037,-58.3816,1000,Argentine|Argentinian|Buenos Aires|อาร์เจนตินา
+Brazil,country,Brazil,-15.7975,-47.8919,1500,Brazilian|Brasilia|Brasília|Rio de Janeiro|Sao Paulo|São Paulo|บราซิล
+United Kingdom,country,United Kingdom,51.5074,-0.1278,400,UK|U.K.|Britain|British|England|อังกฤษ|สหราชอาณาจักร
+London,city,United Kingdom,51.5074,-0.1278,40,ลอนดอน
+Northern Ireland,city,United Kingdom,54.5973,-5.9301,100,Belfast|ไอร์แลนด์เหนือ
+Ireland,country,Ireland,53.3498,-6.2603,200,Irish|Dublin|ไอร์แลนด์
+France,country,France,48.8566,2.3522,500,French|ฝรั่งเศส
+Paris,city,France,48.8566,2.3522,40,ปารีส
+Germany,country,Germany,52.5200,13.4050,450,German|Berlin|เยอรมนี|เยอรมัน
+Netherlands,country,Netherlands,52.3676,4.9041,150,Dutch|Amsterdam|The Hague|เนเธอร์แลนด์
+Belgium,country,Belgium,50.8503,4.3517,120,Belgian|Brussels|เบลเยียม
+Spain,country,Spain,40.4168,-3.7038,500,Spanish|Madrid|Barcelona|สเปน
+Portugal,country,Portugal,38.7223,-9.1393,250,Portuguese|Lisbon|โปรตุเกส
+Italy,country,Italy,41.9028,12.4964,500,Italian|Rome|Milan|Naples|อิตาลี
+Greece,country,Greece,37.9838,23.7275,300,Greek|Athens|กรีซ
+Serbia,country,Serbia,44.7866,20.4489,200,Serbian|Belgrade|เซอร์เบีย
+Kosovo,country,Kosovo,42.6629,21.1655,80,โคโซโว
+Poland,country,Poland,52.2297,21.0122,350,Polish|Warsaw|โปแลนด์
+Ukraine,country,Ukraine,50.4501,30.5234,700,Ukrainian|Kyiv|Kiev|ยูเครน|เคียฟ
+Kharkiv,city,Ukraine,49.9935,36.2304,40,คาร์คีฟ
+Donetsk,city,Ukraine,48.0159,37.8029,80,Donbas|โดเนตสค์
+Odesa,city,Ukraine,46.4825,30.7233,30,Odessa|โอเดสซา
+Russia,country,Russia,55.7558,37.6173,3000,Russian|Kremlin|รัสเซีย
+Moscow,city,Russia,55.7558,37.6173,40,มอสโก
+Belarus,country,Belarus,53.9006,27.5590,300,Belarusian|Minsk|เบลารุส
+Georgia,country,Georgia,41.7151,44.8271,200,Tbilisi|จอร์เจีย
+Armenia,country,Armenia,40.1792,44.4991,150,Armenian|Yerevan|อาร์เมเนีย
+Azerbaijan,country,Azerbaijan,40.4093,49.8671,200,Azerbaijani|Baku|อาเซอร์ไบจาน
+Hungary,country,Hungary,47.4979,19.0402,200,Hungarian|Budapest|ฮังการี
+Romania,country,Romania,44.4268,26.1025,300,Romanian|Bucharest|โรมาเนีย
+Bulgaria,country,Bulgaria,42.6977,23.3219,200,Bulgarian|Sofia|บัลแกเรีย
+Slovakia,country,Slovakia,48.1486,17.1077,150,Slovak|Bratislava|สโลวาเกีย
+Sweden,country,Sweden,59.3293,18.0686,600,Swedish|Stockholm|สวีเดน
+Kazakhstan,country,Kazakhstan,51.1694,71.4491,1200,Kazakh|Almaty|คาซัคสถาน
+Australia,country,Australia,-35.2809,149.1300,2000,Australian|Sydney|Melbourne|ออสเตรเลีย
+New Zealand,country,New Zealand,-41.2865,174.7762,600,Wellington|Auckland|นิวซีแลนด์
+Papua New Guinea,country,Papua New Guinea,-9.4438,147.1803,500,Port Moresby|ปาปัวนิวกินี
