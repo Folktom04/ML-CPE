@@ -271,6 +271,24 @@ table.vocab td:first-child { white-space: nowrap; }
 details.again summary { cursor: pointer; color: var(--lv); font-size: .9rem; padding: 4px 0; }
 @media (max-width: 420px) { .stories { grid-template-columns: 1fr; } .storytext { padding: 14px; font-size: 1.06rem; } }
 
+/* Oxford word bank */
+.oxlevels { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.oxlv { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 8px; display: flex; flex-direction: column; gap: 4px; align-items: stretch; text-align: center; }
+.oxlv b { font-family: var(--display); font-size: 1.25rem; color: var(--lv); }
+.oxlv .num { font-size: .72rem; color: var(--muted); }
+.oxlv.on { border-color: var(--lv); box-shadow: 0 0 0 2px var(--lv); }
+.row.oxtools { flex-wrap: nowrap; }
+.oxtools .textin { font-size: .95rem; padding: 10px 12px; }
+.oxtools #oxq { flex: 1 1 auto; min-width: 0; }
+.oxtools #oxf { flex: 0 0 auto; width: auto; }
+.oxtable td { padding: 7px 6px; }
+.oxtable td:first-child { width: 14px; padding-right: 0; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--muted); vertical-align: middle; }
+.dot.learning { background: var(--lv); border-color: var(--lv); opacity: .5; }
+.dot.known { background: var(--good); border-color: var(--good); }
+.oxbadge { font-family: var(--mono); font-size: .7rem; padding: 2px 8px; border-radius: 999px; border: 1.5px solid var(--lv); color: var(--lv); white-space: nowrap; }
+.banner .bar { margin-top: 6px; }
+
 /* result */
 .score { font-family: var(--display); font-weight: 800; font-size: 4rem; line-height: 1; color: var(--lv); }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -1162,6 +1180,5008 @@ function ruleOf(q) {
 /* the sentence too. glos: "word|part of speech|Thai; ..."              */
 /* qs: [question, answer, [wrong], Thai note]                          */
 /* ------------------------------------------------------------------ */
+/* Oxford 3000 + 5000 word list (word|sense|pos|level|list|Thai). Source: oxfordlearnersdictionaries.com */
+const OXFORD_RAW = `a, an||indefinite article|A1|3|หนึ่ง (คำนำหน้านามไม่เจาะจง)
+about||prep., adv. adj.|A1|3|เกี่ยวกับ, ประมาณ
+above||prep., adv.|A1|3|ข้างบน, เหนือ
+across||prep., adv.|A1|3|ข้าม, ฝั่งตรงข้าม
+action||n.|A1|3|การกระทำ
+activity||n.|A1|3|กิจกรรม
+actor||n.|A1|3|นักแสดงชาย
+actress||n.|A1|3|นักแสดงหญิง
+add||v.|A1|3|เพิ่ม, บวก
+address||n. v.|A1|3|ที่อยู่
+adult||n. adj.|A1|3|ผู้ใหญ่
+advice||n.|A1|3|คำแนะนำ
+afraid||adj.|A1|3|กลัว
+after||prep. conj., adv.|A1|3|หลังจาก
+afternoon||n.|A1|3|ตอนบ่าย
+again||adv.|A1|3|อีกครั้ง
+age||n. v.|A1|3|อายุ
+ago||adv.|A1|3|ที่ผ่านมา (…ก่อน)
+agree||v.|A1|3|เห็นด้วย
+air||n.|A1|3|อากาศ
+airport||n.|A1|3|สนามบิน
+all||det., pron. adv.|A1|3|ทั้งหมด
+also||adv.|A1|3|ด้วย, เช่นกัน
+always||adv.|A1|3|เสมอ
+amazing||adj.|A1|3|น่าทึ่ง
+an||indefinite article|A1|3|หนึ่ง (หน้าเสียงสระ)
+and||conj.|A1|3|และ
+angry||adj.|A1|3|โกรธ
+animal||n.|A1|3|สัตว์
+another||det./pron.|A1|3|อีก (หนึ่ง)
+answer||n., v.|A1|3|คำตอบ, ตอบ
+any||det., pron. adv.|A1|3|ใดๆ
+anyone||pron.|A1|3|ใครก็ได้
+anything||pron.|A1|3|อะไรก็ได้
+apartment||n.|A1|3|อพาร์ตเมนต์
+apple||n.|A1|3|แอปเปิล
+April||n.|A1|3|เมษายน
+area||n.|A1|3|พื้นที่
+arm||n.|A1|3|แขน
+around||prep., adv.|A1|3|รอบๆ
+arrive||v.|A1|3|มาถึง
+art||n.|A1|3|ศิลปะ
+article||n.|A1|3|บทความ
+artist||n.|A1|3|ศิลปิน
+as||prep. adv., conj.|A1|3|ในฐานะ, เหมือน
+ask||v.|A1|3|ถาม, ขอ
+at||prep.|A1|3|ที่, ตอน
+August||n.|A1|3|สิงหาคม
+aunt||n.|A1|3|ป้า, น้า, อา (หญิง)
+autumn||n.|A1|3|ฤดูใบไม้ร่วง
+away||adv.|A1|3|ออกไป, ห่างไป
+baby||n.|A1|3|ทารก
+back||n., adv. adj. v.|A1|3|หลัง, กลับ
+bad||adj.|A1|3|แย่, ไม่ดี
+bag||n.|A1|3|กระเป๋า, ถุง
+ball||n.|A1|3|ลูกบอล
+banana||n.|A1|3|กล้วย
+band||n.|A1|3|วงดนตรี
+bank|money|n.|A1|3|ธนาคาร
+bar||n. v.|A1|3|บาร์, แท่ง
+bath||n.|A1|3|อ่างอาบน้ำ, การอาบน้ำ
+bathroom||n.|A1|3|ห้องน้ำ
+be||v., auxiliary v.|A1|3|เป็น, อยู่, คือ
+beach||n.|A1|3|ชายหาด
+beautiful||adj.|A1|3|สวย
+because||conj.|A1|3|เพราะว่า
+because of||prep.|A1|3|เพราะ (+ คำนาม)
+become||v.|A1|3|กลายเป็น
+bed||n.|A1|3|เตียง
+bedroom||n.|A1|3|ห้องนอน
+beer||n.|A1|3|เบียร์
+before||prep. conj., adv.|A1|3|ก่อน
+begin||v.|A1|3|เริ่ม
+beginning||n.|A1|3|จุดเริ่มต้น
+behind||prep., adv.|A1|3|ข้างหลัง
+believe||v.|A1|3|เชื่อ
+below||adv., prep.|A1|3|ข้างล่าง, ต่ำกว่า
+best||adj. adv., n.|A1|3|ดีที่สุด
+better||adj. adv. n.|A1|3|ดีกว่า
+between||prep. adv.|A1|3|ระหว่าง
+bicycle||n.|A1|3|จักรยาน
+big||adj.|A1|3|ใหญ่
+bike||n.|A1|3|จักรยาน
+bill||n. v.|A1|3|ใบแจ้งหนี้, บิล
+bird||n.|A1|3|นก
+birthday||n.|A1|3|วันเกิด
+black||adj., n.|A1|3|สีดำ
+blog||n.|A1|3|บล็อก
+blonde||adj.|A1|3|ผมสีบลอนด์
+blue||adj., n.|A1|3|สีน้ำเงิน, สีฟ้า
+boat||n.|A1|3|เรือ
+body||n.|A1|3|ร่างกาย
+book||n. v.|A1|3|หนังสือ, จอง
+boot||n.|A1|3|รองเท้าบูต
+bored||adj.|A1|3|เบื่อ
+boring||adj.|A1|3|น่าเบื่อ
+born||v.|A1|3|เกิด
+both||det./pron.|A1|3|ทั้งสอง
+bottle||n.|A1|3|ขวด
+box||n.|A1|3|กล่อง
+boy||n.|A1|3|เด็กผู้ชาย
+boyfriend||n.|A1|3|แฟน (ชาย)
+bread||n.|A1|3|ขนมปัง
+break||v., n.|A1|3|ทำแตก, พัก
+breakfast||n.|A1|3|อาหารเช้า
+bring||v.|A1|3|นำมา
+brother||n.|A1|3|พี่ชาย, น้องชาย
+brown||adj., n.|A1|3|สีน้ำตาล
+build||v.|A1|3|สร้าง
+building||n.|A1|3|อาคาร
+bus||n.|A1|3|รถบัส
+business||n.|A1|3|ธุรกิจ
+busy||adj.|A1|3|ยุ่ง
+but||conj. prep.|A1|3|แต่
+butter||n.|A1|3|เนย
+buy||v.|A1|3|ซื้อ
+by||prep. adv.|A1|3|โดย, ข้างๆ
+bye||exclam.|A1|3|ลาก่อน
+cafe||n.|A1|3|ร้านกาแฟ
+cake||n.|A1|3|เค้ก
+call||v., n.|A1|3|โทร, เรียก
+camera||n.|A1|3|กล้องถ่ายรูป
+can||modal v.|A1|3|สามารถ
+cannot||v.|A1|3|ไม่สามารถ
+capital||n., adj.|A1|3|เมืองหลวง
+car||n.|A1|3|รถยนต์
+card||n.|A1|3|บัตร, การ์ด
+career||n.|A1|3|อาชีพการงาน
+carrot||n.|A1|3|แครอท
+carry||v.|A1|3|ถือ, แบก
+cat||n.|A1|3|แมว
+cent||n.|A1|3|เซนต์
+centre||n. v.|A1|3|ศูนย์กลาง
+century||n.|A1|3|ศตวรรษ
+chair||n. v.|A1|3|เก้าอี้
+change||v., n.|A1|3|เปลี่ยน, การเปลี่ยนแปลง
+chart||n. v.|A1|3|แผนภูมิ
+cheap||adj. adv.|A1|3|ถูก (ราคา)
+check||v. n.|A1|3|ตรวจสอบ
+cheese||n.|A1|3|ชีส
+chicken||n.|A1|3|ไก่
+child||n.|A1|3|เด็ก
+chocolate||n.|A1|3|ช็อกโกแลต
+choose||v.|A1|3|เลือก
+cinema||n.|A1|3|โรงภาพยนตร์
+city||n.|A1|3|เมือง
+class||n.|A1|3|ชั้นเรียน
+classroom||n.|A1|3|ห้องเรียน
+clean||adj., v.|A1|3|สะอาด, ทำความสะอาด
+climb||v. n.|A1|3|ปีน
+clock||n.|A1|3|นาฬิกา
+close||v. n.|A1|3|ปิด
+clothes||n.|A1|3|เสื้อผ้า
+club||n.|A1|3|ชมรม, สโมสร
+coat||n.|A1|3|เสื้อโค้ต
+coffee||n.|A1|3|กาแฟ
+cold||adj., n.|A1|3|หนาว, เย็น
+college||n.|A1|3|วิทยาลัย
+colour||n.|A1|3|สี
+come||v.|A1|3|มา
+common||adj., n.|A1|3|ทั่วไป, พบบ่อย
+company||n.|A1|3|บริษัท
+compare||v.|A1|3|เปรียบเทียบ
+complete||adj., v.|A1|3|สมบูรณ์, ทำให้เสร็จ
+computer||n.|A1|3|คอมพิวเตอร์
+concert||n.|A1|3|คอนเสิร์ต
+conversation||n.|A1|3|บทสนทนา
+cook||v. n.|A1|3|ทำอาหาร
+cooking||n.|A1|3|การทำอาหาร
+cool||adj. v.|A1|3|เย็นสบาย, เท่
+correct||adj., v.|A1|3|ถูกต้อง
+cost||n., v.|A1|3|ราคา, มีราคา
+could||modal v.|A1|3|สามารถ (อดีต), อาจ
+country||n.|A1|3|ประเทศ
+course||n.|A1|3|หลักสูตร
+cousin||n.|A1|3|ลูกพี่ลูกน้อง
+cow||n.|A1|3|วัว
+cream||n. adj.|A1|3|ครีม
+create||v.|A1|3|สร้างสรรค์
+culture||n.|A1|3|วัฒนธรรม
+cup||n.|A1|3|ถ้วย
+customer||n.|A1|3|ลูกค้า
+cut||v. n.|A1|3|ตัด
+dad||n.|A1|3|พ่อ
+dance||n., v.|A1|3|เต้นรำ
+dancer||n.|A1|3|นักเต้น
+dancing||n.|A1|3|การเต้นรำ
+dangerous||adj.|A1|3|อันตราย
+dark||adj. n.|A1|3|มืด
+date||n. v.|A1|3|วันที่
+daughter||n.|A1|3|ลูกสาว
+day||n.|A1|3|วัน
+dear||adj. exclam.|A1|3|ที่รัก
+December||n.|A1|3|ธันวาคม
+decide||v.|A1|3|ตัดสินใจ
+delicious||adj.|A1|3|อร่อย
+describe||v.|A1|3|บรรยาย
+description||n.|A1|3|คำบรรยาย
+design||n., v.|A1|3|การออกแบบ, ออกแบบ
+desk||n.|A1|3|โต๊ะทำงาน
+detail||n. v.|A1|3|รายละเอียด
+dialogue||n.|A1|3|บทสนทนา
+dictionary||n.|A1|3|พจนานุกรม
+die||v.|A1|3|ตาย
+diet||n.|A1|3|อาหารการกิน
+difference||n.|A1|3|ความแตกต่าง
+different||adj.|A1|3|แตกต่าง
+difficult||adj.|A1|3|ยาก
+dinner||n.|A1|3|อาหารเย็น
+dirty||adj.|A1|3|สกปรก
+discuss||v.|A1|3|อภิปราย, พูดคุย
+dish||n.|A1|3|จาน, อาหาร
+do||v., auxiliary v.|A1|3|ทำ
+doctor||n.|A1|3|หมอ
+dog||n.|A1|3|สุนัข
+dollar||n.|A1|3|ดอลลาร์
+door||n.|A1|3|ประตู
+down||adv., prep.|A1|3|ลง
+downstairs||adv. adj.|A1|3|ชั้นล่าง
+draw||v.|A1|3|วาด
+dress||n., v.|A1|3|ชุดกระโปรง, แต่งตัว
+drink||n., v.|A1|3|ดื่ม, เครื่องดื่ม
+drive||v. n.|A1|3|ขับรถ
+driver||n.|A1|3|คนขับ
+during||prep.|A1|3|ระหว่าง
+each||det./pron./adv.|A1|3|แต่ละ
+ear||n.|A1|3|หู
+early||adj., adv.|A1|3|เช้า, ก่อนเวลา
+east||n., adj., adv.|A1|3|ทิศตะวันออก
+easy||adj.|A1|3|ง่าย
+eat||v.|A1|3|กิน
+egg||n.|A1|3|ไข่
+eight||number|A1|3|แปด
+eighteen||number|A1|3|สิบแปด
+eighty||number|A1|3|แปดสิบ
+elephant||n.|A1|3|ช้าง
+eleven||number|A1|3|สิบเอ็ด
+else||adv.|A1|3|อื่น
+email||n., v.|A1|3|อีเมล
+end||n., v.|A1|3|จุดจบ, สิ้นสุด
+enjoy||v.|A1|3|สนุกกับ
+enough||det., pron., adv.|A1|3|พอ
+euro||n.|A1|3|ยูโร
+even||adv. adj.|A1|3|แม้แต่
+evening||n.|A1|3|ตอนเย็น
+event||n.|A1|3|เหตุการณ์, งาน
+ever||adv.|A1|3|เคย
+every||det.|A1|3|ทุกๆ
+everybody||pron.|A1|3|ทุกคน
+everyone||pron.|A1|3|ทุกคน
+everything||pron.|A1|3|ทุกสิ่ง
+exam||n.|A1|3|การสอบ
+example||n.|A1|3|ตัวอย่าง
+excited||adj.|A1|3|ตื่นเต้น
+exciting||adj.|A1|3|น่าตื่นเต้น
+exercise||n., v.|A1|3|การออกกำลังกาย, แบบฝึกหัด
+expensive||adj.|A1|3|แพง
+explain||v.|A1|3|อธิบาย
+extra||adj. n., adv.|A1|3|พิเศษ, เพิ่มเติม
+eye||n.|A1|3|ตา
+face||n. v.|A1|3|ใบหน้า
+fact||n.|A1|3|ข้อเท็จจริง
+fall||v. n.|A1|3|ตก, ล้ม
+false||adj.|A1|3|ผิด, ไม่จริง
+family||n., adj.|A1|3|ครอบครัว
+famous||adj.|A1|3|มีชื่อเสียง
+fantastic||adj.|A1|3|ยอดเยี่ยม
+far||adv. adj.|A1|3|ไกล
+farm||n. v.|A1|3|ฟาร์ม
+farmer||n.|A1|3|ชาวนา, เกษตรกร
+fast||adj., adv.|A1|3|เร็ว
+fat||adj. n.|A1|3|อ้วน, ไขมัน
+father||n.|A1|3|พ่อ
+favourite||adj., n.|A1|3|ที่ชอบที่สุด
+February||n.|A1|3|กุมภาพันธ์
+feel||v. n.|A1|3|รู้สึก
+feeling||n.|A1|3|ความรู้สึก
+festival||n.|A1|3|เทศกาล
+few||det./adj., pron.|A1|3|น้อย, ไม่กี่
+fifteen||number|A1|3|สิบห้า
+fifth||number|A1|3|ที่ห้า
+fifty||number|A1|3|ห้าสิบ
+fill||v.|A1|3|เติม, ทำให้เต็ม
+film||n. v.|A1|3|ภาพยนตร์
+final||adj. n.|A1|3|สุดท้าย
+find||v.|A1|3|หา, พบ
+fine||adj.|A1|3|สบายดี, ดี
+finish||v. n.|A1|3|ทำเสร็จ, จบ
+fire||n. v.|A1|3|ไฟ
+first||det./number, adv. n.|A1|3|แรก, ที่หนึ่ง
+fish||n. v.|A1|3|ปลา
+five||number|A1|3|ห้า
+flat||n. adj.|A1|3|แฟลต, แบน
+flight||n.|A1|3|เที่ยวบิน
+floor||n.|A1|3|พื้น, ชั้น
+flower||n.|A1|3|ดอกไม้
+fly||v. n.|A1|3|บิน
+follow||v.|A1|3|ตาม
+food||n.|A1|3|อาหาร
+foot||n.|A1|3|เท้า
+football||n.|A1|3|ฟุตบอล
+for||prep.|A1|3|สำหรับ
+forget||v.|A1|3|ลืม
+form||n., v.|A1|3|แบบฟอร์ม, รูปแบบ
+forty||number|A1|3|สี่สิบ
+four||number|A1|3|สี่
+fourteen||number|A1|3|สิบสี่
+fourth||number|A1|3|ที่สี่
+free||adj. adv. v.|A1|3|ฟรี, อิสระ
+Friday||n.|A1|3|วันศุกร์
+friend||n.|A1|3|เพื่อน
+friendly||adj.|A1|3|เป็นมิตร
+from||prep.|A1|3|จาก
+front||n., adj.|A1|3|ด้านหน้า
+fruit||n.|A1|3|ผลไม้
+full||adj.|A1|3|เต็ม, อิ่ม
+fun||n. adj.|A1|3|ความสนุก
+funny||adj.|A1|3|ตลก
+future||n. adj.|A1|3|อนาคต
+game||n.|A1|3|เกม
+garden||n.|A1|3|สวน
+geography||n.|A1|3|ภูมิศาสตร์
+get||v.|A1|3|ได้รับ
+girl||n.|A1|3|เด็กผู้หญิง
+girlfriend||n.|A1|3|แฟน (หญิง)
+give||v.|A1|3|ให้
+glass||n.|A1|3|แก้ว, กระจก
+go||v. n.|A1|3|ไป
+good||adj. n.|A1|3|ดี
+goodbye||exclam./n.|A1|3|ลาก่อน
+grandfather||n.|A1|3|ปู่, ตา
+grandmother||n.|A1|3|ย่า, ยาย
+grandparent||n.|A1|3|ปู่ย่าตายาย
+great||adj.|A1|3|ยอดเยี่ยม
+green||adj., n.|A1|3|สีเขียว
+grey||adj., n.|A1|3|สีเทา
+group||n.|A1|3|กลุ่ม
+grow||v.|A1|3|เติบโต, ปลูก
+guess||v., n.|A1|3|เดา
+guitar||n.|A1|3|กีตาร์
+gym||n.|A1|3|ยิม
+hair||n.|A1|3|ผม
+half||n., det./pron. adv.|A1|3|ครึ่ง
+hand||n. v.|A1|3|มือ
+happen||v.|A1|3|เกิดขึ้น
+happy||adj.|A1|3|มีความสุข
+hard||adj., adv.|A1|3|ยาก, แข็ง, หนัก
+hat||n.|A1|3|หมวก
+hate||v. n.|A1|3|เกลียด
+have||v. auxiliary v.|A1|3|มี
+have to||modal v.|A1|3|ต้อง
+he||pron.|A1|3|เขา (ผู้ชาย)
+head||n. v.|A1|3|ศีรษะ
+health||n.|A1|3|สุขภาพ
+healthy||adj.|A1|3|มีสุขภาพดี
+hear||v.|A1|3|ได้ยิน
+hello||exclam./n.|A1|3|สวัสดี
+help||v., n.|A1|3|ช่วย
+her||pron., det.|A1|3|เธอ, ของเธอ
+here||adv.|A1|3|ที่นี่
+hey||exclam.|A1|3|เฮ้
+hi||exclam.|A1|3|สวัสดี
+high||adj. adv. n.|A1|3|สูง
+him||pron.|A1|3|เขา (กรรม)
+his||det. pron.|A1|3|ของเขา
+history||n.|A1|3|ประวัติศาสตร์
+hobby||n.|A1|3|งานอดิเรก
+holiday||n.|A1|3|วันหยุด
+home||n., adv. adj.|A1|3|บ้าน
+homework||n.|A1|3|การบ้าน
+hope||v. n.|A1|3|หวัง
+horse||n.|A1|3|ม้า
+hospital||n.|A1|3|โรงพยาบาล
+hot||adj.|A1|3|ร้อน
+hotel||n.|A1|3|โรงแรม
+hour||n.|A1|3|ชั่วโมง
+house||n., v.|A1|3|บ้าน
+how||adv.|A1|3|อย่างไร
+however||adv. conj.|A1|3|อย่างไรก็ตาม
+hundred||number|A1|3|ร้อย
+hungry||adj.|A1|3|หิว
+husband||n.|A1|3|สามี
+I||pron.|A1|3|ฉัน, ผม
+ice||n.|A1|3|น้ำแข็ง
+ice cream||n.|A1|3|ไอศกรีม
+idea||n.|A1|3|ความคิด
+if||conj.|A1|3|ถ้า
+imagine||v.|A1|3|จินตนาการ
+important||adj.|A1|3|สำคัญ
+improve||v.|A1|3|ปรับปรุง, พัฒนา
+in||prep., adv.|A1|3|ใน
+include||v.|A1|3|รวมถึง
+information||n.|A1|3|ข้อมูล
+interest||n., v.|A1|3|ความสนใจ
+interested||adj.|A1|3|สนใจ
+interesting||adj.|A1|3|น่าสนใจ
+internet||n.|A1|3|อินเทอร์เน็ต
+interview||n., v.|A1|3|สัมภาษณ์
+into||prep.|A1|3|เข้าไปใน
+introduce||v.|A1|3|แนะนำ
+island||n.|A1|3|เกาะ
+it||pron.|A1|3|มัน
+its||det.|A1|3|ของมัน
+jacket||n.|A1|3|แจ็กเก็ต
+January||n.|A1|3|มกราคม
+jeans||n.|A1|3|กางเกงยีนส์
+job||n.|A1|3|งาน
+join||v.|A1|3|เข้าร่วม
+journey||n.|A1|3|การเดินทาง
+juice||n.|A1|3|น้ำผลไม้
+July||n.|A1|3|กรกฎาคม
+June||n.|A1|3|มิถุนายน
+just||adv.|A1|3|เพียง, เพิ่ง
+keep||v.|A1|3|เก็บ, รักษา
+key||n., adj. v.|A1|3|กุญแจ, สำคัญ
+kilometre||n.|A1|3|กิโลเมตร
+kind|type|n.|A1|3|ชนิด, ประเภท
+kitchen||n.|A1|3|ห้องครัว
+know||v.|A1|3|รู้
+land||n. v.|A1|3|ที่ดิน, ลงจอด
+language||n.|A1|3|ภาษา
+large||adj.|A1|3|ใหญ่
+last|final|det. adv., n.|A1|3|สุดท้าย, ที่แล้ว
+late||adj., adv.|A1|3|สาย
+later||adv. adj.|A1|3|ทีหลัง
+laugh||v., n.|A1|3|หัวเราะ
+learn||v.|A1|3|เรียนรู้
+leave||v. n.|A1|3|ออกจาก, จากไป
+left||adj., adv., n.|A1|3|ซ้าย
+leg||n.|A1|3|ขา
+lesson||n.|A1|3|บทเรียน
+let||v.|A1|3|ปล่อยให้, ให้
+letter||n.|A1|3|จดหมาย, ตัวอักษร
+library||n.|A1|3|ห้องสมุด
+lie||v.|A1|3|นอน (เอนกาย)
+life||n.|A1|3|ชีวิต
+light|from the sun/a lamp|n., adj., v.|A1|3|แสง, ไฟ
+like|find sb/sth pleasant|v.|A1|3|ชอบ
+like|similar|prep.|A1|3|เหมือน
+line||n. v.|A1|3|เส้น, แถว
+lion||n.|A1|3|สิงโต
+list||n., v.|A1|3|รายการ
+listen||v.|A1|3|ฟัง
+little||adj., det./pron. adv.|A1|3|เล็ก, น้อย
+live||v.|A1|3|อาศัยอยู่
+local||adj. n.|A1|3|ท้องถิ่น
+long||adj., adv.|A1|3|ยาว
+look||v. n.|A1|3|มอง, ดู
+lose||v.|A1|3|ทำหาย, แพ้
+lot||pron., det., adv.|A1|3|มาก (a lot)
+love||n., v.|A1|3|รัก
+lunch||n.|A1|3|อาหารกลางวัน
+machine||n.|A1|3|เครื่องจักร
+magazine||n.|A1|3|นิตยสาร
+main||adj.|A1|3|หลัก
+make||v. n.|A1|3|ทำ, สร้าง
+man||n.|A1|3|ผู้ชาย
+many||det./pron.|A1|3|มาก, หลาย
+map||n. v.|A1|3|แผนที่
+March||n.|A1|3|มีนาคม
+market||n. v.|A1|3|ตลาด
+married||adj.|A1|3|แต่งงานแล้ว
+match|contest/correspond|n., v.|A1|3|การแข่งขัน, เข้ากัน
+May||n.|A1|3|พฤษภาคม
+maybe||adv.|A1|3|บางที
+me||pron.|A1|3|ฉัน (กรรม)
+meal||n.|A1|3|มื้ออาหาร
+mean||v.|A1|3|หมายความว่า
+meaning||n.|A1|3|ความหมาย
+meat||n.|A1|3|เนื้อสัตว์
+meet||v.|A1|3|พบ
+meeting||n.|A1|3|การประชุม
+member||n.|A1|3|สมาชิก
+menu||n.|A1|3|เมนู
+message||n.|A1|3|ข้อความ
+metre||n.|A1|3|เมตร
+midnight||n.|A1|3|เที่ยงคืน
+mile||n.|A1|3|ไมล์
+milk||n.|A1|3|นม
+million||number|A1|3|ล้าน
+minute||n.|A1|3|นาที
+miss||v.|A1|3|คิดถึง, พลาด
+mistake||n. v.|A1|3|ความผิดพลาด
+model||n. v.|A1|3|แบบจำลอง, นางแบบ
+modern||adj.|A1|3|ทันสมัย
+moment||n.|A1|3|ขณะ, ช่วงเวลา
+Monday||n.|A1|3|วันจันทร์
+money||n.|A1|3|เงิน
+month||n.|A1|3|เดือน
+more||det./pron., adv.|A1|3|มากกว่า
+morning||n.|A1|3|ตอนเช้า
+most||det./pron., adv.|A1|3|มากที่สุด, ส่วนใหญ่
+mother||n.|A1|3|แม่
+mountain||n.|A1|3|ภูเขา
+mouse||n.|A1|3|หนู, เมาส์
+mouth||n.|A1|3|ปาก
+move||v. n.|A1|3|เคลื่อนที่, ย้าย
+movie||n.|A1|3|ภาพยนตร์
+much||det./pron., adv.|A1|3|มาก
+mum||n.|A1|3|แม่
+museum||n.|A1|3|พิพิธภัณฑ์
+music||n.|A1|3|ดนตรี
+must||modal v.|A1|3|ต้อง
+my||det.|A1|3|ของฉัน
+name||n., v.|A1|3|ชื่อ
+natural||adj.|A1|3|ธรรมชาติ
+near||prep., adj., adv.|A1|3|ใกล้
+need||v. n. modal v.|A1|3|ต้องการ
+negative||adj. n.|A1|3|ด้านลบ
+neighbour||n.|A1|3|เพื่อนบ้าน
+never||adv.|A1|3|ไม่เคย
+new||adj.|A1|3|ใหม่
+news||n.|A1|3|ข่าว
+newspaper||n.|A1|3|หนังสือพิมพ์
+next||adj., adv. n.|A1|3|ถัดไป
+next to||prep.|A1|3|ข้างๆ
+nice||adj.|A1|3|ดี, น่ารัก
+night||n.|A1|3|กลางคืน
+nine||number|A1|3|เก้า
+nineteen||number|A1|3|สิบเก้า
+ninety||number|A1|3|เก้าสิบ
+no||exclam., det.|A1|3|ไม่, ไม่มี
+no one||pron.|A1|3|ไม่มีใคร
+nobody||pron.|A1|3|ไม่มีใคร
+north||n., adj., adv.|A1|3|ทิศเหนือ
+nose||n.|A1|3|จมูก
+not||adv.|A1|3|ไม่
+note||n. v.|A1|3|บันทึก, โน้ต
+nothing||pron.|A1|3|ไม่มีอะไร
+November||n.|A1|3|พฤศจิกายน
+now||adv. conj.|A1|3|ตอนนี้
+nurse||n.|A1|3|พยาบาล
+object||n. v.|A1|3|วัตถุ
+October||n.|A1|3|ตุลาคม
+of||prep.|A1|3|ของ
+off||adv., prep.|A1|3|ออก, ปิด
+office||n.|A1|3|สำนักงาน
+often||adv.|A1|3|บ่อย
+oh||exclam.|A1|3|โอ้
+OK||exclam., adj./adv.|A1|3|โอเค
+old||adj.|A1|3|แก่, เก่า
+on||prep., adv.|A1|3|บน
+once||adv. conj.|A1|3|ครั้งหนึ่ง
+one||number/det., pron.|A1|3|หนึ่ง
+onion||n.|A1|3|หัวหอม
+online||adj., adv.|A1|3|ออนไลน์
+only||adj., adv.|A1|3|เท่านั้น
+open||adj., v.|A1|3|เปิด
+opinion||n.|A1|3|ความคิดเห็น
+opposite||adj., adv., prep., n.|A1|3|ตรงข้าม
+or||conj.|A1|3|หรือ
+orange||n., adj.|A1|3|ส้ม, สีส้ม
+order||n., v.|A1|3|สั่ง, ลำดับ
+other||adj./pron.|A1|3|อื่น
+our||det.|A1|3|ของพวกเรา
+out||adv./prep.|A1|3|ออก, ข้างนอก
+outside||adv. prep., n., adj.|A1|3|ข้างนอก
+over||prep., adv.|A1|3|เหนือ, เกิน
+own||adj./pron. v.|A1|3|ของตัวเอง
+o’clock||adv.|A1|3|นาฬิกา (บอกเวลาตรง)
+page||n.|A1|3|หน้า (หนังสือ)
+paint||v., n.|A1|3|ทาสี, วาดภาพ
+painting||n.|A1|3|ภาพวาด
+pair||n.|A1|3|คู่
+paper||n.|A1|3|กระดาษ
+paragraph||n.|A1|3|ย่อหน้า
+parent||n.|A1|3|พ่อหรือแม่
+park||n., v.|A1|3|สวนสาธารณะ, จอดรถ
+part||n.|A1|3|ส่วน
+partner||n.|A1|3|คู่หู, หุ้นส่วน
+party||n.|A1|3|งานเลี้ยง
+passport||n.|A1|3|หนังสือเดินทาง
+past||adj., n., prep. adv.|A1|3|อดีต, ผ่าน
+pay||v. n.|A1|3|จ่าย
+pen||n.|A1|3|ปากกา
+pencil||n.|A1|3|ดินสอ
+people||n.|A1|3|ผู้คน
+pepper||n.|A1|3|พริกไทย
+perfect||adj.|A1|3|สมบูรณ์แบบ
+period||n.|A1|3|ช่วงเวลา
+person||n.|A1|3|บุคคล
+personal||adj.|A1|3|ส่วนตัว
+phone||n., v.|A1|3|โทรศัพท์
+photo||n.|A1|3|รูปถ่าย
+photograph||n. v.|A1|3|ภาพถ่าย
+phrase||n.|A1|3|วลี
+piano||n.|A1|3|เปียโน
+picture||n. v.|A1|3|รูปภาพ
+piece||n.|A1|3|ชิ้น
+pig||n.|A1|3|หมู
+pink||adj., n.|A1|3|สีชมพู
+pizza||n.|A1|3|พิซซ่า
+place||n. v.|A1|3|สถานที่
+plan||n., v.|A1|3|แผน, วางแผน
+plane||n.|A1|3|เครื่องบิน
+plant||n. v.|A1|3|พืช, ปลูก
+play||v., n.|A1|3|เล่น
+player||n.|A1|3|ผู้เล่น
+please||exclam. v.|A1|3|กรุณา
+point||n. v.|A1|3|จุด, ประเด็น
+police||n.|A1|3|ตำรวจ
+pool||n.|A1|3|สระว่ายน้ำ
+poor||adj.|A1|3|จน
+popular||adj.|A1|3|เป็นที่นิยม
+positive||adj. n.|A1|3|ด้านบวก
+possible||adj.|A1|3|เป็นไปได้
+post||n., v.|A1|3|ไปรษณีย์, โพสต์
+potato||n.|A1|3|มันฝรั่ง
+pound||n.|A1|3|ปอนด์
+practice||n.|A1|3|การฝึกฝน
+practise||v.|A1|3|ฝึกฝน
+prefer||v.|A1|3|ชอบมากกว่า
+prepare||v.|A1|3|เตรียม
+present||adj., n. v.|A1|3|ของขวัญ, ปัจจุบัน
+pretty||adj., adv.|A1|3|สวย, ค่อนข้าง
+price||n. v.|A1|3|ราคา
+probably||adv.|A1|3|น่าจะ
+problem||n.|A1|3|ปัญหา
+product||n.|A1|3|ผลิตภัณฑ์
+programme||n.|A1|3|รายการ, โครงการ
+project||n. v.|A1|3|โครงการ
+purple||adj., n.|A1|3|สีม่วง
+put||v.|A1|3|วาง, ใส่
+quarter||n.|A1|3|หนึ่งในสี่
+question||n. v.|A1|3|คำถาม
+quick||adj.|A1|3|เร็ว
+quickly||adv.|A1|3|อย่างรวดเร็ว
+quiet||adj.|A1|3|เงียบ
+quite||adv.|A1|3|ค่อนข้าง
+radio||n.|A1|3|วิทยุ
+rain||n., v.|A1|3|ฝน
+read||v.|A1|3|อ่าน
+reader||n.|A1|3|ผู้อ่าน
+reading||n.|A1|3|การอ่าน
+ready||adj.|A1|3|พร้อม
+real||adj.|A1|3|จริง
+really||adv.|A1|3|จริงๆ
+reason||n.|A1|3|เหตุผล
+red||adj., n.|A1|3|สีแดง
+relax||v.|A1|3|ผ่อนคลาย
+remember||v.|A1|3|จำ
+repeat||v. n.|A1|3|ทำซ้ำ, พูดซ้ำ
+report||n. v.|A1|3|รายงาน
+restaurant||n.|A1|3|ร้านอาหาร
+result||n. v.|A1|3|ผลลัพธ์
+return||v., n.|A1|3|กลับ, คืน
+rice||n.|A1|3|ข้าว
+rich||adj.|A1|3|รวย
+ride||v. n.|A1|3|ขี่
+right||adj., adv., n.|A1|3|ขวา, ถูกต้อง
+river||n.|A1|3|แม่น้ำ
+road||n.|A1|3|ถนน
+room||n.|A1|3|ห้อง
+routine||n. adj.|A1|3|กิจวัตร
+rule||n. v.|A1|3|กฎ
+run||v. n.|A1|3|วิ่ง
+sad||adj.|A1|3|เศร้า
+salad||n.|A1|3|สลัด
+salt||n.|A1|3|เกลือ
+same||adj., pron., adv.|A1|3|เหมือนกัน
+sandwich||n.|A1|3|แซนด์วิช
+Saturday||n.|A1|3|วันเสาร์
+say||v.|A1|3|พูด
+school||n.|A1|3|โรงเรียน
+science||n.|A1|3|วิทยาศาสตร์
+scientist||n.|A1|3|นักวิทยาศาสตร์
+sea||n.|A1|3|ทะเล
+second|next after the first|det./number, adv.|A1|3|ที่สอง
+second|unit of time|n.|A1|3|วินาที
+section||n.|A1|3|ส่วน, หมวด
+see||v.|A1|3|เห็น
+sell||v.|A1|3|ขาย
+send||v.|A1|3|ส่ง
+sentence||n. v.|A1|3|ประโยค
+September||n.|A1|3|กันยายน
+seven||number|A1|3|เจ็ด
+seventeen||number|A1|3|สิบเจ็ด
+seventy||number|A1|3|เจ็ดสิบ
+share||v. n.|A1|3|แบ่งปัน
+she||pron.|A1|3|เธอ
+sheep||n.|A1|3|แกะ
+shirt||n.|A1|3|เสื้อเชิ้ต
+shoe||n.|A1|3|รองเท้า
+shop||n., v.|A1|3|ร้านค้า
+shopping||n.|A1|3|การช็อปปิ้ง
+short||adj.|A1|3|สั้น, เตี้ย
+should||modal v.|A1|3|ควร
+show||v., n.|A1|3|แสดง
+shower||n.|A1|3|ฝักบัว, การอาบน้ำ
+sick||adj.|A1|3|ป่วย
+similar||adj.|A1|3|คล้ายกัน
+sing||v.|A1|3|ร้องเพลง
+singer||n.|A1|3|นักร้อง
+sister||n.|A1|3|พี่สาว, น้องสาว
+sit||v.|A1|3|นั่ง
+situation||n.|A1|3|สถานการณ์
+six||number|A1|3|หก
+sixteen||number|A1|3|สิบหก
+sixty||number|A1|3|หกสิบ
+skill||n.|A1|3|ทักษะ
+skirt||n.|A1|3|กระโปรง
+sleep||v. n.|A1|3|นอนหลับ
+slow||adj. v.|A1|3|ช้า
+small||adj.|A1|3|เล็ก
+snake||n.|A1|3|งู
+snow||n., v.|A1|3|หิมะ
+so||adv., conj.|A1|3|ดังนั้น, มาก
+some||det., pron.|A1|3|บ้าง, จำนวนหนึ่ง
+somebody||pron.|A1|3|ใครบางคน
+someone||pron.|A1|3|ใครบางคน
+something||pron.|A1|3|บางสิ่ง
+sometimes||adv.|A1|3|บางครั้ง
+son||n.|A1|3|ลูกชาย
+song||n.|A1|3|เพลง
+soon||adv.|A1|3|เร็วๆ นี้
+sorry||adj., exclam.|A1|3|ขอโทษ, เสียใจ
+sound||n., v.|A1|3|เสียง
+soup||n.|A1|3|ซุป
+south||n., adj., adv.|A1|3|ทิศใต้
+space||n.|A1|3|พื้นที่, อวกาศ
+speak||v.|A1|3|พูด
+special||adj.|A1|3|พิเศษ
+spell||v.|A1|3|สะกด
+spelling||n.|A1|3|การสะกดคำ
+spend||v.|A1|3|ใช้ (เงิน, เวลา)
+sport||n.|A1|3|กีฬา
+spring||n. v.|A1|3|ฤดูใบไม้ผลิ
+stand||v. n.|A1|3|ยืน
+star||n. v.|A1|3|ดาว
+start||v. n.|A1|3|เริ่ม
+statement||n.|A1|3|คำแถลง, ข้อความ
+station||n.|A1|3|สถานี
+stay||v. n.|A1|3|พัก, อยู่
+still||adv. adj.|A1|3|ยังคง
+stop||v., n.|A1|3|หยุด
+story||n.|A1|3|เรื่องราว
+street||n.|A1|3|ถนน
+strong||adj.|A1|3|แข็งแรง
+student||n.|A1|3|นักเรียน
+study||n., v.|A1|3|เรียน, ศึกษา
+style||n.|A1|3|สไตล์, รูปแบบ
+subject||n. adj.|A1|3|วิชา, หัวข้อ
+success||n.|A1|3|ความสำเร็จ
+sugar||n.|A1|3|น้ำตาล
+summer||n.|A1|3|ฤดูร้อน
+sun||n.|A1|3|ดวงอาทิตย์
+Sunday||n.|A1|3|วันอาทิตย์
+sunny||adj.|A1|3|แดดออก
+supermarket||n.|A1|3|ซูเปอร์มาร์เก็ต
+sure||adj. adv.|A1|3|แน่ใจ
+sweater||n.|A1|3|เสื้อสเวตเตอร์
+swim||v. n.|A1|3|ว่ายน้ำ
+swimming||n.|A1|3|การว่ายน้ำ
+T-shirt||n.|A1|3|เสื้อยืด
+table||n.|A1|3|โต๊ะ
+take||v.|A1|3|เอาไป, ใช้ (เวลา)
+talk||v. n.|A1|3|พูดคุย
+tall||adj.|A1|3|สูง
+taxi||n.|A1|3|แท็กซี่
+tea||n.|A1|3|ชา
+teach||v.|A1|3|สอน
+teacher||n.|A1|3|ครู
+team||n.|A1|3|ทีม
+teenager||n.|A1|3|วัยรุ่น
+telephone||n., v.|A1|3|โทรศัพท์
+television||n.|A1|3|โทรทัศน์
+tell||v.|A1|3|บอก
+ten||number|A1|3|สิบ
+tennis||n.|A1|3|เทนนิส
+terrible||adj.|A1|3|แย่มาก
+test||n., v.|A1|3|การทดสอบ
+text||n.|A1|3|ข้อความ
+than||conj.|A1|3|กว่า
+thank||v.|A1|3|ขอบคุณ
+thanks||exclam., n.|A1|3|ขอบคุณ
+that||det., pron., conj. adv.|A1|3|นั้น, ว่า
+the||definite article|A1|3|(คำนำหน้านามเจาะจง)
+theatre||n.|A1|3|โรงละคร
+their||det.|A1|3|ของพวกเขา
+them||pron.|A1|3|พวกเขา (กรรม)
+then||adv.|A1|3|จากนั้น
+there||adv.|A1|3|ที่นั่น
+they||pron.|A1|3|พวกเขา
+thing||n.|A1|3|สิ่ง
+think||v.|A1|3|คิด
+third||number n.|A1|3|ที่สาม
+thirsty||adj.|A1|3|กระหายน้ำ
+thirteen||number|A1|3|สิบสาม
+thirty||number|A1|3|สามสิบ
+this||det./pron. adv.|A1|3|นี้
+thousand||number|A1|3|พัน
+three||number|A1|3|สาม
+through||prep., adv.|A1|3|ผ่าน
+Thursday||n.|A1|3|วันพฤหัสบดี
+ticket||n.|A1|3|ตั๋ว
+time||n. v.|A1|3|เวลา, ครั้ง
+tired||adj.|A1|3|เหนื่อย
+title||n. v.|A1|3|ชื่อเรื่อง
+to||prep., infinitive marker|A1|3|ไปยัง, เพื่อ
+today||adv., n.|A1|3|วันนี้
+together||adv.|A1|3|ด้วยกัน
+toilet||n.|A1|3|ห้องสุขา
+tomato||n.|A1|3|มะเขือเทศ
+tomorrow||adv., n.|A1|3|พรุ่งนี้
+tonight||adv., n.|A1|3|คืนนี้
+too||adv.|A1|3|ด้วย, เกินไป
+tooth||n.|A1|3|ฟัน
+topic||n.|A1|3|หัวข้อ
+tourist||n.|A1|3|นักท่องเที่ยว
+town||n.|A1|3|เมือง
+traffic||n.|A1|3|การจราจร
+train||n. v.|A1|3|รถไฟ, ฝึก
+travel||v., n.|A1|3|เดินทาง
+tree||n.|A1|3|ต้นไม้
+trip||n. v.|A1|3|การเดินทาง, ทริป
+trousers||n.|A1|3|กางเกงขายาว
+true||adj.|A1|3|จริง
+try||v. n.|A1|3|พยายาม, ลอง
+Tuesday||n.|A1|3|วันอังคาร
+turn||v., n.|A1|3|หมุน, เลี้ยว
+TV||n.|A1|3|ทีวี
+twelve||number|A1|3|สิบสอง
+twenty||number|A1|3|ยี่สิบ
+twice||adv.|A1|3|สองครั้ง
+two||number|A1|3|สอง
+type||n. v.|A1|3|ประเภท, พิมพ์
+umbrella||n.|A1|3|ร่ม
+uncle||n.|A1|3|ลุง, น้า, อา (ชาย)
+under||prep., adv.|A1|3|ใต้
+understand||v.|A1|3|เข้าใจ
+university||n.|A1|3|มหาวิทยาลัย
+until||conj./prep.|A1|3|จนกระทั่ง
+up||adv., prep.|A1|3|ขึ้น
+upstairs||adv. adj.|A1|3|ชั้นบน
+us||pron.|A1|3|พวกเรา (กรรม)
+use||v. n.|A1|3|ใช้
+useful||adj.|A1|3|มีประโยชน์
+usually||adv.|A1|3|โดยปกติ
+vacation||n.|A1|3|วันหยุดพักผ่อน
+vegetable||n.|A1|3|ผัก
+very||adv. adj.|A1|3|มาก
+video||n.|A1|3|วิดีโอ
+village||n.|A1|3|หมู่บ้าน
+visit||v., n.|A1|3|เยี่ยม
+visitor||n.|A1|3|ผู้มาเยือน
+wait||v. n.|A1|3|รอ
+waiter||n.|A1|3|พนักงานเสิร์ฟ
+wake||v.|A1|3|ตื่น
+walk||v., n.|A1|3|เดิน
+wall||n.|A1|3|กำแพง, ผนัง
+want||v.|A1|3|ต้องการ
+warm||adj. v.|A1|3|อบอุ่น
+wash||v. n.|A1|3|ล้าง
+watch||v., n.|A1|3|ดู, นาฬิกาข้อมือ
+water||n. v.|A1|3|น้ำ
+way||n. adv.|A1|3|ทาง, วิธี
+we||pron.|A1|3|พวกเรา
+wear||v.|A1|3|สวมใส่
+weather||n.|A1|3|สภาพอากาศ
+website||n.|A1|3|เว็บไซต์
+Wednesday||n.|A1|3|วันพุธ
+week||n.|A1|3|สัปดาห์
+weekend||n.|A1|3|สุดสัปดาห์
+welcome||exclam., v., adj. n.|A1|3|ยินดีต้อนรับ
+well||adv., adj., exclam.|A1|3|ดี, อย่างดี
+west||n., adj., adv.|A1|3|ทิศตะวันตก
+what||pron./det.|A1|3|อะไร
+when||adv., pron., conj.|A1|3|เมื่อไร
+where||adv., conj.|A1|3|ที่ไหน
+which||pron./det.|A1|3|อันไหน, ซึ่ง
+white||adj., n.|A1|3|สีขาว
+who||pron.|A1|3|ใคร
+why||adv.|A1|3|ทำไม
+wife||n.|A1|3|ภรรยา
+will||modal v. n.|A1|3|จะ
+win||v. n.|A1|3|ชนะ
+window||n.|A1|3|หน้าต่าง
+wine||n.|A1|3|ไวน์
+winter||n.|A1|3|ฤดูหนาว
+with||prep.|A1|3|กับ, ด้วย
+without||prep.|A1|3|โดยไม่มี
+woman||n.|A1|3|ผู้หญิง
+wonderful||adj.|A1|3|วิเศษ
+word||n.|A1|3|คำ
+work||v., n.|A1|3|ทำงาน, งาน
+worker||n.|A1|3|คนงาน
+world||n.|A1|3|โลก
+would||modal v.|A1|3|จะ (อดีต, สมมุติ)
+write||v.|A1|3|เขียน
+writer||n.|A1|3|นักเขียน
+writing||n.|A1|3|การเขียน
+wrong||adj. adv. n.|A1|3|ผิด
+yeah||exclam.|A1|3|ใช่
+year||n.|A1|3|ปี
+yellow||adj., n.|A1|3|สีเหลือง
+yes||exclam.|A1|3|ใช่
+yesterday||adv., n.|A1|3|เมื่อวาน
+you||pron.|A1|3|คุณ
+young||adj. n.|A1|3|อายุน้อย
+your||det.|A1|3|ของคุณ
+yourself||pron.|A1|3|ตัวคุณเอง
+ability||n.|A2|3|ความสามารถ
+able||adj.|A2|3|สามารถ
+abroad||adv.|A2|3|ต่างประเทศ
+accept||v.|A2|3|ยอมรับ
+accident||n.|A2|3|อุบัติเหตุ
+according to||prep.|A2|3|ตามที่…กล่าว
+achieve||v.|A2|3|บรรลุ, ทำสำเร็จ
+act||v. n.|A2|3|กระทำ, แสดง
+active||adj.|A2|3|กระตือรือร้น, คล่องแคล่ว
+actually||adv.|A2|3|ที่จริงแล้ว
+advantage||n.|A2|3|ข้อได้เปรียบ
+adventure||n.|A2|3|การผจญภัย
+advertise||v.|A2|3|โฆษณา
+advertisement||n.|A2|3|โฆษณา (ชิ้นงาน)
+advertising||n.|A2|3|การโฆษณา
+affect||v.|A2|3|ส่งผลต่อ
+against||prep.|A2|3|ต่อต้าน, พิง
+ah||exclam.|A2|3|อ้อ
+airline||n.|A2|3|สายการบิน
+alive||adj.|A2|3|ยังมีชีวิตอยู่
+all right||adj./adv., exclam.|A2|3|โอเค, ไม่เป็นไร
+allow||v.|A2|3|อนุญาต
+almost||adv.|A2|3|เกือบ
+alone||adj./adv.|A2|3|ตามลำพัง
+along||prep., adv.|A2|3|ตามแนว
+already||adv.|A2|3|แล้ว (เร็วกว่าที่คิด)
+alternative||n. adj.|A2|3|ทางเลือก
+although||conj.|A2|3|แม้ว่า
+among||prep.|A2|3|ท่ามกลาง
+amount||n. v.|A2|3|จำนวน, ปริมาณ
+ancient||adj.|A2|3|โบราณ
+ankle||n.|A2|3|ข้อเท้า
+any more||adv.|A2|3|อีกต่อไป
+anybody||pron.|A2|3|ใครก็ได้
+anyway||adv.|A2|3|ยังไงก็ตาม
+anywhere||adv., pron.|A2|3|ที่ไหนก็ได้
+app||n.|A2|3|แอป
+appear||v.|A2|3|ปรากฏ
+appearance||n.|A2|3|รูปลักษณ์, การปรากฏตัว
+apply||v.|A2|3|สมัคร, นำไปใช้
+architect||n.|A2|3|สถาปนิก
+architecture||n.|A2|3|สถาปัตยกรรม
+argue||v.|A2|3|โต้เถียง
+argument||n.|A2|3|การโต้เถียง, ข้อโต้แย้ง
+army||n.|A2|3|กองทัพ
+arrange||v.|A2|3|จัดเตรียม
+arrangement||n.|A2|3|การจัดเตรียม
+asleep||adj.|A2|3|หลับอยู่
+assistant||n., adj.|A2|3|ผู้ช่วย
+athlete||n.|A2|3|นักกีฬา
+attack||n., v.|A2|3|โจมตี
+attend||v.|A2|3|เข้าร่วม
+attention||n., exclam.|A2|3|ความสนใจ
+attractive||adj.|A2|3|น่าดึงดูด
+audience||n.|A2|3|ผู้ชม
+audio||n., adj.|A2|3|เสียง
+author||n.|A2|3|ผู้แต่ง
+available||adj.|A2|3|ว่าง, มีให้ใช้
+average||adj., n. v.|A2|3|เฉลี่ย
+avoid||v.|A2|3|หลีกเลี่ยง
+award||n. v.|A2|3|รางวัล
+awful||adj.|A2|3|แย่มาก
+background||n.|A2|3|พื้นหลัง, ภูมิหลัง
+badly||adv.|A2|3|อย่างแย่
+baseball||n.|A2|3|เบสบอล
+based||adj.|A2|3|อิงจาก, ตั้งอยู่
+basketball||n.|A2|3|บาสเกตบอล
+bean||n.|A2|3|ถั่ว
+bear|animal|n.|A2|3|หมี
+beef||n.|A2|3|เนื้อวัว
+behave||v.|A2|3|ประพฤติ
+behaviour||n.|A2|3|พฤติกรรม
+belong||v.|A2|3|เป็นของ
+belt||n.|A2|3|เข็มขัด
+benefit||n. v.|A2|3|ประโยชน์
+billion||number|A2|3|พันล้าน
+bin||n.|A2|3|ถังขยะ
+biology||n.|A2|3|ชีววิทยา
+birth||n.|A2|3|การเกิด
+biscuit||n.|A2|3|บิสกิต
+bit||n.|A2|3|นิดหน่อย, ชิ้นเล็ก
+blood||n.|A2|3|เลือด
+blow||v.|A2|3|เป่า, พัด
+board||n. v.|A2|3|กระดาน
+boil||v.|A2|3|ต้ม
+bone||n.|A2|3|กระดูก
+borrow||v.|A2|3|ยืม
+boss||n.|A2|3|หัวหน้า
+bottom||n., adj.|A2|3|ด้านล่าง, ก้น
+bowl||n.|A2|3|ชาม
+brain||n.|A2|3|สมอง
+bridge||n.|A2|3|สะพาน
+bright||adj.|A2|3|สว่าง, ฉลาด
+brilliant||adj.|A2|3|ยอดเยี่ยม
+broken||adj.|A2|3|แตก, เสีย
+brush||v., n.|A2|3|แปรง
+burn||v. n.|A2|3|เผา, ไหม้
+businessman||n.|A2|3|นักธุรกิจ
+button||n.|A2|3|ปุ่ม, กระดุม
+camp||n., v.|A2|3|ค่าย, ตั้งแคมป์
+camping||n.|A2|3|การตั้งแคมป์
+can||n.|A2|3|กระป๋อง
+care||n., v.|A2|3|ดูแล, ใส่ใจ
+careful||adj.|A2|3|ระมัดระวัง
+carefully||adv.|A2|3|อย่างระมัดระวัง
+carpet||n.|A2|3|พรม
+cartoon||n.|A2|3|การ์ตูน
+case||n.|A2|3|กรณี, กล่อง
+cash||n.|A2|3|เงินสด
+castle||n.|A2|3|ปราสาท
+catch||v. n.|A2|3|จับ
+cause||n., v.|A2|3|สาเหตุ, ทำให้เกิด
+celebrate||v.|A2|3|ฉลอง
+celebrity||n.|A2|3|คนดัง
+certain||adj.|A2|3|แน่ใจ, บางอย่าง
+certainly||adv.|A2|3|แน่นอน
+chance||n.|A2|3|โอกาส
+character||n.|A2|3|ตัวละคร, นิสัย
+charity||n.|A2|3|องค์กรการกุศล
+chat||v., n.|A2|3|คุย
+chef||n.|A2|3|พ่อครัว, เชฟ
+chemistry||n.|A2|3|เคมี
+chip||n.|A2|3|มันฝรั่งทอด, ชิป
+choice||n.|A2|3|ทางเลือก
+church||n.|A2|3|โบสถ์
+cigarette||n.|A2|3|บุหรี่
+circle||n., v.|A2|3|วงกลม
+classical||adj.|A2|3|คลาสสิก
+clear||adj. v.|A2|3|ชัดเจน
+clearly||adv.|A2|3|อย่างชัดเจน
+clever||adj.|A2|3|ฉลาด
+climate||n.|A2|3|ภูมิอากาศ
+close||adj. adv.|A2|3|ใกล้, สนิท
+closed||adj.|A2|3|ปิดอยู่
+clothing||n.|A2|3|เครื่องแต่งกาย
+cloud||n.|A2|3|เมฆ
+coach||n., v.|A2|3|โค้ช, รถโค้ช
+coast||n.|A2|3|ชายฝั่ง
+code||n.|A2|3|รหัส
+colleague||n.|A2|3|เพื่อนร่วมงาน
+collect||v.|A2|3|สะสม, เก็บ
+column||n.|A2|3|คอลัมน์, เสา
+comedy||n.|A2|3|ตลก (ประเภทหนัง)
+comfortable||adj.|A2|3|สบาย
+comment||n. v.|A2|3|ความคิดเห็น
+communicate||v.|A2|3|สื่อสาร
+community||n.|A2|3|ชุมชน
+compete||v.|A2|3|แข่งขัน
+competition||n.|A2|3|การแข่งขัน
+complain||v.|A2|3|บ่น, ร้องเรียน
+completely||adv.|A2|3|โดยสิ้นเชิง
+condition||n.|A2|3|สภาพ, เงื่อนไข
+conference||n.|A2|3|การประชุมใหญ่
+connect||v.|A2|3|เชื่อมต่อ
+connected||adj.|A2|3|เชื่อมต่อกัน
+consider||v.|A2|3|พิจารณา
+contain||v.|A2|3|บรรจุ, มี
+context||n.|A2|3|บริบท
+continent||n.|A2|3|ทวีป
+continue||v.|A2|3|ดำเนินต่อ
+control||n., v.|A2|3|ควบคุม
+cooker||n.|A2|3|เตาทำอาหาร
+copy||n., v.|A2|3|สำเนา, คัดลอก
+corner||n.|A2|3|มุม
+correctly||adv.|A2|3|อย่างถูกต้อง
+count||v. n.|A2|3|นับ
+couple||n.|A2|3|คู่รัก, สองสาม
+cover||v. n.|A2|3|ปก, ปิดคลุม
+crazy||adj.|A2|3|บ้า
+creative||adj.|A2|3|สร้างสรรค์
+credit||n. v.|A2|3|เครดิต
+crime||n.|A2|3|อาชญากรรม
+criminal||n. adj.|A2|3|อาชญากร
+cross||v., n.|A2|3|ข้าม
+crowd||n.|A2|3|ฝูงชน
+crowded||adj.|A2|3|แออัด
+cry||v. n.|A2|3|ร้องไห้
+cupboard||n.|A2|3|ตู้
+curly||adj.|A2|3|หยิก
+cycle||n., v.|A2|3|ปั่นจักรยาน, วงจร
+daily||adj. adv.|A2|3|ประจำวัน
+danger||n.|A2|3|อันตราย
+data||n.|A2|3|ข้อมูล
+dead||adj.|A2|3|ตายแล้ว
+deal||v. n.|A2|3|จัดการ, ข้อตกลง
+death||n.|A2|3|ความตาย
+decision||n.|A2|3|การตัดสินใจ
+deep||adj. adv.|A2|3|ลึก
+definitely||adv.|A2|3|แน่นอน
+degree||n.|A2|3|ปริญญา, องศา
+dentist||n.|A2|3|ทันตแพทย์
+department||n.|A2|3|แผนก
+depend||v.|A2|3|ขึ้นอยู่กับ
+desert||n. v.|A2|3|ทะเลทราย
+designer||n.|A2|3|นักออกแบบ
+dessert||n.|A2|3|ของหวาน
+destroy||v.|A2|3|ทำลาย
+detective||n.|A2|3|นักสืบ
+develop||v.|A2|3|พัฒนา
+device||n.|A2|3|อุปกรณ์
+diary||n.|A2|3|ไดอารี่
+differently||adv.|A2|3|อย่างแตกต่าง
+digital||adj.|A2|3|ดิจิทัล
+direct||adj. v., adv.|A2|3|โดยตรง
+direction||n.|A2|3|ทิศทาง
+director||n.|A2|3|ผู้กำกับ, ผู้อำนวยการ
+disagree||v.|A2|3|ไม่เห็นด้วย
+disappear||v.|A2|3|หายไป
+disaster||n.|A2|3|หายนะ
+discover||v.|A2|3|ค้นพบ
+discovery||n.|A2|3|การค้นพบ
+discussion||n.|A2|3|การอภิปราย
+disease||n.|A2|3|โรค
+distance||n.|A2|3|ระยะทาง
+divorced||adj.|A2|3|หย่าร้าง
+document||n. v.|A2|3|เอกสาร
+double||adj., det., pron., v. adv.|A2|3|สองเท่า
+download||v., n.|A2|3|ดาวน์โหลด
+drama||n.|A2|3|ละคร
+drawing||n.|A2|3|ภาพวาดเส้น
+dream||n., v.|A2|3|ความฝัน
+driving||n.|A2|3|การขับรถ
+drop||v. n.|A2|3|ทำตก
+drug||n.|A2|3|ยา, ยาเสพติด
+dry||adj., v.|A2|3|แห้ง
+earn||v.|A2|3|หาเงิน, ได้รับ
+earth||n.|A2|3|โลก, ดิน
+easily||adv.|A2|3|อย่างง่ายดาย
+education||n.|A2|3|การศึกษา
+effect||n.|A2|3|ผลกระทบ
+either||det./pron., adv.|A2|3|อันใดอันหนึ่ง, ก็ไม่… เช่นกัน
+electric||adj.|A2|3|ไฟฟ้า (ใช้ไฟฟ้า)
+electrical||adj.|A2|3|เกี่ยวกับไฟฟ้า
+electricity||n.|A2|3|กระแสไฟฟ้า
+electronic||adj.|A2|3|อิเล็กทรอนิกส์
+employ||v.|A2|3|จ้างงาน
+employee||n.|A2|3|ลูกจ้าง
+employer||n.|A2|3|นายจ้าง
+empty||adj. v.|A2|3|ว่างเปล่า
+ending||n.|A2|3|ตอนจบ
+energy||n.|A2|3|พลังงาน
+engine||n.|A2|3|เครื่องยนต์
+engineer||n.|A2|3|วิศวกร
+enormous||adj.|A2|3|ใหญ่มาก
+enter||v.|A2|3|เข้า
+environment||n.|A2|3|สิ่งแวดล้อม
+equipment||n.|A2|3|อุปกรณ์
+error||n.|A2|3|ข้อผิดพลาด
+especially||adv.|A2|3|โดยเฉพาะ
+essay||n.|A2|3|เรียงความ
+everyday||adj.|A2|3|ประจำวัน
+everywhere||adv.|A2|3|ทุกที่
+evidence||n.|A2|3|หลักฐาน
+exact||adj.|A2|3|แน่นอน, ตรงเป๊ะ
+exactly||adv.|A2|3|อย่างแน่นอน
+excellent||adj.|A2|3|ยอดเยี่ยม
+except||prep. conj.|A2|3|ยกเว้น
+exist||v.|A2|3|มีอยู่
+expect||v.|A2|3|คาดหวัง
+experience||n. v.|A2|3|ประสบการณ์
+experiment||n. v.|A2|3|การทดลอง
+expert||n., adj.|A2|3|ผู้เชี่ยวชาญ
+explanation||n.|A2|3|คำอธิบาย
+express||v.|A2|3|แสดงออก
+expression||n.|A2|3|การแสดงออก, สำนวน
+extreme||adj. n.|A2|3|สุดขีด
+extremely||adv.|A2|3|อย่างยิ่ง
+factor||n.|A2|3|ปัจจัย
+factory||n.|A2|3|โรงงาน
+fail||v.|A2|3|ล้มเหลว, สอบตก
+fair||adj.|A2|3|ยุติธรรม
+fan||n.|A2|3|แฟนคลับ, พัดลม
+farming||n.|A2|3|การทำฟาร์ม
+fashion||n.|A2|3|แฟชั่น
+fear||n. v.|A2|3|ความกลัว
+feature||n. v.|A2|3|ลักษณะเด่น
+feed||v. n.|A2|3|ให้อาหาร
+female||adj., n.|A2|3|เพศหญิง
+fiction||n.|A2|3|นิยาย
+field||n.|A2|3|ทุ่ง, สาขา
+fight||v., n.|A2|3|ต่อสู้
+figure||n. v.|A2|3|ตัวเลข, รูปร่าง
+finally||adv.|A2|3|ในที่สุด
+finger||n.|A2|3|นิ้วมือ
+firstly||adv.|A2|3|ประการแรก
+fishing||n.|A2|3|การตกปลา
+fit||v., adj.|A2|3|พอดี, ฟิต
+fix||v. n.|A2|3|ซ่อม
+flu||n.|A2|3|ไข้หวัดใหญ่
+flying||n., adj.|A2|3|การบิน
+focus||v., n.|A2|3|เน้น, จดจ่อ
+following||adj. n. prep.|A2|3|ต่อไปนี้, ถัดไป
+foreign||adj.|A2|3|ต่างประเทศ
+forest||n.|A2|3|ป่า
+fork||n.|A2|3|ส้อม
+formal||adj.|A2|3|เป็นทางการ
+fortunately||adv.|A2|3|โชคดีที่
+forward||adv. adj.|A2|3|ไปข้างหน้า
+fresh||adj.|A2|3|สด
+fridge||n.|A2|3|ตู้เย็น
+frog||n.|A2|3|กบ
+furniture||n.|A2|3|เฟอร์นิเจอร์
+further||adj. adv.|A2|3|เพิ่มเติม, ไกลกว่า
+gallery||n.|A2|3|หอศิลป์
+gap||n.|A2|3|ช่องว่าง
+gas||n.|A2|3|ก๊าซ
+gate||n.|A2|3|ประตูรั้ว
+general||adj.|A2|3|ทั่วไป
+gift||n.|A2|3|ของขวัญ
+goal||n.|A2|3|เป้าหมาย, ประตู (กีฬา)
+god||n.|A2|3|พระเจ้า
+gold||n., adj.|A2|3|ทองคำ
+golf||n.|A2|3|กอล์ฟ
+government||n.|A2|3|รัฐบาล
+grass||n.|A2|3|หญ้า
+greet||v.|A2|3|ทักทาย
+ground||n.|A2|3|พื้นดิน
+guest||n.|A2|3|แขก
+guide||n., v.|A2|3|มัคคุเทศก์, คู่มือ
+gun||n.|A2|3|ปืน
+guy||n.|A2|3|ผู้ชาย, หมอนี่
+habit||n.|A2|3|นิสัย
+hall||n.|A2|3|ห้องโถง
+happily||adv.|A2|3|อย่างมีความสุข
+headache||n.|A2|3|ปวดหัว
+heart||n.|A2|3|หัวใจ
+heat||n., v.|A2|3|ความร้อน
+heavy||adj.|A2|3|หนัก
+height||n.|A2|3|ความสูง
+helpful||adj.|A2|3|มีประโยชน์, ช่วยเหลือดี
+hero||n.|A2|3|วีรบุรุษ
+hers||pron.|A2|3|ของเธอ
+herself||pron.|A2|3|ตัวเธอเอง
+hide||v.|A2|3|ซ่อน
+hike||n., v.|A2|3|เดินป่า
+hill||n.|A2|3|เนินเขา
+himself||pron.|A2|3|ตัวเขาเอง
+hit||v., n.|A2|3|ตี, ชน
+hockey||n.|A2|3|ฮอกกี้
+hold||v. n.|A2|3|ถือ, จัด
+hole||n.|A2|3|รู, หลุม
+huge||adj.|A2|3|ใหญ่โต
+human||adj., n.|A2|3|มนุษย์
+hurt||v., adj. n.|A2|3|เจ็บ, ทำร้าย
+ideal||adj. n.|A2|3|ในอุดมคติ
+identify||v.|A2|3|ระบุ
+ill||adj.|A2|3|ป่วย
+illness||n.|A2|3|ความเจ็บป่วย
+image||n.|A2|3|ภาพ
+immediately||adv.|A2|3|ทันที
+impossible||adj.|A2|3|เป็นไปไม่ได้
+included||adj.|A2|3|รวมอยู่ด้วย
+including||prep.|A2|3|รวมถึง
+increase||v., n.|A2|3|เพิ่มขึ้น
+incredible||adj.|A2|3|เหลือเชื่อ
+independent||adj.|A2|3|อิสระ
+individual||n., adj.|A2|3|บุคคล, แต่ละคน
+industry||n.|A2|3|อุตสาหกรรม
+informal||adj.|A2|3|ไม่เป็นทางการ
+injury||n.|A2|3|การบาดเจ็บ
+insect||n.|A2|3|แมลง
+inside||prep., adv., n., adj.|A2|3|ข้างใน
+instead||adv.|A2|3|แทน
+instead of||prep.|A2|3|แทนที่จะ
+instruction||n.|A2|3|คำแนะนำ, คำสั่ง
+instructor||n.|A2|3|ผู้สอน
+instrument||n.|A2|3|เครื่องดนตรี, เครื่องมือ
+intelligent||adj.|A2|3|ฉลาด
+international||adj.|A2|3|นานาชาติ
+introduction||n.|A2|3|บทนำ, การแนะนำ
+invent||v.|A2|3|ประดิษฐ์
+invention||n.|A2|3|สิ่งประดิษฐ์
+invitation||n.|A2|3|คำเชิญ
+invite||v.|A2|3|เชิญ
+involve||v.|A2|3|เกี่ยวข้อง
+item||n.|A2|3|รายการ, สิ่งของ
+itself||pron.|A2|3|ตัวมันเอง
+jam||n.|A2|3|แยม
+jazz||n.|A2|3|แจ๊ส
+jewellery||n.|A2|3|เครื่องประดับ
+joke||n., v.|A2|3|มุกตลก
+journalist||n.|A2|3|นักข่าว
+jump||v., n.|A2|3|กระโดด
+kid||n.|A2|3|เด็ก
+kill||v.|A2|3|ฆ่า
+king||n.|A2|3|กษัตริย์
+knee||n.|A2|3|เข่า
+knife||n.|A2|3|มีด
+knock||v. n.|A2|3|เคาะ
+knowledge||n.|A2|3|ความรู้
+lab||n.|A2|3|ห้องปฏิบัติการ
+lady||n.|A2|3|สุภาพสตรี
+lake||n.|A2|3|ทะเลสาบ
+lamp||n.|A2|3|โคมไฟ
+laptop||n.|A2|3|แล็ปท็อป
+last|taking time|v.|A2|3|ใช้เวลา, คงอยู่
+laughter||n.|A2|3|เสียงหัวเราะ
+law||n.|A2|3|กฎหมาย
+lawyer||n.|A2|3|ทนายความ
+lazy||adj.|A2|3|ขี้เกียจ
+lead||v. n.|A2|3|นำ
+leader||n.|A2|3|ผู้นำ
+learning||n.|A2|3|การเรียนรู้
+least||det./pron., adv.|A2|3|น้อยที่สุด
+lecture||n., v.|A2|3|การบรรยาย
+lemon||n.|A2|3|มะนาว (เลมอน)
+lend||v.|A2|3|ให้ยืม
+less||det./pron., adv.|A2|3|น้อยกว่า
+level||n. adj. v.|A2|3|ระดับ
+lifestyle||n.|A2|3|วิถีชีวิต
+lift||v., n.|A2|3|ยก, ลิฟต์
+light|not heavy|adj.|A2|3|เบา
+likely||adj.|A2|3|มีแนวโน้ม
+link||n., v.|A2|3|ลิงก์, เชื่อมโยง
+listener||n.|A2|3|ผู้ฟัง
+lock||v., n.|A2|3|ล็อก, กุญแจ
+lorry||n.|A2|3|รถบรรทุก
+lost||adj.|A2|3|หลงทาง, หาย
+loud||adj., adv.|A2|3|ดัง
+loudly||adv.|A2|3|เสียงดัง
+lovely||adj.|A2|3|น่ารัก, ดีมาก
+low||adj., adv. n.|A2|3|ต่ำ
+luck||n.|A2|3|โชค
+lucky||adj.|A2|3|โชคดี
+mail||n., v.|A2|3|จดหมาย, ไปรษณีย์
+major||adj.|A2|3|สำคัญ, หลัก
+male||adj., n.|A2|3|เพศชาย
+manage||v.|A2|3|จัดการ
+manager||n.|A2|3|ผู้จัดการ
+manner||n.|A2|3|ลักษณะ, มารยาท
+mark||v., n.|A2|3|คะแนน, ทำเครื่องหมาย
+marry||v.|A2|3|แต่งงาน
+material||n. adj.|A2|3|วัสดุ
+mathematics||n.|A2|3|คณิตศาสตร์
+maths||n.|A2|3|คณิตศาสตร์
+matter||n., v.|A2|3|เรื่อง, สำคัญ
+may||modal v.|A2|3|อาจ
+media||n.|A2|3|สื่อ
+medical||adj.|A2|3|ทางการแพทย์
+medicine||n.|A2|3|ยา
+memory||n.|A2|3|ความจำ
+mention||v. n.|A2|3|กล่าวถึง
+metal||n.|A2|3|โลหะ
+method||n.|A2|3|วิธีการ
+middle||n., adj.|A2|3|ตรงกลาง
+might||modal v.|A2|3|อาจจะ
+mind||n., v.|A2|3|จิตใจ, รังเกียจ
+mine|belongs to me|pron.|A2|3|ของฉัน
+mirror||n.|A2|3|กระจกเงา
+missing||adj.|A2|3|หายไป
+mobile||adj., n.|A2|3|โทรศัพท์มือถือ, เคลื่อนที่ได้
+monkey||n.|A2|3|ลิง
+moon||n.|A2|3|ดวงจันทร์
+mostly||adv.|A2|3|ส่วนใหญ่
+motorcycle||n.|A2|3|รถจักรยานยนต์
+movement||n.|A2|3|การเคลื่อนไหว
+musical||adj. n.|A2|3|เกี่ยวกับดนตรี, ละครเพลง
+musician||n.|A2|3|นักดนตรี
+myself||pron.|A2|3|ตัวฉันเอง
+narrow||adj. v.|A2|3|แคบ
+national||adj. n.|A2|3|แห่งชาติ
+nature||n.|A2|3|ธรรมชาติ
+nearly||adv.|A2|3|เกือบ
+necessary||adj.|A2|3|จำเป็น
+neck||n.|A2|3|คอ
+neither||det./pron. adv.|A2|3|ไม่ทั้งสอง
+nervous||adj.|A2|3|ประหม่า
+network||n.|A2|3|เครือข่าย
+noise||n.|A2|3|เสียงดัง
+noisy||adj.|A2|3|เสียงดัง
+none||pron.|A2|3|ไม่มีเลย
+normal||adj. n.|A2|3|ปกติ
+normally||adv.|A2|3|โดยปกติ
+notice||v., n.|A2|3|สังเกต, ประกาศ
+novel||n.|A2|3|นวนิยาย
+nowhere||adv.|A2|3|ไม่มีที่ไหน
+nut||n.|A2|3|ถั่ว
+ocean||n.|A2|3|มหาสมุทร
+offer||v., n.|A2|3|เสนอ
+officer||n.|A2|3|เจ้าหน้าที่
+oil||n.|A2|3|น้ำมัน
+onto||prep.|A2|3|ไปบน
+opportunity||n.|A2|3|โอกาส
+option||n.|A2|3|ตัวเลือก
+ordinary||adj.|A2|3|ธรรมดา
+organization||n.|A2|3|องค์กร
+organize||v.|A2|3|จัดระเบียบ, จัดงาน
+original||adj. n.|A2|3|ดั้งเดิม, ต้นฉบับ
+ourselves||pron.|A2|3|ตัวพวกเราเอง
+oven||n.|A2|3|เตาอบ
+owner||n.|A2|3|เจ้าของ
+pack||v. n.|A2|3|แพ็ก, จัดกระเป๋า
+pain||n.|A2|3|ความเจ็บปวด
+painter||n.|A2|3|จิตรกร
+palace||n.|A2|3|พระราชวัง
+pants||n.|A2|3|กางเกง
+parking||n.|A2|3|การจอดรถ
+particular||adj.|A2|3|เฉพาะ
+pass||v. n.|A2|3|ผ่าน, สอบผ่าน
+passenger||n.|A2|3|ผู้โดยสาร
+patient||n. adj.|A2|3|ผู้ป่วย, อดทน
+pattern||n.|A2|3|รูปแบบ, ลวดลาย
+peace||n.|A2|3|สันติภาพ
+penny||n.|A2|3|เพนนี
+per||prep.|A2|3|ต่อ
+per cent||n., adj./adv.|A2|3|เปอร์เซ็นต์
+perform||v.|A2|3|แสดง, ปฏิบัติ
+perhaps||adv.|A2|3|บางที
+permission||n.|A2|3|การอนุญาต
+personality||n.|A2|3|บุคลิกภาพ
+pet||n.|A2|3|สัตว์เลี้ยง
+petrol||n.|A2|3|น้ำมันเบนซิน
+physical||adj.|A2|3|ทางกายภาพ
+physics||n.|A2|3|ฟิสิกส์
+pick||v. n.|A2|3|เลือก, เก็บ
+pilot||n.|A2|3|นักบิน
+planet||n.|A2|3|ดาวเคราะห์
+plastic||n., adj.|A2|3|พลาสติก
+plate||n.|A2|3|จาน
+platform||n.|A2|3|ชานชาลา, แพลตฟอร์ม
+pleased||adj.|A2|3|พอใจ, ยินดี
+pocket||n.|A2|3|กระเป๋าเสื้อ
+polite||adj.|A2|3|สุภาพ
+pollution||n.|A2|3|มลพิษ
+pop||n., adj.|A2|3|ป็อป
+population||n.|A2|3|ประชากร
+position||n. v.|A2|3|ตำแหน่ง
+possession||n.|A2|3|ทรัพย์สิน, การครอบครอง
+possibility||n.|A2|3|ความเป็นไปได้
+poster||n.|A2|3|โปสเตอร์
+power||n. v.|A2|3|พลัง, อำนาจ
+predict||v.|A2|3|ทำนาย
+president||n.|A2|3|ประธานาธิบดี, ประธาน
+prevent||v.|A2|3|ป้องกัน
+print||v. n.|A2|3|พิมพ์
+printer||n.|A2|3|เครื่องพิมพ์
+prison||n.|A2|3|เรือนจำ
+prize||n.|A2|3|รางวัล
+process||n. v.|A2|3|กระบวนการ
+produce||v. v.|A2|3|ผลิต
+professional||adj. n.|A2|3|มืออาชีพ
+professor||n.|A2|3|ศาสตราจารย์
+profile||n.|A2|3|ประวัติย่อ, โปรไฟล์
+program||n. v.|A2|3|โปรแกรม
+progress||n., v.|A2|3|ความก้าวหน้า
+promise||v., n.|A2|3|สัญญา
+pronounce||v.|A2|3|ออกเสียง
+protect||v.|A2|3|ปกป้อง
+provide||v.|A2|3|จัดหาให้
+pub||n.|A2|3|ผับ
+public||adj., n.|A2|3|สาธารณะ
+publish||v.|A2|3|ตีพิมพ์
+pull||v. n.|A2|3|ดึง
+purpose||n.|A2|3|จุดประสงค์
+push||v. n.|A2|3|ผลัก
+quality||n.|A2|3|คุณภาพ
+quantity||n.|A2|3|ปริมาณ
+queen||n.|A2|3|ราชินี
+quietly||adv.|A2|3|อย่างเงียบๆ
+race|competition|n., v.|A2|3|การแข่งขัน
+railway||n.|A2|3|ทางรถไฟ
+raise||v.|A2|3|ยกขึ้น, เลี้ยงดู
+rate||n. v.|A2|3|อัตรา
+rather||adv.|A2|3|ค่อนข้าง
+reach||v. n.|A2|3|ไปถึง, เอื้อม
+react||v.|A2|3|ตอบสนอง
+realize||v.|A2|3|ตระหนัก
+receive||v.|A2|3|ได้รับ
+recent||adj.|A2|3|ล่าสุด
+recently||adv.|A2|3|เมื่อเร็วๆ นี้
+reception||n.|A2|3|แผนกต้อนรับ
+recipe||n.|A2|3|สูตรอาหาร
+recognize||v.|A2|3|จำได้
+recommend||v.|A2|3|แนะนำ
+record||n., v.|A2|3|บันทึก, สถิติ
+recording||n.|A2|3|การบันทึกเสียง
+recycle||v.|A2|3|รีไซเคิล
+reduce||v.|A2|3|ลด
+refer||v.|A2|3|อ้างถึง
+refuse||v.|A2|3|ปฏิเสธ
+region||n.|A2|3|ภูมิภาค
+regular||adj.|A2|3|สม่ำเสมอ
+relationship||n.|A2|3|ความสัมพันธ์
+remove||v.|A2|3|เอาออก
+repair||v. n.|A2|3|ซ่อมแซม
+replace||v.|A2|3|แทนที่
+reply||v., n.|A2|3|ตอบกลับ
+reporter||n.|A2|3|ผู้สื่อข่าว
+request||n. v.|A2|3|คำขอ
+research||n., v.|A2|3|การวิจัย
+researcher||n.|A2|3|นักวิจัย
+respond||v.|A2|3|ตอบสนอง
+response||n.|A2|3|การตอบสนอง
+rest|remaining part|n.|A2|3|ส่วนที่เหลือ
+rest|sleep/relax|n., v.|A2|3|พักผ่อน
+review||n., v.|A2|3|บทวิจารณ์, ทบทวน
+ring||n.|A2|3|แหวน, (โทรศัพท์) ดัง
+ring||v. n.|A2|3|แหวน, (โทรศัพท์) ดัง
+rise||v. n.|A2|3|เพิ่มขึ้น, ขึ้น
+rock|music|n.|A2|3|ดนตรีร็อก
+rock|stone|n.|A2|3|หิน
+role||n.|A2|3|บทบาท
+roof||n.|A2|3|หลังคา
+round||adj., adv., prep. n.|A2|3|กลม, รอบ
+route||n.|A2|3|เส้นทาง
+rubbish||n.|A2|3|ขยะ
+rude||adj.|A2|3|หยาบคาย
+runner||n.|A2|3|นักวิ่ง
+running||n.|A2|3|การวิ่ง
+sadly||adv.|A2|3|น่าเศร้าที่
+safe||adj.|A2|3|ปลอดภัย
+sail||v. n.|A2|3|แล่นเรือ
+sailing||n.|A2|3|การแล่นเรือใบ
+salary||n.|A2|3|เงินเดือน
+sale||n.|A2|3|การขาย, ลดราคา
+sauce||n.|A2|3|ซอส
+save||v.|A2|3|ประหยัด, ช่วยชีวิต
+scared||adj.|A2|3|กลัว
+scary||adj.|A2|3|น่ากลัว
+scene||n.|A2|3|ฉาก
+schedule||n. v.|A2|3|ตารางเวลา
+score||v., n.|A2|3|คะแนน
+screen||n. v.|A2|3|หน้าจอ
+search||n., v.|A2|3|ค้นหา
+season||n.|A2|3|ฤดูกาล
+seat||n. v.|A2|3|ที่นั่ง
+secondly||adv.|A2|3|ประการที่สอง
+secret||adj., n.|A2|3|ความลับ
+secretary||n.|A2|3|เลขานุการ
+seem||v.|A2|3|ดูเหมือน
+sense||n. v.|A2|3|ความรู้สึก, สัมผัส
+separate||adj. v.|A2|3|แยก
+series||n.|A2|3|ซีรีส์, ชุด
+serious||adj.|A2|3|จริงจัง, ร้ายแรง
+serve||v.|A2|3|เสิร์ฟ, รับใช้
+service||n.|A2|3|บริการ
+several||det./pron.|A2|3|หลาย
+shake||v. n.|A2|3|เขย่า
+shall||modal v.|A2|3|จะ
+shape||n. v.|A2|3|รูปร่าง
+sheet||n.|A2|3|แผ่น, ผ้าปูที่นอน
+ship||n. v.|A2|3|เรือ
+shoulder||n.|A2|3|ไหล่
+shout||v., n.|A2|3|ตะโกน
+shut||v., adj.|A2|3|ปิด
+side||n.|A2|3|ด้าน, ข้าง
+sign||n., v.|A2|3|ป้าย, ลงชื่อ
+silver||n., adj.|A2|3|เงิน (โลหะ)
+simple||adj.|A2|3|ง่าย, เรียบง่าย
+since||prep., conj. adv.|A2|3|ตั้งแต่
+singing||n.|A2|3|การร้องเพลง
+single||adj., n.|A2|3|เดี่ยว, โสด
+sir||n.|A2|3|ท่าน (ชาย)
+site||n.|A2|3|สถานที่, เว็บไซต์
+size||n.|A2|3|ขนาด
+ski||v., n. adj.|A2|3|เล่นสกี
+skiing||n.|A2|3|การเล่นสกี
+skin||n.|A2|3|ผิวหนัง
+sky||n.|A2|3|ท้องฟ้า
+slowly||adv.|A2|3|อย่างช้าๆ
+smartphone||n.|A2|3|สมาร์ตโฟน
+smell||v., n.|A2|3|กลิ่น, ได้กลิ่น
+smile||v., n.|A2|3|ยิ้ม
+smoke||n., v.|A2|3|ควัน, สูบบุหรี่
+smoking||n.|A2|3|การสูบบุหรี่
+soap||n.|A2|3|สบู่
+soccer||n.|A2|3|ฟุตบอล
+social||adj.|A2|3|ทางสังคม
+society||n.|A2|3|สังคม
+sock||n.|A2|3|ถุงเท้า
+soft||adj.|A2|3|นุ่ม
+soldier||n.|A2|3|ทหาร
+solution||n.|A2|3|วิธีแก้ปัญหา
+solve||v.|A2|3|แก้ปัญหา
+somewhere||adv., pron.|A2|3|ที่ไหนสักแห่ง
+sort||n. v.|A2|3|ประเภท, จัดเรียง
+source||n.|A2|3|แหล่งที่มา
+speaker||n.|A2|3|ผู้พูด, ลำโพง
+specific||adj.|A2|3|เฉพาะเจาะจง
+speech||n.|A2|3|สุนทรพจน์
+speed||n. v.|A2|3|ความเร็ว
+spider||n.|A2|3|แมงมุม
+spoon||n.|A2|3|ช้อน
+square||adj., n.|A2|3|สี่เหลี่ยมจัตุรัส, จัตุรัส
+stage||n. v.|A2|3|เวที, ขั้นตอน
+stair||n.|A2|3|ขั้นบันได
+stamp||n.|A2|3|แสตมป์
+state||n. adj., v.|A2|3|รัฐ, สภาพ
+steal||v.|A2|3|ขโมย
+step||n. v.|A2|3|ก้าว, ขั้นตอน
+stomach||n.|A2|3|ท้อง
+stone||n.|A2|3|หิน
+store||n. v.|A2|3|ร้าน, เก็บ
+storm||n.|A2|3|พายุ
+straight||adv., adj.|A2|3|ตรง
+strange||adj.|A2|3|แปลก
+strategy||n.|A2|3|กลยุทธ์
+stress||n., v.|A2|3|ความเครียด
+structure||n. v.|A2|3|โครงสร้าง
+stupid||adj.|A2|3|โง่
+succeed||v.|A2|3|ประสบความสำเร็จ
+successful||adj.|A2|3|ประสบความสำเร็จ
+such||det./pron.|A2|3|เช่นนั้น
+suddenly||adv.|A2|3|ทันใดนั้น
+suggest||v.|A2|3|เสนอแนะ
+suggestion||n.|A2|3|ข้อเสนอแนะ
+suit||n. v.|A2|3|ชุดสูท, เหมาะกับ
+support||v., n.|A2|3|สนับสนุน
+suppose||v.|A2|3|สมมุติ, คิดว่า
+surprise||n., v.|A2|3|ความประหลาดใจ
+surprised||adj.|A2|3|ประหลาดใจ
+surprising||adj.|A2|3|น่าประหลาดใจ
+survey||n. v.|A2|3|การสำรวจ
+sweet||adj., n.|A2|3|หวาน, ขนม
+symbol||n.|A2|3|สัญลักษณ์
+system||n.|A2|3|ระบบ
+tablet||n.|A2|3|แท็บเล็ต, ยาเม็ด
+target||n. v.|A2|3|เป้าหมาย
+task||n.|A2|3|งาน, ภารกิจ
+taste||n., v.|A2|3|รสชาติ, ชิม
+teaching||n.|A2|3|การสอน
+technology||n.|A2|3|เทคโนโลยี
+teenage||adj.|A2|3|วัยรุ่น
+temperature||n.|A2|3|อุณหภูมิ
+term||n. v.|A2|3|ภาคเรียน, ศัพท์
+themselves||pron.|A2|3|ตัวพวกเขาเอง
+thick||adj.|A2|3|หนา
+thief||n.|A2|3|ขโมย
+thin||adj.|A2|3|บาง, ผอม
+thinking||n.|A2|3|ความคิด
+thought||n.|A2|3|ความคิด
+throw||v.|A2|3|ขว้าง
+tidy||adj., v.|A2|3|เป็นระเบียบ
+tie||v., n.|A2|3|ผูก, เนกไท
+tip||n. v.|A2|3|ทิป, เคล็ดลับ
+tool||n.|A2|3|เครื่องมือ
+top||n., adj.|A2|3|ด้านบน, สูงสุด
+touch||v. n.|A2|3|สัมผัส
+tour||n. v.|A2|3|ทัวร์
+tourism||n.|A2|3|การท่องเที่ยว
+towards||prep.|A2|3|ไปทาง
+towel||n.|A2|3|ผ้าเช็ดตัว
+tower||n.|A2|3|หอคอย
+toy||n., adj.|A2|3|ของเล่น
+track||n. v.|A2|3|ราง, ลู่
+tradition||n.|A2|3|ประเพณี
+traditional||adj.|A2|3|ดั้งเดิม
+trainer||n.|A2|3|ผู้ฝึกสอน, รองเท้าผ้าใบ
+training||n.|A2|3|การฝึกอบรม
+transport||n. v.|A2|3|การขนส่ง
+traveller||n.|A2|3|นักเดินทาง
+trouble||n. v.|A2|3|ปัญหา
+truck||n.|A2|3|รถบรรทุก
+twin||n., adj.|A2|3|ฝาแฝด
+typical||adj.|A2|3|โดยทั่วไป, ตามแบบฉบับ
+underground||adj., adv.|A2|3|ใต้ดิน
+understanding||n.|A2|3|ความเข้าใจ
+unfortunately||adv.|A2|3|โชคไม่ดีที่
+unhappy||adj.|A2|3|ไม่มีความสุข
+uniform||n.|A2|3|เครื่องแบบ
+unit||n.|A2|3|หน่วย
+united||adj.|A2|3|รวมกัน
+unusual||adj.|A2|3|ไม่ธรรมดา
+used to||modal v.|A2|3|เคย (ทำในอดีต)
+user||n.|A2|3|ผู้ใช้
+usual||adj.|A2|3|ตามปกติ
+valley||n.|A2|3|หุบเขา
+van||n.|A2|3|รถตู้
+variety||n.|A2|3|ความหลากหลาย
+vehicle||n.|A2|3|ยานพาหนะ
+view||n. v.|A2|3|วิว, มุมมอง
+virus||n.|A2|3|ไวรัส
+voice||n.|A2|3|เสียง (พูด)
+war||n.|A2|3|สงคราม
+washing||n.|A2|3|การซักผ้า
+wave||n. v.|A2|3|คลื่น, โบกมือ
+weak||adj.|A2|3|อ่อนแอ
+web||n.|A2|3|เว็บ
+wedding||n.|A2|3|งานแต่งงาน
+weight||n.|A2|3|น้ำหนัก
+wet||adj.|A2|3|เปียก
+wheel||n.|A2|3|ล้อ
+while||conj. n.|A2|3|ขณะที่
+whole||adj. n.|A2|3|ทั้งหมด
+whose||det./pron.|A2|3|ของใคร
+wide||adj.|A2|3|กว้าง
+wild||adj.|A2|3|ป่า, ดุร้าย
+wind||n.|A2|3|ลม
+winner||n.|A2|3|ผู้ชนะ
+wish||v., n.|A2|3|ปรารถนา, อยากให้
+wood||n.|A2|3|ไม้
+wooden||adj.|A2|3|ทำจากไม้
+working||adj.|A2|3|ที่ทำงาน, ใช้งานได้
+worried||adj.|A2|3|กังวล
+worry||v. n.|A2|3|กังวล
+worse||adj. adv. n.|A2|3|แย่กว่า
+worst||adj. adv. n.|A2|3|แย่ที่สุด
+wow||exclam.|A2|3|ว้าว
+yet||adv. conj.|A2|3|ยัง
+yours||pron.|A2|3|ของคุณ
+zero||number|A2|3|ศูนย์
+absolutely||adv.|B1|3|อย่างแน่นอน, อย่างยิ่ง
+academic||adj. n.|B1|3|ทางวิชาการ
+access||n., v.|B1|3|การเข้าถึง
+accommodation||n.|B1|3|ที่พัก
+account||n. v.|B1|3|บัญชี
+achievement||n.|B1|3|ความสำเร็จ
+ad||n.|B1|3|โฆษณา
+addition||n.|B1|3|การเพิ่ม, ส่วนเพิ่ม
+admire||v.|B1|3|ชื่นชม
+admit||v.|B1|3|ยอมรับ
+advanced||adj.|B1|3|ขั้นสูง
+advise||v.|B1|3|แนะนำ
+afford||v.|B1|3|มีเงินพอจ่าย
+aged||adj.|B1|3|อายุ…
+agent||n.|B1|3|ตัวแทน
+agreement||n.|B1|3|ข้อตกลง
+ahead||adv.|B1|3|ข้างหน้า, ล่วงหน้า
+AI||n.|B1|3|ปัญญาประดิษฐ์
+aim||v., n.|B1|3|เป้าหมาย, มุ่ง
+alarm||n. v.|B1|3|สัญญาณเตือน
+album||n.|B1|3|อัลบั้ม
+alcohol||n.|B1|3|แอลกอฮอล์
+alcoholic||adj.|B1|3|มีแอลกอฮอล์
+amazed||adj.|B1|3|ทึ่ง
+ambition||n.|B1|3|ความทะเยอทะยาน
+ambitious||adj.|B1|3|ทะเยอทะยาน
+analyse||v.|B1|3|วิเคราะห์
+analysis||n.|B1|3|การวิเคราะห์
+announce||v.|B1|3|ประกาศ
+announcement||n.|B1|3|คำประกาศ
+annoy||v.|B1|3|ทำให้รำคาญ
+annoyed||adj.|B1|3|รำคาญ
+annoying||adj.|B1|3|น่ารำคาญ
+apart||adv.|B1|3|แยกกัน, ห่างกัน
+apologize||v.|B1|3|ขอโทษ
+application||n.|B1|3|ใบสมัคร, การนำไปใช้
+appointment||n.|B1|3|การนัดหมาย
+appreciate||v.|B1|3|ซาบซึ้ง, เห็นคุณค่า
+approximately||adv.|B1|3|ประมาณ
+arrest||v., n.|B1|3|จับกุม
+arrival||n.|B1|3|การมาถึง
+assignment||n.|B1|3|งานที่ได้รับมอบหมาย
+assist||v.|B1|3|ช่วยเหลือ
+atmosphere||n.|B1|3|บรรยากาศ
+attach||v.|B1|3|แนบ, ติด
+attitude||n.|B1|3|ทัศนคติ
+attract||v.|B1|3|ดึงดูด
+attraction||n.|B1|3|สถานที่ท่องเที่ยว, แรงดึงดูด
+authority||n.|B1|3|อำนาจ, หน่วยงาน
+aware||adj.|B1|3|ตระหนัก, รู้ตัว
+backwards||adv.|B1|3|ถอยหลัง
+bake||v.|B1|3|อบ
+balance||n., v.|B1|3|สมดุล
+ban||v., n.|B1|3|ห้าม
+bank|river|n.|B1|3|ตลิ่ง, ริมฝั่ง
+base||n., v.|B1|3|ฐาน
+basic||adj.|B1|3|พื้นฐาน
+basis||n.|B1|3|พื้นฐาน, หลักการ
+battery||n.|B1|3|แบตเตอรี่
+battle||n. v.|B1|3|การต่อสู้
+beat||v. n.|B1|3|ตี, ชนะ
+beauty||n.|B1|3|ความงาม
+bee||n.|B1|3|ผึ้ง
+belief||n.|B1|3|ความเชื่อ
+bell||n.|B1|3|กระดิ่ง
+bend||v., n.|B1|3|โค้ง, งอ
+bite||v., n.|B1|3|กัด
+block||n., v.|B1|3|ปิดกั้น, ตึก
+bomb||n., v.|B1|3|ระเบิด
+border||n. v.|B1|3|ชายแดน
+bother||v.|B1|3|รบกวน
+branch||n.|B1|3|กิ่ง, สาขา
+brand||n., v.|B1|3|ยี่ห้อ
+brave||adj.|B1|3|กล้าหาญ
+breathe||v.|B1|3|หายใจ
+breathing||n.|B1|3|การหายใจ
+bride||n.|B1|3|เจ้าสาว
+bubble||n.|B1|3|ฟอง
+bury||v.|B1|3|ฝัง
+calm||adj., v., n.|B1|3|สงบ
+campaign||n., v.|B1|3|การรณรงค์
+campus||n.|B1|3|วิทยาเขต
+candidate||n.|B1|3|ผู้สมัคร
+cap||n.|B1|3|หมวกแก๊ป, ฝา
+captain||n.|B1|3|กัปตัน
+careless||adj.|B1|3|ประมาท
+category||n.|B1|3|หมวดหมู่
+ceiling||n.|B1|3|เพดาน
+celebration||n.|B1|3|การเฉลิมฉลอง
+central||adj.|B1|3|ตรงกลาง, ศูนย์กลาง
+ceremony||n.|B1|3|พิธี
+chain||n. v.|B1|3|โซ่, เครือ (ร้าน)
+challenge||n. v.|B1|3|ความท้าทาย
+champion||n.|B1|3|แชมป์
+channel||n.|B1|3|ช่อง
+chapter||n.|B1|3|บท
+charge||n., v.|B1|3|ค่าธรรมเนียม, ชาร์จ
+cheat||v., n.|B1|3|โกง
+cheerful||adj.|B1|3|ร่าเริง
+chemical||adj., n.|B1|3|สารเคมี
+chest||n.|B1|3|หน้าอก
+childhood||n.|B1|3|วัยเด็ก
+claim||v., n.|B1|3|อ้าง
+clause||n.|B1|3|อนุประโยค
+click||v., n.|B1|3|คลิก
+client||n.|B1|3|ลูกค้า
+cloth||n.|B1|3|ผ้า
+clue||n.|B1|3|เบาะแส
+coal||n.|B1|3|ถ่านหิน
+coin||n.|B1|3|เหรียญ
+collection||n.|B1|3|การสะสม, คอลเลกชัน
+coloured||adj.|B1|3|มีสี
+combine||v.|B1|3|รวม
+commercial||adj., n.|B1|3|เชิงพาณิชย์, โฆษณา
+commit||v.|B1|3|กระทำ (ผิด), ผูกมัด
+communication||n.|B1|3|การสื่อสาร
+comparison||n.|B1|3|การเปรียบเทียบ
+competitive||adj.|B1|3|มีการแข่งขันสูง
+competitor||n.|B1|3|คู่แข่ง
+complaint||n.|B1|3|คำร้องเรียน
+complex||adj. n.|B1|3|ซับซ้อน
+concentrate||v.|B1|3|ตั้งสมาธิ
+conclude||v.|B1|3|สรุป
+conclusion||n.|B1|3|บทสรุป
+confident||adj.|B1|3|มั่นใจ
+confirm||v.|B1|3|ยืนยัน
+confuse||v.|B1|3|ทำให้สับสน
+confused||adj.|B1|3|สับสน
+connection||n.|B1|3|การเชื่อมต่อ
+consequence||n.|B1|3|ผลที่ตามมา
+consist||v.|B1|3|ประกอบด้วย
+consume||v.|B1|3|บริโภค
+consumer||n.|B1|3|ผู้บริโภค
+contact||n., v.|B1|3|ติดต่อ
+container||n.|B1|3|ภาชนะ
+content||n.|B1|3|เนื้อหา
+continuous||adj.|B1|3|ต่อเนื่อง
+contrast||n., v.|B1|3|ความแตกต่าง
+convenient||adj.|B1|3|สะดวก
+convince||v.|B1|3|โน้มน้าว
+costume||n.|B1|3|เครื่องแต่งกาย
+cottage||n.|B1|3|กระท่อม
+cotton||n.|B1|3|ฝ้าย
+countryside||n.|B1|3|ชนบท
+court||n.|B1|3|ศาล, สนาม
+covered||adj.|B1|3|ปกคลุม
+cruel||adj.|B1|3|โหดร้าย
+cultural||adj.|B1|3|ทางวัฒนธรรม
+currency||n.|B1|3|สกุลเงิน
+current||adj. n.|B1|3|ปัจจุบัน, กระแส
+currently||adv.|B1|3|ในปัจจุบัน
+curtain||n.|B1|3|ผ้าม่าน
+custom||n.|B1|3|ประเพณี
+damage||n., v.|B1|3|ความเสียหาย
+decade||n.|B1|3|ทศวรรษ
+decorate||v.|B1|3|ตกแต่ง
+define||v.|B1|3|นิยาม
+definite||adj.|B1|3|แน่นอน
+definition||n.|B1|3|คำนิยาม
+deliver||v.|B1|3|ส่ง, จัดส่ง
+departure||n.|B1|3|การออกเดินทาง
+despite||prep.|B1|3|แม้ว่า (+ คำนาม)
+destination||n.|B1|3|จุดหมายปลายทาง
+determine||v.|B1|3|กำหนด, ตัดสิน
+determined||adj.|B1|3|มุ่งมั่น
+development||n.|B1|3|การพัฒนา
+diagram||n.|B1|3|แผนภาพ
+diamond||n.|B1|3|เพชร
+difficulty||n.|B1|3|ความยากลำบาก
+directly||adv.|B1|3|โดยตรง
+dirt||n.|B1|3|สิ่งสกปรก
+disadvantage||n.|B1|3|ข้อเสีย
+disappointed||adj.|B1|3|ผิดหวัง
+disappointing||adj.|B1|3|น่าผิดหวัง
+discount||n. v.|B1|3|ส่วนลด
+dislike||v., n.|B1|3|ไม่ชอบ
+divide||v. n.|B1|3|แบ่ง
+documentary||n.|B1|3|สารคดี
+donate||v.|B1|3|บริจาค
+doubt||n., v.|B1|3|ความสงสัย
+dressed||adj.|B1|3|แต่งตัวแล้ว
+drum||n.|B1|3|กลอง
+drunk||adj.|B1|3|เมา
+due||adj.|B1|3|ครบกำหนด, เนื่องจาก
+dust||n.|B1|3|ฝุ่น
+duty||n.|B1|3|หน้าที่
+earthquake||n.|B1|3|แผ่นดินไหว
+eastern||adj.|B1|3|ทางตะวันออก
+economic||adj.|B1|3|ทางเศรษฐกิจ
+economy||n.|B1|3|เศรษฐกิจ
+edge||n.|B1|3|ขอบ
+editor||n.|B1|3|บรรณาธิการ
+educate||v.|B1|3|ให้การศึกษา
+educated||adj.|B1|3|มีการศึกษา
+educational||adj.|B1|3|เพื่อการศึกษา
+effective||adj.|B1|3|มีประสิทธิภาพ
+effectively||adv.|B1|3|อย่างได้ผล
+effort||n.|B1|3|ความพยายาม
+election||n.|B1|3|การเลือกตั้ง
+element||n.|B1|3|องค์ประกอบ
+embarrassed||adj.|B1|3|อาย
+embarrassing||adj.|B1|3|น่าอาย
+emergency||n.|B1|3|เหตุฉุกเฉิน
+emotion||n.|B1|3|อารมณ์
+employment||n.|B1|3|การจ้างงาน
+encourage||v.|B1|3|สนับสนุน, ให้กำลังใจ
+enemy||n.|B1|3|ศัตรู
+engaged||adj.|B1|3|หมั้นแล้ว, ไม่ว่าง
+engineering||n.|B1|3|วิศวกรรม
+entertain||v.|B1|3|ให้ความบันเทิง
+entertainment||n.|B1|3|ความบันเทิง
+entrance||n.|B1|3|ทางเข้า
+entry||n.|B1|3|การเข้า
+environmental||adj.|B1|3|ด้านสิ่งแวดล้อม
+episode||n.|B1|3|ตอน
+equal||adj., v. n.|B1|3|เท่ากัน
+equally||adv.|B1|3|อย่างเท่าเทียม
+escape||v., n.|B1|3|หนี
+essential||adj.|B1|3|จำเป็นมาก
+eventually||adv.|B1|3|ในที่สุด
+examine||v.|B1|3|ตรวจสอบ
+exchange||n., v.|B1|3|แลกเปลี่ยน
+excitement||n.|B1|3|ความตื่นเต้น
+exhibition||n.|B1|3|นิทรรศการ
+expand||v.|B1|3|ขยาย
+expected||adj.|B1|3|ที่คาดไว้
+expedition||n.|B1|3|การสำรวจ
+experienced||adj.|B1|3|มีประสบการณ์
+explode||v.|B1|3|ระเบิด
+explore||v.|B1|3|สำรวจ
+explosion||n.|B1|3|การระเบิด
+export||n., v.|B1|3|ส่งออก
+fairly||adv.|B1|3|ค่อนข้าง
+familiar||adj.|B1|3|คุ้นเคย
+fancy||v., adj.|B1|3|อยาก (ไม่เป็นทางการ), หรูหรา
+fascinating||adj.|B1|3|น่าหลงใหล
+fashionable||adj.|B1|3|ทันสมัย
+fasten||v.|B1|3|รัด, ผูก
+favour||n. v.|B1|3|ความช่วยเหลือ
+fence||n.|B1|3|รั้ว
+fighting||n.|B1|3|การต่อสู้
+file||n. v.|B1|3|แฟ้ม, ไฟล์
+financial||adj.|B1|3|ทางการเงิน
+fitness||n.|B1|3|สมรรถภาพร่างกาย
+fixed||adj.|B1|3|คงที่
+flag||n.|B1|3|ธง
+flood||n., v.|B1|3|น้ำท่วม
+flour||n.|B1|3|แป้ง
+flow||v., n.|B1|3|ไหล
+fold||v. n.|B1|3|พับ
+folk||n., adj.|B1|3|พื้นบ้าน
+force||n., v.|B1|3|แรง, บังคับ
+forever||adv.|B1|3|ตลอดไป
+frame||n., v.|B1|3|กรอบ
+freeze||v.|B1|3|แช่แข็ง
+frequently||adv.|B1|3|บ่อยครั้ง
+friendship||n.|B1|3|มิตรภาพ
+frighten||v.|B1|3|ทำให้กลัว
+frightened||adj.|B1|3|กลัว
+frightening||adj.|B1|3|น่ากลัว
+frozen||adj.|B1|3|แช่แข็ง
+fry||v.|B1|3|ทอด
+fuel||n. v.|B1|3|เชื้อเพลิง
+function||n. v.|B1|3|หน้าที่, ทำงาน
+fur||n.|B1|3|ขนสัตว์
+garage||n.|B1|3|โรงรถ, อู่ซ่อมรถ
+gather||v.|B1|3|รวบรวม
+generally||adv.|B1|3|โดยทั่วไป
+generation||n.|B1|3|รุ่น
+generous||adj.|B1|3|ใจกว้าง
+gentle||adj.|B1|3|อ่อนโยน
+ghost||n.|B1|3|ผี
+giant||adj., n.|B1|3|ยักษ์
+glad||adj.|B1|3|ดีใจ
+global||adj.|B1|3|ระดับโลก
+glove||n.|B1|3|ถุงมือ
+goods||n.|B1|3|สินค้า
+grade||n. v.|B1|3|เกรด, ระดับ
+graduate||n., v.|B1|3|จบการศึกษา, บัณฑิต
+grain||n.|B1|3|เมล็ดพืช
+grateful||adj.|B1|3|ขอบคุณ, สำนึกบุญคุณ
+growth||n.|B1|3|การเติบโต
+guard||n., v.|B1|3|ยาม, เฝ้า
+guilty||adj.|B1|3|มีความผิด, รู้สึกผิด
+hang||v.|B1|3|แขวน
+happiness||n.|B1|3|ความสุข
+hardly||adv.|B1|3|แทบจะไม่
+headline||n.|B1|3|พาดหัวข่าว
+heating||n.|B1|3|ระบบทำความร้อน
+heavily||adv.|B1|3|อย่างหนัก
+helicopter||n.|B1|3|เฮลิคอปเตอร์
+highlight||v., n.|B1|3|เน้น, ไฮไลต์
+highly||adv.|B1|3|อย่างสูง
+hire||v. n.|B1|3|จ้าง, เช่า
+historic||adj.|B1|3|สำคัญทางประวัติศาสตร์
+historical||adj.|B1|3|ทางประวัติศาสตร์
+honest||adj.|B1|3|ซื่อสัตย์
+horrible||adj.|B1|3|น่ากลัว, แย่มาก
+horror||n.|B1|3|ความสยองขวัญ
+host||n. v.|B1|3|เจ้าภาพ
+hunt||v. n.|B1|3|ล่า
+hurricane||n.|B1|3|พายุเฮอริเคน
+hurry||n., v.|B1|3|รีบ
+identity||n.|B1|3|ตัวตน
+ignore||v.|B1|3|เพิกเฉย
+illegal||adj.|B1|3|ผิดกฎหมาย
+imaginary||adj.|B1|3|ในจินตนาการ
+immediate||adj.|B1|3|ทันที
+immigrant||n.|B1|3|ผู้อพยพ
+impact||n., v.|B1|3|ผลกระทบ
+import||n., v.|B1|3|นำเข้า
+importance||n.|B1|3|ความสำคัญ
+impression||n.|B1|3|ความประทับใจ
+impressive||adj.|B1|3|น่าประทับใจ
+improvement||n.|B1|3|การปรับปรุง
+incredibly||adv.|B1|3|อย่างเหลือเชื่อ
+indeed||adv.|B1|3|จริงๆ
+indicate||v.|B1|3|บ่งชี้
+indirect||adj.|B1|3|ทางอ้อม
+indoor||adj.|B1|3|ในร่ม
+indoors||adv.|B1|3|ในอาคาร
+influence||n., v.|B1|3|อิทธิพล
+ingredient||n.|B1|3|ส่วนผสม
+injure||v.|B1|3|ทำให้บาดเจ็บ
+injured||adj.|B1|3|บาดเจ็บ
+innocent||adj.|B1|3|บริสุทธิ์
+intelligence||n.|B1|3|ความฉลาด, ข่าวกรอง
+intend||v.|B1|3|ตั้งใจ
+intention||n.|B1|3|ความตั้งใจ
+invest||v.|B1|3|ลงทุน
+investigate||v.|B1|3|สืบสวน
+involved||adj.|B1|3|มีส่วนร่วม
+iron||n., v.|B1|3|เหล็ก, เตารีด
+issue||n. v.|B1|3|ประเด็น
+IT||n.|B1|3|เทคโนโลยีสารสนเทศ
+journal||n.|B1|3|วารสาร
+judge||n., v.|B1|3|ผู้พิพากษา, ตัดสิน
+keen||adj.|B1|3|กระตือรือร้น
+keyboard||n.|B1|3|แป้นพิมพ์
+kick||v., n.|B1|3|เตะ
+killing||n.|B1|3|การฆ่า
+kind|caring|adj.|B1|3|ใจดี
+kiss||v., n.|B1|3|จูบ
+label||n., v.|B1|3|ป้าย, ฉลาก
+laboratory||n.|B1|3|ห้องปฏิบัติการ
+lack||n., v.|B1|3|การขาด
+latest||adj. n.|B1|3|ล่าสุด
+lay||v.|B1|3|วาง
+layer||n.|B1|3|ชั้น
+leading||adj.|B1|3|ชั้นนำ
+leaf||n.|B1|3|ใบไม้
+leather||n.|B1|3|หนัง
+legal||adj.|B1|3|ถูกกฎหมาย
+leisure||n.|B1|3|เวลาว่าง
+length||n.|B1|3|ความยาว
+lie|tell a lie|v., n.|B1|3|โกหก
+limit||n., v.|B1|3|ขีดจำกัด
+lip||n.|B1|3|ริมฝีปาก
+liquid||n., adj.|B1|3|ของเหลว
+literature||n.|B1|3|วรรณกรรม
+live||adj., adv.|B1|3|สด (ถ่ายทอด), มีชีวิต
+living||adj., n.|B1|3|การดำรงชีวิต
+locate||v.|B1|3|หาตำแหน่ง
+located||adj.|B1|3|ตั้งอยู่
+location||n.|B1|3|ที่ตั้ง
+lonely||adj.|B1|3|เหงา
+loss||n.|B1|3|การสูญเสีย
+luxury||n.|B1|3|ความหรูหรา
+mad||adj.|B1|3|บ้า, โกรธ
+magic||n., adj.|B1|3|เวทมนตร์
+mainly||adv.|B1|3|ส่วนใหญ่
+mall||n.|B1|3|ห้างสรรพสินค้า
+management||n.|B1|3|การจัดการ
+marketing||n.|B1|3|การตลาด
+marriage||n.|B1|3|การแต่งงาน
+meanwhile||adv.|B1|3|ในขณะเดียวกัน
+measure||v., n.|B1|3|วัด
+medium||adj. n.|B1|3|ขนาดกลาง
+mental||adj.|B1|3|ทางจิตใจ
+mess||n., v.|B1|3|ความยุ่งเหยิง
+mild||adj.|B1|3|อ่อนๆ, ไม่รุนแรง
+mine|hole in the ground|n.|B1|3|เหมือง
+mix||v., n.|B1|3|ผสม
+mixture||n.|B1|3|ส่วนผสม
+mood||n.|B1|3|อารมณ์
+mud||n.|B1|3|โคลน
+murder||n., v.|B1|3|ฆาตกรรม
+muscle||n.|B1|3|กล้ามเนื้อ
+mystery||n.|B1|3|ความลึกลับ
+nail||n.|B1|3|เล็บ, ตะปู
+narrative||n., adj.|B1|3|การเล่าเรื่อง
+nation||n.|B1|3|ชาติ
+native||adj., n.|B1|3|พื้นเมือง, เจ้าของภาษา
+naturally||adv.|B1|3|โดยธรรมชาติ
+necessarily||adv.|B1|3|จำเป็นเสมอไป
+needle||n.|B1|3|เข็ม
+neighbourhood||n.|B1|3|ละแวกบ้าน
+net||n.|B1|3|ตาข่าย
+nor||conj./adv.|B1|3|และไม่
+northern||adj.|B1|3|ทางเหนือ
+nuclear||adj.|B1|3|นิวเคลียร์
+obvious||adj.|B1|3|ชัดเจน
+obviously||adv.|B1|3|เห็นได้ชัด
+occasion||n.|B1|3|โอกาส, งาน
+occur||v.|B1|3|เกิดขึ้น
+odd||adj.|B1|3|แปลก
+official||adj. n.|B1|3|อย่างเป็นทางการ, เจ้าหน้าที่
+old-fashioned||adj.|B1|3|ล้าสมัย
+operation||n.|B1|3|การผ่าตัด, การดำเนินงาน
+organized||adj.|B1|3|เป็นระเบียบ
+organizer||n.|B1|3|ผู้จัด
+originally||adv.|B1|3|แต่เดิม
+ought||modal v.|B1|3|ควร
+ours||pron.|B1|3|ของพวกเรา
+outdoor||adj.|B1|3|กลางแจ้ง
+outdoors||adv.|B1|3|นอกบ้าน
+package||n. v.|B1|3|พัสดุ
+painful||adj.|B1|3|เจ็บปวด
+pale||adj.|B1|3|ซีด
+pan||n.|B1|3|กระทะ
+participate||v.|B1|3|มีส่วนร่วม
+particularly||adv.|B1|3|โดยเฉพาะ
+passion||n.|B1|3|ความหลงใหล
+path||n.|B1|3|ทางเดิน
+payment||n.|B1|3|การชำระเงิน
+peaceful||adj.|B1|3|สงบสุข
+percentage||n.|B1|3|ร้อยละ
+perfectly||adv.|B1|3|อย่างสมบูรณ์
+performance||n.|B1|3|การแสดง, ผลงาน
+personally||adv.|B1|3|โดยส่วนตัว
+persuade||v.|B1|3|ชักชวน
+photographer||n.|B1|3|ช่างภาพ
+photography||n.|B1|3|การถ่ายภาพ
+pin||n., v.|B1|3|เข็มหมุด
+pipe||n.|B1|3|ท่อ
+planning||n.|B1|3|การวางแผน
+pleasant||adj.|B1|3|น่ารื่นรมย์
+pleasure||n.|B1|3|ความยินดี
+plenty||pron.|B1|3|มากมาย
+plot||n. v.|B1|3|โครงเรื่อง
+plus||prep. adj., conj., n.|B1|3|บวก
+podcast||n.|B1|3|พอดแคสต์
+poem||n.|B1|3|บทกวี
+poet||n.|B1|3|กวี
+poetry||n.|B1|3|กวีนิพนธ์
+poison||n., v.|B1|3|ยาพิษ
+poisonous||adj.|B1|3|มีพิษ
+policy||n.|B1|3|นโยบาย
+political||adj.|B1|3|ทางการเมือง
+politician||n.|B1|3|นักการเมือง
+politics||n.|B1|3|การเมือง
+port||n.|B1|3|ท่าเรือ
+portrait||n.|B1|3|ภาพเหมือน
+possibly||adv.|B1|3|อาจจะ
+pot||n.|B1|3|หม้อ
+pour||v.|B1|3|เท
+poverty||n.|B1|3|ความยากจน
+powder||n.|B1|3|ผง
+powerful||adj.|B1|3|ทรงพลัง
+practical||adj.|B1|3|ใช้ได้จริง
+pray||v.|B1|3|สวดมนต์
+prayer||n.|B1|3|คำอธิษฐาน
+prediction||n.|B1|3|การทำนาย
+prepared||adj.|B1|3|เตรียมพร้อม
+presentation||n.|B1|3|การนำเสนอ
+press||v., n.|B1|3|กด, สื่อมวลชน
+pressure||n.|B1|3|ความกดดัน
+pretend||v.|B1|3|แกล้งทำ
+previous||adj.|B1|3|ก่อนหน้า
+previously||adv.|B1|3|ก่อนหน้านี้
+priest||n.|B1|3|นักบวช
+primary||adj.|B1|3|หลัก, ประถม
+prince||n.|B1|3|เจ้าชาย
+princess||n.|B1|3|เจ้าหญิง
+printing||n.|B1|3|การพิมพ์
+prisoner||n.|B1|3|นักโทษ
+private||adj.|B1|3|ส่วนตัว, เอกชน
+producer||n.|B1|3|ผู้ผลิต
+production||n.|B1|3|การผลิต
+profession||n.|B1|3|อาชีพ
+profit||n.|B1|3|กำไร
+promote||v.|B1|3|ส่งเสริม, เลื่อนตำแหน่ง
+proper||adj.|B1|3|เหมาะสม
+properly||adv.|B1|3|อย่างเหมาะสม
+property||n.|B1|3|ทรัพย์สิน
+protest||n., v.|B1|3|ประท้วง
+proud||adj.|B1|3|ภูมิใจ
+prove||v.|B1|3|พิสูจน์
+punish||v.|B1|3|ลงโทษ
+punishment||n.|B1|3|การลงโทษ
+qualification||n.|B1|3|คุณวุฒิ
+qualified||adj.|B1|3|มีคุณสมบัติ
+qualify||v.|B1|3|มีสิทธิ์, ผ่านเกณฑ์
+queue||n., v.|B1|3|คิว, เข้าแถว
+quit||v.|B1|3|ลาออก, เลิก
+quotation||n.|B1|3|คำพูดที่ยกมา, ใบเสนอราคา
+quote||v., n.|B1|3|อ้างคำพูด
+race|of people|n.|B1|3|เชื้อชาติ
+racing||n.|B1|3|การแข่งรถ
+range||n. v.|B1|3|ช่วง, ขอบเขต
+rare||adj.|B1|3|หายาก
+rarely||adv.|B1|3|แทบไม่
+reaction||n.|B1|3|ปฏิกิริยา
+reality||n.|B1|3|ความเป็นจริง
+receipt||n.|B1|3|ใบเสร็จ
+recommendation||n.|B1|3|คำแนะนำ
+reference||n.|B1|3|การอ้างอิง
+reflect||v.|B1|3|สะท้อน
+regularly||adv.|B1|3|เป็นประจำ
+reject||v.|B1|3|ปฏิเสธ
+relate||v.|B1|3|เกี่ยวข้อง
+related||adj.|B1|3|ที่เกี่ยวข้อง
+relation||n.|B1|3|ความสัมพันธ์
+relative||adj., n.|B1|3|ญาติ
+relaxed||adj.|B1|3|ผ่อนคลาย
+relaxing||adj.|B1|3|ทำให้ผ่อนคลาย
+release||v., n.|B1|3|ปล่อย
+reliable||adj.|B1|3|เชื่อถือได้
+religion||n.|B1|3|ศาสนา
+religious||adj.|B1|3|ทางศาสนา
+remain||v.|B1|3|ยังคง
+remind||v.|B1|3|เตือนให้นึกถึง
+remote||adj.|B1|3|ห่างไกล
+renewable||adj.|B1|3|หมุนเวียนได้
+rent||n., v.|B1|3|ค่าเช่า, เช่า
+repeated||adj.|B1|3|ซ้ำๆ
+represent||v.|B1|3|เป็นตัวแทน
+require||v.|B1|3|ต้องการ
+reservation||n.|B1|3|การจอง
+resource||n.|B1|3|ทรัพยากร
+respect||n., v.|B1|3|ความเคารพ
+responsibility||n.|B1|3|ความรับผิดชอบ
+responsible||adj.|B1|3|รับผิดชอบ
+retire||v.|B1|3|เกษียณ
+retired||adj.|B1|3|เกษียณแล้ว
+revise||v.|B1|3|ทบทวน, แก้ไข
+risk||n., v.|B1|3|ความเสี่ยง
+robot||n.|B1|3|หุ่นยนต์
+roll||v., n.|B1|3|กลิ้ง, ม้วน
+romantic||adj.|B1|3|โรแมนติก
+rope||n.|B1|3|เชือก
+rough||adj.|B1|3|หยาบ
+row||n.|B1|3|แถว
+royal||adj.|B1|3|ราชวงศ์
+rugby||n.|B1|3|รักบี้
+safety||n.|B1|3|ความปลอดภัย
+sailor||n.|B1|3|กะลาสี
+sample||n. v.|B1|3|ตัวอย่าง
+sand||n.|B1|3|ทราย
+scan||v.|B1|3|สแกน
+scientific||adj.|B1|3|ทางวิทยาศาสตร์
+script||n.|B1|3|บท
+secondary||adj.|B1|3|มัธยม, รอง
+security||n.|B1|3|ความปลอดภัย
+seed||n.|B1|3|เมล็ด
+sensible||adj.|B1|3|มีเหตุผล
+seriously||adv.|B1|3|อย่างจริงจัง
+servant||n.|B1|3|คนรับใช้
+set|group|n.|B1|3|ชุด
+set|put|v.|B1|3|วาง, ตั้ง
+setting||n.|B1|3|ฉาก, สภาพแวดล้อม
+sex||n.|B1|3|เพศ
+sexual||adj.|B1|3|ทางเพศ
+sharp||adj.|B1|3|คม
+shelf||n.|B1|3|ชั้นวาง
+shell||n.|B1|3|เปลือก
+shift||n. v.|B1|3|กะ, เปลี่ยน
+shine||v.|B1|3|ส่องแสง
+shiny||adj.|B1|3|เป็นมันวาว
+shoot||v.|B1|3|ยิง
+shy||adj.|B1|3|ขี้อาย
+sight||n.|B1|3|การมองเห็น, ทิวทัศน์
+signal||n., v.|B1|3|สัญญาณ
+silent||adj.|B1|3|เงียบ
+silly||adj.|B1|3|โง่, ไร้สาระ
+similarity||n.|B1|3|ความคล้ายคลึง
+similarly||adv.|B1|3|ในทำนองเดียวกัน
+simply||adv.|B1|3|เพียงแค่
+sink||v.|B1|3|จม
+slice||n., v.|B1|3|ชิ้นบาง
+slightly||adv.|B1|3|เล็กน้อย
+smart||adj.|B1|3|ฉลาด
+smooth||adj.|B1|3|เรียบ
+software||n.|B1|3|ซอฟต์แวร์
+soil||n.|B1|3|ดิน
+solid||adj., n.|B1|3|แข็ง, ของแข็ง
+southern||adj.|B1|3|ทางใต้
+specialize||v.|B1|5|เชี่ยวชาญเฉพาะ
+specifically||adv.|B1|3|โดยเฉพาะ
+spending||n.|B1|3|การใช้จ่าย
+spicy||adj.|B1|3|เผ็ด
+spirit||n.|B1|3|จิตวิญญาณ
+spoken||adj.|B1|3|ภาษาพูด
+spot||n. v.|B1|3|จุด, สังเกตเห็น
+spread||v. n.|B1|3|แพร่กระจาย
+stadium||n.|B1|3|สนามกีฬา
+staff||n.|B1|3|พนักงาน
+standard||n., adj.|B1|3|มาตรฐาน
+statistic||n.|B1|3|สถิติ
+statue||n.|B1|3|รูปปั้น
+stick|piece of wood|n.|B1|3|ไม้, กิ่งไม้
+stick|push into/attach|v.|B1|3|ติด, แทง
+stranger||n.|B1|3|คนแปลกหน้า
+strength||n.|B1|3|ความแข็งแรง
+string||n.|B1|3|เชือก
+strongly||adv.|B1|3|อย่างหนักแน่น
+studio||n.|B1|3|สตูดิโอ
+stuff||n. v.|B1|3|ของ, สิ่งของ
+substance||n.|B1|3|สาร
+successfully||adv.|B1|3|อย่างสำเร็จ
+sudden||adj.|B1|3|กะทันหัน
+suffer||v.|B1|3|ทนทุกข์
+suitable||adj.|B1|3|เหมาะสม
+summarize||v.|B1|3|สรุป
+summary||n.|B1|3|บทสรุป
+supply||n., v.|B1|3|จัดหา, อุปทาน
+supporter||n.|B1|3|ผู้สนับสนุน
+surely||adv.|B1|3|แน่นอน
+surface||n.|B1|3|พื้นผิว
+survive||v.|B1|3|รอดชีวิต
+switch||v. n.|B1|3|สวิตช์, สลับ
+symptom||n.|B1|3|อาการ
+tail||n.|B1|3|หาง
+talent||n.|B1|3|พรสวรรค์
+talented||adj.|B1|3|มีพรสวรรค์
+tax||n., v.|B1|3|ภาษี
+technical||adj.|B1|3|ทางเทคนิค
+technique||n.|B1|3|เทคนิค
+tend||v.|B1|3|มีแนวโน้ม
+tent||n.|B1|3|เต็นท์
+theirs||pron.|B1|3|ของพวกเขา
+theme||n.|B1|3|หัวข้อ, ธีม
+theory||n.|B1|3|ทฤษฎี
+therefore||adv.|B1|3|ดังนั้น
+though||conj., adv.|B1|3|แม้ว่า
+throat||n.|B1|3|ลำคอ
+throughout||prep./adv.|B1|3|ตลอด
+tight||adj.|B1|3|แน่น, คับ
+till||conj./prep.|B1|3|จนกระทั่ง
+tin||n.|B1|3|กระป๋อง, ดีบุก
+tiny||adj.|B1|3|เล็กมาก
+toe||n.|B1|3|นิ้วเท้า
+tongue||n.|B1|3|ลิ้น
+total||adj., n.|B1|3|ทั้งหมด, ยอดรวม
+totally||adv.|B1|3|โดยสิ้นเชิง
+trade||n., v.|B1|3|การค้า
+translate||v.|B1|3|แปล
+translation||n.|B1|3|คำแปล
+treat||v.|B1|3|ปฏิบัติต่อ, รักษา
+treatment||n.|B1|3|การรักษา
+trend||n.|B1|3|แนวโน้ม
+trick||n., v.|B1|3|กลอุบาย
+truth||n.|B1|3|ความจริง
+tube||n.|B1|3|หลอด
+typically||adv.|B1|3|โดยทั่วไป
+tyre||n.|B1|3|ยางรถ
+ugly||adj.|B1|3|น่าเกลียด
+unable||adj.|B1|3|ไม่สามารถ
+uncomfortable||adj.|B1|3|ไม่สบาย
+underwear||n.|B1|3|ชุดชั้นใน
+unemployed||adj.|B1|3|ว่างงาน
+unemployment||n.|B1|3|การว่างงาน
+unfair||adj.|B1|3|ไม่ยุติธรรม
+union||n.|B1|3|สหภาพ
+unless||conj.|B1|3|เว้นแต่
+unlike||prep.|B1|3|ไม่เหมือน
+unlikely||adj.|B1|3|ไม่น่าจะ
+unnecessary||adj.|B1|3|ไม่จำเป็น
+unpleasant||adj.|B1|3|ไม่น่าพอใจ
+update||v., n.|B1|3|อัปเดต
+upset||adj., v.|B1|3|ไม่สบายใจ
+used||adj.|B1|3|ใช้แล้ว, มือสอง
+used to||adj.|B1|3|คุ้นเคยกับ (be used to)
+valuable||adj.|B1|3|มีค่า
+value||n. v.|B1|3|คุณค่า
+various||adj.|B1|3|หลากหลาย
+version||n.|B1|3|ฉบับ, เวอร์ชัน
+victim||n.|B1|3|เหยื่อ
+viewer||n.|B1|3|ผู้ชม
+violent||adj.|B1|3|รุนแรง
+volunteer||n., v.|B1|3|อาสาสมัคร
+vote||n., v.|B1|3|ลงคะแนน
+warn||v.|B1|3|เตือน
+warning||n.|B1|3|คำเตือน
+waste||n., v., adj.|B1|3|ขยะ, สิ้นเปลือง
+weapon||n.|B1|3|อาวุธ
+weigh||v.|B1|3|ชั่งน้ำหนัก
+western||adj.|B1|3|ทางตะวันตก
+whatever||det./pron.|B1|3|อะไรก็ตาม
+whenever||conj.|B1|3|เมื่อใดก็ตาม
+whether||conj.|B1|3|ว่า…หรือไม่
+Wi-Fi||n.|B1|3|ไวไฟ
+wing||n.|B1|3|ปีก
+within||prep.|B1|3|ภายใน
+wonder||v., n.|B1|3|สงสัย
+wool||n.|B1|3|ขนสัตว์
+worldwide||adj., adv.|B1|3|ทั่วโลก
+worth||adj. n.|B1|3|คุ้มค่า
+written||adj.|B1|3|เป็นลายลักษณ์อักษร
+yard||n.|B1|3|ลาน, หลา
+youth||n.|B1|3|เยาวชน
+abandon||v.|B2|3|ละทิ้ง
+absolute||adj.|B2|3|สมบูรณ์, เด็ดขาด
+absorb||v.|B2|5|ดูดซับ
+abstract||adj.|B2|5|นามธรรม
+accent||n.|B2|5|สำเนียง
+acceptable||adj.|B2|3|ยอมรับได้
+accidentally||adv.|B2|5|โดยบังเอิญ
+accommodate||v.|B2|5|รองรับ, ให้ที่พัก
+accompany||v.|B2|3|ไปด้วย, ร่วมทาง
+accomplish||v.|B2|5|ทำสำเร็จ
+accountant||n.|B2|5|นักบัญชี
+accuracy||n.|B2|5|ความแม่นยำ
+accurate||adj.|B2|3|แม่นยำ
+accurately||adv.|B2|5|อย่างแม่นยำ
+accuse||v.|B2|3|กล่าวหา
+acid||n. adj.|B2|5|กรด
+acknowledge||v.|B2|3|ยอมรับ
+acquire||v.|B2|3|ได้มา
+activate||v.|B2|5|เปิดใช้งาน
+actual||adj.|B2|3|จริง
+adapt||v.|B2|3|ปรับตัว
+addiction||n.|B2|5|การเสพติด
+additional||adj.|B2|3|เพิ่มเติม
+additionally||adv.|B2|5|นอกจากนี้
+adequate||adj.|B2|5|เพียงพอ
+adjust||v.|B2|5|ปรับ
+administration||n.|B2|3|การบริหาร
+adopt||v.|B2|3|รับเลี้ยง, นำมาใช้
+advance||n., v., adj.|B2|3|ความก้าวหน้า, ล่วงหน้า
+affair||n.|B2|3|เรื่องราว, กิจการ
+affordable||adj.|B2|5|ราคาเอื้อมถึง
+afterwards||adv.|B2|3|หลังจากนั้น
+agency||n.|B2|3|หน่วยงาน, เอเจนซี
+agenda||n.|B2|3|วาระ
+aggressive||adj.|B2|3|ก้าวร้าว
+agriculture||n.|B2|5|เกษตรกรรม
+aid||n., v.|B2|3|ความช่วยเหลือ
+aircraft||n.|B2|3|อากาศยาน
+alien||n. adj.|B2|5|มนุษย์ต่างดาว, คนต่างด้าว
+alter||v.|B2|3|เปลี่ยนแปลง
+altogether||adv.|B2|5|ทั้งหมด, โดยสิ้นเชิง
+ambulance||n.|B2|5|รถพยาบาล
+amusing||adj.|B2|5|น่าขบขัน
+analyst||n.|B2|5|นักวิเคราะห์
+ancestor||n.|B2|5|บรรพบุรุษ
+anger||n.|B2|3|ความโกรธ
+angle||n.|B2|3|มุม
+animation||n.|B2|5|แอนิเมชัน
+anniversary||n.|B2|3|วันครบรอบ
+annual||adj.|B2|3|ประจำปี
+annually||adv.|B2|5|ทุกปี
+anticipate||v.|B2|5|คาดการณ์
+anxiety||n.|B2|5|ความวิตกกังวล
+anxious||adj.|B2|3|กังวล
+apology||n.|B2|5|คำขอโทษ
+apparent||adj.|B2|3|ชัดเจน, ดูเหมือน
+apparently||adv.|B2|3|ดูเหมือนว่า
+appeal||n., v.|B2|3|ดึงดูดใจ, อุทธรณ์
+applicant||n.|B2|5|ผู้สมัคร
+approach||n., v.|B2|3|วิธีการ, เข้าใกล้
+appropriate||adj.|B2|3|เหมาะสม
+approval||n.|B2|3|การอนุมัติ
+approve||v.|B2|3|อนุมัติ, เห็นชอบ
+arise||v.|B2|3|เกิดขึ้น
+armed||adj.|B2|3|มีอาวุธ
+arms||n.|B2|3|อาวุธ
+arrow||n.|B2|5|ลูกศร
+artificial||adj.|B2|3|เทียม, ประดิษฐ์
+artistic||adj.|B2|3|มีศิลปะ
+artwork||n.|B2|5|งานศิลปะ
+ashamed||adj.|B2|3|ละอายใจ
+aside||adv.|B2|5|ไว้ข้างๆ
+aspect||n.|B2|3|แง่มุม
+assess||v.|B2|3|ประเมิน
+assessment||n.|B2|3|การประเมิน
+asset||n.|B2|5|ทรัพย์สิน
+assign||v.|B2|5|มอบหมาย
+assistance||n.|B2|5|ความช่วยเหลือ
+associate||v.|B2|3|เชื่อมโยง
+associated||adj.|B2|3|ที่เกี่ยวข้อง
+association||n.|B2|3|สมาคม, ความเกี่ยวข้อง
+assume||v.|B2|3|สันนิษฐาน
+assumption||n.|B2|5|ข้อสันนิษฐาน
+assure||v.|B2|5|รับรอง
+astonishing||adj.|B2|5|น่าประหลาดใจมาก
+attachment||n.|B2|5|ไฟล์แนบ, ความผูกพัน
+attempt||n., v.|B2|3|ความพยายาม
+auction||n.|B2|5|การประมูล
+automatic||adj.|B2|5|อัตโนมัติ
+automatically||adv.|B2|5|โดยอัตโนมัติ
+awareness||n.|B2|5|ความตระหนัก
+bacteria||n.|B2|3|แบคทีเรีย
+badge||n.|B2|5|เข็มกลัด, ตรา
+balanced||adj.|B2|5|สมดุล
+ballet||n.|B2|5|บัลเล่ต์
+balloon||n.|B2|5|ลูกโป่ง
+barely||adv.|B2|5|แทบจะไม่
+bargain||n.|B2|5|ของถูก, ต่อรอง
+barrier||n.|B2|3|อุปสรรค, สิ่งกีดขวาง
+basement||n.|B2|5|ห้องใต้ดิน
+basically||adv.|B2|3|โดยพื้นฐาน
+basket||n.|B2|5|ตะกร้า
+bat||n. v.|B2|5|ค้างคาว, ไม้ตี
+bay||n.|B2|5|อ่าว
+bear|deal with|v.|B2|3|ทน
+beg||v.|B2|3|ขอร้อง
+being||n.|B2|3|สิ่งมีชีวิต
+beneficial||adj.|B2|5|เป็นประโยชน์
+bent||adj.|B2|3|งอ
+beside||prep.|B2|5|ข้างๆ
+besides||prep., adv.|B2|5|นอกจากนี้
+bet||v., n.|B2|3|พนัน
+beyond||prep., adv.|B2|3|เกินกว่า
+bias||n.|B2|5|อคติ
+bid||n., v.|B2|5|การประมูล, ความพยายาม
+billionaire||n.|B2|5|มหาเศรษฐีพันล้าน
+biological||adj.|B2|5|ทางชีวภาพ
+bitter||adj.|B2|3|ขม
+blame||v., n.|B2|3|ตำหนิ
+blanket||n.|B2|5|ผ้าห่ม
+blind||adj.|B2|3|ตาบอด
+bold||adj.|B2|5|กล้าหาญ, ตัวหนา
+bombing||n.|B2|5|การทิ้งระเบิด
+bond||n.|B2|3|ความผูกพัน
+booking||n.|B2|5|การจอง
+bound||adj.|B2|5|ต้อง…แน่ (bound to)
+brake||n., v.|B2|5|เบรก
+breast||n.|B2|3|หน้าอก
+breath||n.|B2|3|ลมหายใจ
+brick||n.|B2|5|อิฐ
+brief||adj.|B2|3|สั้นๆ
+briefly||adv.|B2|5|โดยย่อ
+broad||adj.|B2|3|กว้าง
+broadcast||v., n.|B2|3|ออกอากาศ
+broadcaster||n.|B2|5|ผู้ประกาศข่าว, สถานี
+broadly||adv.|B2|5|โดยกว้างๆ
+budget||n.|B2|3|งบประมาณ
+bug||n.|B2|5|แมลง, บั๊ก
+bullet||n.|B2|3|กระสุน
+bunch||n.|B2|3|พวง, กลุ่ม
+bush||n.|B2|3|พุ่มไม้
+cabin||n.|B2|5|ห้องโดยสาร, กระท่อม
+cable||n.|B2|3|สายเคเบิล
+calculate||v.|B2|3|คำนวณ
+canal||n.|B2|5|คลอง
+cancel||v.|B2|3|ยกเลิก
+cancer||n.|B2|3|มะเร็ง
+candle||n.|B2|5|เทียน
+capable||adj.|B2|3|มีความสามารถ
+capacity||n.|B2|3|ความจุ, ความสามารถ
+caption||n., v.|B2|5|คำบรรยายใต้ภาพ
+capture||v., n.|B2|3|จับ, บันทึก
+carbon||n.|B2|5|คาร์บอน
+cast||n., v.|B2|3|นักแสดงทั้งหมด, หล่อ
+casual||adj.|B2|5|ลำลอง
+cave||n.|B2|5|ถ้ำ
+cell||n.|B2|3|เซลล์
+certainty||n.|B2|5|ความแน่นอน
+certificate||n.|B2|5|ใบรับรอง
+challenging||adj.|B2|5|ท้าทาย
+championship||n.|B2|5|การแข่งขันชิงแชมป์
+characteristic||n., adj.|B2|3|ลักษณะเฉพาะ
+chase||v., n.|B2|5|ไล่ตาม
+cheek||n.|B2|5|แก้ม
+cheer||v., n.|B2|5|เชียร์
+chief||adj., n.|B2|3|หัวหน้า
+choir||n.|B2|5|คณะนักร้องประสานเสียง
+chop||v.|B2|5|สับ
+circuit||n.|B2|5|วงจร
+circumstance||n.|B2|3|สถานการณ์
+cite||v.|B2|3|อ้างอิง
+citizen||n.|B2|3|พลเมือง
+civil||adj.|B2|3|พลเรือน, ทางแพ่ง
+civilization||n.|B2|5|อารยธรรม
+clarify||v.|B2|5|ทำให้ชัดเจน
+classic||adj., n.|B2|3|คลาสสิก
+classify||v.|B2|5|จำแนก
+clerk||n.|B2|5|เสมียน
+cliff||n.|B2|5|หน้าผา
+clinic||n.|B2|5|คลินิก
+clip||n.|B2|5|คลิป
+closely||adv.|B2|3|อย่างใกล้ชิด
+coincidence||n.|B2|5|ความบังเอิญ
+collapse||v., n.|B2|3|ล้มลง, พังทลาย
+collector||n.|B2|5|นักสะสม
+colony||n.|B2|5|อาณานิคม
+colourful||adj.|B2|5|มีสีสัน
+combination||n.|B2|3|การผสมผสาน
+comedian||n.|B2|5|นักแสดงตลก
+comfort||n., v.|B2|3|ความสบาย, ปลอบใจ
+comic||adj., n.|B2|5|การ์ตูน, ตลก
+command||n., v.|B2|3|คำสั่ง
+commander||n.|B2|5|ผู้บัญชาการ
+commission||n., v.|B2|3|คณะกรรมการ, ค่านายหน้า
+commitment||n.|B2|3|ความมุ่งมั่น, พันธะ
+committee||n.|B2|3|คณะกรรมการ
+commonly||adv.|B2|3|โดยทั่วไป
+comparative||adj.|B2|5|เชิงเปรียบเทียบ
+completion||n.|B2|5|การทำให้เสร็จ
+complicated||adj.|B2|3|ซับซ้อน
+component||n.|B2|3|ส่วนประกอบ
+compose||v.|B2|5|แต่ง (เพลง)
+composer||n.|B2|5|นักแต่งเพลง
+compound||n.|B2|5|สารประกอบ
+comprehensive||adj.|B2|5|ครอบคลุม
+comprise||v.|B2|5|ประกอบด้วย
+compulsory||adj.|B2|5|บังคับ
+concentration||n.|B2|3|สมาธิ
+concept||n.|B2|3|แนวคิด
+concern||n., v.|B2|3|ความกังวล
+concerned||adj.|B2|3|กังวล
+concrete||adj., n.|B2|5|คอนกรีต, เป็นรูปธรรม
+conduct||v., n.|B2|3|ดำเนินการ
+confidence||n.|B2|3|ความมั่นใจ
+conflict||n., v.|B2|3|ความขัดแย้ง
+confusing||adj.|B2|3|น่าสับสน
+confusion||n.|B2|5|ความสับสน
+conscious||adj.|B2|3|มีสติ, ตระหนัก
+consequently||adv.|B2|5|ดังนั้น
+conservation||n.|B2|5|การอนุรักษ์
+conservative||adj., n.|B2|3|อนุรักษ์นิยม
+considerable||adj.|B2|5|มากพอสมควร
+considerably||adv.|B2|5|อย่างมาก
+consideration||n.|B2|3|การพิจารณา
+consistent||adj.|B2|3|สม่ำเสมอ
+consistently||adv.|B2|5|อย่างสม่ำเสมอ
+console||n.|B2|5|เครื่องเล่นเกม, ปลอบใจ
+conspiracy||n.|B2|5|การสมรู้ร่วมคิด
+constant||adj.|B2|3|คงที่, ตลอดเวลา
+constantly||adv.|B2|3|อยู่ตลอดเวลา
+construct||v.|B2|3|ก่อสร้าง
+construction||n.|B2|3|การก่อสร้าง
+consult||v.|B2|5|ปรึกษา
+consultant||n.|B2|5|ที่ปรึกษา
+consumption||n.|B2|5|การบริโภค
+contemporary||adj.|B2|3|ร่วมสมัย
+contest||n., v.|B2|3|การประกวด
+contract||n., v.|B2|3|สัญญา
+contribute||v.|B2|3|มีส่วนช่วย
+contribution||n.|B2|3|การมีส่วนร่วม
+controversial||adj.|B2|5|เป็นที่ถกเถียง
+controversy||n.|B2|5|ข้อโต้แย้ง
+convenience||n.|B2|5|ความสะดวก
+convention||n.|B2|5|ธรรมเนียม, การประชุม
+conventional||adj.|B2|5|ตามแบบแผน
+convert||v.|B2|3|แปลง
+convey||v.|B2|5|ถ่ายทอด
+convinced||adj.|B2|3|เชื่อมั่น
+convincing||adj.|B2|5|น่าเชื่อถือ
+cope||v.|B2|5|รับมือ
+core||n., adj.|B2|3|แกนกลาง
+corporate||adj.|B2|3|ของบริษัท
+corporation||n.|B2|5|บริษัท
+corridor||n.|B2|5|ทางเดิน
+council||n.|B2|3|สภา
+counter|long flat surface|n.|B2|5|เคาน์เตอร์
+county||n.|B2|3|เขต, มณฑล
+courage||n.|B2|3|ความกล้าหาญ
+coverage||n.|B2|5|การรายงานข่าว, ความครอบคลุม
+crack||v., n.|B2|5|รอยร้าว
+craft||n. v.|B2|5|งานฝีมือ
+crash||n., v.|B2|3|ชน, ตก
+creation||n.|B2|3|การสร้าง
+creativity||n.|B2|5|ความคิดสร้างสรรค์
+creature||n.|B2|3|สิ่งมีชีวิต
+crew||n.|B2|3|ลูกเรือ, ทีมงาน
+crisis||n.|B2|3|วิกฤต
+criterion||n.|B2|3|เกณฑ์
+critic||n.|B2|3|นักวิจารณ์
+critical||adj.|B2|3|วิพากษ์, สำคัญยิ่ง
+critically||adv.|B2|5|อย่างวิพากษ์
+criticism||n.|B2|3|คำวิจารณ์
+criticize||v.|B2|3|วิจารณ์
+crop||n.|B2|3|พืชผล
+crucial||adj.|B2|3|สำคัญยิ่ง
+cruise||n.|B2|5|การล่องเรือ
+cue||n.|B2|5|สัญญาณ
+cure||v., n.|B2|3|รักษา
+curious||adj.|B2|5|อยากรู้อยากเห็น
+curriculum||n.|B2|5|หลักสูตร
+curve||n., v.|B2|3|เส้นโค้ง
+curved||adj.|B2|3|โค้ง
+cute||adj.|B2|5|น่ารัก
+dairy||n., adj.|B2|5|ผลิตภัณฑ์นม
+dare||v.|B2|5|กล้า
+darkness||n.|B2|5|ความมืด
+database||n.|B2|5|ฐานข้อมูล
+deadline||n.|B2|5|กำหนดส่ง
+deadly||adj.|B2|5|อันตรายถึงชีวิต
+dealer||n.|B2|5|ผู้ค้า
+debate||n., v.|B2|3|การโต้วาที
+debt||n.|B2|3|หนี้
+decent||adj.|B2|3|ดีพอใช้, เหมาะสม
+deck||n.|B2|5|ดาดฟ้าเรือ
+declare||v.|B2|3|ประกาศ
+decline||v., n.|B2|3|ลดลง, ปฏิเสธ
+decoration||n.|B2|3|การตกแต่ง
+decrease||v., n.|B2|3|ลดลง
+deeply||adv.|B2|3|อย่างลึกซึ้ง
+defeat||v., n.|B2|3|พ่ายแพ้, เอาชนะ
+defence||n.|B2|3|การป้องกัน
+defend||v.|B2|3|ป้องกัน
+defender||n.|B2|5|ผู้ป้องกัน, กองหลัง
+delay||v., n.|B2|3|ความล่าช้า
+delete||v.|B2|5|ลบ
+deliberate||adj.|B2|3|จงใจ
+deliberately||adv.|B2|3|โดยเจตนา
+delight||v., n.|B2|3|ความยินดี
+delighted||adj.|B2|3|ยินดีมาก
+delivery||n.|B2|3|การจัดส่ง
+demand||n., v.|B2|3|ความต้องการ, เรียกร้อง
+democracy||n.|B2|5|ประชาธิปไตย
+democratic||adj.|B2|5|เป็นประชาธิปไตย
+demonstrate||v.|B2|3|สาธิต, แสดงให้เห็น
+demonstration||n.|B2|5|การสาธิต, การชุมนุม
+deny||v.|B2|3|ปฏิเสธ
+depart||v.|B2|5|ออกเดินทาง
+dependent||adj.|B2|5|พึ่งพา
+deposit||n. v.|B2|5|เงินมัดจำ, ฝาก
+depressed||adj.|B2|3|หดหู่
+depressing||adj.|B2|3|น่าหดหู่
+depression||n.|B2|5|ภาวะซึมเศร้า
+depth||n.|B2|3|ความลึก
+derive||v.|B2|5|ได้มาจาก
+deserve||v.|B2|3|สมควรได้รับ
+desire||n., v.|B2|3|ความปรารถนา
+desperate||adj.|B2|3|สิ้นหวัง
+desperately||adv.|B2|5|อย่างสิ้นหวัง
+destruction||n.|B2|5|การทำลาย
+detailed||adj.|B2|3|ละเอียด
+detect||v.|B2|3|ตรวจจับ
+determination||n.|B2|5|ความมุ่งมั่น
+devote||v.|B2|5|อุทิศ
+diabetes||n.|B2|5|โรคเบาหวาน
+differ||v.|B2|5|แตกต่าง
+dig||v.|B2|3|ขุด
+disability||n.|B2|5|ความพิการ
+disabled||adj.|B2|5|พิการ
+disagreement||n.|B2|5|ความไม่เห็นด้วย
+disappoint||v.|B2|5|ทำให้ผิดหวัง
+disappointment||n.|B2|5|ความผิดหวัง
+discipline||n.|B2|3|วินัย
+discourage||v.|B2|5|ทำให้ท้อ
+dishonest||adj.|B2|3|ไม่ซื่อสัตย์
+dismiss||v.|B2|3|ไล่ออก, ปัดตก
+disorder||n.|B2|5|ความผิดปกติ
+display||v., n.|B2|3|แสดง
+distant||adj.|B2|5|ห่างไกล
+distinct||adj.|B2|5|ชัดเจน, แตกต่าง
+distinguish||v.|B2|5|แยกแยะ
+distract||v.|B2|5|ทำให้ไขว้เขว
+distribute||v.|B2|3|แจกจ่าย
+distribution||n.|B2|3|การกระจาย
+district||n.|B2|3|เขต
+disturb||v.|B2|5|รบกวน
+dive||v., n.|B2|5|ดำน้ำ
+diverse||adj.|B2|5|หลากหลาย
+diversity||n.|B2|5|ความหลากหลาย
+division||n.|B2|3|การแบ่ง, แผนก
+divorce||n., v.|B2|5|การหย่า
+domestic||adj.|B2|3|ภายในประเทศ, ในบ้าน
+dominant||adj.|B2|5|มีอำนาจเหนือ
+dominate||v.|B2|3|ครอบงำ
+donation||n.|B2|5|การบริจาค
+dot||n.|B2|5|จุด
+downtown||n., adj., adv.|B2|5|ย่านใจกลางเมือง
+downwards||adv.|B2|3|ลงข้างล่าง
+dozen||n., det.|B2|3|โหล
+draft||n., v.|B2|3|ร่าง
+drag||v.|B2|3|ลาก
+dramatic||adj.|B2|3|น่าตื่นเต้น, อย่างมาก
+dramatically||adv.|B2|5|อย่างมาก
+drought||n.|B2|5|ความแห้งแล้ง
+dull||adj.|B2|5|น่าเบื่อ, ทึบ
+dump||v.|B2|5|ทิ้ง
+duration||n.|B2|5|ระยะเวลา
+dynamic||adj. n.|B2|5|มีพลัง
+economics||n.|B2|5|เศรษฐศาสตร์
+economist||n.|B2|5|นักเศรษฐศาสตร์
+ecosystem||n.|B2|5|ระบบนิเวศ
+edit||v.|B2|3|แก้ไข
+edition||n.|B2|3|ฉบับ
+editorial||adj.|B2|5|บทบรรณาธิการ
+efficient||adj.|B2|3|มีประสิทธิภาพ
+efficiently||adv.|B2|5|อย่างมีประสิทธิภาพ
+elbow||n.|B2|5|ข้อศอก
+elderly||adj.|B2|3|ผู้สูงอายุ
+elect||v.|B2|3|เลือกตั้ง
+electronics||n.|B2|5|อิเล็กทรอนิกส์
+elegant||adj.|B2|5|สง่างาม
+elementary||adj.|B2|5|ระดับต้น
+eliminate||v.|B2|5|กำจัด
+elsewhere||adv.|B2|3|ที่อื่น
+embrace||v.|B2|5|โอบกอด, ยอมรับ
+emerge||v.|B2|3|ปรากฏ
+emission||n.|B2|5|การปล่อย (ก๊าซ)
+emotional||adj.|B2|3|ทางอารมณ์
+emphasis||n.|B2|3|การเน้น
+emphasize||v.|B2|3|เน้นย้ำ
+empire||n.|B2|5|จักรวรรดิ
+enable||v.|B2|3|ทำให้สามารถ
+encounter||v., n.|B2|3|พบเจอ
+engage||v.|B2|3|มีส่วนร่วม
+enhance||v.|B2|3|เสริม, ยกระดับ
+enjoyable||adj.|B2|5|สนุก
+enquiry||n.|B2|3|การสอบถาม
+ensure||v.|B2|3|ทำให้แน่ใจ
+entertaining||adj.|B2|5|ให้ความบันเทิง
+enthusiasm||n.|B2|3|ความกระตือรือร้น
+enthusiastic||adj.|B2|3|กระตือรือร้น
+entire||adj.|B2|3|ทั้งหมด
+entirely||adv.|B2|3|โดยสิ้นเชิง
+entrepreneur||n.|B2|5|ผู้ประกอบการ
+envelope||n.|B2|5|ซองจดหมาย
+equip||v.|B2|5|จัดเตรียมอุปกรณ์
+equivalent||n., adj.|B2|5|เทียบเท่า
+era||n.|B2|5|ยุคสมัย
+erupt||v.|B2|5|ปะทุ
+essentially||adv.|B2|5|โดยพื้นฐาน
+establish||v.|B2|3|ก่อตั้ง
+estate||n.|B2|3|ที่ดิน, อสังหาริมทรัพย์
+estimate||v., n.|B2|3|ประมาณการ
+ethic||n.|B2|5|จริยธรรม
+ethical||adj.|B2|3|มีจริยธรรม
+ethnic||adj.|B2|5|ชาติพันธุ์
+evaluate||v.|B2|3|ประเมิน
+evaluation||n.|B2|5|การประเมิน
+evident||adj.|B2|5|ชัดเจน
+evil||adj., n.|B2|3|ชั่วร้าย
+evolution||n.|B2|5|วิวัฒนาการ
+evolve||v.|B2|5|วิวัฒน์
+examination||n.|B2|3|การสอบ, การตรวจ
+exceed||v.|B2|5|เกิน
+exception||n.|B2|5|ข้อยกเว้น
+excessive||adj.|B2|5|มากเกินไป
+exclude||v.|B2|5|ไม่รวม
+excuse||n., v.|B2|3|ข้ออ้าง
+executive||n., adj.|B2|3|ผู้บริหาร
+exhibit||v., n.|B2|5|จัดแสดง
+existence||n.|B2|3|การมีอยู่
+exit||n.|B2|5|ทางออก
+exotic||adj.|B2|5|แปลกใหม่
+expansion||n.|B2|5|การขยายตัว
+expectation||n.|B2|3|ความคาดหวัง
+expense||n.|B2|3|ค่าใช้จ่าย
+expertise||n.|B2|5|ความเชี่ยวชาญ
+exploit||v.|B2|5|ฉวยประโยชน์
+exploration||n.|B2|3|การสำรวจ
+expose||v.|B2|3|เปิดเผย
+exposure||n.|B2|5|การสัมผัส, การเปิดเผย
+extend||v.|B2|3|ขยาย
+extension||n.|B2|5|ส่วนต่อขยาย
+extensive||adj.|B2|5|กว้างขวาง
+extent||n.|B2|3|ขอบเขต
+external||adj.|B2|3|ภายนอก
+extract||n. v.|B2|5|สกัด
+extraordinary||adj.|B2|3|พิเศษ, ไม่ธรรมดา
+fabric||n.|B2|5|ผ้า
+fabulous||adj.|B2|5|ยอดเยี่ยม
+facility||n.|B2|3|สิ่งอำนวยความสะดวก
+failure||n.|B2|3|ความล้มเหลว
+faith||n.|B2|3|ศรัทธา
+fake||adj.|B2|5|ปลอม
+fame||n.|B2|5|ชื่อเสียง
+fantasy||n.|B2|5|จินตนาการ
+fare||n.|B2|5|ค่าโดยสาร
+fault||n.|B2|3|ความผิด
+feather||n.|B2|3|ขนนก
+federal||adj.|B2|5|ของรัฐบาลกลาง
+fee||n.|B2|3|ค่าธรรมเนียม
+feedback||n.|B2|3|ความคิดเห็นป้อนกลับ
+fellow||adj.|B2|3|เพื่อนร่วม…
+fever||n.|B2|5|ไข้
+finance||n., v.|B2|3|การเงิน
+finding||n.|B2|3|ข้อค้นพบ
+firefighter||n.|B2|5|นักดับเพลิง
+firework||n.|B2|5|ดอกไม้ไฟ
+firm||n.|B2|3|บริษัท, แน่น
+firm||adj.|B2|5|บริษัท, แน่น
+firmly||adv.|B2|5|อย่างมั่นคง
+flame||n.|B2|3|เปลวไฟ
+flash||n., v.|B2|3|แสงวาบ
+flavour||n.|B2|5|รสชาติ
+flexible||adj.|B2|3|ยืดหยุ่น
+float||v.|B2|3|ลอย
+folding||adj.|B2|3|พับได้
+follower||n.|B2|5|ผู้ติดตาม
+fond||adj.|B2|5|ชอบ (fond of)
+fool||n.|B2|5|คนโง่
+footprint||n.|B2|5|รอยเท้า
+forbid||v.|B2|5|ห้าม
+forecast||n., v.|B2|5|พยากรณ์
+forgive||v.|B2|3|ให้อภัย
+format||n.|B2|5|รูปแบบ
+formation||n.|B2|5|การก่อตัว
+former||adj.|B2|3|อดีต…, อันแรก
+formerly||adv.|B2|5|แต่ก่อน
+fortunate||adj.|B2|5|โชคดี
+fortune||n.|B2|3|โชค, ทรัพย์สมบัติ
+forum||n.|B2|5|เวที, กระดานสนทนา
+fossil||n.|B2|5|ฟอสซิล
+found||v.|B2|3|ก่อตั้ง
+foundation||n.|B2|5|รากฐาน, มูลนิธิ
+founder||n.|B2|5|ผู้ก่อตั้ง
+fraction||n.|B2|5|เศษส่วน
+fragment||n.|B2|5|ชิ้นส่วน
+framework||n.|B2|5|กรอบงาน
+fraud||n.|B2|5|การฉ้อโกง
+freedom||n.|B2|3|เสรีภาพ
+frequency||n.|B2|3|ความถี่
+frequent||adj.|B2|5|บ่อย
+fulfil||v.|B2|5|ทำให้สำเร็จ
+full-time||adj./adv.|B2|5|เต็มเวลา
+fully||adv.|B2|3|อย่างเต็มที่
+fund||n., v.|B2|3|กองทุน
+fundamental||adj.|B2|3|พื้นฐาน
+funding||n.|B2|3|เงินทุน
+furious||adj.|B2|5|โกรธจัด
+furthermore||adv.|B2|3|ยิ่งไปกว่านั้น
+gain||v., n.|B2|3|ได้รับ
+gaming||n.|B2|5|การเล่นเกม
+gang||n.|B2|3|แก๊ง
+gay||adj.|B2|5|เกย์
+gender||n.|B2|3|เพศ
+gene||n.|B2|5|ยีน
+generate||v.|B2|3|สร้าง, ผลิต
+genetic||adj.|B2|5|ทางพันธุกรรม
+genius||n.|B2|5|อัจฉริยะ
+genre||n.|B2|3|ประเภท (ศิลปะ)
+genuine||adj.|B2|5|แท้จริง
+genuinely||adv.|B2|5|อย่างแท้จริง
+gesture||n.|B2|5|ท่าทาง
+globalization||n.|B2|5|โลกาภิวัตน์
+globe||n.|B2|5|ลูกโลก
+golden||adj.|B2|5|สีทอง
+goodness||n.|B2|5|ความดี
+gorgeous||adj.|B2|5|งดงาม
+govern||v.|B2|3|ปกครอง
+governor||n.|B2|5|ผู้ว่าการ
+grab||v.|B2|3|คว้า
+gradually||adv.|B2|3|ค่อยๆ
+grand||adj.|B2|3|ยิ่งใหญ่
+grant||v., n.|B2|3|ทุน, อนุญาต
+graphic||adj.|B2|5|กราฟิก
+graphics||n.|B2|5|กราฟิก
+greatly||adv.|B2|5|อย่างมาก
+greenhouse||n.|B2|5|เรือนกระจก
+grocery||n.|B2|5|ร้านขายของชำ
+guarantee||v., n.|B2|3|รับประกัน
+guideline||n.|B2|5|แนวทาง
+habitat||n.|B2|5|ถิ่นที่อยู่
+handle||v., n.|B2|3|จัดการ, ที่จับ
+harbour||n.|B2|5|ท่าเรือ
+harm||n., v.|B2|3|อันตราย
+harmful||adj.|B2|3|เป็นอันตราย
+headquarters||n.|B2|5|สำนักงานใหญ่
+heal||v.|B2|5|รักษา, หาย
+healthcare||n.|B2|5|การดูแลสุขภาพ
+hearing||n.|B2|3|การได้ยิน, การพิจารณาคดี
+heaven||n.|B2|3|สวรรค์
+heel||n.|B2|3|ส้นเท้า
+hell||n.|B2|3|นรก
+helmet||n.|B2|5|หมวกกันน็อก
+hence||adv.|B2|5|ดังนั้น
+herb||n.|B2|5|สมุนไพร
+hesitate||v.|B2|3|ลังเล
+hidden||adj.|B2|5|ซ่อนอยู่
+highway||n.|B2|5|ทางหลวง
+hilarious||adj.|B2|5|ตลกมาก
+hip||n.|B2|5|สะโพก
+historian||n.|B2|5|นักประวัติศาสตร์
+hollow||adj.|B2|3|กลวง
+holy||adj.|B2|3|ศักดิ์สิทธิ์
+homeless||adj.|B2|5|ไร้บ้าน
+honesty||n.|B2|5|ความซื่อสัตย์
+honour||n., v.|B2|3|เกียรติ
+hook||n., v.|B2|5|ตะขอ
+hopefully||adv.|B2|5|หวังว่า
+household||n.|B2|3|ครัวเรือน
+housing||n.|B2|3|ที่อยู่อาศัย
+hug||v., n.|B2|5|กอด
+humorous||adj.|B2|3|มีอารมณ์ขัน
+humour||n.|B2|3|อารมณ์ขัน
+hunger||n.|B2|5|ความหิว
+hunting||n.|B2|3|การล่าสัตว์
+hypothesis||n.|B2|5|สมมติฐาน
+icon||n.|B2|5|ไอคอน, สัญลักษณ์
+identical||adj.|B2|5|เหมือนกันทุกประการ
+illusion||n.|B2|5|ภาพลวงตา
+illustrate||v.|B2|3|แสดงให้เห็น, วาดภาพประกอบ
+illustration||n.|B2|3|ภาพประกอบ
+imagination||n.|B2|3|จินตนาการ
+immigration||n.|B2|5|การอพยพเข้าเมือง
+immune||adj.|B2|5|มีภูมิคุ้มกัน
+impatient||adj.|B2|3|ใจร้อน
+implement||v.|B2|5|นำไปปฏิบัติ
+implication||n.|B2|5|ผลที่ตามมา, นัยยะ
+imply||v.|B2|3|บอกเป็นนัย
+impose||v.|B2|3|บังคับใช้
+impress||v.|B2|3|ทำให้ประทับใจ
+impressed||adj.|B2|3|ประทับใจ
+incentive||n.|B2|5|สิ่งจูงใจ
+inch||n.|B2|3|นิ้ว (หน่วยวัด)
+incident||n.|B2|3|เหตุการณ์
+income||n.|B2|3|รายได้
+incorporate||v.|B2|5|รวมเข้าด้วยกัน
+incorrect||adj.|B2|5|ไม่ถูกต้อง
+increasingly||adv.|B2|3|มากขึ้นเรื่อยๆ
+independence||n.|B2|5|ความเป็นอิสระ
+index||n.|B2|5|ดัชนี
+indication||n.|B2|5|สิ่งบ่งชี้
+industrial||adj.|B2|3|อุตสาหกรรม
+inevitable||adj.|B2|5|หลีกเลี่ยงไม่ได้
+infection||n.|B2|3|การติดเชื้อ
+infer||v.|B2|5|อนุมาน
+inflation||n.|B2|5|เงินเฟ้อ
+info||n.|B2|5|ข้อมูล
+inform||v.|B2|3|แจ้ง
+infrastructure||n.|B2|5|โครงสร้างพื้นฐาน
+inhabitant||n.|B2|5|ผู้อยู่อาศัย
+inherit||v.|B2|5|รับมรดก
+initial||adj.|B2|3|เริ่มแรก
+initially||adv.|B2|3|ในตอนแรก
+initiative||n.|B2|3|ความริเริ่ม
+ink||n.|B2|5|หมึก
+inner||adj.|B2|3|ภายใน
+innovation||n.|B2|5|นวัตกรรม
+innovative||adj.|B2|5|สร้างสรรค์ใหม่
+input||n.|B2|5|ข้อมูลเข้า
+inquiry||n.|B2|3|การสอบสวน, การสอบถาม
+insert||v.|B2|5|ใส่เข้าไป
+insight||n.|B2|3|ความเข้าใจลึกซึ้ง
+insist||v.|B2|3|ยืนกราน
+inspector||n.|B2|5|ผู้ตรวจการ
+inspire||v.|B2|3|สร้างแรงบันดาลใจ
+install||v.|B2|3|ติดตั้ง
+installation||n.|B2|5|การติดตั้ง
+instance||n.|B2|3|ตัวอย่าง (for instance)
+instant||adj.|B2|5|ทันที
+instantly||adv.|B2|5|ในทันที
+institute||n.|B2|3|สถาบัน
+institution||n.|B2|3|สถาบัน
+insurance||n.|B2|3|ประกันภัย
+integrate||v.|B2|5|บูรณาการ
+intellectual||adj. n.|B2|5|ทางปัญญา
+intended||adj.|B2|3|ตั้งใจไว้
+intense||adj.|B2|3|เข้มข้น
+interact||v.|B2|5|มีปฏิสัมพันธ์
+interaction||n.|B2|5|ปฏิสัมพันธ์
+internal||adj.|B2|3|ภายใน
+interpret||v.|B2|3|ตีความ, แปล (ล่าม)
+interpretation||n.|B2|5|การตีความ
+interrupt||v.|B2|3|ขัดจังหวะ
+interval||n.|B2|5|ช่วงเวลา, ช่วงพัก
+invade||v.|B2|5|รุกราน
+invasion||n.|B2|5|การรุกราน
+investigation||n.|B2|3|การสืบสวน
+investment||n.|B2|3|การลงทุน
+investor||n.|B2|5|นักลงทุน
+isolate||v.|B2|5|แยกออก
+isolated||adj.|B2|5|โดดเดี่ยว
+jail||n., v.|B2|5|คุก
+jet||n.|B2|5|เครื่องบินเจ็ต
+journalism||n.|B2|5|วารสารศาสตร์
+joy||n.|B2|3|ความสุข
+judgement||n.|B2|3|การตัดสิน, วิจารณญาณ
+junior||adj.|B2|3|รุ่นน้อง, ระดับล่าง
+jury||n.|B2|5|คณะลูกขุน
+justice||n.|B2|3|ความยุติธรรม
+justify||v.|B2|3|ให้เหตุผลรองรับ
+kit||n.|B2|5|ชุดอุปกรณ์
+labour||n.|B2|3|แรงงาน
+ladder||n.|B2|5|บันได (พาด)
+landing||n.|B2|5|การลงจอด
+landscape||n.|B2|3|ภูมิทัศน์
+lane||n.|B2|5|ช่องทาง, ซอย
+largely||adv.|B2|3|ส่วนใหญ่
+lately||adv.|B2|5|เมื่อไม่นานมานี้
+launch||v., n.|B2|3|เปิดตัว
+leadership||n.|B2|3|ความเป็นผู้นำ
+league||n.|B2|3|ลีก
+lean||v.|B2|3|พิง, เอนตัว
+legend||n.|B2|5|ตำนาน
+lens||n.|B2|5|เลนส์
+licence||n.|B2|3|ใบอนุญาต
+lifetime||n.|B2|5|ชั่วชีวิต
+lighting||n.|B2|5|การจัดแสง
+likewise||adv.|B2|5|เช่นเดียวกัน
+limitation||n.|B2|5|ข้อจำกัด
+limited||adj.|B2|3|จำกัด
+literally||adv.|B2|5|ตามตัวอักษร, จริงๆ
+literary||adj.|B2|5|ทางวรรณกรรม
+litre||n.|B2|5|ลิตร
+litter||n.|B2|5|ขยะ (ที่ทิ้งเกลื่อน)
+lively||adj.|B2|3|มีชีวิตชีวา
+load||n., v.|B2|3|น้ำหนักบรรทุก, บรรทุก
+loan||n.|B2|3|เงินกู้
+logical||adj.|B2|3|มีเหตุผล
+logo||n.|B2|5|โลโก้
+long-term||adj., adv.|B2|3|ระยะยาว
+loose||adj.|B2|3|หลวม
+lord||n.|B2|3|ท่านลอร์ด, เจ้านาย
+lottery||n.|B2|5|ลอตเตอรี่
+lower||v.|B2|3|ลดลง, ต่ำกว่า
+loyal||adj.|B2|5|ซื่อสัตย์, จงรักภักดี
+lung||n.|B2|3|ปอด
+lyric||n.|B2|5|เนื้อเพลง
+magnificent||adj.|B2|5|งดงามตระการตา
+maintain||v.|B2|3|รักษาไว้
+majority||n.|B2|3|ส่วนใหญ่
+make-up||n.|B2|5|เครื่องสำอาง
+making||n.|B2|5|การทำ, การผลิต
+manufacture||v.|B2|5|ผลิต
+manufacturing||n.|B2|5|การผลิต
+marathon||n.|B2|5|มาราธอน
+margin||n.|B2|5|ขอบ, ส่วนต่าง
+marker||n.|B2|5|ปากกาเมจิก, เครื่องหมาย
+mass||n., adj.|B2|3|มวล, จำนวนมาก
+massive||adj.|B2|3|ใหญ่มาก
+master||n., v.|B2|3|ปรมาจารย์, เชี่ยวชาญ
+matching||adj.|B2|3|เข้าชุดกัน
+mate||n., v.|B2|5|เพื่อน
+maximum||adj., n.|B2|3|สูงสุด
+mayor||n.|B2|5|นายกเทศมนตรี
+means||n.|B2|3|วิธี
+measurement||n.|B2|3|การวัด
+mechanic||n.|B2|5|ช่างเครื่อง
+mechanical||adj.|B2|5|เชิงกล
+mechanism||n.|B2|5|กลไก
+medal||n.|B2|5|เหรียญรางวัล
+medication||n.|B2|5|ยารักษาโรค
+melt||v.|B2|3|ละลาย
+membership||n.|B2|5|การเป็นสมาชิก
+memorable||adj.|B2|5|น่าจดจำ
+metaphor||n.|B2|5|คำอุปมา
+military||adj., n.|B2|3|ทางทหาร
+miner||n.|B2|5|คนงานเหมือง
+mineral||n.|B2|3|แร่ธาตุ
+minimum||adj., n.|B2|3|ขั้นต่ำ
+minister||n.|B2|3|รัฐมนตรี
+minor||adj.|B2|3|เล็กน้อย
+minority||n.|B2|3|ชนกลุ่มน้อย
+miserable||adj.|B2|5|ทุกข์ใจ
+mission||n.|B2|3|ภารกิจ
+mixed||adj.|B2|3|ผสม
+mode||n.|B2|5|โหมด, รูปแบบ
+modest||adj.|B2|5|ถ่อมตัว, พอประมาณ
+modify||v.|B2|3|ดัดแปลง
+monitor||n., v.|B2|3|ติดตาม, จอ
+monster||n.|B2|5|สัตว์ประหลาด
+monthly||adj.|B2|5|รายเดือน
+monument||n.|B2|5|อนุสาวรีย์
+moral||adj., n.|B2|3|ทางศีลธรรม
+moreover||adv.|B2|5|ยิ่งไปกว่านั้น
+mortgage||n.|B2|5|สินเชื่อบ้าน
+mosque||n.|B2|5|มัสยิด
+motion||n.|B2|5|การเคลื่อนไหว
+motivate||v.|B2|5|จูงใจ
+motivation||n.|B2|5|แรงจูงใจ
+motor||n., adj.|B2|3|มอเตอร์
+mount||v.|B2|3|เพิ่มขึ้น, ปีนขึ้น
+moving||adj.|B2|5|ซาบซึ้ง, เคลื่อนที่
+multiple||adj.|B2|3|หลายอย่าง
+multiply||v.|B2|3|คูณ, เพิ่มทวี
+mysterious||adj.|B2|3|ลึกลับ
+myth||n.|B2|5|ตำนาน, ความเชื่อผิดๆ
+naked||adj.|B2|5|เปลือย
+nasty||adj.|B2|5|น่ารังเกียจ
+navigate||v.|B2|5|นำทาง
+navigation||n.|B2|5|การนำทาง
+nearby||adj., adv.|B2|5|ใกล้เคียง
+neat||adj.|B2|3|เรียบร้อย
+necessity||n.|B2|5|ความจำเป็น
+negotiate||v.|B2|5|เจรจา
+negotiation||n.|B2|5|การเจรจา
+nerve||n.|B2|3|เส้นประสาท
+neutral||adj.|B2|5|เป็นกลาง
+nevertheless||adv.|B2|3|อย่างไรก็ตาม
+newly||adv.|B2|5|เพิ่ง…ใหม่
+nightmare||n.|B2|3|ฝันร้าย
+norm||n.|B2|5|บรรทัดฐาน
+notebook||n.|B2|5|สมุดบันทึก
+notion||n.|B2|3|ความคิด, แนวคิด
+novelist||n.|B2|5|นักเขียนนวนิยาย
+nowadays||adv.|B2|5|ทุกวันนี้
+numerous||adj.|B2|3|จำนวนมาก
+nursing||adj.|B2|5|การพยาบาล
+nutrition||n.|B2|5|โภชนาการ
+obesity||n.|B2|5|โรคอ้วน
+obey||v.|B2|3|เชื่อฟัง
+objective||n., adj.|B2|3|วัตถุประสงค์, ไม่ลำเอียง
+obligation||n.|B2|3|พันธะ, หน้าที่
+observation||n.|B2|3|การสังเกต
+observe||v.|B2|3|สังเกต
+observer||n.|B2|5|ผู้สังเกตการณ์
+obstacle||n.|B2|5|อุปสรรค
+obtain||v.|B2|3|ได้รับ
+occasionally||adv.|B2|3|เป็นครั้งคราว
+occupation||n.|B2|5|อาชีพ, การยึดครอง
+occupy||v.|B2|5|ครอบครอง
+offence||n.|B2|3|ความผิด
+offend||v.|B2|3|ทำให้ขุ่นเคือง
+offender||n.|B2|5|ผู้กระทำผิด
+offensive||adj.|B2|3|ก้าวร้าว, น่ารังเกียจ
+ongoing||adj.|B2|5|ต่อเนื่อง
+opening||n.|B2|3|การเปิด
+openly||adv.|B2|5|อย่างเปิดเผย
+opera||n.|B2|5|อุปรากร
+operate||v.|B2|3|ดำเนินการ, ผ่าตัด
+operator||n.|B2|5|ผู้ควบคุม
+opponent||n.|B2|3|คู่ต่อสู้
+oppose||v.|B2|3|คัดค้าน
+opposed||adj.|B2|3|ต่อต้าน
+opposition||n.|B2|3|ฝ่ายค้าน
+optimistic||adj.|B2|5|มองโลกในแง่ดี
+orchestra||n.|B2|5|วงออร์เคสตรา
+organ||n.|B2|3|อวัยวะ
+organic||adj.|B2|5|อินทรีย์
+origin||n.|B2|3|ต้นกำเนิด
+otherwise||adv.|B2|3|มิฉะนั้น
+outcome||n.|B2|3|ผลลัพธ์
+outer||adj.|B2|3|ด้านนอก
+outfit||n.|B2|5|ชุด
+outline||n., v.|B2|3|โครงร่าง
+output||n.|B2|5|ผลผลิต
+outstanding||adj.|B2|5|โดดเด่น
+overall||adj., adv.|B2|3|โดยรวม
+overcome||v.|B2|5|เอาชนะ
+overnight||adv.|B2|5|ข้ามคืน
+overseas||adv., adj.|B2|5|ต่างประเทศ
+owe||v.|B2|3|เป็นหนี้
+ownership||n.|B2|5|ความเป็นเจ้าของ
+oxygen||n.|B2|5|ออกซิเจน
+pace||n., v.|B2|3|จังหวะ, ความเร็ว
+packet||n.|B2|5|ซอง, ห่อ
+palm||n.|B2|5|ฝ่ามือ, ต้นปาล์ม
+pandemic||n., adj.|B2|5|โรคระบาดทั่วโลก
+panel||n.|B2|3|คณะ, แผง
+panic||n.|B2|5|ตื่นตระหนก
+parade||n.|B2|5|ขบวนพาเหรด
+parallel||adj., n.|B2|5|ขนาน
+parliament||n.|B2|3|รัฐสภา
+part-time||adj./adv.|B2|5|พาร์ตไทม์
+participant||n.|B2|3|ผู้เข้าร่วม
+participation||n.|B2|5|การมีส่วนร่วม
+partly||adv.|B2|3|บางส่วน
+partnership||n.|B2|5|ความร่วมมือ
+passage||n.|B2|3|ข้อความ, ทางผ่าน
+passionate||adj.|B2|5|หลงใหล
+password||n.|B2|5|รหัสผ่าน
+patience||n.|B2|5|ความอดทน
+pause||v.|B2|5|หยุดชั่วคราว
+peer||n.|B2|5|เพื่อนรุ่นเดียวกัน
+penalty||n.|B2|5|บทลงโทษ
+pension||n.|B2|3|เงินบำนาญ
+perceive||v.|B2|5|รับรู้
+perception||n.|B2|5|การรับรู้
+permanent||adj.|B2|3|ถาวร
+permanently||adv.|B2|5|อย่างถาวร
+permit||v., n.|B2|3|อนุญาต, ใบอนุญาต
+perspective||n.|B2|3|มุมมอง
+pharmacy||n.|B2|5|ร้านขายยา
+phase||n.|B2|3|ระยะ, ขั้น
+phenomenon||n.|B2|3|ปรากฏการณ์
+philosophy||n.|B2|3|ปรัชญา
+pile||n., v.|B2|3|กอง
+pill||n.|B2|5|ยาเม็ด
+pitch||n.|B2|3|สนาม, ระดับเสียง
+pity||n.|B2|5|ความสงสาร
+placement||n.|B2|5|การฝึกงาน, การจัดวาง
+plain||adj.|B2|3|เรียบๆ, ธรรมดา
+pointed||adj.|B2|3|แหลม
+popularity||n.|B2|3|ความนิยม
+portion||n.|B2|5|ส่วน
+pose||v.|B2|3|ก่อให้เกิด, โพสท่า
+possess||v.|B2|3|ครอบครอง
+potential||adj., n.|B2|3|ศักยภาพ
+potentially||adv.|B2|5|อาจจะ
+praise||n., v.|B2|3|ชมเชย
+precede||v.|B2|5|มาก่อน
+precious||adj.|B2|5|ล้ำค่า
+precise||adj.|B2|5|แม่นยำ
+precisely||adv.|B2|5|อย่างแม่นยำ
+predictable||adj.|B2|5|คาดเดาได้
+preference||n.|B2|5|ความชอบ
+pregnant||adj.|B2|3|ตั้งครรภ์
+preparation||n.|B2|3|การเตรียมการ
+presence||n.|B2|3|การปรากฏตัว
+preserve||v.|B2|3|รักษา, ถนอม
+preview||n., v.|B2|5|ตัวอย่าง (ก่อนฉาย)
+pride||n.|B2|5|ความภาคภูมิใจ
+primarily||adv.|B2|5|เป็นหลัก
+prime||adj.|B2|3|สำคัญที่สุด
+principal||adj. n.|B2|5|หลัก, อาจารย์ใหญ่
+principle||n.|B2|3|หลักการ
+prior||adj.|B2|5|ก่อนหน้า
+priority||n.|B2|3|ลำดับความสำคัญ
+privacy||n.|B2|3|ความเป็นส่วนตัว
+probability||n.|B2|5|ความน่าจะเป็น
+probable||adj.|B2|5|น่าจะเป็น
+procedure||n.|B2|3|ขั้นตอน
+proceed||v.|B2|5|ดำเนินต่อ
+programming||n.|B2|5|การเขียนโปรแกรม
+progressive||adj.|B2|5|ก้าวหน้า
+prohibit||v.|B2|5|ห้าม
+promising||adj.|B2|5|มีอนาคต
+promotion||n.|B2|5|การเลื่อนตำแหน่ง, โปรโมชัน
+prompt||v.|B2|5|กระตุ้น, ทันที
+proof||n.|B2|3|หลักฐาน
+proportion||n.|B2|5|สัดส่วน
+proposal||n.|B2|3|ข้อเสนอ
+propose||v.|B2|3|เสนอ
+prospect||n.|B2|3|โอกาส, แนวโน้ม
+protection||n.|B2|3|การปกป้อง
+protein||n.|B2|5|โปรตีน
+protester||n.|B2|5|ผู้ประท้วง
+psychological||adj.|B2|5|ทางจิตวิทยา
+psychologist||n.|B2|3|นักจิตวิทยา
+psychology||n.|B2|3|จิตวิทยา
+publication||n.|B2|3|สิ่งพิมพ์
+publicity||n.|B2|5|การประชาสัมพันธ์
+publishing||n.|B2|5|การพิมพ์เผยแพร่
+punk||n.|B2|5|พังก์
+pupil||n.|B2|3|นักเรียน
+purchase||n., v.|B2|3|ซื้อ
+pure||adj.|B2|3|บริสุทธิ์
+pursue||v.|B2|3|ไล่ตาม, มุ่งหา
+pursuit||n.|B2|5|การไล่ตาม
+puzzle||n.|B2|5|ปริศนา
+questionnaire||n.|B2|5|แบบสอบถาม
+racial||adj.|B2|5|ทางเชื้อชาติ
+racism||n.|B2|5|การเหยียดเชื้อชาติ
+racist||adj., n.|B2|5|ผู้เหยียดเชื้อชาติ
+radiation||n.|B2|5|รังสี
+rail||n.|B2|5|ราง
+random||adj.|B2|5|สุ่ม
+rank||n., v.|B2|3|ยศ, อันดับ
+rapid||adj.|B2|3|รวดเร็ว
+rapidly||adv.|B2|3|อย่างรวดเร็ว
+rat||n.|B2|5|หนู
+rating||n.|B2|5|การจัดอันดับ
+raw||adj.|B2|3|ดิบ
+realistic||adj.|B2|3|สมจริง
+reasonable||adj.|B2|3|สมเหตุสมผล
+reasonably||adv.|B2|5|พอสมควร
+rebuild||v.|B2|5|สร้างใหม่
+recall||v.|B2|3|นึกถึง, เรียกคืน
+receiver||n.|B2|5|ผู้รับ, หูโทรศัพท์
+recession||n.|B2|5|ภาวะเศรษฐกิจถดถอย
+reckon||v.|B2|5|คิดว่า
+recognition||n.|B2|5|การยอมรับ, การจดจำ
+recover||v.|B2|3|ฟื้นตัว
+recovery||n.|B2|5|การฟื้นตัว
+recruit||v.|B2|5|รับสมัคร
+recruitment||n.|B2|5|การสรรหา
+reduction||n.|B2|3|การลดลง
+referee||n.|B2|5|กรรมการ
+refugee||n.|B2|5|ผู้ลี้ภัย
+refund||n., v.|B2|5|เงินคืน
+regard||v., n.|B2|3|ถือว่า
+regional||adj.|B2|3|ระดับภูมิภาค
+register||v., n.|B2|3|ลงทะเบียน
+registration||n.|B2|5|การลงทะเบียน
+regret||v., n.|B2|3|เสียใจ
+regulate||v.|B2|5|ควบคุม
+regulation||n.|B2|3|กฎระเบียบ
+reinforce||v.|B2|5|เสริมกำลัง
+relatively||adv.|B2|3|ค่อนข้าง
+relevant||adj.|B2|3|เกี่ยวข้อง
+relief||n.|B2|3|ความโล่งใจ
+relieve||v.|B2|5|บรรเทา
+relieved||adj.|B2|5|โล่งใจ
+rely||v.|B2|3|พึ่งพา
+remark||n., v.|B2|3|ข้อสังเกต
+remarkable||adj.|B2|5|น่าทึ่ง
+reporting||n.|B2|5|การรายงาน
+representative||n., adj.|B2|3|ตัวแทน
+reputation||n.|B2|3|ชื่อเสียง
+requirement||n.|B2|3|ข้อกำหนด
+rescue||v., n.|B2|3|ช่วยเหลือ
+reserve||n., v.|B2|3|จอง, สำรอง
+resident||n., adj.|B2|3|ผู้อยู่อาศัย
+resign||v.|B2|5|ลาออก
+resist||v.|B2|3|ต่อต้าน
+resolution||n.|B2|5|มติ, ความละเอียด
+resolve||v.|B2|3|แก้ไข, ตั้งใจ
+resort||n.|B2|3|รีสอร์ต
+restore||v.|B2|5|ฟื้นฟู
+restrict||v.|B2|5|จำกัด
+restriction||n.|B2|5|ข้อจำกัด
+retail||n.|B2|5|การค้าปลีก
+retain||v.|B2|3|เก็บรักษา
+retirement||n.|B2|5|การเกษียณ
+reveal||v.|B2|3|เปิดเผย
+revenue||n.|B2|5|รายได้
+revision||n.|B2|5|การทบทวน
+revolution||n.|B2|3|การปฏิวัติ
+reward||n., v.|B2|3|รางวัล
+rhythm||n.|B2|3|จังหวะ
+rid||v.|B2|3|กำจัด (get rid of)
+ridiculous||adj.|B2|5|ไร้สาระ
+risky||adj.|B2|5|เสี่ยง
+rival||n., adj.|B2|5|คู่แข่ง
+rob||v.|B2|5|ปล้น
+robbery||n.|B2|5|การปล้น
+rocket||n.|B2|5|จรวด
+romance||n.|B2|5|ความรัก, นิยายรัก
+root||n.|B2|3|ราก
+rose||n.|B2|5|ดอกกุหลาบ
+roughly||adv.|B2|5|โดยประมาณ
+rub||v.|B2|3|ถู
+rubber||n., adj.|B2|3|ยาง
+ruin||v., n.|B2|5|ทำลาย, ซากปรักหักพัง
+rural||adj.|B2|3|ชนบท
+rush||v., n.|B2|3|รีบเร่ง
+satellite||n.|B2|3|ดาวเทียม
+satisfaction||n.|B2|5|ความพึงพอใจ
+satisfied||adj.|B2|3|พอใจ
+satisfy||v.|B2|3|ทำให้พอใจ
+saving||n.|B2|3|เงินออม
+scale||n.|B2|3|ขนาด, มาตราส่วน
+scandal||n.|B2|5|เรื่องอื้อฉาว
+scare||v.|B2|5|ทำให้กลัว
+scenario||n.|B2|5|สถานการณ์สมมุติ
+scheme||n.|B2|3|โครงการ, แผน
+scholar||n.|B2|5|นักวิชาการ
+scholarship||n.|B2|5|ทุนการศึกษา
+scratch||v.|B2|5|ข่วน, รอยขีด
+scream||v., n.|B2|3|กรีดร้อง
+screening||n.|B2|5|การฉาย, การคัดกรอง
+sector||n.|B2|3|ภาคส่วน
+secure||v., adj.|B2|3|ปลอดภัย, มั่นคง
+seek||v.|B2|3|แสวงหา
+seeker||n.|B2|5|ผู้แสวงหา
+select||v.|B2|3|เลือก
+selection||n.|B2|3|การคัดเลือก
+self||n.|B2|3|ตัวตน
+seminar||n.|B2|5|สัมมนา
+senior||adj.|B2|3|อาวุโส
+sensitive||adj.|B2|3|อ่อนไหว
+sensor||n.|B2|5|เซ็นเซอร์
+sequence||n.|B2|3|ลำดับ
+session||n.|B2|3|ช่วง, รอบ
+settle||v.|B2|3|ตั้งรกราก, ยุติ
+settler||n.|B2|5|ผู้ตั้งถิ่นฐาน
+severe||adj.|B2|3|รุนแรง
+severely||adv.|B2|5|อย่างรุนแรง
+sexy||adj.|B2|5|เซ็กซี่
+shade||n.|B2|3|ร่มเงา
+shadow||n.|B2|3|เงา
+shallow||adj.|B2|3|ตื้น
+shame||n.|B2|3|ความอับอาย, น่าเสียดาย
+shaped||adj.|B2|5|มีรูปร่าง…
+shelter||n., v.|B2|3|ที่พักพิง
+shock||n., v.|B2|3|ความตกใจ
+shocked||adj.|B2|3|ตกใจ
+shocking||adj.|B2|5|น่าตกใจ
+shooting||n.|B2|3|การยิง
+shore||n.|B2|5|ฝั่ง
+short-term||adj.|B2|5|ระยะสั้น
+shortage||n.|B2|5|การขาดแคลน
+shortly||adv.|B2|5|ในไม่ช้า
+shot||n.|B2|3|นัด, การยิง, ภาพถ่าย
+sibling||n.|B2|5|พี่น้อง
+signature||n.|B2|5|ลายเซ็น
+significance||n.|B2|5|ความสำคัญ
+significant||adj.|B2|3|สำคัญ
+significantly||adv.|B2|3|อย่างมีนัยสำคัญ
+silence||n.|B2|3|ความเงียบ
+silk||n.|B2|3|ผ้าไหม
+sincere||adj.|B2|3|จริงใจ
+skilled||adj.|B2|5|มีทักษะ
+skull||n.|B2|5|กะโหลก
+slave||n.|B2|5|ทาส
+slide||v., n.|B2|3|ลื่นไถล, สไลด์
+slight||adj.|B2|3|เล็กน้อย
+slip||v.|B2|3|ลื่น
+slogan||n.|B2|5|คำขวัญ
+slope||n., v.|B2|3|ทางลาด
+so-called||adj.|B2|5|ที่เรียกกันว่า
+solar||adj.|B2|3|พลังงานแสงอาทิตย์
+somehow||adv.|B2|5|ไม่ทางใดก็ทางหนึ่ง
+sometime||adv.|B2|5|สักวันหนึ่ง
+somewhat||adv.|B2|3|ค่อนข้าง
+sophisticated||adj.|B2|5|ซับซ้อน, ทันสมัย
+soul||n.|B2|3|วิญญาณ
+spare||adj. v.|B2|5|สำรอง
+specialist||n., adj.|B2|3|ผู้เชี่ยวชาญ
+species||n.|B2|3|สายพันธุ์
+specify||v.|B2|5|ระบุ
+spectacular||adj.|B2|5|น่าตื่นตา
+spectator||n.|B2|5|ผู้ชม
+speculate||v.|B2|5|คาดเดา
+speculation||n.|B2|5|การคาดเดา
+spill||v.|B2|5|ทำหก
+spiritual||adj.|B2|3|ทางจิตวิญญาณ
+spite||n.|B2|5|ความอาฆาต (in spite of = แม้ว่า)
+split||v., n.|B2|3|แยก, แบ่ง
+spoil||v.|B2|5|ทำให้เสีย, ตามใจ
+spokesman||n.|B2|5|โฆษก (ชาย)
+spokesperson||n.|B2|5|โฆษก
+spokeswoman||n.|B2|5|โฆษก (หญิง)
+sponsor||v., n.|B2|3|ผู้สนับสนุน
+sponsorship||n.|B2|5|การสนับสนุน
+sporting||adj.|B2|5|ทางกีฬา
+stable||adj.|B2|3|มั่นคง
+stall||n.|B2|5|แผงขายของ
+stance||n.|B2|5|จุดยืน
+stare||v.|B2|3|จ้องมอง
+status||n.|B2|3|สถานะ
+steadily||adv.|B2|5|อย่างสม่ำเสมอ
+steady||adj.|B2|3|มั่นคง, สม่ำเสมอ
+steam||n.|B2|5|ไอน้ำ
+steel||n.|B2|3|เหล็กกล้า
+steep||adj.|B2|3|ชัน
+sticky||adj.|B2|3|เหนียว
+stimulate||v.|B2|5|กระตุ้น
+stock||n.|B2|3|สต๊อก, หุ้น
+stream||n.|B2|3|ลำธาร, สตรีม
+strengthen||v.|B2|5|เสริมให้แข็งแรง
+stretch||v., n.|B2|3|ยืด
+strict||adj.|B2|3|เข้มงวด
+strictly||adv.|B2|5|อย่างเคร่งครัด
+strike||v., n.|B2|3|ตี, การนัดหยุดงาน
+striking||adj.|B2|5|โดดเด่น
+stroke||n.|B2|5|โรคหลอดเลือดสมอง, ลูบ
+struggle||v., n.|B2|3|ดิ้นรน
+stunning||adj.|B2|5|งดงามมาก
+submit||v.|B2|3|ส่ง (งาน)
+subsequent||adj.|B2|5|ต่อมา
+subsequently||adv.|B2|5|ภายหลัง
+suburb||n.|B2|5|ชานเมือง
+suffering||n.|B2|5|ความทุกข์ทรมาน
+sufficient||adj.|B2|5|เพียงพอ
+sum||n., v.|B2|3|ผลรวม, จำนวนเงิน
+super||adj.|B2|5|ยอดเยี่ยม
+surgeon||n.|B2|5|ศัลยแพทย์
+surgery||n.|B2|3|การผ่าตัด
+surround||v.|B2|3|ล้อมรอบ
+surrounding||adj.|B2|3|โดยรอบ
+survival||n.|B2|5|การอยู่รอด
+survivor||n.|B2|5|ผู้รอดชีวิต
+suspect||v., n.|B2|3|สงสัย, ผู้ต้องสงสัย
+suspend||v.|B2|5|ระงับ, แขวน
+sustainable||adj.|B2|5|ยั่งยืน
+swallow||v.|B2|5|กลืน
+swear||v.|B2|3|สาบาน, สบถ
+sweep||v.|B2|3|กวาด
+sympathetic||adj.|B2|5|เห็นอกเห็นใจ
+sympathy||n.|B2|3|ความเห็นใจ
+tackle||v., n.|B2|5|จัดการ (ปัญหา)
+tag||n.|B2|5|ป้าย, แท็ก
+tale||n.|B2|3|นิทาน
+tank||n.|B2|3|ถัง, รถถัง
+tap||v., n.|B2|5|ก๊อกน้ำ, แตะ
+tattoo||n., v.|B2|5|รอยสัก
+tear||v., n.|B2|3|น้ำตา, ฉีก
+tear||n.|B2|3|น้ำตา, ฉีก
+tease||v.|B2|5|แซว
+technological||adj.|B2|5|ทางเทคโนโลยี
+teens||n.|B2|5|วัยรุ่น (13–19)
+temple||n.|B2|5|วัด
+temporarily||adv.|B2|5|ชั่วคราว
+temporary||adj.|B2|3|ชั่วคราว
+tendency||n.|B2|5|แนวโน้ม
+tension||n.|B2|5|ความตึงเครียด
+terminal||n. adj.|B2|5|อาคารผู้โดยสาร
+terms||n.|B2|5|เงื่อนไข
+terribly||adv.|B2|5|อย่างมาก, อย่างแย่
+terrify||v.|B2|5|ทำให้หวาดกลัว
+territory||n.|B2|5|อาณาเขต
+terror||n.|B2|5|ความหวาดกลัว
+terrorism||n.|B2|5|การก่อการร้าย
+terrorist||n.|B2|5|ผู้ก่อการร้าย
+testing||n.|B2|5|การทดสอบ
+textbook||n.|B2|5|หนังสือเรียน
+theft||n.|B2|5|การโจรกรรม
+therapist||n.|B2|5|นักบำบัด
+therapy||n.|B2|3|การบำบัด
+thesis||n.|B2|5|วิทยานิพนธ์
+thorough||adj.|B2|5|ละเอียดถี่ถ้วน
+thoroughly||adv.|B2|5|อย่างละเอียด
+threat||n.|B2|3|ภัยคุกคาม
+threaten||v.|B2|3|ขู่
+thumb||n.|B2|5|นิ้วโป้ง
+thus||adv.|B2|3|ดังนั้น
+timeline||n.|B2|5|ลำดับเวลา
+timing||n.|B2|5|จังหวะเวลา
+tissue||n.|B2|5|กระดาษทิชชู, เนื้อเยื่อ
+ton||n.|B2|5|ตัน
+tone||n.|B2|3|น้ำเสียง
+tonne||n.|B2|5|ตัน (เมตริก)
+tough||adj.|B2|3|ยาก, แข็งแกร่ง
+tournament||n.|B2|5|การแข่งขัน
+trace||v., n.|B2|5|ร่องรอย
+trading||n.|B2|5|การซื้อขาย
+tragedy||n.|B2|5|โศกนาฏกรรม
+tragic||adj.|B2|5|น่าเศร้า
+trait||n.|B2|5|ลักษณะนิสัย
+transfer||v., n.|B2|3|โอน, ย้าย
+transform||v.|B2|3|เปลี่ยนรูป
+transition||n.|B2|3|การเปลี่ยนผ่าน
+transmit||v.|B2|5|ส่งสัญญาณ
+transportation||n.|B2|5|การขนส่ง
+trap||v., n.|B2|5|กับดัก
+treasure||n.|B2|5|สมบัติ
+trial||n.|B2|3|การทดลอง, การพิจารณาคดี
+tribe||n.|B2|5|เผ่า
+trigger||v. n.|B2|5|กระตุ้น
+trillion||number|B2|5|ล้านล้าน
+troop||n.|B2|5|กองทหาร
+tropical||adj.|B2|3|เขตร้อน
+truly||adv.|B2|3|อย่างแท้จริง
+trust||n., v.|B2|3|ความไว้วางใจ
+tsunami||n.|B2|5|สึนามิ
+tune||n.|B2|3|ทำนอง
+tunnel||n.|B2|3|อุโมงค์
+ultimate||adj.|B2|5|สูงสุด
+ultimately||adv.|B2|3|ในที่สุด
+unacceptable||adj.|B2|5|ยอมรับไม่ได้
+uncertainty||n.|B2|5|ความไม่แน่นอน
+unconscious||adj.|B2|3|หมดสติ
+undergo||v.|B2|5|ผ่าน, ได้รับ
+undertake||v.|B2|5|รับผิดชอบดำเนินการ
+unexpected||adj.|B2|3|ไม่คาดคิด
+unfold||v.|B2|5|คลี่, เผยออกมา
+unfortunate||adj.|B2|5|โชคร้าย
+unique||adj.|B2|3|เป็นเอกลักษณ์
+unite||v.|B2|5|รวมกัน
+unity||n.|B2|5|ความสามัคคี
+universal||adj.|B2|5|สากล
+universe||n.|B2|3|จักรวาล
+unknown||adj.|B2|3|ไม่รู้จัก
+upon||prep.|B2|3|บน, เมื่อ
+upper||adj.|B2|3|ข้างบน
+upwards||adv.|B2|3|ขึ้นข้างบน
+urban||adj.|B2|3|ในเมือง
+urge||v.|B2|3|กระตุ้น, เร่งเร้า
+urgent||adj.|B2|5|เร่งด่วน
+usage||n.|B2|5|การใช้
+useless||adj.|B2|5|ไร้ประโยชน์
+vaccinate||v.|B2|5|ฉีดวัคซีน
+vaccination||n.|B2|5|การฉีดวัคซีน
+vaccine||n.|B2|3|วัคซีน
+valid||adj.|B2|5|ใช้ได้, ถูกต้อง
+variation||n.|B2|5|ความแตกต่าง
+vary||v.|B2|3|แตกต่างกัน
+vast||adj.|B2|3|กว้างใหญ่
+venue||n.|B2|3|สถานที่จัดงาน
+vertical||adj.|B2|5|แนวตั้ง
+via||prep.|B2|3|ผ่านทาง
+victory||n.|B2|3|ชัยชนะ
+viewpoint||n.|B2|5|มุมมอง
+villain||n.|B2|5|ตัวร้าย
+violence||n.|B2|3|ความรุนแรง
+virtual||adj.|B2|3|เสมือนจริง
+visa||n.|B2|5|วีซ่า
+visible||adj.|B2|5|มองเห็นได้
+vision||n.|B2|3|วิสัยทัศน์, การมองเห็น
+visual||adj.|B2|3|ทางการมองเห็น
+vital||adj.|B2|3|สำคัญยิ่ง
+vitamin||n.|B2|3|วิตามิน
+volume||n.|B2|3|ปริมาณ, ระดับเสียง
+voluntary||adj.|B2|5|โดยสมัครใจ
+voting||n.|B2|5|การลงคะแนน
+wage||n.|B2|3|ค่าจ้าง
+wander||v.|B2|5|เดินเตร่
+warming||n.|B2|5|การอุ่นขึ้น
+weakness||n.|B2|3|จุดอ่อน
+wealth||n.|B2|3|ความมั่งคั่ง
+wealthy||adj.|B2|3|ร่ำรวย
+weekly||adj.|B2|5|รายสัปดาห์
+weird||adj.|B2|5|แปลก
+welfare||n.|B2|5|สวัสดิการ
+well-being||n.|B2|3|ความเป็นอยู่ที่ดี
+wheat||n.|B2|5|ข้าวสาลี
+whereas||conj.|B2|3|ในขณะที่
+wherever||conj.|B2|3|ที่ไหนก็ตาม
+whilst||conj.|B2|5|ขณะที่
+whisper||v., n.|B2|5|กระซิบ
+whoever||pron.|B2|5|ใครก็ตาม
+whom||pron.|B2|3|ผู้ซึ่ง (กรรม)
+widely||adv.|B2|3|อย่างกว้างขวาง
+widespread||adj.|B2|5|แพร่หลาย
+wildlife||n.|B2|3|สัตว์ป่า
+willing||adj.|B2|3|เต็มใจ
+wind||v.|B2|3|พัน, หมุน (wind up)
+wire||n.|B2|3|สายไฟ
+wisdom||n.|B2|5|ปัญญา
+wise||adj.|B2|3|ฉลาด
+withdraw||v.|B2|5|ถอน
+witness||n., v.|B2|3|พยาน
+workforce||n.|B2|5|แรงงาน
+workplace||n.|B2|5|ที่ทำงาน
+workshop||n.|B2|5|เวิร์กช็อป
+worm||n.|B2|5|หนอน
+wound||n., v.|B2|3|บาดแผล
+wrap||v.|B2|3|ห่อ
+wrist||n.|B2|5|ข้อมือ
+zone||n.|B2|3|โซน
+abolish||v.|C1|5|ยกเลิก (กฎหมาย, ระบบ)
+abortion||n.|C1|5|การทำแท้ง
+absence||n.|C1|5|การขาด, การไม่อยู่
+absent||adj.|C1|5|ขาด, ไม่อยู่
+absurd||adj.|C1|5|ไร้สาระ
+abundance||n.|C1|5|ความอุดมสมบูรณ์
+abuse||n., v.|C1|5|การทารุณ, ใช้ในทางที่ผิด
+academy||n.|C1|5|สถาบัน
+accelerate||v.|C1|5|เร่ง
+acceptance||n.|C1|5|การยอมรับ
+accessible||adj.|C1|5|เข้าถึงได้
+accessory||n.|C1|5|อุปกรณ์เสริม
+accomplishment||n.|C1|5|ความสำเร็จ
+accordance||n.|C1|5|ความสอดคล้อง (in accordance with)
+accordingly||adv.|C1|5|ตามนั้น
+accountability||n.|C1|5|ความรับผิดชอบที่ตรวจสอบได้
+accountable||adj.|C1|5|ต้องรับผิดชอบ
+accumulate||v.|C1|5|สะสม
+accumulation||n.|C1|5|การสะสม
+accusation||n.|C1|5|ข้อกล่าวหา
+accused||n.|C1|5|ผู้ถูกกล่าวหา
+acquisition||n.|C1|5|การได้มา, การซื้อกิจการ
+acre||n.|C1|5|เอเคอร์
+activation||n.|C1|5|การเปิดใช้งาน
+activist||n.|C1|5|นักเคลื่อนไหว
+acute||adj.|C1|5|เฉียบพลัน, รุนแรง
+adaptation||n.|C1|5|การปรับตัว, การดัดแปลง
+adhere||v.|C1|5|ยึดถือ, ติด
+adjacent||adj.|C1|5|ติดกัน
+adjustment||n.|C1|5|การปรับ
+administer||v.|C1|5|บริหาร, ให้ (ยา)
+administrative||adj.|C1|5|ด้านการบริหาร
+administrator||n.|C1|5|ผู้บริหาร
+admission||n.|C1|5|การรับเข้า, ค่าเข้า
+adolescent||n.|C1|5|วัยรุ่น
+adoption||n.|C1|5|การรับเลี้ยง, การนำมาใช้
+adverse||adj.|C1|5|เป็นผลเสีย
+advocate||n., v.|C1|5|ผู้สนับสนุน, สนับสนุน
+aesthetic||adj.|C1|5|ทางสุนทรียะ
+affection||n.|C1|5|ความรักใคร่
+aftermath||n.|C1|5|ผลพวง
+aggression||n.|C1|5|ความก้าวร้าว
+agricultural||adj.|C1|5|ทางการเกษตร
+aide||n.|C1|5|ผู้ช่วย
+albeit||conj.|C1|5|แม้ว่า
+alert||v., n., adj.|C1|5|ตื่นตัว, แจ้งเตือน
+algorithm||n.|C1|5|อัลกอริทึม
+align||v.|C1|5|จัดแนว, สอดคล้อง
+alignment||n.|C1|5|การจัดแนว
+alike||adv., adj.|C1|5|เหมือนกัน
+all-time||adj.|C1|5|ตลอดกาล
+allegation||n.|C1|5|ข้อกล่าวหา
+allege||v.|C1|5|กล่าวหา
+allegedly||adv.|C1|5|ตามที่กล่าวหา
+alliance||n.|C1|5|พันธมิตร
+allocate||v.|C1|5|จัดสรร
+allocation||n.|C1|5|การจัดสรร
+allowance||n.|C1|5|เบี้ยเลี้ยง
+ally||n.|C1|5|พันธมิตร
+alongside||prep.|C1|5|เคียงข้าง
+aluminium||n.|C1|5|อะลูมิเนียม
+amateur||adj., n.|C1|5|มือสมัครเล่น
+ambassador||n.|C1|5|เอกอัครราชทูต
+amend||v.|C1|5|แก้ไข (กฎหมาย)
+amendment||n.|C1|5|การแก้ไขเพิ่มเติม
+amid||prep.|C1|5|ท่ามกลาง
+analogy||n.|C1|5|การเปรียบเทียบ
+analytics||n.|C1|5|การวิเคราะห์ข้อมูล
+anchor||n.|C1|5|สมอเรือ, ผู้ประกาศข่าว
+angel||n.|C1|5|นางฟ้า
+anonymous||adj.|C1|5|ไม่ระบุชื่อ
+appealing||adj.|C1|5|น่าดึงดูด
+appetite||n.|C1|5|ความอยากอาหาร
+applaud||v.|C1|5|ปรบมือ, ชื่นชม
+applicable||adj.|C1|5|ใช้ได้
+appoint||v.|C1|5|แต่งตั้ง
+appreciation||n.|C1|5|การเห็นคุณค่า
+architectural||adj.|C1|5|ทางสถาปัตยกรรม
+archive||n.|C1|5|คลังเอกสาร
+arena||n.|C1|5|สนามกีฬา, เวที
+arguably||adv.|C1|5|อาจกล่าวได้ว่า
+arm||v.|C1|5|ติดอาวุธ
+array||n.|C1|5|ชุด, แถว
+articulate||v.|C1|5|พูดชัดเจน
+ash||n.|C1|5|เถ้า
+aspiration||n.|C1|5|ความปรารถนา
+aspire||v.|C1|5|ใฝ่ฝัน
+assassination||n.|C1|5|การลอบสังหาร
+assault||n., v.|C1|5|การทำร้าย
+assemble||v.|C1|5|ประกอบ, ชุมนุม
+assembly||n.|C1|5|การประชุม, การประกอบ
+assert||v.|C1|5|ยืนยัน
+assertion||n.|C1|5|การยืนยัน
+assurance||n.|C1|5|การรับประกัน
+asylum||n.|C1|5|การลี้ภัย
+attain||v.|C1|5|บรรลุ
+attendance||n.|C1|5|การเข้าร่วม
+attorney||n.|C1|5|ทนายความ
+attribute||v., n.|C1|5|คุณลักษณะ, ระบุว่าเป็นผลจาก
+audit||n.|C1|5|การตรวจสอบบัญชี
+authentic||adj.|C1|5|แท้
+authorize||v.|C1|5|อนุญาต
+auto||n.|C1|5|รถยนต์
+autonomy||n.|C1|5|ความเป็นอิสระ
+availability||n.|C1|5|ความพร้อมใช้
+await||v.|C1|5|รอคอย
+awkward||adj.|C1|5|อึดอัด
+backdrop||n.|C1|5|ฉากหลัง
+backing||n.|C1|5|การสนับสนุน
+backup||n.|C1|5|สำรอง
+bail||n.|C1|5|ประกันตัว
+ballot||n.|C1|5|บัตรเลือกตั้ง
+bang||v., n.|C1|5|เสียงดังปัง
+banner||n.|C1|5|ป้ายผ้า
+bare||adj.|C1|5|เปลือย, เปล่า
+barrel||n.|C1|5|ถัง, บาร์เรล
+bass||n.|C1|5|เสียงทุ้ม, เบส
+battlefield||n.|C1|5|สนามรบ
+beam||n.|C1|5|ลำแสง, คาน
+beast||n.|C1|5|สัตว์ร้าย
+behalf||n.|C1|5|ในนามของ (on behalf of)
+beloved||adj.|C1|5|เป็นที่รัก
+bench||n.|C1|5|ม้านั่ง
+benchmark||n.|C1|5|เกณฑ์มาตรฐาน
+beneath||prep.|C1|5|ข้างใต้
+beneficiary||n.|C1|5|ผู้รับผลประโยชน์
+betray||v.|C1|5|ทรยศ
+bind||v.|C1|5|ผูกมัด
+biography||n.|C1|5|ชีวประวัติ
+bishop||n.|C1|5|บาทหลวง
+bizarre||adj.|C1|5|แปลกประหลาด
+blade||n.|C1|5|ใบมีด
+blast||n., v.|C1|5|การระเบิด
+blaze||n., v.|C1|5|เพลิงไหม้
+bleed||v.|C1|5|เลือดออก
+blend||v.|C1|5|ผสมผสาน
+bless||v.|C1|5|อวยพร
+blessing||n.|C1|5|พร, สิ่งดีงาม
+blow||n.|C1|5|การโจมตี, ความผิดหวัง
+boast||v.|C1|5|โอ้อวด
+bolster||v.|C1|5|เสริมกำลัง
+bonus||n.|C1|5|โบนัส
+boom||n.|C1|5|การเฟื่องฟู
+boost||v., n.|C1|5|กระตุ้น, เพิ่ม
+bounce||v.|C1|5|กระดอน
+boundary||n.|C1|5|เขตแดน
+bout||n.|C1|5|ช่วง (อาการ), ยก
+bow||v., n.|C1|5|โค้งคำนับ, คันธนู
+breach||n., v.|C1|5|การละเมิด
+breakdown||n.|C1|5|การพังทลาย, การแจกแจง
+breakthrough||n.|C1|5|ความก้าวหน้าครั้งสำคัญ
+breed||v., n.|C1|5|สายพันธุ์, ผสมพันธุ์
+broadband||n.|C1|5|บรอดแบนด์
+browser||n.|C1|5|เบราว์เซอร์
+brutal||adj.|C1|5|โหดเหี้ยม
+buck||n.|C1|5|ดอลลาร์ (ภาษาพูด)
+buddy||n.|C1|5|เพื่อน
+buffer||n.|C1|5|กันชน
+bulk||n.|C1|5|ปริมาณมาก
+burden||n.|C1|5|ภาระ
+burial||n.|C1|5|การฝังศพ
+burst||v.|C1|5|ระเบิด, ปะทุ
+buzz||v., n.|C1|5|เสียงหึ่ง, ความตื่นเต้น
+cabinet||n.|C1|5|คณะรัฐมนตรี, ตู้
+calculation||n.|C1|5|การคำนวณ
+cancellation||n.|C1|5|การยกเลิก
+canvas||n.|C1|5|ผ้าใบ
+capability||n.|C1|5|ความสามารถ
+capitalism||n.|C1|5|ทุนนิยม
+capitalist||adj.|C1|5|นายทุน
+cargo||n.|C1|5|สินค้าบรรทุก
+carriage||n.|C1|5|ตู้รถไฟ, รถม้า
+carve||v.|C1|5|แกะสลัก
+casino||n.|C1|5|คาสิโน
+casualty||n.|C1|5|ผู้บาดเจ็บหรือเสียชีวิต
+catalogue||n.|C1|5|แคตตาล็อก
+cater||v.|C1|5|จัดเลี้ยง, ตอบสนอง
+cattle||n.|C1|5|วัวควาย
+caution||n.|C1|5|ความระมัดระวัง
+cautious||adj.|C1|5|ระมัดระวัง
+cease||v.|C1|5|หยุด
+cemetery||n.|C1|5|สุสาน
+chamber||n.|C1|5|ห้อง, สภา
+chaos||n.|C1|5|ความโกลาหล
+characterize||v.|C1|5|เป็นลักษณะของ
+charm||n.|C1|5|เสน่ห์
+charming||adj.|C1|5|มีเสน่ห์
+charter||n.|C1|5|กฎบัตร, เช่าเหมา
+chill||n., v.|C1|5|ความเย็น, ชิล
+chronic||adj.|C1|5|เรื้อรัง
+chunk||n.|C1|5|ก้อน, ชิ้นใหญ่
+circulate||v.|C1|5|หมุนเวียน
+circulation||n.|C1|5|การหมุนเวียน
+citizenship||n.|C1|5|สัญชาติ
+civic||adj.|C1|5|ของพลเมือง
+civilian||n., adj.|C1|5|พลเรือน
+clarity||n.|C1|5|ความชัดเจน
+clash||n.|C1|5|ปะทะ
+classification||n.|C1|5|การจำแนก
+cling||v.|C1|5|เกาะ, ยึดติด
+clinical||adj.|C1|5|ทางคลินิก
+closure||n.|C1|5|การปิด
+cluster||n.|C1|5|กลุ่ม
+coalition||n.|C1|5|รัฐบาลผสม, แนวร่วม
+coastal||adj.|C1|5|ชายฝั่ง
+cocktail||n.|C1|5|ค็อกเทล
+cognitive||adj.|C1|5|ทางการรับรู้
+coincide||v.|C1|5|เกิดพร้อมกัน
+collaborate||v.|C1|5|ร่วมมือ
+collaboration||n.|C1|5|ความร่วมมือ
+collective||adj.|C1|5|ร่วมกัน
+collision||n.|C1|5|การชน
+columnist||n.|C1|5|คอลัมนิสต์
+combat||n., v.|C1|5|การต่อสู้
+comeback||n.|C1|5|การกลับมา
+commence||v.|C1|5|เริ่มต้น
+commentary||n.|C1|5|คำบรรยาย
+commentator||n.|C1|5|ผู้บรรยาย
+commerce||n.|C1|5|การพาณิชย์
+commissioner||n.|C1|5|ผู้บัญชาการ, กรรมาธิการ
+commodity||n.|C1|5|สินค้าโภคภัณฑ์
+communist||adj.|C1|5|คอมมิวนิสต์
+companion||n.|C1|5|เพื่อนร่วมทาง
+comparable||adj.|C1|5|เทียบเคียงได้
+compassion||n.|C1|5|ความเมตตา
+compel||v.|C1|5|บังคับ
+compelling||adj.|C1|5|น่าสนใจมาก, หนักแน่น
+compensate||v.|C1|5|ชดเชย
+compensation||n.|C1|5|ค่าชดเชย
+competence||n.|C1|5|ความสามารถ
+competent||adj.|C1|5|มีความสามารถ
+compile||v.|C1|5|รวบรวม
+complement||v.|C1|5|เติมเต็ม
+complexity||n.|C1|5|ความซับซ้อน
+compliance||n.|C1|5|การปฏิบัติตาม
+complication||n.|C1|5|ภาวะแทรกซ้อน
+comply||v.|C1|5|ปฏิบัติตาม
+composition||n.|C1|5|องค์ประกอบ, การแต่ง
+compromise||n., v.|C1|5|ประนีประนอม
+conceal||v.|C1|5|ปกปิด
+concede||v.|C1|5|ยอมรับ (อย่างไม่เต็มใจ)
+conceive||v.|C1|5|คิดขึ้น, ตั้งครรภ์
+concession||n.|C1|5|การยอมให้, สัมปทาน
+condemn||v.|C1|5|ประณาม
+confess||v.|C1|5|สารภาพ
+confession||n.|C1|5|คำสารภาพ
+configuration||n.|C1|5|การกำหนดค่า
+confine||v.|C1|5|จำกัด, กักขัง
+confirmation||n.|C1|5|การยืนยัน
+confront||v.|C1|5|เผชิญหน้า
+confrontation||n.|C1|5|การเผชิญหน้า
+congratulate||v.|C1|5|แสดงความยินดี
+congregation||n.|C1|5|ชุมนุมผู้นับถือ
+congressional||adj.|C1|5|ของรัฐสภา
+connectivity||n.|C1|5|การเชื่อมต่อ
+conquer||v.|C1|5|พิชิต
+conscience||n.|C1|5|มโนธรรม
+consciousness||n.|C1|5|จิตสำนึก
+consecutive||adj.|C1|5|ติดต่อกัน
+consensus||n.|C1|5|ฉันทามติ
+consent||n., v.|C1|5|ความยินยอม
+conserve||v.|C1|5|อนุรักษ์
+consistency||n.|C1|5|ความสม่ำเสมอ
+consolidate||v.|C1|5|รวม, เสริมให้มั่นคง
+constituency||n.|C1|5|เขตเลือกตั้ง
+constitute||v.|C1|5|ประกอบเป็น
+constitution||n.|C1|5|รัฐธรรมนูญ
+constitutional||adj.|C1|5|ตามรัฐธรรมนูญ
+constraint||n.|C1|5|ข้อจำกัด
+consultation||n.|C1|5|การปรึกษา
+contemplate||v.|C1|5|ไตร่ตรอง
+contempt||n.|C1|5|การดูหมิ่น
+contend||v.|C1|5|โต้แย้ง, แข่งขัน
+contender||n.|C1|5|ผู้แข่งขัน
+content||adj.|C1|5|พอใจ
+contention||n.|C1|5|การโต้แย้ง
+continually||adv.|C1|5|อย่างต่อเนื่อง
+contractor||n.|C1|5|ผู้รับเหมา
+contrary||adj., n.|C1|5|ตรงกันข้าม
+contributor||n.|C1|5|ผู้มีส่วนร่วม
+conversion||n.|C1|5|การแปลง
+convict||v.|C1|5|ตัดสินว่ามีความผิด, นักโทษ
+conviction||n.|C1|5|ความเชื่อมั่น, การตัดสินลงโทษ
+cooperate||v.|C1|5|ร่วมมือ
+cooperation||n.|C1|5|ความร่วมมือ
+cooperative||adj.|C1|5|ให้ความร่วมมือ, สหกรณ์
+coordinate||v.|C1|5|ประสานงาน
+coordination||n.|C1|5|การประสานงาน
+coordinator||n.|C1|5|ผู้ประสานงาน
+cop||n.|C1|5|ตำรวจ (ภาษาพูด)
+copper||n.|C1|5|ทองแดง
+copyright||n.|C1|5|ลิขสิทธิ์
+correction||n.|C1|5|การแก้ไข
+correlate||v.|C1|5|สัมพันธ์กัน
+correlation||n.|C1|5|ความสัมพันธ์
+correspond||v.|C1|5|สอดคล้อง, ติดต่อทางจดหมาย
+correspondent||n.|C1|5|ผู้สื่อข่าว
+corresponding||adj.|C1|5|ที่สอดคล้องกัน
+corrupt||adj.|C1|5|ทุจริต
+corruption||n.|C1|5|การทุจริต
+costly||adj.|C1|5|มีค่าใช้จ่ายสูง
+councillor||n.|C1|5|สมาชิกสภา
+counselling||n.|C1|5|การให้คำปรึกษา
+counsellor||n.|C1|5|ผู้ให้คำปรึกษา
+counter|argue against|v.|C1|5|โต้แย้ง
+counterpart||n.|C1|5|คู่เทียบ
+countless||adj.|C1|5|นับไม่ถ้วน
+coup||n.|C1|5|รัฐประหาร
+courtesy||n.|C1|5|ความสุภาพ
+crawl||v.|C1|5|คลาน
+creator||n.|C1|5|ผู้สร้าง
+credibility||n.|C1|5|ความน่าเชื่อถือ
+credible||adj.|C1|5|น่าเชื่อถือ
+creep||v.|C1|5|ย่อง
+critique||n.|C1|5|บทวิจารณ์
+crown||n.|C1|5|มงกุฎ
+crude||adj.|C1|5|หยาบ, ดิบ
+crush||v.|C1|5|บดขยี้
+cryptocurrency||n.|C1|5|คริปโทเคอร์เรนซี
+crystal||n.|C1|5|คริสตัล
+cult||n., adj.|C1|5|ลัทธิ
+cultivate||v.|C1|5|เพาะปลูก, บ่มเพาะ
+curiosity||n.|C1|5|ความอยากรู้
+custody||n.|C1|5|การควบคุมตัว, สิทธิ์ดูแลบุตร
+dam||n.|C1|5|เขื่อน
+damaging||adj.|C1|5|สร้างความเสียหาย
+dawn||n.|C1|5|รุ่งอรุณ
+debris||n.|C1|5|เศษซาก
+debut||n.|C1|5|การเปิดตัวครั้งแรก
+decision-making||n.|C1|5|การตัดสินใจ
+decisive||adj.|C1|5|เด็ดขาด
+declaration||n.|C1|5|คำประกาศ
+dedicated||adj.|C1|5|ทุ่มเท
+dedication||n.|C1|5|ความทุ่มเท
+deed||n.|C1|5|การกระทำ
+deem||v.|C1|5|ถือว่า
+default||n.|C1|5|ค่าเริ่มต้น, ผิดนัดชำระ
+defect||n.|C1|5|ข้อบกพร่อง
+defensive||adj.|C1|5|เชิงป้องกัน
+deficiency||n.|C1|5|การขาด
+deficit||n.|C1|5|การขาดดุล
+defy||v.|C1|5|ท้าทาย, ขัดขืน
+delegate||n.|C1|5|ผู้แทน, มอบหมาย
+delegation||n.|C1|5|คณะผู้แทน
+delicate||adj.|C1|5|บอบบาง
+demon||n.|C1|5|ปีศาจ
+denial||n.|C1|5|การปฏิเสธ
+denounce||v.|C1|5|ประณาม
+dense||adj.|C1|5|หนาแน่น
+density||n.|C1|5|ความหนาแน่น
+dependence||n.|C1|5|การพึ่งพา
+depict||v.|C1|5|พรรณนา, แสดงภาพ
+deploy||v.|C1|5|ส่งไปประจำการ, นำไปใช้
+deployment||n.|C1|5|การส่งไปประจำการ
+deprive||v.|C1|5|พราก, ทำให้ขาด
+deputy||n.|C1|5|รอง (ตำแหน่ง)
+descend||v.|C1|5|ลงมา
+descent||n.|C1|5|การลงมา, เชื้อสาย
+designate||v.|C1|5|กำหนด
+desirable||adj.|C1|5|น่าปรารถนา
+desktop||n.|C1|5|คอมพิวเตอร์ตั้งโต๊ะ
+destructive||adj.|C1|5|ทำลายล้าง
+detain||v.|C1|5|กักตัว
+detection||n.|C1|5|การตรวจจับ
+detention||n.|C1|5|การกักขัง
+deteriorate||v.|C1|5|เสื่อมลง
+devastate||v.|C1|5|ทำลายล้าง
+devastating||adj.|C1|5|ร้ายแรงมาก
+devil||n.|C1|5|ปีศาจ
+devise||v.|C1|5|คิดค้น
+diagnose||v.|C1|5|วินิจฉัย
+diagnosis||n.|C1|5|การวินิจฉัย
+dictate||v.|C1|5|สั่งการ, บอกให้เขียน
+differentiate||v.|C1|5|แยกแยะ
+dignity||n.|C1|5|ศักดิ์ศรี
+dilemma||n.|C1|5|ภาวะกลืนไม่เข้าคายไม่ออก
+dimension||n.|C1|5|มิติ
+diminish||v.|C1|5|ลดลง
+dip||v.|C1|5|จุ่ม, ลดลงเล็กน้อย
+diplomat||n.|C1|5|นักการทูต
+diplomatic||n.|C1|5|ทางการทูต
+disastrous||adj.|C1|5|หายนะ
+discard||v.|C1|5|ทิ้ง
+discharge||v.|C1|5|ปล่อย, ปลดประจำการ
+disclose||v.|C1|5|เปิดเผย
+disclosure||n.|C1|5|การเปิดเผย
+discourse||n.|C1|5|วาทกรรม
+discretion||n.|C1|5|ดุลยพินิจ
+discrimination||n.|C1|5|การเลือกปฏิบัติ
+dismissal||n.|C1|5|การไล่ออก
+displace||v.|C1|5|ทำให้ต้องย้ายที่
+disposal||n.|C1|5|การกำจัด
+dispose||v.|C1|5|กำจัดทิ้ง
+dispute||n., v.|C1|5|ข้อพิพาท
+disrupt||v.|C1|5|ขัดขวาง, ทำให้หยุดชะงัก
+disruption||n.|C1|5|การหยุดชะงัก
+dissolve||v.|C1|5|ละลาย, ยุบ
+distinction||n.|C1|5|ความแตกต่าง, ความโดดเด่น
+distinctive||adj.|C1|5|เป็นเอกลักษณ์
+distress||n.|C1|5|ความทุกข์
+disturbing||adj.|C1|5|น่ากังวลใจ
+divert||v.|C1|5|เบี่ยงเบน
+dividend||n.|C1|5|เงินปันผล
+doctrine||n.|C1|5|หลักคำสอน
+documentation||n.|C1|5|เอกสารประกอบ
+domain||n.|C1|5|ขอบเขต, โดเมน
+dominance||n.|C1|5|การครอบงำ
+donor||n.|C1|5|ผู้บริจาค
+dose||n.|C1|5|ขนาดยา
+drain||v.|C1|5|ระบายน้ำ, ท่อระบาย
+drift||v.|C1|5|ลอยไป
+driving||adj.|C1|5|ที่เป็นแรงขับ
+drone||n.|C1|5|โดรน
+drown||v.|C1|5|จมน้ำ
+dual||adj.|C1|5|คู่, สองอย่าง
+dub||v.|C1|5|พากย์, ตั้งฉายา
+duo||n.|C1|5|คู่
+e-commerce||n.|C1|5|พาณิชย์อิเล็กทรอนิกส์
+eager||adj.|C1|5|กระตือรือร้น
+earnings||n.|C1|5|รายได้
+ease||n., v.|C1|5|ความง่าย, บรรเทา
+echo||v.|C1|5|เสียงสะท้อน
+ecological||adj.|C1|5|ทางนิเวศวิทยา
+educator||n.|C1|5|นักการศึกษา
+effectiveness||n.|C1|5|ประสิทธิผล
+efficiency||n.|C1|5|ประสิทธิภาพ
+ego||n.|C1|5|อัตตา
+elaborate||adj.|C1|5|ประณีต, อธิบายเพิ่มเติม
+electoral||adj.|C1|5|เกี่ยวกับการเลือกตั้ง
+elevate||v.|C1|5|ยกระดับ
+eligible||adj.|C1|5|มีสิทธิ์
+elite||n.|C1|5|ชนชั้นนำ
+embark||v.|C1|5|เริ่มต้น, ลงเรือ
+embarrassment||n.|C1|5|ความอับอาย
+embassy||n.|C1|5|สถานทูต
+embed||v.|C1|5|ฝัง
+embody||v.|C1|5|เป็นตัวแทนของ
+emergence||n.|C1|5|การเกิดขึ้น
+empower||v.|C1|5|ให้อำนาจ
+enact||v.|C1|5|ตรากฎหมาย
+encompass||v.|C1|5|ครอบคลุม
+encouragement||n.|C1|5|กำลังใจ
+encouraging||adj.|C1|5|ให้กำลังใจ
+endeavour||n.|C1|5|ความพยายาม
+endless||adj.|C1|5|ไม่มีที่สิ้นสุด
+endorse||v.|C1|5|รับรอง, สนับสนุน
+endorsement||n.|C1|5|การรับรอง
+endure||v.|C1|5|อดทน
+enforce||v.|C1|5|บังคับใช้
+enforcement||n.|C1|5|การบังคับใช้
+engagement||n.|C1|5|การหมั้น, การมีส่วนร่วม
+engaging||adj.|C1|5|น่าสนใจ
+enquire||v.|C1|5|สอบถาม
+enrich||v.|C1|5|เสริมให้ดีขึ้น
+enrol||v.|C1|5|ลงทะเบียนเรียน
+ensue||v.|C1|5|ตามมา
+enterprise||n.|C1|5|กิจการ
+enthusiast||n.|C1|5|ผู้หลงใหล
+entitle||v.|C1|5|ให้สิทธิ์
+entity||n.|C1|5|หน่วยงาน, สิ่ง
+epidemic||n.|C1|5|โรคระบาด
+equality||n.|C1|5|ความเท่าเทียม
+equation||n.|C1|5|สมการ
+equity||n.|C1|5|ความเสมอภาค, ส่วนของผู้ถือหุ้น
+erect||v.|C1|5|สร้าง, ตั้งตรง
+escalate||v.|C1|5|บานปลาย
+essence||n.|C1|5|แก่นแท้
+establishment||n.|C1|5|การก่อตั้ง, สถานประกอบการ
+evacuate||v.|C1|5|อพยพ
+evoke||v.|C1|5|กระตุ้นให้นึกถึง
+evolutionary||adj.|C1|5|ทางวิวัฒนาการ
+exaggerate||v.|C1|5|พูดเกินจริง
+excellence||n.|C1|5|ความเป็นเลิศ
+exceptional||adj.|C1|5|ยอดเยี่ยม, ผิดปกติ
+excess||n., adj.|C1|5|ส่วนเกิน
+exclusion||n.|C1|5|การกีดกัน
+exclusive||adj.|C1|5|พิเศษเฉพาะ
+exclusively||adv.|C1|5|โดยเฉพาะ
+execute||v.|C1|5|ประหาร, ดำเนินการ
+execution||n.|C1|5|การประหาร, การดำเนินการ
+exile||n.|C1|5|การเนรเทศ
+expenditure||n.|C1|5|ค่าใช้จ่าย
+experimental||adj.|C1|5|เชิงทดลอง
+expire||v.|C1|5|หมดอายุ
+explicit||adj.|C1|5|ชัดเจน
+exploitation||n.|C1|5|การแสวงประโยชน์
+explosive||adj., n.|C1|5|วัตถุระเบิด
+extremist||n.|C1|5|ผู้นิยมความรุนแรง
+facilitate||v.|C1|5|อำนวยความสะดวก
+faction||n.|C1|5|กลุ่ม, ฝ่าย
+faculty||n.|C1|5|คณะ
+fade||v.|C1|5|จางลง
+fairness||n.|C1|5|ความยุติธรรม
+fatal||adj.|C1|5|ถึงแก่ชีวิต
+fate||n.|C1|5|โชคชะตา
+favourable||adj.|C1|5|เป็นที่พอใจ, เอื้ออำนวย
+feminist||adj.|C1|5|นักสตรีนิยม
+festive||adj.|C1|5|รื่นเริง
+fibre||n.|C1|5|เส้นใย
+fierce||adj.|C1|5|ดุเดือด
+film-maker||n.|C1|5|ผู้สร้างภาพยนตร์
+filter||n., v.|C1|5|ตัวกรอง
+fine||n., v.|C1|5|ค่าปรับ
+firearm||n.|C1|5|อาวุธปืน
+fit||n.|C1|5|อาการชัก, ความเหมาะสม
+fixture||n.|C1|5|อุปกรณ์ติดตั้ง, นัดแข่ง
+flaw||n.|C1|5|ข้อบกพร่อง
+flawed||adj.|C1|5|มีข้อบกพร่อง
+flee||v.|C1|5|หลบหนี
+fleet||n.|C1|5|กองเรือ
+flesh||n.|C1|5|เนื้อ
+flexibility||n.|C1|5|ความยืดหยุ่น
+flourish||v.|C1|5|เจริญรุ่งเรือง
+fluid||n.|C1|5|ของเหลว, ลื่นไหล
+follow-up||adj., n.|C1|5|การติดตามผล
+footage||n.|C1|5|ฟุตเทจ, ภาพวิดีโอ
+forge||v.|C1|5|ปลอมแปลง, สร้าง (ความสัมพันธ์)
+formula||n.|C1|5|สูตร
+formulate||v.|C1|5|กำหนด, คิดค้น
+forth||adv.|C1|5|ไปข้างหน้า
+forthcoming||adj.|C1|5|ที่กำลังจะมา
+foster||v.|C1|5|ส่งเสริม, รับเลี้ยงดู
+fragile||adj.|C1|5|เปราะบาง
+franchise||n.|C1|5|แฟรนไชส์
+frankly||adv.|C1|5|พูดตรงๆ
+freely||adv.|C1|5|อย่างอิสระ
+frustrated||adj.|C1|5|หงุดหงิด
+frustrating||adj.|C1|5|น่าหงุดหงิด
+frustration||n.|C1|5|ความหงุดหงิด
+functional||adj.|C1|5|ใช้งานได้
+fundraising||n.|C1|5|การระดมทุน
+funeral||n.|C1|5|งานศพ
+gallon||n.|C1|5|แกลลอน
+gambling||n.|C1|5|การพนัน
+gathering||n.|C1|5|การชุมนุม
+gaze||n., v.|C1|5|จ้องมอง
+gear||n.|C1|5|เกียร์, อุปกรณ์
+generic||adj.|C1|5|ทั่วไป
+genocide||n.|C1|5|การฆ่าล้างเผ่าพันธุ์
+gig||n.|C1|5|การแสดงดนตรี, งานชั่วคราว
+glance||v., n.|C1|5|เหลือบมอง
+glimpse||n.|C1|5|เห็นแวบหนึ่ง
+glorious||adj.|C1|5|รุ่งโรจน์
+glory||n.|C1|5|ความรุ่งโรจน์
+governance||n.|C1|5|การกำกับดูแล
+grace||n.|C1|5|ความสง่างาม
+grasp||v.|C1|5|เข้าใจ, จับแน่น
+grave|for dead person|n.|C1|5|หลุมศพ
+grave|serious|adj.|C1|5|ร้ายแรง
+gravity||n.|C1|5|แรงโน้มถ่วง, ความร้ายแรง
+grid||n.|C1|5|ตาราง, กริด
+grief||n.|C1|5|ความโศกเศร้า
+grind||v.|C1|5|บด
+grip||n., v.|C1|5|การจับยึด
+guidance||n.|C1|5|คำแนะนำ
+guilt||n.|C1|5|ความรู้สึกผิด
+gut||n.|C1|5|ลำไส้, สัญชาตญาณ
+hack||v., n.|C1|5|แฮ็ก
+hail||v.|C1|5|ลูกเห็บ, ยกย่อง
+halfway||adv.|C1|5|ครึ่งทาง
+halt||v.|C1|5|หยุด
+hammer||n., v.|C1|5|ค้อน
+handful||n.|C1|5|กำมือ, จำนวนเล็กน้อย
+handling||n.|C1|5|การจัดการ
+handy||adj.|C1|5|สะดวก, มีประโยชน์
+harassment||n.|C1|5|การคุกคาม
+hardware||n.|C1|5|ฮาร์ดแวร์
+harmony||n.|C1|5|ความกลมกลืน
+harsh||adj.|C1|5|รุนแรง, โหดร้าย
+harvest||n., v.|C1|5|การเก็บเกี่ยว
+hatred||n.|C1|5|ความเกลียดชัง
+haunt||v.|C1|5|หลอกหลอน
+hazard||n.|C1|5|อันตราย
+heighten||v.|C1|5|เพิ่มขึ้น
+heritage||n.|C1|5|มรดก
+hierarchy||n.|C1|5|ลำดับชั้น
+high-profile||adj.|C1|5|เป็นที่จับตามอง
+hint||n., v.|C1|5|คำใบ้
+homeland||n.|C1|5|บ้านเกิดเมืองนอน
+hopeful||adj.|C1|5|มีความหวัง
+horizon||n.|C1|5|ขอบฟ้า
+horn||n.|C1|5|เขาสัตว์, แตร
+hospitality||n.|C1|5|การต้อนรับขับสู้
+hostage||n.|C1|5|ตัวประกัน
+hostile||adj.|C1|5|เป็นปรปักษ์
+hub||n.|C1|5|ศูนย์กลาง
+humanitarian||adj.|C1|5|ด้านมนุษยธรรม
+humanity||n.|C1|5|มนุษยชาติ
+humble||adj.|C1|5|ถ่อมตน
+hybrid||adj., n.|C1|5|ลูกผสม
+hydrogen||n.|C1|5|ไฮโดรเจน
+identification||n.|C1|5|การระบุตัวตน
+ideology||n.|C1|5|อุดมการณ์
+ignorance||n.|C1|5|ความไม่รู้
+imagery||n.|C1|5|ภาพพจน์
+immense||adj.|C1|5|มหาศาล
+imminent||adj.|C1|5|ใกล้จะเกิดขึ้น
+immunity||n.|C1|5|ภูมิคุ้มกัน
+implementation||n.|C1|5|การนำไปปฏิบัติ
+imprisonment||n.|C1|5|การจำคุก
+inability||n.|C1|5|การไม่สามารถ
+inadequate||adj.|C1|5|ไม่เพียงพอ
+inappropriate||adj.|C1|5|ไม่เหมาะสม
+incidence||n.|C1|5|อุบัติการณ์
+inclined||adj.|C1|5|มีแนวโน้ม
+inclusion||n.|C1|5|การรวมเข้า
+inclusive||adj.|C1|5|ครอบคลุมทุกคน
+incur||v.|C1|5|ก่อให้เกิด (ค่าใช้จ่าย)
+indicator||n.|C1|5|ตัวชี้วัด
+indictment||n.|C1|5|คำฟ้อง
+indigenous||adj.|C1|5|พื้นเมือง
+induce||v.|C1|5|ชักนำ, ทำให้เกิด
+indulge||v.|C1|5|ตามใจ
+inequality||n.|C1|5|ความเหลื่อมล้ำ
+infamous||adj.|C1|5|ฉาวโฉ่
+infant||n.|C1|5|ทารก
+infect||v.|C1|5|ติดเชื้อ
+infectious||adj.|C1|5|ติดต่อได้
+inflict||v.|C1|5|ทำให้ได้รับ (ความเสียหาย)
+influential||adj.|C1|5|มีอิทธิพล
+inherent||adj.|C1|5|มีอยู่ในตัว
+inhibit||v.|C1|5|ยับยั้ง
+initiate||v.|C1|5|เริ่มต้น
+inject||v.|C1|5|ฉีด
+injection||n.|C1|5|การฉีดยา
+injustice||n.|C1|5|ความอยุติธรรม
+inmate||n.|C1|5|ผู้ต้องขัง
+insider||n.|C1|5|คนใน
+inspect||v.|C1|5|ตรวจสอบ
+inspection||n.|C1|5|การตรวจสอบ
+inspiration||n.|C1|5|แรงบันดาลใจ
+instinct||n.|C1|5|สัญชาตญาณ
+institutional||adj.|C1|5|ระดับสถาบัน
+instruct||v.|C1|5|สั่ง, สอน
+instrumental||adj.|C1|5|มีบทบาทสำคัญ
+insufficient||adj.|C1|5|ไม่เพียงพอ
+insult||n.|C1|5|ดูถูก
+intact||adj.|C1|5|ไม่บุบสลาย
+intake||n.|C1|5|การรับเข้า (ปริมาณ)
+integral||adj.|C1|5|สำคัญจำเป็น
+integrated||adj.|C1|5|บูรณาการ
+integration||n.|C1|5|การบูรณาการ
+integrity||n.|C1|5|ความซื่อตรง
+intensify||v.|C1|5|ทวีความรุนแรง
+intensity||n.|C1|5|ความเข้มข้น
+intensive||adj.|C1|5|เข้มข้น
+intent||n.|C1|5|เจตนา
+interactive||adj.|C1|5|โต้ตอบได้
+interface||n.|C1|5|อินเทอร์เฟซ
+interfere||v.|C1|5|แทรกแซง
+interference||n.|C1|5|การแทรกแซง
+interim||adj.|C1|5|ชั่วคราว
+interior||n., adj.|C1|5|ภายใน
+intervene||v.|C1|5|เข้าแทรกแซง
+intervention||n.|C1|5|การแทรกแซง
+intimate||adj.|C1|5|ใกล้ชิดสนิทสนม
+intriguing||adj.|C1|5|น่าสนใจ, น่าพิศวง
+investigator||n.|C1|5|ผู้สืบสวน
+invisible||adj.|C1|5|มองไม่เห็น
+invoke||v.|C1|5|อ้างถึง, เรียกใช้
+involvement||n.|C1|5|การมีส่วนเกี่ยวข้อง
+ironically||adv.|C1|5|ย้อนแย้งที่ว่า
+irony||n.|C1|5|ความย้อนแย้ง
+irrelevant||adj.|C1|5|ไม่เกี่ยวข้อง
+isolation||n.|C1|5|การแยกตัว, ความโดดเดี่ยว
+joint||adj., n.|C1|5|ร่วมกัน, ข้อต่อ
+judicial||adj.|C1|5|ทางตุลาการ
+junction||n.|C1|5|ทางแยก
+jurisdiction||n.|C1|5|เขตอำนาจศาล
+just||adj.|C1|5|ยุติธรรม
+justification||n.|C1|5|เหตุผลรองรับ
+kidnap||v.|C1|5|ลักพาตัว
+kidney||n.|C1|5|ไต
+kingdom||n.|C1|5|ราชอาณาจักร
+lad||n.|C1|5|เด็กหนุ่ม
+landlord||n.|C1|5|เจ้าของที่ให้เช่า
+landmark||n.|C1|5|สถานที่สำคัญ
+lap||n.|C1|5|ตัก, รอบ (สนาม)
+large-scale||adj.|C1|5|ขนาดใหญ่
+laser||n.|C1|5|เลเซอร์
+latter||adj., n.|C1|5|อย่างหลัง
+lawn||n.|C1|5|สนามหญ้า
+lawsuit||n.|C1|5|คดีความ
+layout||n.|C1|5|การจัดวาง
+leak||v., n.|C1|5|รั่ว
+leap||v., n.|C1|5|กระโดด, ก้าวกระโดด
+legacy||n.|C1|5|มรดก
+legendary||adj.|C1|5|เป็นตำนาน
+legislation||n.|C1|5|กฎหมาย
+legislative||adj.|C1|5|ด้านนิติบัญญัติ
+legislature||n.|C1|5|สภานิติบัญญัติ
+legitimate||adj.|C1|5|ถูกต้องตามกฎหมาย, ชอบธรรม
+lengthy||adj.|C1|5|ยาวนาน
+lesbian||adj.|C1|5|เลสเบียน
+lesser||adj.|C1|5|น้อยกว่า
+lethal||adj.|C1|5|ถึงตาย
+levy||n., v.|C1|5|จัดเก็บ (ภาษี)
+liable||adj.|C1|5|ต้องรับผิดชอบ, มีแนวโน้ม
+liberal||adj., n.|C1|5|เสรีนิยม
+liberty||n.|C1|5|เสรีภาพ
+license||v.|C1|5|อนุญาต
+lifelong||adj.|C1|5|ตลอดชีวิต
+likelihood||n.|C1|5|ความเป็นไปได้
+limb||n.|C1|5|แขนขา
+line-up||n.|C1|5|รายชื่อผู้แสดง
+linear||adj.|C1|5|เชิงเส้น
+linger||v.|C1|5|อ้อยอิ่ง, ยังคงอยู่
+listing||n.|C1|5|รายการ
+literacy||n.|C1|5|การรู้หนังสือ
+liver||n.|C1|5|ตับ
+lobby||n., v.|C1|5|ล็อบบี้, วิ่งเต้น
+logic||n.|C1|5|ตรรกะ
+long-standing||adj.|C1|5|มีมานาน
+long-time||adj.|C1|5|ยาวนาน
+loom||v.|C1|5|ปรากฏอย่างน่ากลัว, ใกล้เข้ามา
+loop||n.|C1|5|วง, ลูป
+loyalty||n.|C1|5|ความภักดี
+machinery||n.|C1|5|เครื่องจักร
+magical||adj.|C1|5|มหัศจรรย์
+magistrate||n.|C1|5|ผู้พิพากษา (ศาลแขวง)
+magnetic||adj.|C1|5|แม่เหล็ก
+magnitude||n.|C1|5|ขนาด, ความรุนแรง
+mainland||n.|C1|5|แผ่นดินใหญ่
+mainstream||n., adj.|C1|5|กระแสหลัก
+maintenance||n.|C1|5|การบำรุงรักษา
+major||n.|C1|5|วิชาเอก
+mandate||n.|C1|5|อาณัติ, คำสั่ง
+mandatory||adj.|C1|5|บังคับ
+manifest||v.|C1|5|แสดงออก
+manipulate||v.|C1|5|ชักใย, จัดการ
+manipulation||n.|C1|5|การบงการ
+march||n., v.|C1|5|เดินขบวน
+marginal||adj.|C1|5|เล็กน้อย, ชายขอบ
+marine||adj.|C1|5|ทางทะเล
+marketplace||n.|C1|5|ตลาด
+mask||n.|C1|5|หน้ากาก
+massacre||n.|C1|5|การสังหารหมู่
+mathematical||adj.|C1|5|ทางคณิตศาสตร์
+mature||adj.|C1|5|เป็นผู้ใหญ่
+maximize||v.|C1|5|เพิ่มให้มากที่สุด
+meaningful||adj.|C1|5|มีความหมาย
+meantime||n.|C1|5|ระหว่างนี้
+medieval||adj.|C1|5|ยุคกลาง
+meditation||n.|C1|5|การทำสมาธิ
+melody||n.|C1|5|ทำนอง
+memo||n.|C1|5|บันทึกช่วยจำ
+memoir||n.|C1|5|บันทึกความทรงจำ
+memorial||n.|C1|5|อนุสรณ์
+mentor||n.|C1|5|พี่เลี้ยง, ที่ปรึกษา
+merchant||n.|C1|5|พ่อค้า
+mercy||n.|C1|5|ความเมตตา
+mere||adj.|C1|5|เพียง
+merely||adv.|C1|5|เพียงแค่
+merge||v.|C1|5|ผสาน, ควบรวม
+merger||n.|C1|5|การควบรวมกิจการ
+merit||n.|C1|5|ข้อดี, คุณความดี
+methodology||n.|C1|5|ระเบียบวิธี
+midst||n.|C1|5|ท่ามกลาง
+migrant||n., adj.|C1|5|ผู้ย้ายถิ่น
+migration||n.|C1|5|การย้ายถิ่น
+milestone||n.|C1|5|หลักไมล์, จุดสำคัญ
+militant||n., adj.|C1|5|หัวรุนแรง
+militia||n.|C1|5|กองกำลังติดอาวุธ
+mill||n.|C1|5|โรงสี
+mindset||n.|C1|5|กรอบความคิด
+minimal||adj.|C1|5|น้อยที่สุด
+minimize||v.|C1|5|ลดให้น้อยที่สุด
+mining||n.|C1|5|การทำเหมือง
+ministry||n.|C1|5|กระทรวง
+minute||adj.|C1|5|เล็กมาก (ออกเสียง ไม-นิวท์)
+miracle||n.|C1|5|ปาฏิหาริย์
+misery||n.|C1|5|ความทุกข์ยาก
+misleading||adj.|C1|5|ทำให้เข้าใจผิด
+missile||n.|C1|5|ขีปนาวุธ
+mitigate||v.|C1|5|บรรเทา
+mob||n.|C1|5|ฝูงชน
+mobility||n.|C1|5|การเคลื่อนย้าย
+mobilize||v.|C1|5|ระดม
+moderate||adj.|C1|5|ปานกลาง
+modification||n.|C1|5|การดัดแปลง
+momentum||n.|C1|5|แรงผลักดัน
+monopoly||n.|C1|5|การผูกขาด
+motive||n.|C1|5|แรงจูงใจ
+motorist||n.|C1|5|ผู้ขับขี่
+municipal||adj.|C1|5|ของเทศบาล
+mutual||adj.|C1|5|ซึ่งกันและกัน
+namely||adv.|C1|5|กล่าวคือ
+nationwide||adj.|C1|5|ทั่วประเทศ
+neglect||v.|C1|5|ละเลย
+neighbouring||adj.|C1|5|ใกล้เคียง
+nest||n.|C1|5|รัง
+net||adj.|C1|5|สุทธิ
+newsletter||n.|C1|5|จดหมายข่าว
+niche||n.|C1|5|ช่องทางเฉพาะ
+nod||v.|C1|5|พยักหน้า
+nominate||v.|C1|5|เสนอชื่อ
+nomination||n.|C1|5|การเสนอชื่อ
+nominee||n.|C1|5|ผู้ได้รับการเสนอชื่อ
+non-profit||adj.|C1|5|ไม่แสวงหากำไร
+nonetheless||adv.|C1|5|อย่างไรก็ตาม
+nonsense||n.|C1|5|เรื่องไร้สาระ
+noon||n.|C1|5|เที่ยงวัน
+notable||adj.|C1|5|น่าสังเกต
+notably||adv.|C1|5|โดยเฉพาะอย่างยิ่ง
+notification||n.|C1|5|การแจ้งเตือน
+notify||v.|C1|5|แจ้ง
+notorious||adj.|C1|5|ฉาวโฉ่
+novel||adj.|C1|5|แปลกใหม่
+nursery||n.|C1|5|สถานรับเลี้ยงเด็ก
+objection||n.|C1|5|การคัดค้าน
+oblige||v.|C1|5|บังคับ, ทำตามคำขอ
+obsess||v.|C1|5|หมกมุ่น
+obsession||n.|C1|5|ความหมกมุ่น
+occasional||adj.|C1|5|เป็นครั้งคราว
+occurrence||n.|C1|5|การเกิดขึ้น
+odds||n.|C1|5|ความน่าจะเป็น
+offering||n.|C1|5|ของถวาย, สิ่งที่นำเสนอ
+offset||v.|C1|5|ชดเชย
+offshore||adj.|C1|5|นอกชายฝั่ง
+operational||adj.|C1|5|เกี่ยวกับการดำเนินงาน
+opt||v.|C1|5|เลือก
+optical||adj.|C1|5|ทางสายตา
+optimism||n.|C1|5|การมองโลกในแง่ดี
+oral||adj.|C1|5|ทางปาก, ปากเปล่า
+organizational||adj.|C1|5|ด้านองค์กร
+orientation||n.|C1|5|การปฐมนิเทศ, ทิศทาง
+originate||v.|C1|5|กำเนิด
+outbreak||n.|C1|5|การระบาด
+outing||n.|C1|5|การไปเที่ยว
+outlet||n.|C1|5|ร้านค้า, ช่องทางระบาย
+outlook||n.|C1|5|ทัศนะ, แนวโน้ม
+outrage||n.|C1|5|ความโกรธแค้น
+outsider||n.|C1|5|คนนอก
+overlook||v.|C1|5|มองข้าม
+overly||adv.|C1|5|มากเกินไป
+oversee||v.|C1|5|ดูแล
+overturn||v.|C1|5|พลิกคว่ำ, ล้มคำตัดสิน
+overwhelm||v.|C1|5|ท่วมท้น
+overwhelming||adj.|C1|5|ท่วมท้น
+pad||n.|C1|5|แผ่นรอง, สมุดฉีก
+parameter||n.|C1|5|ตัวแปร, ขอบเขต
+parental||adj.|C1|5|ของพ่อแม่
+parish||n.|C1|5|ตำบล (ศาสนา)
+parliamentary||adj.|C1|5|ของรัฐสภา
+partial||adj.|C1|5|บางส่วน
+partially||adv.|C1|5|บางส่วน
+passing||n.|C1|5|ที่ผ่านไป, การเสียชีวิต
+passive||adj.|C1|5|เฉื่อยชา, ถูกกระทำ
+pastor||n.|C1|5|ศิษยาภิบาล
+patch||n.|C1|5|แผ่นปะ, หย่อม
+patent||n.|C1|5|สิทธิบัตร
+pathway||n.|C1|5|เส้นทาง
+patrol||n.|C1|5|ลาดตระเวน
+patron||n.|C1|5|ผู้อุปถัมภ์
+peak||n.|C1|5|จุดสูงสุด
+persist||v.|C1|5|คงอยู่, ยืนกราน
+persistent||adj.|C1|5|ไม่ลดละ
+personnel||n.|C1|5|บุคลากร
+petition||n.|C1|5|คำร้อง
+pharmaceutical||adj., n.|C1|5|ทางเภสัชกรรม
+philosopher||n.|C1|5|นักปรัชญา
+physician||n.|C1|5|แพทย์
+pioneer||n., v.|C1|5|ผู้บุกเบิก
+pipeline||n.|C1|5|ท่อส่ง
+pirate||n.|C1|5|โจรสลัด
+pit||n.|C1|5|หลุม
+plea||n.|C1|5|คำวิงวอน, คำให้การ
+plead||v.|C1|5|วิงวอน, ให้การ
+pledge||v., n.|C1|5|คำมั่นสัญญา
+plug||v., n.|C1|5|ปลั๊ก
+plunge||v.|C1|5|ดิ่งลง
+pole||n.|C1|5|เสา, ขั้วโลก
+poll||n.|C1|5|การสำรวจความคิดเห็น
+pond||n.|C1|5|บ่อน้ำ
+pop||v.|C1|5|โผล่, เสียงป๊อก
+portfolio||n.|C1|5|แฟ้มผลงาน
+portray||v.|C1|5|พรรณนา
+postpone||v.|C1|5|เลื่อน
+practitioner||n.|C1|5|ผู้ปฏิบัติงาน
+precedent||n.|C1|5|แบบอย่าง
+precision||n.|C1|5|ความแม่นยำ
+predator||n.|C1|5|สัตว์นักล่า
+predecessor||n.|C1|5|ผู้มาก่อน
+predominantly||adv.|C1|5|ส่วนใหญ่
+pregnancy||n.|C1|5|การตั้งครรภ์
+prejudice||n.|C1|5|อคติ
+preliminary||adj.|C1|5|เบื้องต้น
+premise||n.|C1|5|หลักฐานตั้งต้น, สถานที่
+premium||n.|C1|5|เบี้ยประกัน, พรีเมียม
+prescribe||v.|C1|5|สั่งจ่าย (ยา)
+prescription||n.|C1|5|ใบสั่งยา
+presently||adv.|C1|5|ในปัจจุบัน
+preservation||n.|C1|5|การอนุรักษ์
+preside||v.|C1|5|เป็นประธาน
+presidency||n.|C1|5|ตำแหน่งประธานาธิบดี
+presidential||adj.|C1|5|ของประธานาธิบดี
+prestigious||adj.|C1|5|มีเกียรติ
+presumably||adv.|C1|5|สันนิษฐานว่า
+presume||v.|C1|5|สันนิษฐาน
+prevail||v.|C1|5|ชนะ, แพร่หลาย
+prevalence||n.|C1|5|ความแพร่หลาย
+prevention||n.|C1|5|การป้องกัน
+prey||n.|C1|5|เหยื่อ
+prioritize||v.|C1|5|จัดลำดับความสำคัญ
+privilege||n.|C1|5|สิทธิพิเศษ
+probe||n.|C1|5|สอบสวน
+problematic||adj.|C1|5|เป็นปัญหา
+proceedings||n.|C1|5|การดำเนินคดี
+proceeds||n.|C1|5|รายได้
+processing||n.|C1|5|การประมวลผล
+processor||n.|C1|5|ตัวประมวลผล
+proclaim||v.|C1|5|ประกาศ
+productive||adj.|C1|5|มีประสิทธิผล
+productivity||n.|C1|5|ผลิตภาพ
+profitable||adj.|C1|5|ทำกำไร
+profound||adj.|C1|5|ลึกซึ้ง
+projection||n.|C1|5|การคาดการณ์
+prominent||adj.|C1|5|โดดเด่น
+pronounced||adj.|C1|5|เด่นชัด
+propaganda||n.|C1|5|การโฆษณาชวนเชื่อ
+proposition||n.|C1|5|ข้อเสนอ
+prosecute||v.|C1|5|ฟ้องร้อง
+prosecution||n.|C1|5|การฟ้องร้อง, ฝ่ายโจทก์
+prosecutor||n.|C1|5|อัยการ
+prospective||adj.|C1|5|ที่คาดว่าจะเป็น
+prosperity||n.|C1|5|ความเจริญรุ่งเรือง
+protective||adj.|C1|5|ปกป้อง
+protocol||n.|C1|5|ระเบียบปฏิบัติ
+province||n.|C1|5|จังหวัด
+provincial||adj.|C1|5|ส่วนจังหวัด
+provision||n.|C1|5|การจัดหา, บทบัญญัติ
+provoke||v.|C1|5|ยั่วยุ
+pulse||n.|C1|5|ชีพจร
+pump||v., n.|C1|5|ปั๊ม
+punch||v., n.|C1|5|ต่อย
+purely||adv.|C1|5|ล้วนๆ
+query||n.|C1|5|ข้อสงสัย
+quest||n.|C1|5|การแสวงหา
+quota||n.|C1|5|โควตา
+radar||n.|C1|5|เรดาร์
+radical||adj.|C1|5|สุดโต่ง, ถึงราก
+rage||n.|C1|5|ความโกรธจัด
+raid||n.|C1|5|บุกจู่โจม
+rally||n., v.|C1|5|ชุมนุม
+ranking||n.|C1|5|การจัดอันดับ
+rape||n., v.|C1|5|การข่มขืน
+ratio||n.|C1|5|อัตราส่วน
+rational||adj.|C1|5|มีเหตุผล
+ray||n.|C1|5|รังสี, ลำแสง
+readily||adv.|C1|5|โดยง่าย
+realization||n.|C1|5|การตระหนักรู้
+realm||n.|C1|5|อาณาจักร, ขอบเขต
+rear||adj.|C1|5|ด้านหลัง, เลี้ยงดู
+reasoning||n.|C1|5|การให้เหตุผล
+reassure||v.|C1|5|ทำให้สบายใจ
+rebel||n.|C1|5|กบฏ
+rebellion||n.|C1|5|การกบฏ
+recipient||n.|C1|5|ผู้รับ
+reconstruction||n.|C1|5|การบูรณะ
+recount||v.|C1|5|เล่า, นับใหม่
+referendum||n.|C1|5|การลงประชามติ
+reflection||n.|C1|5|ภาพสะท้อน, การไตร่ตรอง
+reform||n., v.|C1|5|การปฏิรูป
+refuge||n.|C1|5|ที่หลบภัย
+refusal||n.|C1|5|การปฏิเสธ
+regain||v.|C1|5|ได้คืน
+regardless||adv.|C1|5|โดยไม่คำนึงถึง
+regime||n.|C1|5|ระบอบการปกครอง
+regulator||n.|C1|5|หน่วยงานกำกับ
+regulatory||adj.|C1|5|ด้านกำกับดูแล
+rehabilitation||n.|C1|5|การฟื้นฟูสมรรถภาพ
+reign||n.|C1|5|รัชสมัย
+rejection||n.|C1|5|การปฏิเสธ
+relevance||n.|C1|5|ความเกี่ยวข้อง
+reliability||n.|C1|5|ความน่าเชื่อถือ
+reluctant||adj.|C1|5|ไม่เต็มใจ
+remainder||n.|C1|5|ส่วนที่เหลือ
+remains||n.|C1|5|ซาก, ส่วนที่เหลือ
+remedy||n.|C1|5|วิธีแก้
+reminder||n.|C1|5|สิ่งเตือนความจำ
+removal||n.|C1|5|การนำออก
+render||v.|C1|5|ทำให้เป็น
+renew||v.|C1|5|ต่ออายุ
+renowned||adj.|C1|5|มีชื่อเสียง
+rental||n.|C1|5|การเช่า
+replacement||n.|C1|5|สิ่งทดแทน
+reportedly||adv.|C1|5|ตามรายงาน
+representation||n.|C1|5|การเป็นตัวแทน
+reproduce||v.|C1|5|ทำซ้ำ, สืบพันธุ์
+republic||n.|C1|5|สาธารณรัฐ
+resemble||v.|C1|5|คล้าย
+reside||v.|C1|5|อาศัย
+residence||n.|C1|5|ที่พักอาศัย
+residential||adj.|C1|5|ที่อยู่อาศัย
+resignation||n.|C1|5|การลาออก
+resilience||n.|C1|5|ความยืดหยุ่น, การฟื้นตัว
+resistance||n.|C1|5|การต่อต้าน
+respective||adj.|C1|5|แต่ละ
+respectively||adv.|C1|5|ตามลำดับ
+restoration||n.|C1|5|การบูรณะ
+restraint||n.|C1|5|การยับยั้งชั่งใจ
+resume||v.|C1|5|ดำเนินต่อ
+retreat||n., v.|C1|5|ถอย
+retrieve||v.|C1|5|เอากลับคืน
+revelation||n.|C1|5|การเปิดเผย
+revenge||n.|C1|5|การแก้แค้น
+reverse||v.|C1|5|กลับด้าน
+revival||n.|C1|5|การฟื้นฟู
+revive||v.|C1|5|ฟื้นคืนชีพ
+revolutionary||adj.|C1|5|ปฏิวัติ
+rhetoric||n.|C1|5|วาทศิลป์
+rifle||n.|C1|5|ปืนไรเฟิล
+riot||n.|C1|5|การจลาจล
+rip||v.|C1|5|ฉีก
+ritual||n.|C1|5|พิธีกรรม
+robust||adj.|C1|5|แข็งแรง, ทนทาน
+rock||v.|C1|5|โยก
+rotate||v.|C1|5|หมุน
+rotation||n.|C1|5|การหมุนเวียน
+ruling||n.|C1|5|คำตัดสิน
+rumour||n.|C1|5|ข่าวลือ
+sack||v.|C1|5|ไล่ออก, กระสอบ
+sacred||adj.|C1|5|ศักดิ์สิทธิ์
+sacrifice||n., v.|C1|5|การเสียสละ
+safeguard||v., n.|C1|5|ปกป้อง
+sake||n.|C1|5|เพื่อ (for the sake of)
+sanction||n.|C1|5|การคว่ำบาตร
+say||n.|C1|5|สิทธิ์มีเสียง
+scam||n., v.|C1|5|การหลอกลวง
+scattered||adj.|C1|5|กระจัดกระจาย
+sceptical||adj.|C1|5|ไม่เชื่อ, กังขา
+scope||n.|C1|5|ขอบเขต
+scrap||v., n.|C1|5|เศษ, ยกเลิก
+screw||v.|C1|5|สกรู
+scrutiny||n.|C1|5|การพิจารณาอย่างละเอียด
+seal||v., n.|C1|5|ปิดผนึก, แมวน้ำ
+seasonal||adj.|C1|5|ตามฤดูกาล
+secular||adj.|C1|5|ทางโลก
+seemingly||adv.|C1|5|ดูเหมือน
+segment||n.|C1|5|ส่วน
+seize||v.|C1|5|ยึด
+selective||adj.|C1|5|เลือกสรร
+senator||n.|C1|5|วุฒิสมาชิก
+sensation||n.|C1|5|ความรู้สึก, ความฮือฮา
+sensitivity||n.|C1|5|ความอ่อนไหว
+sentiment||n.|C1|5|ความรู้สึก
+separation||n.|C1|5|การแยกกัน
+sequel||n.|C1|5|ภาคต่อ
+serial||adj.|C1|5|เป็นชุด, ต่อเนื่อง
+set-up||n.|C1|5|การจัดตั้ง
+settlement||n.|C1|5|ข้อตกลง, ถิ่นฐาน
+sexuality||n.|C1|5|เพศวิถี
+shareholder||n.|C1|5|ผู้ถือหุ้น
+shatter||v.|C1|5|แตกละเอียด
+shed||v.|C1|5|โรงเก็บของ, สลัด
+sheer||adj.|C1|5|ล้วนๆ, ชัน
+shipping||n.|C1|5|การขนส่งทางเรือ
+shoot||n.|C1|5|หน่อ, การถ่ายทำ
+shrink||v.|C1|5|หดตัว
+sigh||v., n.|C1|5|ถอนหายใจ
+simulation||n.|C1|5|การจำลอง
+simultaneously||adv.|C1|5|พร้อมกัน
+sin||n.|C1|5|บาป
+situated||adj.|C1|5|ตั้งอยู่
+sketch||n.|C1|5|ภาพร่าง
+skip||v.|C1|5|ข้าม
+slam||v.|C1|5|ปิดแรงๆ, วิจารณ์รุนแรง
+slap||v.|C1|5|ตบ
+slash||v.|C1|5|ตัดลดมาก
+slavery||n.|C1|5|ระบบทาส
+slot||n.|C1|5|ช่อง
+smash||v.|C1|5|ทุบแตก
+snap||v.|C1|5|หัก, ถ่ายรูป
+soak||v.|C1|5|แช่
+soar||v.|C1|5|พุ่งสูง
+socialist||adj.|C1|5|สังคมนิยม
+sole||adj.|C1|5|เพียงหนึ่งเดียว
+solely||adv.|C1|5|แต่เพียงผู้เดียว
+solicitor||n.|C1|5|ทนายความ
+solidarity||n.|C1|5|ความเป็นน้ำหนึ่งใจเดียว
+solo||adj., n.|C1|5|เดี่ยว
+sound||adj.|C1|5|มั่นคง, สมเหตุผล
+sovereignty||n.|C1|5|อธิปไตย
+span||v., n.|C1|5|ช่วง
+spark||v.|C1|5|ประกายไฟ, จุดประกาย
+specialized||adj.|C1|5|เฉพาะทาง
+specification||n.|C1|5|ข้อกำหนดเฉพาะ
+specimen||n.|C1|5|ตัวอย่าง
+spectacle||n.|C1|5|ภาพที่น่าตื่นตา
+spectrum||n.|C1|5|สเปกตรัม, ขอบเขต
+spell||n.|C1|5|ช่วงเวลา, คาถา
+sphere||n.|C1|5|ทรงกลม, ขอบเขต
+spin||v., n.|C1|5|หมุน
+spine||n.|C1|5|กระดูกสันหลัง
+spotlight||n.|C1|5|ไฟสปอตไลต์, ความสนใจ
+spouse||n.|C1|5|คู่สมรส
+spray||n., v.|C1|5|ฉีดพ่น
+spy||n.|C1|5|สายลับ
+squad||n.|C1|5|หน่วย, ทีม
+squeeze||v.|C1|5|บีบ
+stab||v.|C1|5|แทง
+stability||n.|C1|5|เสถียรภาพ
+stabilize||v.|C1|5|ทำให้มั่นคง
+stake||n.|C1|5|ส่วนได้ส่วนเสีย, เดิมพัน
+stark||adj.|C1|5|ชัดเจน, โจ่งแจ้ง
+start-up||n., adj.|C1|5|บริษัทสตาร์ตอัป
+statistical||adj.|C1|5|ทางสถิติ
+steer||v.|C1|5|บังคับทิศทาง
+stem||n., v.|C1|5|ลำต้น, เกิดจาก
+stereotype||n.|C1|5|ภาพเหมารวม
+stimulus||n.|C1|5|สิ่งกระตุ้น
+stir||v.|C1|5|คน, กระตุ้น
+storage||n.|C1|5|การจัดเก็บ
+straightforward||adj.|C1|5|ตรงไปตรงมา
+strain||n.|C1|5|ความเครียด, แรงกด
+strategic||adj.|C1|5|เชิงกลยุทธ์
+streaming||n.|C1|5|การสตรีม
+strip|long narrow piece|n.|C1|5|แถบ
+strip|remove clothes/a layer|v.|C1|5|ถอด, ลอก
+strive||v.|C1|5|มุ่งมั่น
+structural||adj.|C1|5|เชิงโครงสร้าง
+stumble||v.|C1|5|สะดุด
+stun||v.|C1|5|ทำให้ตะลึง
+submission||n.|C1|5|การส่ง, การยอมจำนน
+subscribe||v.|C1|5|สมัครสมาชิก
+subscriber||n.|C1|5|ผู้สมัครสมาชิก
+subscription||n.|C1|5|การสมัครสมาชิก
+subsidy||n.|C1|5|เงินอุดหนุน
+substantial||adj.|C1|5|มาก, สำคัญ
+substantially||adv.|C1|5|อย่างมาก
+substitute||n., v.|C1|5|ตัวแทน, แทนที่
+substitution||n.|C1|5|การแทนที่
+subtle||adj.|C1|5|แนบเนียน
+suburban||adj.|C1|5|ชานเมือง
+succession||n.|C1|5|การสืบทอด
+successive||adj.|C1|5|ต่อเนื่องกัน
+successor||n.|C1|5|ผู้สืบทอด
+suck||v.|C1|5|ดูด
+sue||v.|C1|5|ฟ้องร้อง
+suicide||n.|C1|5|การฆ่าตัวตาย
+suite||n.|C1|5|ห้องชุด
+summit||n.|C1|5|การประชุมสุดยอด, ยอดเขา
+superb||adj.|C1|5|ยอดเยี่ยม
+superior||adj.|C1|5|เหนือกว่า
+supervise||v.|C1|5|ควบคุมดูแล
+supervision||n.|C1|5|การกำกับดูแล
+supervisor||n.|C1|5|หัวหน้างาน
+supplement||n., v.|C1|5|อาหารเสริม, ส่วนเสริม
+supportive||adj.|C1|5|ให้การสนับสนุน
+supposedly||adv.|C1|5|ว่ากันว่า
+suppress||v.|C1|5|ปราบปราม
+surge||n.|C1|5|พุ่งขึ้น
+surgical||adj.|C1|5|ทางศัลยกรรม
+surpass||v.|C1|5|เหนือกว่า
+surplus||n.|C1|5|ส่วนเกิน
+surrender||v.|C1|5|ยอมแพ้
+surveillance||n.|C1|5|การสอดแนม
+suspension||n.|C1|5|การพักงาน, ระบบกันสะเทือน
+suspicion||n.|C1|5|ความสงสัย
+suspicious||adj.|C1|5|น่าสงสัย
+sustain||v.|C1|5|ค้ำจุน
+sustainability||n.|C1|5|ความยั่งยืน
+swing||v., n.|C1|5|แกว่ง
+sword||n.|C1|5|ดาบ
+symbolic||adj.|C1|5|เชิงสัญลักษณ์
+syndrome||n.|C1|5|กลุ่มอาการ
+systematic||adj.|C1|5|เป็นระบบ
+tactic||n.|C1|5|กลยุทธ์
+tactical||adj.|C1|5|เชิงยุทธวิธี
+taxpayer||n.|C1|5|ผู้เสียภาษี
+tempt||v.|C1|5|ล่อใจ
+tenant||n.|C1|5|ผู้เช่า
+tenure||n.|C1|5|วาระการดำรงตำแหน่ง
+terminate||v.|C1|5|ยุติ
+terrain||n.|C1|5|ภูมิประเทศ
+terrific||adj.|C1|5|ยอดเยี่ยม
+testify||v.|C1|5|ให้การ
+testimony||n.|C1|5|คำให้การ
+texture||n.|C1|5|พื้นผิว
+thankfully||adv.|C1|5|โชคดีที่
+theoretical||adj.|C1|5|ทางทฤษฎี
+thereafter||adv.|C1|5|หลังจากนั้น
+thereby||adv.|C1|5|ด้วยเหตุนั้น
+thoughtful||adj.|C1|5|ใส่ใจ, รอบคอบ
+thread||n.|C1|5|ด้าย, กระทู้
+threshold||n.|C1|5|เกณฑ์, ธรณีประตู
+thrilled||adj.|C1|5|ตื่นเต้นดีใจ
+thrive||v.|C1|5|เจริญเติบโต
+tide||n.|C1|5|กระแสน้ำ
+tighten||v.|C1|5|ขันให้แน่น
+timber||n.|C1|5|ไม้แปรรูป
+timely||adj.|C1|5|ทันเวลา
+tobacco||n.|C1|5|ยาสูบ
+tolerance||n.|C1|5|ความอดกลั้น
+tolerate||v.|C1|5|อดทน
+toll||n.|C1|5|ค่าผ่านทาง, ยอดผู้เสียชีวิต
+top||v.|C1|5|อยู่อันดับหนึ่ง, เหนือกว่า
+torture||n., v.|C1|5|การทรมาน
+toss||v.|C1|5|โยน
+total||v.|C1|5|รวมเป็น
+toxic||adj.|C1|5|เป็นพิษ
+trademark||n.|C1|5|เครื่องหมายการค้า
+trafficking||n.|C1|5|การค้ามนุษย์, การลักลอบค้า
+trail||n., v.|C1|5|เส้นทาง, รอย
+trailer||n.|C1|5|ตัวอย่างหนัง, รถพ่วง
+trans||adj.|C1|5|ข้ามเพศ
+transaction||n.|C1|5|ธุรกรรม
+transcript||n.|C1|5|บันทึกคำพูด
+transformation||n.|C1|5|การเปลี่ยนแปลง
+transit||n.|C1|5|การขนส่ง
+transmission||n.|C1|5|การส่ง, การแพร่เชื้อ
+transparency||n.|C1|5|ความโปร่งใส
+transparent||adj.|C1|5|โปร่งใส
+trauma||n.|C1|5|บาดแผลทางใจ
+treaty||n.|C1|5|สนธิสัญญา
+tremendous||adj.|C1|5|มหาศาล
+tribal||adj.|C1|5|ของชนเผ่า
+tribunal||n.|C1|5|ศาล, คณะตุลาการ
+tribute||n.|C1|5|การแสดงความเคารพ
+trio||n.|C1|5|สามคน
+triumph||n.|C1|5|ชัยชนะ
+trophy||n.|C1|5|ถ้วยรางวัล
+troubled||adj.|C1|5|มีปัญหา
+trustee||n.|C1|5|ผู้ดูแลทรัพย์สิน
+tuition||n.|C1|5|ค่าเล่าเรียน, การสอน
+turnout||n.|C1|5|จำนวนผู้มาใช้สิทธิ์
+turnover||n.|C1|5|รายได้, อัตราการลาออก
+twist||v., n.|C1|5|บิด, จุดหักมุม
+underlying||adj.|C1|5|ที่แฝงอยู่
+undermine||v.|C1|5|บ่อนทำลาย
+undoubtedly||adv.|C1|5|อย่างไม่ต้องสงสัย
+unify||v.|C1|5|รวมเป็นหนึ่ง
+unprecedented||adj.|C1|5|ไม่เคยมีมาก่อน
+unveil||v.|C1|5|เปิดตัว
+upcoming||adj.|C1|5|ที่กำลังจะมา
+upgrade||v., n.|C1|5|อัปเกรด
+uphold||v.|C1|5|ยึดถือ, รักษา
+utility||n.|C1|5|สาธารณูปโภค
+utilize||v.|C1|5|ใช้ประโยชน์
+utterly||adv.|C1|5|โดยสิ้นเชิง
+vacuum||n.|C1|5|สุญญากาศ
+vague||adj.|C1|5|คลุมเครือ
+vanish||v.|C1|5|หายไป
+variable||n., adj.|C1|5|ตัวแปร
+varied||adj.|C1|5|หลากหลาย
+vegan||n., adj.|C1|5|มังสวิรัติเคร่ง
+vein||n.|C1|5|หลอดเลือดดำ
+vendor||n.|C1|5|ผู้ขาย
+venture||n., v.|C1|5|กิจการ, เสี่ยง
+verbal||adj.|C1|5|ทางวาจา
+verdict||n.|C1|5|คำตัดสิน
+verify||v.|C1|5|ตรวจสอบยืนยัน
+verse||n.|C1|5|บทกลอน
+versus||conj.|C1|5|ปะทะ, กับ
+vessel||n.|C1|5|เรือ, หลอดเลือด
+veteran||n.|C1|5|ทหารผ่านศึก, ผู้มากประสบการณ์
+viable||adj.|C1|5|เป็นไปได้
+vibrant||adj.|C1|5|มีชีวิตชีวา
+vice||n.|C1|5|ความชั่ว, รอง (ตำแหน่ง)
+vicious||adj.|C1|5|โหดร้าย
+villager||n.|C1|5|ชาวบ้าน
+violate||v.|C1|5|ละเมิด
+violation||n.|C1|5|การละเมิด
+viral||adj.|C1|5|แพร่กระจายเร็ว (ไวรัล)
+virtue||n.|C1|5|คุณธรรม
+vocal||adj.|C1|5|ทางเสียง, เปิดเผย
+vow||v.|C1|5|คำปฏิญาณ
+vulnerability||n.|C1|5|ความเปราะบาง
+vulnerable||adj.|C1|5|เปราะบาง
+ward||n.|C1|5|หอผู้ป่วย
+warehouse||n.|C1|5|โกดัง
+warfare||n.|C1|5|การสงคราม
+warrant||n., v.|C1|5|หมายจับ, สมควร
+warrior||n.|C1|5|นักรบ
+weaken||v.|C1|5|ทำให้อ่อนแอ
+weave||v.|C1|5|ทอ
+weed||n.|C1|5|วัชพืช
+well||n.|C1|5|บ่อน้ำ
+whatsoever||adv.|C1|5|ใดๆ ทั้งสิ้น
+whip||v.|C1|5|แส้, ตีด้วยแส้
+wholly||adv.|C1|5|ทั้งหมด
+widen||v.|C1|5|ขยายให้กว้าง
+widow||n.|C1|5|หญิงหม้าย
+width||n.|C1|5|ความกว้าง
+wildfire||n.|C1|5|ไฟป่า
+willingness||n.|C1|5|ความเต็มใจ
+wipe||v.|C1|5|เช็ด
+wit||n.|C1|5|ไหวพริบ
+withdrawal||n.|C1|5|การถอนตัว
+workout||n.|C1|5|การออกกำลังกาย
+worsen||v.|C1|5|แย่ลง
+worship||n., v.|C1|5|การบูชา
+worthwhile||adj.|C1|5|คุ้มค่า
+worthy||adj.|C1|5|คู่ควร
+yell||v.|C1|5|ตะโกน
+yield||n., v.|C1|5|ให้ผล, ยอมแพ้
+youngster||n.|C1|5|เด็กหนุ่มสาว`;
+
 const STORIES = {
 A1: [
   { title: 'My Morning', th: 'เช้าของฉัน', topic: 'ชีวิตประจำวัน',
@@ -1388,6 +6408,7 @@ const MODES = {
   mix:       { th: 'ฝึกรวมทุกทักษะ', tag: 'ALL SKILLS', desc: '' },
   story:     { th: 'คำถามจากเรื่องอ่าน', tag: 'STORY', desc: '' },
   sword:     { th: 'คำศัพท์จากเรื่องอ่าน', tag: 'STORY WORDS', desc: '' },
+  ox:        { th: 'คำศัพท์ Oxford 5000', tag: 'OXFORD', desc: '' },
   exam:      { th: 'สอบผ่านระดับ', tag: 'LEVEL EXAM', desc: '' }
 };
 
@@ -1449,6 +6470,7 @@ function speak(text, slow) {
 /* be rebuilt later in Review.  id = level|mode|index[|sub]            */
 /* ------------------------------------------------------------------ */
 function build(id) {
+  if (id.startsWith('ox|')) return buildOx(id);
   const [lv, mode, a, b] = id.split('|');
   if (mode === 'story' || mode === 'sword') return buildStory(id);
   const D = DATA[lv], li = lvIndex(lv), i = +a;
@@ -1583,6 +6605,7 @@ function home() {
       </div>
       <button class="btn lv" id="placement">${S.placement ? 'ทดสอบใหม่' : 'วัดระดับ'}</button>
     </section>
+    <section class="banner"><div><b>คลังคำศัพท์ Oxford 5000</b><span class="muted" style="font-size:.9rem">จำได้แล้ว ${OX_LEVELS.reduce((n, l) => n + oxStats(l).known, 0)} จาก 5,000 คำ (A1–C1) พร้อมคำแปลไทย ค้นหาได้ และทวนคำที่ใกล้ลืมให้อัตโนมัติ</span></div><button class="btn lv" id="oxHome">เปิดคลังคำ</button></section>
     <section class="banner"><div><b>คลังเรื่องอ่าน</b><span class="muted" style="font-size:.9rem">${LEVELS.reduce((n, l) => n + STORIES[l].length, 0)} เรื่อง เรียงจากสั้นไปยาว แตะคำเพื่อดูคำแปล พร้อมคำแปลและโครงสร้างทุกประโยค</span></div><button class="btn lv" id="library">เปิดคลังเรื่อง</button></section>
     <section class="banner"><div><b>คู่มือไวยากรณ์</b><span class="muted" style="font-size:.9rem">ตาราง 12 tense และกฎทั้งหมด ${Object.keys(RULES).length} ข้อ พร้อมตัวอย่างง่ายๆ</span></div><button class="btn ghost" id="handbook">เปิดคู่มือ</button></section>
     ${missCount ? `<section class="banner"><div><b>คำที่เคยตอบผิด ${missCount} ข้อ</b><span class="muted" style="font-size:.9rem">ทบทวนจนตอบถูก แล้วข้อนั้นจะหายจากรายการ</span></div><button class="btn ghost" id="review">ทบทวน</button></section>` : ''}
@@ -1602,6 +6625,7 @@ function home() {
   $('#placement').onclick = startPlacement;
   $('#handbook').onclick = handbook;
   $('#library').onclick = library;
+  $('#oxHome').onclick = () => oxford(OX_LEVELS.includes(S.placement) ? S.placement : S.placement === 'C2' ? 'C1' : 'A1');
   if (missCount) $('#review').onclick = startReview;
   $('#rate').oninput = e => { S.rate = +e.target.value; save(); };
   $('#rate').onchange = () => speak('This is how fast I will read.');
@@ -1634,6 +6658,11 @@ function level(lv) {
       ${SKILLS.map(sk => { const v = Math.round(skillMastery(lv, sk) * 100); return `
         <div class="skillrow"><span>${sk.th}</span><span class="bar"><i style="width:${v}%"></i></span><span class="num">${v}%</span></div>`; }).join('')}
     </section>
+    ${(() => { const ol = lv === 'C2' ? 'C1' : lv, st = oxStats(ol); return `<section class="banner">
+      <div><b>Oxford 5000 · คำศัพท์ระดับ ${ol}</b><span class="muted" style="font-size:.9rem">${lv === 'C2' ? 'Oxford 5000 ครอบคลุมถึง C1 ระดับ C2 ควรรู้คำ C1 ให้ครบก่อน · ' : ''}จำได้แล้ว ${st.known}/${st.total} คำ · ถึงเวลาทบทวน ${st.due} คำ</span>
+        <span class="bar" style="--lv:var(--${ol})"><i style="width:${Math.round(st.known / st.total * 100)}%"></i></span></div>
+      <div class="row" style="flex:0 1 auto"><button class="btn ghost" id="oxList">ดูคำทั้งหมด</button><button class="btn lv" id="oxPractice">ฝึก 10 คำ</button></div>
+    </section>`; })()}
     <section class="skill">
       <div class="skillhead"><h3>เรียนผ่านเรื่องอ่าน</h3><span class="eyebrow">Graded reading</span></div>
       <div class="stories">${STORIES[lv].map((_, i) => storyCard(lv, i, maxStoryWords())).join('')}</div>
@@ -1655,6 +6684,8 @@ function level(lv) {
     </div>`;
   $('#back').onclick = home;
   app.querySelectorAll('.mode').forEach(b => b.onclick = () => startRound(lv, b.dataset.mode));
+  $('#oxList').onclick = () => oxford(lv === 'C2' ? 'C1' : lv);
+  $('#oxPractice').onclick = () => startOx(lv === 'C2' ? 'C1' : lv);
   bindStoryCards();
   window.scrollTo(0, 0);
 }
@@ -1834,9 +6865,9 @@ function openStory(lv, i, tab, focusSentence) {
   } else if (tab === 'words') {
     const list = [...Gl.values()].sort((a, b) => (/ /.test(a.w) - / /.test(b.w)));
     body = `<p class="sub">คำศัพท์ทุกคำในเรื่องนี้ (ไม่รวมคำพื้นฐานอย่าง the, is, and) เรียงตามลำดับที่พบ วลีอยู่ท้ายรายการ</p>
-      <div class="gridwrap"><table class="vocab"><thead><tr><th>คำ</th><th>ชนิด</th><th>คำแปล</th></tr></thead>
-      <tbody>${list.map(e => `<tr><td>${hasTTS ? `<button class="exsay" data-say="${esc(e.w)}" aria-label="ฟังเสียง">🔊</button> ` : ''}<b>${esc(e.w)}</b></td><td class="num muted">${esc(e.pos)}</td><td>${esc(e.th)}</td></tr>`).join('')}</tbody></table></div>
-      <p class="foot">n. คำนาม · v. กริยา · adj. คุณศัพท์ · adv. กริยาวิเศษณ์ · prep. บุพบท · conj. คำเชื่อม · pron. สรรพนาม · det. คำนำหน้านาม · num. ตัวเลข · phr. วลี · phr. v. กริยาวลี</p>
+      <div class="gridwrap"><table class="vocab"><thead><tr><th>คำ</th><th>ชนิด</th><th>คำแปล</th><th>Oxford</th></tr></thead>
+      <tbody>${list.map(e => `<tr><td>${hasTTS ? `<button class="exsay" data-say="${esc(e.w)}" aria-label="ฟังเสียง">🔊</button> ` : ''}<b>${esc(e.w)}</b></td><td class="num muted">${esc(e.pos)}</td><td>${esc(e.th)}</td><td>${(() => { const o = / /.test(e.w) ? null : oxFind(e.w); return o ? `<span class="pill" style="background:var(--${o.lv})" title="Oxford ${o.src === '3' ? '3000' : '5000'}">${o.lv}</span>` : ''; })()}</td></tr>`).join('')}</tbody></table></div>
+      <p class="foot">ป้าย A1–C1 คือระดับของคำนั้นใน Oxford 5000 · n. คำนาม · v. กริยา · adj. คุณศัพท์ · adv. กริยาวิเศษณ์ · prep. บุพบท · conj. คำเชื่อม · pron. สรรพนาม · det. คำนำหน้านาม · num. ตัวเลข · phr. วลี · phr. v. กริยาวลี</p>
       <button class="btn lv block" id="wordQuiz">ฝึกคำศัพท์ของเรื่องนี้ (10 คำ)</button>`;
   } else {
     const rec = S.stories[sid] || {};
@@ -1879,6 +6910,7 @@ document.addEventListener('click', e => {
     el.innerHTML = `
       <div class="sheet-in">
         <div class="sheet-top"><b class="sheet-w">${esc(w.dataset.w)}</b>${hasTTS ? `<button class="exsay" data-say="${esc(w.dataset.w)}">🔊</button>` : ''}<button class="x" id="sheetX" aria-label="ปิด">×</button></div>
+        ${(() => { const o = oxFind(w.dataset.w); return o ? `<p>${oxBadge(o)} <span class="sub">Oxford: ${esc(o.th)}</span></p>` : ''; })()}
         ${info ? `<p><span class="num muted">${esc(info.pos)}</span> ${esc(info.th)}</p>${info.how ? `<p class="sub">${esc(info.how)}</p>` : ''}` : (/^[A-Z]/.test(w.dataset.w) ? '<p><span class="num muted">n.</span> ชื่อเฉพาะ (ชื่อคนหรือสถานที่) ไม่ต้องแปล</p>' : '<p class="sub">ไม่มีคำนี้ในรายการคำศัพท์</p>')}
         ${ph.length ? `<div class="sheet-ph"><span class="eyebrow">วลีในเรื่องที่มีคำนี้</span>${ph.map(p => `<p><b>${esc(p.w)}</b> = ${esc(p.th)}</p>`).join('')}</div>` : ''}
         <p class="sheet-s">${esc(sentencesOf(STORIES[RD.lv][RD.i])[si][1])}</p>
@@ -1914,6 +6946,123 @@ function buildStory(id) {
   const s = sentencesOf(st).find(x => new RegExp('\\b' + b.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i').test(x[0]));
   return { id, lv, mode, type: 'mc', prompt: e.w, big: true, speakText: e.w, sub: `คำนี้ในเรื่อง “${st.title}” แปลว่าอะไร`, answer: e.th, choices: shuffle([e.th, ...others]),
     explain: `<b>${esc(e.w)}</b> (${esc(e.pos)}) = ${esc(e.th)}` + (s ? `<br>ในเรื่อง: <i>${esc(s[0]).replace(new RegExp('\\b(' + esc(b).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')\\b', 'i'), '<mark>$1</mark>')}</i><br>${esc(s[1])}` : '') };
+}
+
+/* ---------------- Oxford 5000 word bank ---------------- */
+/* Each line: word|sense|part of speech|CEFR level|list (3 = Oxford 3000, 5 = Oxford 5000 extra)|Thai */
+const OX = OXFORD_RAW.split('\n').map((ln, i) => { const [w, sense, pos, lv, src, th] = ln.split('|'); return { i, w, sense, pos, lv, src, th }; });
+const OX_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'];
+const OX_BY_LV = Object.fromEntries(OX_LEVELS.map(l => [l, OX.filter(e => e.lv === l)]));
+const OX_MAP = new Map();
+OX.forEach(e => e.w.split(/,\s*/).forEach(w => { const k = key(w); if (!OX_MAP.has(k)) OX_MAP.set(k, e); }));
+const SRS_DAYS = [0, 1, 3, 7, 16, 35];
+const dayNo = () => Math.floor(Date.now() / 864e5);
+function oxRec(i) { S.ox = S.ox || {}; return S.ox[i]; }
+const oxKnown = e => { const r = oxRec(e.i); return !!r && r.b >= 3; };
+const oxDue = e => { const r = oxRec(e.i); return !!r && r.d <= dayNo(); };
+function oxStats(lv) { const list = OX_BY_LV[lv]; return { total: list.length, known: list.filter(oxKnown).length, seen: list.filter(e => oxRec(e.i)).length, due: list.filter(oxDue).length }; }
+function oxFind(raw) {
+  const w = key(raw).replace(/'s$/, '');
+  const tries = [w];
+  if (/ies$/.test(w)) tries.push(w.slice(0, -3) + 'y');
+  if (/es$/.test(w)) tries.push(w.slice(0, -2));
+  if (/s$/.test(w)) tries.push(w.slice(0, -1));
+  if (/ied$/.test(w)) tries.push(w.slice(0, -3) + 'y');
+  if (/ed$/.test(w)) tries.push(w.slice(0, -2), w.slice(0, -1), w.slice(0, -3));
+  if (/ing$/.test(w)) tries.push(w.slice(0, -3), w.slice(0, -3) + 'e', w.slice(0, -4));
+  if (/ly$/.test(w)) tries.push(w.slice(0, -2));
+  const spell = t => [t, t.replace(/is(e?)$/, 'iz$1'), t.replace(/iz(e?)$/, 'is$1'), t.replace(/isation$/, 'ization'), t.replace(/our$/, 'or')];
+  for (const t of tries) for (const v of spell(t)) if (OX_MAP.has(v)) return OX_MAP.get(v);
+  return null;
+}
+const oxLabel = e => `${e.w}${e.sense ? ` (${e.sense})` : ''}`;
+const oxBadge = e => `<span class="oxbadge" style="--lv:var(--${e.lv})">Oxford ${e.src === '3' ? '3000' : '5000'} · ${e.lv}</span>`;
+
+// Pick a round: due reviews first, then new words from the level.
+function oxRoundIds(lv, n = 10) {
+  const list = OX_BY_LV[lv];
+  const due = shuffle(list.filter(oxDue)).slice(0, n);
+  const fresh = shuffle(list.filter(e => !oxRec(e.i))).slice(0, n - due.length);
+  const rest = due.length + fresh.length < n ? shuffle(list.filter(e => !due.includes(e) && !fresh.includes(e))).slice(0, n - due.length - fresh.length) : [];
+  return shuffle([...due, ...fresh, ...rest]).map(e => 'ox|' + e.i);
+}
+function buildOx(id) {
+  const e = OX[+id.split('|')[1]], pool = OX_BY_LV[e.lv];
+  const pos1 = e.pos.split(/[ ,./]/)[0];
+  const same = pool.filter(x => x !== e && x.th !== e.th && x.w !== e.w);
+  const near = shuffle(same.filter(x => x.pos.split(/[ ,./]/)[0] === pos1));
+  const others = [...near, ...shuffle(same)].filter((x, k, a) => a.indexOf(x) === k);
+  const thDir = Math.random() < (lvIndex(e.lv) <= 1 ? 0.65 : 0.5);
+  const q = { id, lv: e.lv, mode: 'ox', type: 'mc', speakText: e.w, big: true,
+    explain: `${oxBadge(e)}<br><b>${esc(oxLabel(e))}</b> <span class="num">${esc(e.pos)}</span> = ${esc(e.th)}` };
+  if (thDir) {
+    const ch = []; for (const x of others) { if (!ch.includes(x.th)) ch.push(x.th); if (ch.length === 3) break; }
+    return Object.assign(q, { prompt: e.w, sub: (e.sense ? `ความหมาย: ${e.sense} · ` : '') + `${e.pos} · คำนี้แปลว่าอะไร`, answer: e.th, choices: shuffle([e.th, ...ch]) });
+  }
+  const ch = []; for (const x of others) { if (!ch.includes(x.w)) ch.push(x.w); if (ch.length === 3) break; }
+  return Object.assign(q, { prompt: e.th, sub: `${e.pos} · ภาษาอังกฤษคือคำไหน`, answer: e.w, choices: shuffle([e.w, ...ch]), speakAfter: true });
+}
+function oxGrade(id, ok) {
+  const i = +id.split('|')[1], r = oxRec(i) || { b: 0, d: dayNo() };
+  r.b = ok ? Math.min(5, r.b + 1) : 0;
+  r.d = dayNo() + SRS_DAYS[r.b];
+  S.ox[i] = r;
+}
+function startOx(lv) {
+  touchStreak(); save(); closeSheet();
+  G = { kind: 'practice', lv, mode: 'ox', oxLv: lv, queue: oxRoundIds(lv), i: 0, right: 0, hearts: null, combo: 0, xp: 0, misses: [] };
+  next();
+}
+
+let OXV = { lv: 'A1', q: '', show: 60, filter: 'all' };
+function oxford(lv) {
+  G = null; RD = null; closeSheet();
+  if (lv) OXV = { lv, q: '', show: 60, filter: 'all' };
+  setLv(OXV.lv);
+  const st = oxStats(OXV.lv);
+  const qn = key(OXV.q.trim());
+  let list = qn
+    ? OX.filter(e => key(e.w).includes(qn) || e.th.includes(OXV.q.trim()))
+    : OX_BY_LV[OXV.lv];
+  if (OXV.filter === 'known') list = list.filter(oxKnown);
+  if (OXV.filter === 'learning') list = list.filter(e => oxRec(e.i) && !oxKnown(e));
+  if (OXV.filter === 'new') list = list.filter(e => !oxRec(e.i));
+  const shown = list.slice(0, OXV.show);
+  const dot = e => { const r = oxRec(e.i); return r ? (r.b >= 3 ? '<i class="dot known" title="จำได้แล้ว"></i>' : '<i class="dot learning" title="กำลังเรียน"></i>') : '<i class="dot" title="ยังไม่เคยฝึก"></i>'; };
+  app.innerHTML = `
+    <div class="playbar"><button class="x" id="back" aria-label="กลับหน้าหลัก">←</button><span class="muted">หน้าหลัก</span></div>
+    <header style="display:flex;flex-direction:column;gap:8px"><p class="eyebrow">Oxford 3000 + Oxford 5000 · A1 → C1</p><h1>คลังคำศัพท์ Oxford 5000</h1>
+      <p class="muted">คำศัพท์สำคัญ 5,000 คำตามรายการของ Oxford แบ่งตามระดับ CEFR พร้อมคำแปลไทย ระบบจะทวนคำที่ใกล้ลืมให้อัตโนมัติ</p></header>
+    <section class="oxlevels">${OX_LEVELS.map(l => { const s = oxStats(l); return `
+      <button class="oxlv ${l === OXV.lv ? 'on' : ''}" style="--lv:var(--${l})" data-lv="${l}" id="oxlv-${l}">
+        <b>${l}</b><span class="num">${s.known}/${s.total}</span><span class="bar"><i style="width:${Math.round(s.known / s.total * 100)}%"></i></span>
+      </button>`; }).join('')}</section>
+    <section class="banner">
+      <div><b>ระดับ ${OXV.lv}: จำได้แล้ว ${st.known} จาก ${st.total} คำ</b>
+        <span class="muted" style="font-size:.9rem">ฝึกแล้ว ${st.seen} คำ · ถึงเวลาทบทวน ${st.due} คำ · ตอบถูกติดกัน 3 รอบ (ห่างกัน 1, 3, 7 วัน) นับว่าจำได้</span></div>
+      <button class="btn lv" id="oxGo">${st.due ? `ทบทวน + คำใหม่ (10)` : 'ฝึก 10 คำ'}</button>
+    </section>
+    <div class="row oxtools">
+      <input class="textin" id="oxq" type="search" placeholder="ค้นหาคำ (อังกฤษหรือไทย) ทั้ง 5,000 คำ" value="${esc(OXV.q)}" autocomplete="off" aria-label="ค้นหาคำ">
+      <select id="oxf" class="textin" aria-label="กรองคำ">
+        ${[['all', 'ทั้งหมด'], ['new', 'ยังไม่ฝึก'], ['learning', 'กำลังเรียน'], ['known', 'จำได้แล้ว']].map(([v, t]) => `<option value="${v}" ${OXV.filter === v ? 'selected' : ''}>${t}</option>`).join('')}
+      </select>
+    </div>
+    <p class="sub">${qn ? `ผลการค้นหา ${list.length} คำ (ทุกระดับ)` : `${list.length} คำในระดับ ${OXV.lv}`} · <i class="dot"></i> ยังไม่ฝึก <i class="dot learning"></i> กำลังเรียน <i class="dot known"></i> จำได้แล้ว</p>
+    <div class="gridwrap"><table class="vocab oxtable"><tbody>${shown.map(e => `
+      <tr><td>${dot(e)}</td><td>${hasTTS ? `<button class="exsay" data-say="${esc(e.w)}" aria-label="ฟังเสียง">🔊</button> ` : ''}<b>${esc(e.w)}</b>${e.sense ? `<small class="muted"> (${esc(e.sense)})</small>` : ''}</td>
+        <td class="num muted">${esc(e.pos)}</td><td>${esc(e.th)}</td>${qn ? `<td><span class="pill" style="background:var(--${e.lv})">${e.lv}</span></td>` : ''}</tr>`).join('')}</tbody></table></div>
+    ${list.length > OXV.show ? `<button class="btn ghost block" id="oxMore">แสดงเพิ่มอีก ${Math.min(120, list.length - OXV.show)} คำ</button>` : ''}
+    <p class="foot">รายการคำและระดับจาก The Oxford 3000™ และ The Oxford 5000™ © Oxford University Press (oxfordlearnersdictionaries.com) ใช้เพื่อการเรียนส่วนตัว · คำแปลไทยเขียนสำหรับเกมนี้ เป็นความหมายหลักโดยย่อ · Oxford 5000 ครอบคลุมถึง C1 ส่วน C2 ใช้คำศัพท์ในโหมดคำศัพท์ของระดับ C2</p>`;
+  $('#back').onclick = home;
+  app.querySelectorAll('.oxlv').forEach(b => b.onclick = () => { OXV = { lv: b.dataset.lv, q: '', show: 60, filter: OXV.filter }; oxford(); });
+  $('#oxGo').onclick = () => startOx(OXV.lv);
+  const q = $('#oxq');
+  q.oninput = () => { clearTimeout(q._t); q._t = setTimeout(() => { OXV.q = q.value; OXV.show = 60; oxford(); const n = $('#oxq'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); };
+  $('#oxf').onchange = e => { OXV.filter = e.target.value; OXV.show = 60; oxford(); };
+  if ($('#oxMore')) $('#oxMore').onclick = () => { const y = window.scrollY; OXV.show += 120; oxford(); window.scrollTo(0, y); };
+  if (!lv) return;
+  window.scrollTo(0, 0);
 }
 
 /* ---------------- game loop ---------------- */
@@ -2009,7 +7158,7 @@ function render(q) {
       ${body}
       <div id="fb"></div>
     </article>`;
-  $('#quit').onclick = () => G.story != null ? openStory(G.lv, G.story, 'quiz') : (G.kind === 'practice' || G.kind === 'exam') ? level(G.lv) : home();
+  $('#quit').onclick = () => G.oxLv ? oxford(G.oxLv) : G.story != null ? openStory(G.lv, G.story, 'quiz') : (G.kind === 'practice' || G.kind === 'exam') ? level(G.lv) : home();
 
   if (q.type === 'mc') {
     app.querySelectorAll('.choice').forEach(b => b.onclick = () => answerMC(+b.dataset.k));
@@ -2108,6 +7257,7 @@ function finish(ok, given, detail) {
     S.mistakes[q.id] = 1;
     G.misses.push({ q, given });
   }
+  if (q.mode === 'ox') oxGrade(q.id, ok);
   save();
   const rq = ruleOf(q);
   const last = G.kind === 'placement' ? G.i + 1 >= G.total : (G.i + 1 >= G.queue.length || G.hearts === 0);
@@ -2180,7 +7330,8 @@ function result() {
         : `<button class="btn lv" id="again">${G.kind === 'exam' ? 'สอบอีกครั้ง' : 'เล่นอีกรอบ'}</button>`}
     </div>`;
   $('#toHome').onclick = home;
-  if ($('#again')) $('#again').onclick = () => G.kind === 'review' ? startReview() : G.story != null ? startStoryQuiz(G.lv, G.story, G.mode) : startRound(G.lv, G.mode);
+  if ($('#again')) $('#again').onclick = () => G.kind === 'review' ? startReview() : G.oxLv ? startOx(G.oxLv) : G.story != null ? startStoryQuiz(G.lv, G.story, G.mode) : startRound(G.lv, G.mode);
+  if (G.oxLv) { const b = document.createElement('button'); b.className = 'btn ghost'; b.id = 'backOx'; b.textContent = 'คลังคำ Oxford'; const lv = G.oxLv; b.onclick = () => oxford(lv); $('#toHome').after(b); }
   if (G.story != null) { const b = document.createElement('button'); b.className = 'btn ghost'; b.id = 'backStory'; b.textContent = 'กลับไปที่เรื่อง'; const lv = G.lv, i = G.story; b.onclick = () => openStory(lv, i, 'tr'); $('#toHome').after(b); }
   window.scrollTo(0, 0);
 }
