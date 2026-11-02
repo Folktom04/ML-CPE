@@ -25,9 +25,6 @@ source_code/models/sat_exp/*.ubj.gz
 *firebase-adminsdk*.json
 *service-account*.json
 
-# Claude Code personal settings
-.claude/settings.local.json
-
 # Expo / Node
 source_code/app/node_modules/
 source_code/app/.expo/

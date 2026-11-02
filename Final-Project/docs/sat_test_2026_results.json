@@ -2,7 +2,7 @@
   "created": "2026-10-11",
   "opened": {
     "opened_utc": "2026-10-11T08:37:59.805226+00:00",
-    "head": "55568356b706dee53b341de7383948c43f21da65",
+    "head": "ce51729b847e578e2f9bb1a1988aea9e5d9cb0f2",
     "inputs_sha256": {
       "dataset/raw/satellite_himawari_2023_2026h1.csv": "ecbfd3e5f5717dece347f14f92f01a0c0455564a6a1713c180635dbed9a98a79",
       "dataset/raw/openmeteo_weather_2023_2025.csv": "ec38cf1f1e8d428ebaf027369773ca0d0529b6af9a88c50528c6348e1876c2a5",

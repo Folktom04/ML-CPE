@@ -1,8 +1,8 @@
 # Himawari experiment: amendments to the pre-registration
 
-Pre-registration: `source_code/models/sat_exp_prereg_v1.json`, committed in `f4f625e`
+Pre-registration: `source_code/models/sat_exp_prereg_v1.json`, committed in `e80f393`
 (2026-10-08 01:04 +0700). The dev result (`docs/sat_dev_results.json`, decision **go**) was committed
-in `179cf5d`. The prereg file itself is not edited; amendments are recorded here.
+in `65fba16`. The prereg file itself is not edited; amendments are recorded here.
 
 ## Amendment 1: process only (proposed 2026-10-08, after the dev result, before `--refit` / `--test`)
 

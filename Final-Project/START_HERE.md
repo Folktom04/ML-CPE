@@ -1,16 +1,15 @@
-# เริ่มโปรเจกต์ UV Guard (Antigravity + Claude Code)
+# เริ่มโปรเจกต์ UV Guard (Antigravity)
 
-โปรเจกต์นี้ใช้เครื่องมือสองตัวในโฟลเดอร์เดียวกัน
+โปรเจกต์นี้พัฒนาใน Antigravity โดยมี agent อ่าน `ROADMAP.md` เป็นแผนงาน
 
-| งาน | ใช้ตัวไหน |
+| งาน | วิธีทำ |
 |---|---|
-| Phase 1–3: ข้อมูล, ฟิสิกส์, ML | **Claude Code** |
-| Phase 4: FastAPI, ฐานข้อมูล | **Claude Code** |
+| Phase 1–3: ข้อมูล, ฟิสิกส์, ML | เขียนโค้ด Python + pytest |
+| Phase 4: FastAPI, ฐานข้อมูล | เขียนโค้ด API + pytest |
 | Phase 4: หน้าจอแอป Expo | **Antigravity** (browser agent ดูหน้าจอ + ถ่ายภาพ) |
-| Phase 5: แจ้งเตือน | Claude Code เขียนโค้ด, ทดสอบบนมือถือจริงด้วยตัวเอง |
-| quota ฝั่งไหนหมด | สลับไปใช้อีกฝั่ง ทั้งคู่อ่าน ROADMAP.md เดียวกัน |
+| Phase 5: แจ้งเตือน | เขียนโค้ด, ทดสอบบนมือถือจริงด้วยตัวเอง |
 
-กติกาเขียนไว้ที่เดียวคือ `.agents/rules/` แล้ว `CLAUDE.md` ดึงไปใช้ ถ้าจะแก้กติกา ให้แก้ใน `.agents/rules/` เท่านั้น
+กติกาเขียนไว้ที่เดียวคือ `.agents/rules/` ถ้าจะแก้กติกา ให้แก้ใน `.agents/rules/` เท่านั้น
 
 ## 1. เปิดโปรเจกต์
 โปรเจกต์อยู่ที่ `C:\Users\folkt\ML-CPE\Final-Project` ซึ่งอยู่ใน repo `ML-CPE` เดิม **ไม่ต้อง `git init` ใหม่**
@@ -38,27 +37,13 @@
 ถ้า rule ไหนไม่ขึ้นโหมดตามตาราง ให้ตั้งค่าโหมดเองในหน้า Customizations
 (Antigravity เวอร์ชันเก่าใช้โฟลเดอร์ `.agent/` ไม่มี s ถ้าไม่เห็นไฟล์ ให้เปลี่ยนชื่อโฟลเดอร์)
 
-## 2.5 ตั้งค่า Claude Code
-1. ติดตั้ง Claude Code (ต้องมีแพ็กเกจ Claude Pro ขึ้นไป) ตามคู่มือที่ docs.claude.com
-2. สร้าง venv ก่อน เพื่อให้ hook รันเทสด้วย Python ของโปรเจกต์:
-   ```bash
-   python -m venv .venv
-   .venv\Scripts\activate        # Windows
-   source .venv/bin/activate     # macOS / Linux
-   pip install -r requirements.txt
-   ```
-3. เปิด Terminal ใน Antigravity (ที่โฟลเดอร์ `Final-Project`) แล้วพิมพ์ `claude`
-4. พิมพ์ `/memory` เพื่อตรวจว่าโหลด `CLAUDE.md` และไฟล์ rules ทั้ง 3 ไฟล์แล้ว
-5. ครั้งแรกจะมีคำถามให้ยืนยันว่าเชื่อถือ hook ของโปรเจกต์ ให้ตอบยอมรับ
-
-สิ่งที่ตั้งไว้ใน `.claude/`
-- `commands/day.md`, `status.md`, `checkpoint.md` → คำสั่ง `/day 1`, `/status`, `/checkpoint` เหมือนฝั่ง Antigravity
-- `hooks/run_tests.py` → ทุกครั้งที่ Claude แก้ไฟล์ใน `source_code/src/` หรือ `source_code/tests/` จะรัน pytest อัตโนมัติ ถ้าเทสพัง Claude จะต้องแก้ก่อนไปต่อ
-- `settings.json` → อนุญาตให้รัน pytest และคำสั่ง git แบบอ่านอย่างเดียวได้เลยโดยไม่ต้องถาม และห้ามอ่านไฟล์ `.env`
-
-แนะนำให้กด **Shift+Tab** เข้า Plan mode ก่อนสั่ง `/day` จะได้เห็นแผนก่อนที่ Claude จะแก้ไฟล์
-
-**กันสองตัวชนกัน:** อย่าสั่งงานทั้งสองตัวพร้อมกันในไฟล์เดียวกัน ทำเสร็จฝั่งหนึ่งแล้ว commit ก่อนสลับ
+## 2.5 สร้าง venv
+```bash
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+source .venv/bin/activate     # macOS / Linux
+pip install -r requirements.txt
+```
 
 ## 3. ตั้งค่า Agent ของ Antigravity ที่แนะนำ
 - **โหมด:** Planning (ให้ agent เขียนแผนก่อนลงมือ) ใช้ Fast เฉพาะงานแก้เล็ก ๆ

@@ -45,7 +45,7 @@ The source of truth for scope and schedule is `ROADMAP.md`. Read it before start
 ## Repository layout
 The project lives in `ML-CPE/Final-Project/`, a folder of the course repo `ML-CPE` (git root is the parent folder — do NOT run `git init` here). The course template requires `dataset/`, `source_code/`, `README.md` and `report.pdf` at this level; keep them.
 ```
-Final-Project/                 # project root (open this folder in Antigravity / Claude Code)
+Final-Project/                 # project root (open this folder in Antigravity)
 ├── dataset/
 │   ├── raw/                   # API downloads (git-ignored)
 │   ├── processed/             # train.parquet etc. (git-ignored)
