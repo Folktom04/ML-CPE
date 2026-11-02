@@ -272,7 +272,7 @@ NASA POWER มี MAE เทียบ OMI ต่ำกว่า Open-Meteo 1.285
 *รูปที่ 6 recall / precision ของการเตือนด้วย q50, q75 และ q90 `[docs/figures/quantile_alerts.png]`*
 
 ### 4.3 Test 2025 (ประเมินครั้งเดียว)
-ประกาศเกณฑ์ไว้ใน commit `1641d10` / `1443ff9` ก่อนอ่านข้อมูลปี 2025 และหลังเห็นผลไม่ได้แก้อะไร ผล **ผ่าน 14 จาก 15 ข้อ ไม่ผ่าน T4** `[docs/test_2025_criteria.csv]`, `[docs/test_2025_results.json]`
+ประกาศเกณฑ์ไว้ใน commit `d2244cf` / `77aaf85` ก่อนอ่านข้อมูลปี 2025 และหลังเห็นผลไม่ได้แก้อะไร ผล **ผ่าน 14 จาก 15 ข้อ ไม่ผ่าน T4** `[docs/test_2025_criteria.csv]`, `[docs/test_2025_results.json]`
 
 **ตาราง H** เกณฑ์ test 2025 `[docs/test_2025_criteria.csv]`
 
@@ -343,7 +343,7 @@ NASA POWER มี MAE เทียบ OMI ต่ำกว่า Open-Meteo 1.285
 *รูปที่ 9 MAE ของ LSTM เทียบ baseline ตามระยะพยากรณ์ (dev 2024) `[docs/figures/lstm_dev_by_lead.png]`*
 
 ### 4.5 Sky CNN: ผ่าน 7 จาก 10 ข้อ (CCSN ไม่ผ่าน)
-ประกาศเกณฑ์ไว้ใน commit `12c1828` และประเมิน test ครั้งเดียว
+ประกาศเกณฑ์ไว้ใน commit `0279bf9` และประเมิน test ครั้งเดียว
 
 **ตาราง K** `[docs/sky_cnn_test.json]` (ค่าเฉลี่ย ± SD ของ 3 seeds)
 
@@ -385,7 +385,7 @@ NASA POWER มี MAE เทียบ OMI ต่ำกว่า Open-Meteo 1.285
 
 ### 4.7 ระบบซอฟต์แวร์
 
-**ผลเทสอัตโนมัติ** (รันล่าสุดเมื่อ 4 ต.ค. 2026 เวลาไทย ผลจากการรันจริง ไม่ได้มาจากไฟล์ในโปรเจกต์ pytest รันหลัง `c6b05db` ซึ่งไม่ได้แก้โค้ด Python หลังจากนั้น):
+**ผลเทสอัตโนมัติ** (รันล่าสุดเมื่อ 4 ต.ค. 2026 เวลาไทย ผลจากการรันจริง ไม่ได้มาจากไฟล์ในโปรเจกต์ pytest รันหลัง `bc0d44e` ซึ่งไม่ได้แก้โค้ด Python หลังจากนั้น):
 
 | ชุดเทส | ผล | เวลาที่รัน |
 |---|---|---|
@@ -422,9 +422,9 @@ NASA POWER มี MAE เทียบ OMI ต่ำกว่า Open-Meteo 1.285
 
 | บั๊ก | เจอที่ไหน | อาการ | สาเหตุ | แก้ / เทสที่กันไว้ |
 |---|---|---|---|---|
-| **FormData** (วัน 20) | มือถือจริง, Expo Go Android, 29 ก.ย. | กด "ถ่ายและวิเคราะห์" แล้วขึ้น "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" รายละเอียด "Unsupported FormDataPart implementation" และ API ไม่ได้รับ request | SDK 57 บน native ใช้ `expo/fetch` ซึ่งรับ FormData ได้แค่ string, Blob หรือ object ที่มี `bytes()` แต่แอปแนบแบบ `{ uri, name, type }` | แนบ `File` ของ `expo-file-system` แทน และแยก error ขั้น `prepare` ออกจาก network error · `skyUpload.test.ts` รันตัวแปลงจริงของ expo (โค้ดเดิม fail) ส่วนเทสเดิมผ่านเพราะใช้ fetch ปลอม · commit `a24f86b` `[ROADMAP.md วัน 20]` |
-| **expo-notifications** (วัน 22) | มือถือจริง, Expo Go Android, 29 ก.ย. | เปิดแอปแล้วขึ้น "Uncaught Error: expo-notifications: Android Push notifications … was removed from Expo Go with the release of SDK 53" ทั้งแอป | ใน 57.0.21 `index.js` re-export โมดูลที่เรียก `addPushTokenListener` ตั้งแต่ตอน import และ throw บน Android ทำให้แค่ import ก็พัง บั๊กอยู่ตั้งแต่ commit `eb0a433` แต่ Jest ไม่เจอเพราะ mock โมดูลทั้งตัว | โหลด `expo-notifications` แบบ lazy จากไฟล์เดียว (`src/lib/notifications.ts`) ถ้าไม่มีโมดูลก็ปิดสวิตช์เฉพาะบนจอ · `expoGoImport.test.tsx` (ลองย้อนโค้ดแล้ว fail 13/14) · commit `8f2d0ef` `[ROADMAP.md วัน 22]` |
-| **package-lock.json** (วัน 24) | **ตอน EAS build #1 ไม่ใช่บนมือถือ** (build จาก commit `956e8f9`) | `npm ci` EUSAGE "Missing: @emnapi/core@1.11.3 / @emnapi/runtime@1.11.3 from lock file" | npm 11.6.2 บนเครื่องไม่ใส่ peer deps ของ `@napi-rs/wasm-runtime` (optional) ไว้ระดับบนสุดของ lock แต่ npm 10.8.2, 10.9.2 และ 11.4.2 ต้องการให้มี | เพิ่ม 2 รายการลง lock เอง (+25 บรรทัด ไม่มีแพ็กเกจอื่นเปลี่ยนเวอร์ชัน) วันที่ 2 ต.ค. · `__tests__/lockfile.test.ts` + ตรวจด้วย `npx -y npm@10.9.2 ci --dry-run` `[source_code/app/README.md หัวข้อ EAS development build]` |
+| **FormData** (วัน 20) | มือถือจริง, Expo Go Android, 29 ก.ย. | กด "ถ่ายและวิเคราะห์" แล้วขึ้น "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" รายละเอียด "Unsupported FormDataPart implementation" และ API ไม่ได้รับ request | SDK 57 บน native ใช้ `expo/fetch` ซึ่งรับ FormData ได้แค่ string, Blob หรือ object ที่มี `bytes()` แต่แอปแนบแบบ `{ uri, name, type }` | แนบ `File` ของ `expo-file-system` แทน และแยก error ขั้น `prepare` ออกจาก network error · `skyUpload.test.ts` รันตัวแปลงจริงของ expo (โค้ดเดิม fail) ส่วนเทสเดิมผ่านเพราะใช้ fetch ปลอม · commit `f078430` `[ROADMAP.md วัน 20]` |
+| **expo-notifications** (วัน 22) | มือถือจริง, Expo Go Android, 29 ก.ย. | เปิดแอปแล้วขึ้น "Uncaught Error: expo-notifications: Android Push notifications … was removed from Expo Go with the release of SDK 53" ทั้งแอป | ใน 57.0.21 `index.js` re-export โมดูลที่เรียก `addPushTokenListener` ตั้งแต่ตอน import และ throw บน Android ทำให้แค่ import ก็พัง บั๊กอยู่ตั้งแต่ commit `56d7599` แต่ Jest ไม่เจอเพราะ mock โมดูลทั้งตัว | โหลด `expo-notifications` แบบ lazy จากไฟล์เดียว (`src/lib/notifications.ts`) ถ้าไม่มีโมดูลก็ปิดสวิตช์เฉพาะบนจอ · `expoGoImport.test.tsx` (ลองย้อนโค้ดแล้ว fail 13/14) · commit `6a3093d` `[ROADMAP.md วัน 22]` |
+| **package-lock.json** (วัน 24) | **ตอน EAS build #1 ไม่ใช่บนมือถือ** (build จาก commit `d68926b`) | `npm ci` EUSAGE "Missing: @emnapi/core@1.11.3 / @emnapi/runtime@1.11.3 from lock file" | npm 11.6.2 บนเครื่องไม่ใส่ peer deps ของ `@napi-rs/wasm-runtime` (optional) ไว้ระดับบนสุดของ lock แต่ npm 10.8.2, 10.9.2 และ 11.4.2 ต้องการให้มี | เพิ่ม 2 รายการลง lock เอง (+25 บรรทัด ไม่มีแพ็กเกจอื่นเปลี่ยนเวอร์ชัน) วันที่ 2 ต.ค. · `__tests__/lockfile.test.ts` + ตรวจด้วย `npx -y npm@10.9.2 ci --dry-run` `[source_code/app/README.md หัวข้อ EAS development build]` |
 
 **บทเรียน:** บั๊กทั้ง 3 ตัวผ่านเทสอัตโนมัติมาแล้ว เพราะเทส mock ส่วนที่พังจริง (fetch, native module) หรือรันด้วย npm คนละเวอร์ชันกับเครื่อง build การทดสอบบนมือถือจริงและบนเครื่อง build จึงจำเป็น
 
@@ -436,7 +436,7 @@ NASA POWER มี MAE เทียบ OMI ต่ำกว่า Open-Meteo 1.285
 | หัวข้อ | ค่า |
 |---|---|
 | มือถือ | Samsung Galaxy S23 Ultra, Android 16 (One UI 8.5) |
-| build | EAS development build `791d5b3f` (จาก commit `da9057a`) โหลด JS ผ่าน Metro จากโค้ดในเครื่อง ณ เวลาทดสอบ |
+| build | EAS development build `791d5b3f` (จาก commit `fdb87cd`) โหลด JS ผ่าน Metro จากโค้ดในเครื่อง ณ เวลาทดสอบ |
 | การแจ้งเตือน | แจ้งเตือนในเครื่อง (local) เท่านั้น ไม่มี FCM |
 | สถานที่ / ช่วงเวลา / ผู้ทดสอบ | ปทุมธานี สถานที่เดียว วันเดียว ผู้ทดสอบคนเดียว |
 | ท้องฟ้า | เมฆบางส่วน |
@@ -468,7 +468,7 @@ NASA POWER มี MAE เทียบ OMI ต่ำกว่า Open-Meteo 1.285
 - **ตรวจสูตร % ของ MED:** ตอน 12:00 แอปแสดง 160 % ของ MED สูตรได้ 162 %
 - **ความแม่นยำของ UVI ในวันทดสอบ: ประเมินไม่ได้** เพราะไม่มีเครื่องวัด UV ภาคพื้น และไม่ได้เทียบกับ Open-Meteo ณ เวลาและที่เดียวกัน
 
-**ตาราง Q** บั๊กที่พบวันที่ 4 ต.ค. และแก้แล้ว (ข้อ 1–3 ใน commit `c6b05db`, ข้อ 4 ใน `d2b1762`)
+**ตาราง Q** บั๊กที่พบวันที่ 4 ต.ค. และแก้แล้ว (ข้อ 1–3 ใน commit `bc0d44e`, ข้อ 4 ใน `fe30da0`)
 
 | # | อาการ | แก้ |
 |---|---|---|
@@ -522,7 +522,7 @@ NASA POWER มี MAE เทียบ OMI ต่ำกว่า Open-Meteo 1.285
 
 | # | อาการ | สาเหตุ | แก้ |
 |---|---|---|---|
-| 1 | 21 ต.ค. กด "ออกแดด" 14:24 การ์ดบอก "จะเตือนราว 15:02" แต่หลังรีเฟรช 15:00 การ์ดขึ้น "ยังคำนวณปริมาณ UV ที่ได้รับไม่ได้" และไม่ได้รับแจ้งเตือน | `/predict` เริ่มที่ชั่วโมงปัจจุบัน ชั่วโมงที่ session เริ่มจึงหายจากข้อมูลชุดใหม่ ปริมาณ UV คำนวณไม่ได้และการเตือนถูกยกเลิก | เก็บชั่วโมงตั้งแต่กด "ออกแดด" แล้วรวมกับข้อมูลใหม่ (commit `f98f98b`) · **ยืนยันบนมือถือ 25 ต.ค.:** กด 11:50 หลังข้าม 12:00 การ์ดยังแสดง 37 % ของ MED และ "จะเตือนราว 12:12" (สูตรได้ 36.4 % และ 12:12) แจ้งเตือนมาจริง |
+| 1 | 21 ต.ค. กด "ออกแดด" 14:24 การ์ดบอก "จะเตือนราว 15:02" แต่หลังรีเฟรช 15:00 การ์ดขึ้น "ยังคำนวณปริมาณ UV ที่ได้รับไม่ได้" และไม่ได้รับแจ้งเตือน | `/predict` เริ่มที่ชั่วโมงปัจจุบัน ชั่วโมงที่ session เริ่มจึงหายจากข้อมูลชุดใหม่ ปริมาณ UV คำนวณไม่ได้และการเตือนถูกยกเลิก | เก็บชั่วโมงตั้งแต่กด "ออกแดด" แล้วรวมกับข้อมูลใหม่ (commit `bb3100b`) · **ยืนยันบนมือถือ 25 ต.ค.:** กด 11:50 หลังข้าม 12:00 การ์ดยังแสดง 37 % ของ MED และ "จะเตือนราว 12:12" (สูตรได้ 36.4 % และ 12:12) แจ้งเตือนมาจริง |
 | 2 | ในโหมด GPS ที่ไม่มีสิทธิ์ตำแหน่ง หน้าหลักบอก "เปลี่ยนได้ในหน้าตั้งค่า" แต่หน้าตั้งค่าไม่มีปุ่ม "ใช้ GPS" ต้องเลือกจังหวัดอื่นก่อน (ผู้ทดสอบสังเกต) | ปุ่มแสดงเฉพาะเมื่อไม่ได้อยู่ในโหมด GPS | หน้าตั้งค่าตรวจสิทธิ์แล้วแสดงปุ่ม "ใช้ GPS" ถ้ายังไม่มีสิทธิ์ (ยืนยันด้วย Jest ยังไม่ได้ทดสอบบนมือถือ) |
 
 **ตาราง V** เวลาแจ้งเตือน (เลือกรายการที่รู้เวลาที่ตั้ง)
@@ -568,7 +568,7 @@ NASA POWER มี MAE เทียบ OMI ต่ำกว่า Open-Meteo 1.285
 - ข้อมูล: Open-Meteo Satellite Radiation API (`models=jma_jaxa_himawari`) ค่ารายชั่วโมงเป็นค่าเฉลี่ยย้อนหลังที่ติดป้ายตอนจบชั่วโมง ข้อมูลออกช้าประมาณ 30 นาที
 - feature ใหม่ 3 ตัว (ชุด **S1**, ใช้ค่าของชั่วโมงก่อนหน้า): `sat_kt_l1` (ดัชนีความใสของท้องฟ้าจากดาวเทียม), `sat_diffuse_fraction_l1` (สัดส่วนแสงกระจาย), `sat_minus_om_kt_l1` (ส่วนต่างกับค่าจาก Open-Meteo) รวมเป็น 26 features เทียบกับชุดเดิม **B** ที่ไม่มีดาวเทียม ชุด S0 (ชั่วโมงเดียวกัน ใช้จริงไม่ได้) และ lag 2 ชม. รายงานเพื่อดูเพดานเท่านั้น
 - ใช้ hyperparameter เดิมของโมเดลหลัก, 5 seeds (42–46), bootstrap แบบสุ่มเป็นวัน 2,000 รอบ
-- **ประกาศเกณฑ์ไว้ล่วงหน้า** ใน commit `f4f625e` (8 ต.ค. 2026) ก่อนดู test, ฝึก 2023 → dev 2024 และ CV folds 3–5 เพื่อตัดสินใจ "ไปต่อ" จากนั้นฝึกใหม่บน 2023–2025 แล้วเปิด **test ม.ค.–มิ.ย. 2026 ครั้งเดียว** (ช่วงที่ NASA POWER มีข้อมูลถึง 30 มิ.ย. 2026) มีไฟล์ lock บันทึกเวลาเปิดและ SHA-256 ของไฟล์ input ทั้ง 10 ไฟล์ `[docs/sat_test_2026.lock]`
+- **ประกาศเกณฑ์ไว้ล่วงหน้า** ใน commit `e80f393` (8 ต.ค. 2026) ก่อนดู test, ฝึก 2023 → dev 2024 และ CV folds 3–5 เพื่อตัดสินใจ "ไปต่อ" จากนั้นฝึกใหม่บน 2023–2025 แล้วเปิด **test ม.ค.–มิ.ย. 2026 ครั้งเดียว** (ช่วงที่ NASA POWER มีข้อมูลถึง 30 มิ.ย. 2026) มีไฟล์ lock บันทึกเวลาเปิดและ SHA-256 ของไฟล์ input ทั้ง 10 ไฟล์ `[docs/sat_test_2026.lock]`
 
 **ตาราง R** ผลบน dev 2024 และ CV (ผ่านทุกข้อ D1–D4 จึงไปต่อ) `[docs/sat_dev_results.json]`
 

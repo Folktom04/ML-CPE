@@ -68,7 +68,7 @@ Alert comparison, CV folds 3–5 (≥ Very high events 704, Extreme 53):
 
 ## 3. Test 2025, evaluated once (day 10)
 
-Criteria pre-registered in commits `1641d10` / `1443ff9` before any 2025 data was read. Final CQR Q = +0.0379 (CMF) `[source_code/models/cqr_q_final_v1.json]`.
+Criteria pre-registered in commits `d2244cf` / `77aaf85` before any 2025 data was read. Final CQR Q = +0.0379 (CMF) `[source_code/models/cqr_q_final_v1.json]`.
 `[docs/test_2025_criteria.csv]`, `[docs/test_2025_results.json]` — **14 / 15 pass**
 
 | # | Criterion | Value | Pass |
@@ -111,7 +111,7 @@ More from `[docs/test_2025_results.json]`: n = 3,718 hours; UVA MAE 2.910 W/m²,
 **Data** `[docs/sky_splits/ccsn_split.csv]`, `[docs/sky_splits/swimcat_ext_split.csv]`: CCSN 2,543 images (train/val/test 1,785 / 383 / 375; 263 images in cross-label duplicate groups; 344 in near-duplicate groups). SWIMCAT-ext 2,100 images (1,472 / 317 / 311; 1,470 in near-duplicate groups).
 **Validation, 3 seeds** `[source_code/models/sky_cnn_v1_metrics.json]`: CCSN acc 0.521 / 0.518 / 0.516, UV-group 0.717 / 0.708 / 0.703, SWIMCAT-ext 0.991 / 0.984 / 0.987; colour baseline CCSN 0.314, SWIMCAT-ext per group 0.799. Exported seed 43 (lowest val loss).
 
-**Test, once** (criteria pre-registered in `12c1828`) `[docs/sky_cnn_test.json]` — **7 / 10 pass**
+**Test, once** (criteria pre-registered in `0279bf9`) `[docs/sky_cnn_test.json]` — **7 / 10 pass**
 
 | # | Criterion | Value (mean ± SD, 3 seeds) | Pass |
 |---|---|---|---|
@@ -130,7 +130,7 @@ UV-group recall: high thin 0.707, mid 0.366, low thick 0.864, cumulus 0.413. CCS
 
 **Cross-dataset duplicate check (day 15)** `[docs/sky_cnn_crosscheck.json]`, `[docs/sky_crossdataset_duplicates.csv]`: the day-13 rule flagged 11 CCSN × SWIMCAT-ext pairs (1 CCSN-train / SWIMCAT-test, 7 train/train, 2 train/val, 1 val/val); by visual inspection none is the same photo (low-texture look-alikes). Supplementary score without the 1 flagged test image: SWIMCAT-ext 0.975 per image, 0.967 per group (310 images / 180 groups); CCSN unchanged. Re-scoring the saved models reproduces every headline number of `sky_cnn_test.json` (checkpoint).
 
-**Cloud-fraction head from SWIMSEG (after day 20)** `[docs/sky_cloud_test.json]`, `[source_code/models/sky_cloud_v1_metrics.json]`, `[docs/figures/sky_cloud_test_scatter.png]`. Criteria pre-registered in `d755ede` (before training and before the test split was read). Frozen MobileNetV3Small backbone of the day-14 seed-43 model + Dropout + Dense(1, sigmoid), MAE loss, 3 seeds; target = share of cloud pixels in the SWIMSEG mask (white = cloud). Split by capture day because the 1,013 patches come from 33 captures on 17 days: train 735 / 9 days, val 137 / 3 days, test 141 / 5 days, no group across splits `[docs/sky_splits/swimseg_split.csv]`. Validation MAE 0.0795 / 0.0783 / 0.0776 (red/blue 0.150); exported seed 44 (TFLite max diff vs Keras on val 0.0077).
+**Cloud-fraction head from SWIMSEG (after day 20)** `[docs/sky_cloud_test.json]`, `[source_code/models/sky_cloud_v1_metrics.json]`, `[docs/figures/sky_cloud_test_scatter.png]`. Criteria pre-registered in `46dd2f1` (before training and before the test split was read). Frozen MobileNetV3Small backbone of the day-14 seed-43 model + Dropout + Dense(1, sigmoid), MAE loss, 3 seeds; target = share of cloud pixels in the SWIMSEG mask (white = cloud). Split by capture day because the 1,013 patches come from 33 captures on 17 days: train 735 / 9 days, val 137 / 3 days, test 141 / 5 days, no group across splits `[docs/sky_splits/swimseg_split.csv]`. Validation MAE 0.0795 / 0.0783 / 0.0776 (red/blue 0.150); exported seed 44 (TFLite max diff vs Keras on val 0.0077).
 
 **Test, once — 2 / 2 pass**
 

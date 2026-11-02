@@ -1,7 +1,7 @@
 task: detect
 mode: train
-model: /home/claude/weights/yolov8n.pt
-data: /home/claude/ML-10-Object-Detection-II/dataset/data.yaml
+model: weights/yolov8n.pt
+data: dataset/data.yaml
 epochs: 30
 time: null
 patience: 10
@@ -12,7 +12,7 @@ save_period: -1
 cache: false
 device: cpu
 workers: 2
-project: /home/claude/ML-10-Object-Detection-II/outputs
+project: outputs
 name: train
 exist_ok: true
 pretrained: true
@@ -111,4 +111,4 @@ auto_augment: randaugment
 erasing: 0.4
 cfg: null
 tracker: tracktrack.yaml
-save_dir: /home/claude/ML-10-Object-Detection-II/outputs/train
+save_dir: outputs/train
