@@ -14,3 +14,5 @@ date,kind,scheduled_local,received_local,delay_min,battery_saver,device_state,sk
 2026-10-25,burn,12:12,12:36,24,off,locked; arrived when phone woken,III,ใกล้ถึงเวลาผิวไหม้ (ประมาณ),session crossed 11:00->12:00
 2026-10-25,reapply,14:00,14:57,57,off,locked,III,ถึงเวลาทาครีมกันแดดซ้ำ,applied about noon (tester)
 2026-10-25,uv_safe,14:00,14:57,57,off,locked; battery 18%,III,UV ลดลงแล้ว ตั้งแต่ 14:00,arrived same minute as reapply
+2026-11-03,burn,14:55,15:16,21,unknown,locked; app set to unrestricted battery while waiting,I,ใกล้ถึงเวลาผิวไหม้ (ประมาณ),round 3 rehearsal; expected time from formula (session started 14:34)
+2026-11-03,reapply,16:57,17:52,55,unknown,locked,I,ถึงเวลาทาครีมกันแดดซ้ำ,round 3 rehearsal; applied 14:57
