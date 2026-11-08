@@ -4,7 +4,16 @@ import {
   skyImageForm,
   uploadSkyImage,
 } from '@/api/client';
-import { cloudLevelTh, LOW_CONFIDENCE, pct, rankedClasses, skyView } from '@/lib/sky';
+import {
+  cloudLevelTh,
+  compareCloud,
+  LOW_CONFIDENCE,
+  pct,
+  rankedClasses,
+  SKY_CLASS_TH,
+  SKY_UV_MEANING_TH,
+  skyView,
+} from '@/lib/sky';
 import { analyzeSkyPhoto, reencodePhoto, removeTempFile, type SkyPhotoDeps } from '@/lib/skyPhoto';
 
 import { sampleSky, unsureSky } from './fixtures_sky';
@@ -191,5 +200,45 @@ describe('cloudLevelTh (SWIMSEG head shown as a level, not a percentage)', () =>
     [1, 'มาก'],
   ])('%p → %p', (f, level) => {
     expect(cloudLevelTh(f)).toBe(level);
+  });
+});
+
+describe('compareCloud (photo vs forecast cloud cover)', () => {
+  const view = (cnn: number | null, rb = 0.5) =>
+    skyView({
+      ...sampleSky(0.9),
+      cloud_fraction_rb: rb,
+      ...(cnn === null ? {} : { cloud_fraction_cnn: cnn }),
+    });
+
+  it('same level: match; one level apart: close', () => {
+    expect(compareCloud(view(0.8), 90)?.verdict).toBe('match');
+    expect(compareCloud(view(0.5), 90)?.verdict).toBe('close');
+  });
+
+  it('two levels apart: differ, worded by direction (less cloud in photo = UV may be higher)', () => {
+    const less = compareCloud(view(0.1), 95)!;
+    expect(less.verdict).toBe('differ');
+    expect(less.message).toMatch(/แรงกว่าค่าที่แสดง/);
+    const more = compareCloud(view(0.9), 5)!;
+    expect(more.verdict).toBe('differ');
+    expect(more.message).toMatch(/ยังเตือนตามพยากรณ์/);
+  });
+
+  it('uses the red/blue proxy when the model fraction is absent', () => {
+    expect(compareCloud(view(null, 0.1), 10)).toMatchObject({
+      photoLevel: 'น้อย',
+      verdict: 'match',
+    });
+  });
+
+  it('no forecast value: null', () => {
+    expect(compareCloud(view(0.5), null)).toBeNull();
+    expect(compareCloud(view(0.5), undefined)).toBeNull();
+    expect(compareCloud(view(0.5), Number.NaN)).toBeNull();
+  });
+
+  it('has a UV meaning for every sky class', () => {
+    expect(Object.keys(SKY_UV_MEANING_TH).sort()).toEqual(Object.keys(SKY_CLASS_TH).sort());
   });
 });

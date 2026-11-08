@@ -16,6 +16,8 @@ export type HourUV = {
   alert_uvi: number;
   /** Clear-sky UVI >= 0.5; no alerts at night. */
   is_daylight: boolean;
+  /** Open-Meteo total cloud cover (%) used by the model; missing on older servers. */
+  cloud_cover?: number | null;
 };
 
 export type PredictRequest = {
@@ -112,6 +114,8 @@ export type SkyImageResponse = {
    * while that head's one-time test passed its criteria (C1/C2).
    */
   cloud_fraction_cnn?: number;
+  /** JPEG data URI: the analysed crop with red/blue cloud pixels tinted orange (not stored). */
+  cloud_overlay?: string;
   reliability: Record<string, string>;
   note: string;
   stored: boolean;

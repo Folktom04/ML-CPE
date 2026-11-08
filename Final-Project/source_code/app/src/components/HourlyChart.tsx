@@ -160,7 +160,7 @@ export function HourlyChart({ hours, isDaylight }: { hours: HourUV[]; isDaylight
 
 const styles = StyleSheet.create({
   muted: { color: colors.muted },
-  detail: { color: colors.text, fontSize: 14, fontWeight: '600' },
+  detail: { color: colors.text, fontSize: 15, fontWeight: '600' },
   row: { flexDirection: 'row' },
   axis: { width: AXIS_W, position: 'relative' },
   tick: {
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
-  bar: { width: BAR_W, borderTopLeftRadius: 4, borderTopRightRadius: 4 },
+  bar: { width: BAR_W, borderTopLeftRadius: 7, borderTopRightRadius: 7 },
   zero: { width: BAR_W, height: 2, backgroundColor: colors.border },
   whisker: {
     position: 'absolute',
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   ticks: { flexDirection: 'row' },
   tickSlot: { width: SLOT_W, alignItems: 'center', gap: 2, paddingTop: 3 },
   marker: { width: 8, height: 8, borderRadius: 4 },
-  markerOn: { backgroundColor: colors.text },
+  markerOn: { backgroundColor: colors.accent },
   hourOn: { color: colors.text, fontWeight: '700' },
   hour: {
     width: SLOT_W,
@@ -217,6 +217,6 @@ const styles = StyleSheet.create({
   summary: { color: colors.muted, fontSize: 12 },
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  swatch: { width: 10, height: 10, borderRadius: 2 },
+  swatch: { width: 10, height: 10, borderRadius: 5 },
   legendText: { fontSize: 12, color: colors.muted },
 });

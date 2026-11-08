@@ -21,6 +21,10 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerTitleAlign: 'center',
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.accent,
+          headerTitleStyle: { color: colors.text, fontWeight: '600', fontSize: 17 },
           contentStyle: { backgroundColor: colors.background },
         }}>
         <Stack.Screen
@@ -40,5 +44,5 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  headerLink: { color: colors.text, fontSize: 16, fontWeight: '600', paddingHorizontal: 8 },
+  headerLink: { color: colors.accent, fontSize: 17, fontWeight: '400', paddingHorizontal: 8 },
 });

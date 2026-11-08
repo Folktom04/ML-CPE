@@ -175,6 +175,7 @@ export default function SettingsScreen() {
           label={CONSENT_LABEL_TH}
           hint={CONSENT_HINT_TH}>
           <Switch
+            trackColor={{ false: '#E9E9EB', true: '#34C759' }}
             value={s.serverConsent}
             onValueChange={(v) => update({ serverConsent: v })}
             accessibilityLabel="ยินยอมให้ส่งข้อมูลไปเซิร์ฟเวอร์"
@@ -196,6 +197,7 @@ export default function SettingsScreen() {
           label="เปิดการแจ้งเตือน"
           hint="แจ้งเตือนจากในเครื่อง ตั้งเวลาล่วงหน้าจากพยากรณ์ ไม่ส่งข้อมูลออกจากมือถือ ใช้ได้โดยไม่ต้องยินยอม">
           <Switch
+            trackColor={{ false: '#E9E9EB', true: '#34C759' }}
             value={available ? s.notifyEnabled : false}
             disabled={!available}
             onValueChange={async (v) => {
@@ -249,6 +251,7 @@ export default function SettingsScreen() {
       <Card title="แจ้งเตือนในเครื่อง">
         <Row label="สรุป UV ทุกเช้า 07:00">
           <Switch
+            trackColor={{ false: '#E9E9EB', true: '#34C759' }}
             value={available ? s.dailySummary : false}
             disabled={!available}
             onValueChange={(v) => (available ? update({ dailySummary: v }) : undefined)}
@@ -258,6 +261,7 @@ export default function SettingsScreen() {
         </Row>
         <Row label="เตือนทาครีมกันแดดซ้ำทุก 2 ชม.">
           <Switch
+            trackColor={{ false: '#E9E9EB', true: '#34C759' }}
             value={available ? s.reapplyReminder : false}
             disabled={!available}
             onValueChange={(v) => (available ? update({ reapplyReminder: v }) : undefined)}
@@ -392,43 +396,37 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 16, gap: 12, maxWidth: 640, width: '100%', alignSelf: 'center' },
+  content: { padding: 16, paddingBottom: 32, gap: 14, maxWidth: 680, width: '100%', alignSelf: 'center' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   rowText: { flex: 1, gap: 2 },
   label: { color: colors.text, fontSize: 15, fontWeight: '600' },
-  value: { color: colors.text, fontSize: 18, fontWeight: '700' },
+  value: { color: colors.text, fontSize: 20, fontWeight: '700', letterSpacing: -0.3 },
   hint: { color: colors.muted, fontSize: 13 },
-  segments: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  segment: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  segmentOn: { backgroundColor: colors.text, borderColor: colors.text },
-  segmentText: { color: colors.text, fontWeight: '600' },
-  segmentTextOn: { color: '#FFFFFF' },
+  segments: { flexDirection: 'row', flexWrap: 'wrap', backgroundColor: colors.fill, borderRadius: 10, padding: 2, gap: 2 },
+  segment: { paddingVertical: 7, paddingHorizontal: 12, borderRadius: 8 },
+  segmentOn: { backgroundColor: colors.card, boxShadow: '0 1px 3px rgba(0,0,0,0.12)' },
+  segmentText: { color: colors.text, fontWeight: '500' },
+  segmentTextOn: { fontWeight: '700' },
   sync: { color: colors.muted, fontSize: 12, textAlign: 'center' },
   buttonOutline: {
     alignSelf: 'flex-start',
     borderWidth: 1,
-    borderColor: colors.text,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    borderColor: colors.accent,
+    borderRadius: 980,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
   },
-  buttonOutlineText: { color: colors.text, fontWeight: '600' },
+  buttonOutlineText: { color: colors.accent, fontSize: 16, fontWeight: '500' },
   danger: {
     alignSelf: 'flex-start',
-    backgroundColor: '#B42318',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    backgroundColor: '#D70015',
+    borderRadius: 980,
+    paddingHorizontal: 20,
+    paddingVertical: 11,
   },
-  dangerText: { color: '#FFFFFF', fontWeight: '600' },
+  dangerText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
   confirm: { gap: 8 },
   confirmButtons: { flexDirection: 'row', gap: 8 },
-  error: { color: '#B42318', fontSize: 13 },
+  error: { color: '#D70015', fontSize: 13 },
 });

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { HourUV } from '@/api/types';
-import { Card, colors, Note } from '@/components/Card';
+import { Card, colors, Note, ui } from '@/components/Card';
 import { planReapply } from '@/lib/alertPlan';
 import { BURN_FRACTION, sunStatus } from '@/lib/dose';
 import {
@@ -33,10 +33,10 @@ function Button({
   return (
     <Pressable
       onPress={onPress}
-      style={kind === 'primary' ? styles.primary : styles.outline}
+      style={kind === 'primary' ? ui.button : ui.outline}
       accessibilityRole="button"
       testID={testID}>
-      <Text style={kind === 'primary' ? styles.primaryText : styles.outlineText}>{label}</Text>
+      <Text style={kind === 'primary' ? ui.buttonText : ui.outlineText}>{label}</Text>
     </Pressable>
   );
 }
@@ -177,25 +177,8 @@ export function SunSessionCard({
 }
 
 const styles = StyleSheet.create({
-  block: { gap: 6 },
-  value: { color: colors.text, fontSize: 15, fontWeight: '700' },
-  text: { color: colors.text, fontSize: 14 },
-  hint: { color: colors.muted, fontSize: 12 },
-  primary: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.text,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  primaryText: { color: '#FFFFFF', fontWeight: '600' },
-  outline: {
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: colors.text,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  outlineText: { color: colors.text, fontWeight: '600' },
+  block: { gap: 8 },
+  value: { color: colors.text, fontSize: 17, fontWeight: '700' },
+  text: { color: colors.text, fontSize: 15, lineHeight: 22 },
+  hint: { color: colors.muted, fontSize: 12, lineHeight: 17 },
 });

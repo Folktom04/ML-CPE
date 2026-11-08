@@ -1,17 +1,39 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
-import { ApiError, uploadSkyImage } from '@/api/client';
+import { ApiError, fetchForecast, uploadSkyImage } from '@/api/client';
 import CameraScreen from '@/app/camera';
-import { SKY_DOMAIN_GAP_TH, SKY_NOTICE_TH } from '@/lib/sky';
+import { SKY_DOMAIN_GAP_TH, SKY_NOTICE_TH, SKY_UV_MEANING_TH } from '@/lib/sky';
 
 import { sampleSky, unsureSky } from './fixtures_sky';
 import { MemoryStorage, renderWithSettings } from './helpers';
 
 jest.mock('@/api/client', () => {
   const actual = jest.requireActual('@/api/client');
-  return { ...actual, uploadSkyImage: jest.fn() };
+  return { ...actual, uploadSkyImage: jest.fn(), fetchForecast: jest.fn() };
 });
 const mockUpload = uploadSkyImage as jest.MockedFunction<typeof uploadSkyImage>;
+const mockForecast = fetchForecast as jest.MockedFunction<typeof fetchForecast>;
+const forecastWithCloud = (cloud: number | null) => ({
+  lat: 14.02,
+  lon: 100.52,
+  hours: [
+    {
+      time: '2026-11-09T12:00:00+07:00',
+      uvi: 6,
+      uvi_range: [5, 7] as [number, number],
+      uva_wm2: 30,
+      uvb_wm2: 1,
+      level: 'สูง',
+      interval_adjusted: false,
+      data_imputed: false,
+      alert_uvi: 7,
+      is_daylight: true,
+      cloud_cover: cloud,
+    },
+  ],
+  note: null,
+  disclaimer: '',
+});
 const cam = jest.requireMock('expo-camera').__state;
 const fs = jest.requireMock('expo-file-system');
 const accel = jest.requireMock('expo-sensors').Accelerometer;
@@ -21,6 +43,8 @@ const CLEAN = 'file:///cache/ImageManipulator/clean.jpg';
 
 beforeEach(() => {
   mockUpload.mockReset();
+  mockForecast.mockReset();
+  mockForecast.mockResolvedValue(forecastWithCloud(30));
   cam.takePictureAsync.mockClear();
   cam.requestPermission.mockClear();
   cam.permission = { granted: true, canAskAgain: true, status: 'granted' };
@@ -78,6 +102,8 @@ it('takes a photo without EXIF, uploads the re-encoded copy, shows the result, d
   expect(screen.getByTestId('sky-confidence')).toHaveTextContent('87%', {
     exact: false,
   });
+  expect(screen.queryByTestId('sky-cloud')).toBeNull(); // folded under the details toggle
+  await act(async () => fireEvent.press(screen.getByTestId('sky-details-toggle')));
   expect(screen.getByTestId('sky-cloud')).toHaveTextContent('62%', {
     exact: false,
   });
@@ -190,6 +216,7 @@ it('shows the model cloud fraction (in the image, not the whole sky) only when t
   await act(async () => fireEvent.press(await screen.findByTestId('camera-shoot')));
   expect(await screen.findByTestId('sky-cloud-cnn')).toHaveTextContent('เมฆในภาพ (โมเดล): ปานกลาง');
   expect(screen.getByTestId('sky-cloud-cnn')).not.toHaveTextContent('55%', { exact: false });
+  await act(async () => fireEvent.press(screen.getByTestId('sky-details-toggle')));
   expect(screen.getByTestId('sky-cloud-cnn-clear-note')).toHaveTextContent(
     'หมายเหตุ: ภาพท้องฟ้าใสอาจแสดงเป็นเมฆน้อย',
   );
@@ -206,7 +233,81 @@ it('without cloud_fraction_cnn only the red/blue line is shown', async () => {
   mockUpload.mockResolvedValue(sampleSky(0.87));
   await renderWithSettings(<CameraScreen />, acked());
   await act(async () => fireEvent.press(await screen.findByTestId('camera-shoot')));
-  expect(await screen.findByTestId('sky-cloud')).toBeTruthy();
+  await act(async () => fireEvent.press(await screen.findByTestId('sky-details-toggle')));
+  expect(screen.getByTestId('sky-cloud')).toBeTruthy();
   expect(screen.queryByTestId('sky-cloud-cnn')).toBeNull();
   expect(screen.queryByTestId('sky-cloud-cnn-clear-note')).toBeNull();
+});
+
+describe('complete result (overlay, bars, UV meaning, forecast check)', () => {
+  async function shoot(sky = sampleSky(0.87)) {
+    mockUpload.mockResolvedValue(sky);
+    await renderWithSettings(<CameraScreen />, acked());
+    await act(async () => fireEvent.press(await screen.findByTestId('camera-shoot')));
+    await screen.findByTestId('sky-confidence');
+  }
+
+  it('shows the cloud overlay sent by the API, and nothing when it is missing', async () => {
+    await shoot({
+      ...sampleSky(0.87),
+      cloud_overlay: 'data:image/jpeg;base64,AAAA',
+    });
+    expect(screen.getByTestId('sky-overlay').props.source).toEqual({
+      uri: 'data:image/jpeg;base64,AAAA',
+    });
+    expect(screen.getByTestId('sky-overlay-legend')).toHaveTextContent('สีส้ม', { exact: false });
+  });
+
+  it('no overlay field: no picture', async () => {
+    await shoot();
+    expect(screen.queryByTestId('sky-overlay')).toBeNull();
+  });
+
+  it('all six classes as bars, most likely first', async () => {
+    await shoot();
+    const ids = screen.getAllByTestId(/^sky-prob-/).map((e) => e.props.testID);
+    expect(ids).toHaveLength(6);
+    expect(ids[0]).toBe('sky-prob-thick_white_clouds');
+    expect(screen.getByTestId('sky-prob-thick_white_clouds')).toHaveTextContent('87%', {
+      exact: false,
+    });
+  });
+
+  it('explains what the class means for UV, with the source', async () => {
+    await shoot();
+    expect(screen.getByTestId('sky-uv-meaning')).toHaveTextContent(
+      SKY_UV_MEANING_TH.thick_white_clouds,
+    );
+    expect(screen.getByTestId('sky-uv-source')).toHaveTextContent('WHO', {
+      exact: false,
+    });
+  });
+
+  it('unsure: the meaning is for the most likely class, said as "ถ้าเป็น…"', async () => {
+    await shoot(unsureSky());
+    expect(screen.getByTestId('sky-uv-meaning')).toHaveTextContent(
+      `ถ้าเป็นเมฆบางคลุมทั่วฟ้า: ${SKY_UV_MEANING_TH.veil_clouds}`,
+    );
+  });
+
+  it('compares the photo with the forecast cloud cover of this hour (default place)', async () => {
+    mockForecast.mockResolvedValue(forecastWithCloud(85));
+    await shoot({ ...sampleSky(0.87), cloud_fraction_cnn: 0.8 });
+    expect(await screen.findByTestId('sky-compare-verdict')).toHaveTextContent('ตรงกัน');
+    expect(screen.getByTestId('sky-compare')).toHaveTextContent('เมฆมาก (85%)', { exact: false });
+    expect(mockForecast).toHaveBeenCalledWith(14.02, 100.52, 1);
+  });
+
+  it('forecast failure keeps the photo result', async () => {
+    mockForecast.mockRejectedValue(new Error('offline'));
+    await shoot();
+    expect(await screen.findByTestId('sky-compare-error')).toBeTruthy();
+    expect(screen.getByTestId('sky-class')).toBeTruthy();
+  });
+
+  it('forecast without cloud cover (older server)', async () => {
+    mockForecast.mockResolvedValue(forecastWithCloud(null));
+    await shoot();
+    expect(await screen.findByTestId('sky-compare-none')).toBeTruthy();
+  });
 });

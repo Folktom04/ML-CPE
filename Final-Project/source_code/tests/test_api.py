@@ -388,3 +388,38 @@ def test_forecast_hours_carry_alert_uvi_and_daylight(client):
             if not h["is_daylight"]:
                 assert h["uvi"] == 0 and h["alert_uvi"] == 0
         assert {h["is_daylight"] for h in hours} == {True, False}  # 24 h has day and night
+
+
+def _overlay_image(uri: str) -> np.ndarray:
+    import base64
+
+    assert uri.startswith("data:image/jpeg;base64,")
+    return np.asarray(Image.open(io.BytesIO(base64.b64decode(uri.split(",", 1)[1]))).convert("RGB"))
+
+
+def test_cloud_overlay_tints_only_cloud_pixels():
+    from src.sky_infer import OVERLAY_SIZE, cloud_overlay_jpeg
+
+    img = np.zeros((224, 224, 3), dtype=np.float32)
+    img[:, :112] = (0.35, 0.55, 0.9)  # blue sky (NRBR 0.44 >= 0.25)
+    img[:, 112:] = (0.9, 0.9, 0.92)  # white cloud (NRBR ~0.01 < 0.25)
+    out = _overlay_image(cloud_overlay_jpeg(img))
+    assert out.shape == (OVERLAY_SIZE, OVERLAY_SIZE, 3)
+    sky, cloud = out[:, : OVERLAY_SIZE // 4].mean((0, 1)), out[:, -OVERLAY_SIZE // 4 :].mean((0, 1))
+    assert sky[2] > sky[0] + 60  # sky stays blue
+    assert cloud[0] > 220 and cloud[2] < 150  # cloud turns orange
+    with pytest.raises(ValueError):
+        cloud_overlay_jpeg(img * 255)  # 0-255 input is rejected like the models
+
+
+def test_sky_image_returns_overlay_and_still_stores_nothing(client):
+    body = client.post("/sky-image", files={"file": ("s.png", png_bytes(), "image/png")}).json()
+    assert body["stored"] is False
+    assert _overlay_image(body["cloud_overlay"]).shape[2] == 3
+
+
+def test_hours_carry_open_meteo_cloud_cover(client):
+    fc = client.get("/forecast", params={"lat": 14.02, "lon": 100.52, "hours": 6}).json()
+    assert [h["cloud_cover"] for h in fc["hours"]] == [30.0] * len(fc["hours"])  # synthetic_raw
+    p = client.post("/predict", json=PAYLOAD).json()
+    assert all(h["cloud_cover"] == 30.0 for h in p["forecast"])

@@ -293,6 +293,8 @@ def predict_hours(feat: pd.DataFrame, bundle: ModelBundle) -> pd.DataFrame:
     """
     out = feat[["time_utc", "is_day"]].copy()
     out["data_imputed"] = feat["data_imputed"] if "data_imputed" in feat else False
+    # Open-Meteo cloud cover (a model feature), shown next to the sky photo result
+    out["cloud_cover"] = feat["cloud_cover"].to_numpy(dtype=float)
     X = feat[FEATURES]
     cmf = predict_multi(bundle.multi, X)
     cmf_q = apply_cqr(predict_quantiles(bundle.quant, X), bundle.cqr_q)

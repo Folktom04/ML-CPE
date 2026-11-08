@@ -13,8 +13,10 @@ import {
 
 import { ApiError, describeError, fetchForecast, fetchPredict } from '@/api/client';
 import type { PredictResponse } from '@/api/types';
-import { Card, colors, Note } from '@/components/Card';
+import { Card, colors, Note, ui } from '@/components/Card';
 import { HourlyChart } from '@/components/HourlyChart';
+import { PlannerCard } from '@/components/PlannerCard';
+import { ProductsCard } from '@/components/ProductsCard';
 import { SunSessionCard } from '@/components/SunSessionCard';
 import { UVCard } from '@/components/UVCard';
 import { UvaUvbCard } from '@/components/UvaUvbCard';
@@ -237,8 +239,8 @@ export default function HomeScreen() {
               รายละเอียด: {state.detail}
             </Text>
           ) : null}
-          <Pressable style={styles.button} onPress={retry} accessibilityRole="button">
-            <Text style={styles.buttonText}>ลองใหม่</Text>
+          <Pressable style={ui.button} onPress={retry} accessibilityRole="button">
+            <Text style={ui.buttonText}>ลองใหม่</Text>
           </Pressable>
         </Card>
       ) : null}
@@ -256,6 +258,8 @@ export default function HomeScreen() {
             skin={skinType as SkinType}
             isDaylight={state.data.is_daylight}
           />
+          <PlannerCard hours={hours ?? []} skin={skinType as SkinType} />
+          <ProductsCard hours={hours ?? []} />
           <UvaUvbCard data={state.data} nextPeak={state.nextPeak} />
         </>
       ) : null}
@@ -263,14 +267,14 @@ export default function HomeScreen() {
       <Card title="ดูเพิ่มเติม (ข้อมูลประกอบ ไม่เปลี่ยนค่า UVI)">
         <View style={styles.row}>
           <Link href="/camera" asChild>
-            <Pressable style={styles.button} accessibilityRole="button" testID="open-camera">
-              <Text style={styles.buttonText}>ถ่ายท้องฟ้า</Text>
+            <Pressable style={ui.button} accessibilityRole="button" testID="open-camera">
+              <Text style={ui.buttonText}>ถ่ายท้องฟ้า</Text>
             </Pressable>
           </Link>
           {Platform.OS === 'android' ? (
             <Link href="/light" asChild>
-              <Pressable style={styles.button} accessibilityRole="button" testID="open-light">
-                <Text style={styles.buttonText}>วัดแสง</Text>
+              <Pressable style={ui.button} accessibilityRole="button" testID="open-light">
+                <Text style={ui.buttonText}>วัดแสง</Text>
               </Pressable>
             </Link>
           ) : null}
@@ -286,8 +290,8 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 16, gap: 12, maxWidth: 640, width: '100%', alignSelf: 'center' },
-  place: { color: colors.muted, fontSize: 14 },
+  content: { padding: 16, paddingBottom: 32, gap: 14, maxWidth: 680, width: '100%', alignSelf: 'center' },
+  place: { color: colors.muted, fontSize: 14, fontWeight: '600', textAlign: 'center' },
   center: { alignItems: 'center', gap: 8, paddingVertical: 48 },
   muted: { color: colors.muted },
   error: { color: colors.text, fontSize: 15 },
@@ -296,14 +300,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: Platform.select({ ios: 'Menlo', default: 'monospace' }),
   },
-  button: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.text,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  buttonText: { color: '#FFFFFF', fontWeight: '600' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  disclaimer: { color: colors.muted, fontSize: 12, textAlign: 'center', paddingVertical: 8 },
+  disclaimer: { color: colors.muted, fontSize: 12, lineHeight: 17, textAlign: 'center', paddingVertical: 12, paddingHorizontal: 12 },
 });

@@ -47,6 +47,9 @@ class HourUV(BaseModel):
     data_imputed: bool = Field(False, description="some Open-Meteo input was missing and filled")
     alert_uvi: float = Field(description="max(q90 after CQR, uvi): drives alerts and burn dose")
     is_daylight: bool = Field(description="clear-sky UVI >= 0.5 (no alerts at night)")
+    cloud_cover: float | None = Field(
+        None, description="Open-Meteo total cloud cover (%) used as a model feature"
+    )
 
 
 class PredictResponse(Disclaimed):
@@ -98,6 +101,11 @@ class SkyImageResponse(Disclaimed):
         le=1,
         description="cloud fraction IN THE IMAGE from the SWIMSEG head (not the whole sky); "
         "sent only while that head's test result passes its criteria",
+    )
+    cloud_overlay: str | None = Field(
+        default=None,
+        description="JPEG data URI of the analysed crop with red/blue cloud pixels tinted "
+        "orange; built in memory, never stored",
     )
     reliability: dict[str, str]
     note: str

@@ -107,3 +107,65 @@ export function skyView(r: SkyImageResponse): SkyView {
 export function pct(x: number): string {
   return `${Math.round(x * 100)}%`;
 }
+
+/**
+ * What each sky class usually means for UV (general knowledge, WHO Global Solar UV Index guide
+ * 2002: light or thin cloud has little effect and broken cloud can even raise UV for a while).
+ * Shown as education only; the UVI on the home screen never changes with the photo.
+ */
+export const SKY_UV_MEANING_TH: Record<string, string> = {
+  clear_sky: 'ฟ้าใสไม่มีเมฆช่วยบัง เป็นช่วงที่ UV แรงที่สุดของวัน',
+  thin_white_clouds:
+    'เมฆบางบัง UV ได้น้อย UV ยังผ่านลงมาได้เกือบทั้งหมด อย่าคิดว่าแดดไม่แรงเพราะไม่ร้อน',
+  veil_clouds: 'เมฆบางคลุมฟ้าทำให้รู้สึกแดดอ่อน แต่ UV ยังผ่านลงมาได้มาก',
+  patterned_clouds:
+    'เมฆกระจายเป็นหย่อม UV เปลี่ยนเร็ว ช่วงที่แดดลอดช่องเมฆอาจแรงกว่าฟ้าใสได้ชั่วขณะ',
+  thick_white_clouds: 'เมฆหนาช่วยลด UV ได้ แต่ถ้าแดดลอดช่องว่างของเมฆ UV ตรงนั้นยังแรง',
+  thick_dark_clouds:
+    'เมฆหนาสีเข้มลด UV ได้มาก แต่ UV ไม่เป็นศูนย์ และกลับมาแรงทันทีเมื่อเมฆเคลื่อนผ่าน',
+};
+
+export const SKY_UV_SOURCE_TH =
+  'ความรู้ทั่วไปจาก WHO, Global Solar UV Index: A Practical Guide (2002)';
+
+const LEVELS: CloudLevel[] = ['น้อย', 'ปานกลาง', 'มาก'];
+
+export type CloudCheck = {
+  photoLevel: CloudLevel;
+  forecastLevel: CloudLevel;
+  /** Open-Meteo cloud cover, 0-100 %. */
+  forecastPct: number;
+  verdict: 'match' | 'close' | 'differ';
+  message: string;
+};
+
+/**
+ * Compare the cloud seen in the photo (model fraction, else the red/blue proxy) with the
+ * Open-Meteo cloud cover the UV model used for this hour. Same level → match, one level apart →
+ * close, otherwise differ. Information only: the photo shows part of the sky and never changes
+ * the UVI.
+ */
+export function compareCloud(
+  view: SkyView,
+  forecastPct: number | null | undefined,
+): CloudCheck | null {
+  if (typeof forecastPct !== 'number' || !Number.isFinite(forecastPct)) return null;
+  const photo = view.cloudFractionCnn ?? view.cloudFraction;
+  const photoLevel = cloudLevelTh(photo);
+  const forecastLevel = cloudLevelTh(forecastPct / 100);
+  const gap = Math.abs(LEVELS.indexOf(photoLevel) - LEVELS.indexOf(forecastLevel));
+  const verdict = gap === 0 ? 'match' : gap === 1 ? 'close' : 'differ';
+  const lessCloudInPhoto = LEVELS.indexOf(photoLevel) < LEVELS.indexOf(forecastLevel);
+  let message: string;
+  if (verdict === 'match') {
+    message = 'ภาพตรงกับพยากรณ์ ค่า UV ที่แอปแสดงน่าจะใกล้เคียงสภาพตอนนี้';
+  } else if (verdict === 'close') {
+    message = 'ภาพใกล้เคียงกับพยากรณ์ อาจต่างกันเพราะภาพเห็นท้องฟ้าแค่บางส่วน';
+  } else if (lessCloudInPhoto) {
+    message = 'ในภาพเมฆน้อยกว่าพยากรณ์มาก UV จริงอาจแรงกว่าค่าที่แสดง ควรป้องกันตามค่าบนของช่วง UV';
+  } else {
+    message =
+      'ในภาพเมฆมากกว่าพยากรณ์มาก แต่เมฆเคลื่อนเร็วและภาพเห็นแค่บางส่วน แอปจึงยังเตือนตามพยากรณ์';
+  }
+  return { photoLevel, forecastLevel, forecastPct, verdict, message };
+}

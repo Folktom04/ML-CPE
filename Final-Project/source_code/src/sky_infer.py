@@ -8,6 +8,7 @@ never used to change the UVI.
 
 from __future__ import annotations
 
+import base64
 import io
 import json
 from pathlib import Path
@@ -131,6 +132,42 @@ def rb_cloud_fraction(x: np.ndarray, threshold: float = NRBR_CLOUD) -> np.ndarra
     """
     frac = (nrbr_map(x) < threshold).mean(axis=(-2, -1))
     return float(frac) if np.ndim(frac) == 0 else frac
+
+
+OVERLAY_SIZE = 448
+OVERLAY_TINT = (255, 159, 10)  # orange: easy to tell from blue sky and white cloud
+OVERLAY_ALPHA = 0.55
+
+
+def cloud_overlay_jpeg(
+    image: np.ndarray,
+    threshold: float = NRBR_CLOUD,
+    size: int = OVERLAY_SIZE,
+    quality: int = 80,
+) -> str:
+    """The analysed crop with cloud pixels (red/blue proxy) tinted orange, as a JPEG data URI.
+
+    Shown in the app so the user sees which part of the photo counts as cloud. It is built in
+    memory and sent back once; nothing is written to disk.
+
+    Args:
+        image: (H, W, 3) float in [0, 1], the crop the models see (``load_image``).
+        threshold: NRBR below which a pixel counts as cloud (same as ``rb_cloud_fraction``).
+        size: Side of the returned image (px).
+        quality: JPEG quality.
+
+    Returns:
+        ``"data:image/jpeg;base64,..."``.
+    """
+    x = check_unit_range(np.asarray(image, dtype=np.float32))
+    mask = nrbr_map(x) < threshold
+    tint = np.asarray(OVERLAY_TINT, dtype=np.float32) / 255.0
+    out = x.copy()
+    out[mask] = (1.0 - OVERLAY_ALPHA) * out[mask] + OVERLAY_ALPHA * tint
+    img = Image.fromarray(np.round(out * 255).astype(np.uint8)).resize((size, size), Image.BILINEAR)
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=quality)
+    return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
 
 
 def make_interpreter(tflite_path: Path = TFLITE_PATH) -> tuple[Any, str]:

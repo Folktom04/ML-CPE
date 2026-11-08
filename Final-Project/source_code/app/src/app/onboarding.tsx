@@ -191,6 +191,7 @@ export default function OnboardingScreen() {
               <Text style={styles.hint}>{CONSENT_HINT_TH}</Text>
             </View>
             <Switch
+              trackColor={{ false: '#E9E9EB', true: '#34C759' }}
               value={s.serverConsent}
               onValueChange={(v) => update({ serverConsent: v })}
               accessibilityLabel="ยินยอมให้ส่งข้อมูลไปเซิร์ฟเวอร์"
@@ -215,9 +216,9 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 16, gap: 12, maxWidth: 640, width: '100%', alignSelf: 'center' },
-  progress: { color: colors.muted, fontSize: 13 },
-  text: { color: colors.text, fontSize: 15, lineHeight: 22 },
+  content: { padding: 16, paddingBottom: 32, gap: 14, maxWidth: 680, width: '100%', alignSelf: 'center' },
+  progress: { color: colors.muted, fontSize: 13, fontWeight: '600', textAlign: 'center', paddingTop: 4 },
+  text: { color: colors.text, fontSize: 16, lineHeight: 24 },
   value: { color: colors.text, fontSize: 15, fontWeight: '700' },
   label: { color: colors.text, fontSize: 15, fontWeight: '600' },
   hint: { color: colors.muted, fontSize: 13 },
@@ -226,22 +227,22 @@ const styles = StyleSheet.create({
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   primary: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.text,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    backgroundColor: colors.accent,
+    borderRadius: 980,
+    paddingHorizontal: 20,
+    paddingVertical: 11,
   },
-  primaryText: { color: '#FFFFFF', fontWeight: '600' },
+  primaryText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
   outline: {
     alignSelf: 'flex-start',
     borderWidth: 1,
-    borderColor: colors.text,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    borderColor: colors.accent,
+    borderRadius: 980,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
   },
-  outlineText: { color: colors.text, fontWeight: '600' },
+  outlineText: { color: colors.accent, fontSize: 16, fontWeight: '500' },
   disabled: { opacity: 0.4 },
-  notify: { gap: 4, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 8 },
-  back: { color: colors.muted, textAlign: 'center', paddingVertical: 8 },
+  notify: { gap: 4, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, paddingTop: 10 },
+  back: { color: colors.accent, fontSize: 16, textAlign: 'center', paddingVertical: 10 },
 });

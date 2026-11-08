@@ -59,7 +59,13 @@ from src.fetch_data import ROOT
 from src.metrics import WHO_LEVELS, who_level
 from src.risk import DISCLAIMER, assess
 from src.sky_data import load_image
-from src.sky_infer import cloud_head_result, has_exif, predict_cloud_fraction, predict_sky
+from src.sky_infer import (
+    cloud_head_result,
+    cloud_overlay_jpeg,
+    has_exif,
+    predict_cloud_fraction,
+    predict_sky,
+)
 from src.train_cmf import DOCS_DIR
 
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
@@ -242,7 +248,14 @@ def _hour(row: Any) -> HourUV:
         data_imputed=bool(row.data_imputed),
         alert_uvi=round(float(row.alert_uvi), 2),
         is_daylight=bool(row.is_day),
+        cloud_cover=_cloud_cover(row),
     )
+
+
+def _cloud_cover(row: Any) -> float | None:
+    """Open-Meteo cloud cover (%) of a prediction row, or None when it is missing."""
+    v = getattr(row, "cloud_cover", None)
+    return None if v is None or np.isnan(v) else round(float(v), 0)
 
 
 def _scheduler_running() -> bool:
@@ -355,6 +368,7 @@ async def sky_image(file: UploadFile = File(...)) -> SkyImageResponse:
         res["cloud_fraction_cnn"] = predict_cloud_fraction(
             img, interpreter=app.state.bundle.sky_cloud
         )
+    res["cloud_overlay"] = cloud_overlay_jpeg(img)
     return SkyImageResponse(**res, reliability=app.state.sky_reliability, stored=False)
 
 

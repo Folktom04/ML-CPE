@@ -101,8 +101,8 @@ export default function LightScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 16, gap: 12, maxWidth: 640, width: '100%', alignSelf: 'center' },
-  big: { color: colors.text, fontSize: 36, fontWeight: '700' },
+  content: { padding: 16, paddingBottom: 32, gap: 14, maxWidth: 680, width: '100%', alignSelf: 'center' },
+  big: { color: colors.text, fontSize: 56, fontWeight: '700', letterSpacing: -1.5 },
   text: { color: colors.text, fontSize: 15 },
   small: { color: colors.muted, fontSize: 13 },
   disclaimer: { color: colors.muted, fontSize: 12, textAlign: 'center', paddingVertical: 8 },

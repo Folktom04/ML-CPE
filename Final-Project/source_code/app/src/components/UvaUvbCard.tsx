@@ -85,17 +85,17 @@ function NextPeak({ peak }: { peak: DayPeak | null }) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 12 },
-  cell: { flex: 1, gap: 2 },
-  label: { color: colors.muted, fontSize: 14 },
-  value: { color: colors.text, fontSize: 26, fontWeight: '700' },
+  row: { flexDirection: 'row', gap: 10 },
+  cell: { flex: 1, gap: 2, backgroundColor: colors.background, borderRadius: 14, padding: 12 },
+  label: { color: colors.muted, fontSize: 13, fontWeight: '600' },
+  value: { color: colors.text, fontSize: 28, fontWeight: '700', letterSpacing: -0.5 },
   unit: { fontSize: 14, fontWeight: '400', color: colors.muted },
   hint: { color: colors.muted, fontSize: 12 },
-  burn: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 10, gap: 2 },
-  burnValue: { color: colors.text, fontSize: 28, fontWeight: '700' },
+  burn: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, paddingTop: 12, gap: 2 },
+  burnValue: { color: colors.text, fontSize: 34, fontWeight: '700', letterSpacing: -0.6 },
   advice: { gap: 4, paddingTop: 4 },
-  adviceItem: { color: colors.text, fontSize: 14 },
+  adviceItem: { color: colors.text, fontSize: 15, lineHeight: 22 },
   peak: { gap: 4, paddingTop: 4 },
   peakRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  peakBadge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
+  peakBadge: { borderRadius: 980, paddingHorizontal: 10, paddingVertical: 3 },
 });
