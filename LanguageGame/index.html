@@ -303,6 +303,11 @@ details.again summary { cursor: pointer; color: var(--lv); font-size: .9rem; pad
 .netchip.off { background: var(--bad-bg); color: var(--bad); }
 .okline { color: var(--good); font-size: .9rem; }
 
+/* two-layer progress bar: practised (light) under remembered (solid) */
+.bar.two { position: relative; }
+.bar.two i { position: absolute; left: 0; top: 0; }
+.bar.two i.seen { opacity: .35; }
+
 /* skip + remedial */
 .weaknote { display: flex; flex-direction: column; gap: 4px; font-size: .88rem; background: var(--surface); border-radius: 10px; padding: 8px 12px; }
 .weaknote .done { color: var(--good); font-weight: 600; }
@@ -6697,8 +6702,8 @@ function level(lv) {
         <div class="skillrow"><span>${sk.th}</span><span class="bar"><i style="width:${v}%"></i></span><span class="num">${v}%</span></div>`; }).join('')}
     </section>
     ${(() => { const ol = lv === 'C2' ? 'C1' : lv, st = oxStats(ol); return `<section class="banner">
-      <div><b>Oxford 5000 · คำศัพท์ระดับ ${ol}</b><span class="muted" style="font-size:.9rem">${lv === 'C2' ? 'Oxford 5000 ครอบคลุมถึง C1 ระดับ C2 ควรรู้คำ C1 ให้ครบก่อน · ' : ''}จำได้แล้ว ${st.known}/${st.total} คำ · ถึงเวลาทบทวน ${st.due} คำ</span>
-        <span class="bar" style="--lv:var(--${ol})"><i style="width:${Math.round(st.known / st.total * 100)}%"></i></span></div>
+      <div><b>Oxford 5000 · คำศัพท์ระดับ ${ol}</b><span class="muted" style="font-size:.9rem">${lv === 'C2' ? 'Oxford 5000 ครอบคลุมถึง C1 ระดับ C2 ควรรู้คำ C1 ให้ครบก่อน · ' : ''}จำได้แล้ว ${st.known}/${st.total} คำ · ฝึกแล้ว ${st.seen} · ถึงเวลาทบทวน ${st.due} คำ</span>
+        <span class="bar two" style="--lv:var(--${ol})"><i class="seen" style="width:${Math.round(st.seen / st.total * 100)}%"></i><i style="width:${Math.round(st.known / st.total * 100)}%"></i></span></div>
       <div class="row" style="flex:0 1 auto"><button class="btn ghost" id="oxList">ดูคำทั้งหมด</button><button class="btn lv" id="oxPractice">ฝึก 10 คำ</button></div>
     </section>`; })()}
     <section class="skill">
@@ -7040,11 +7045,22 @@ function buildOx(id) {
   const ch = []; for (const x of others) { if (!ch.includes(x.w)) ch.push(x.w); if (ch.length === 3) break; }
   return Object.assign(q, { prompt: e.th, sub: `${e.pos} · ภาษาอังกฤษคือคำไหน`, answer: e.w, choices: shuffle([e.w, ...ch]), speakAfter: true });
 }
+// Spaced review: a right answer moves the word up a step only when it is due (or new),
+// so "remembered" (step 3) needs right answers on three different days: today, 1 day later, 3 days after that.
 function oxGrade(id, ok) {
-  const i = +id.split('|')[1], r = oxRec(i) || { b: 0, d: dayNo() };
-  r.b = ok ? Math.min(5, r.b + 1) : 0;
-  r.d = dayNo() + SRS_DAYS[r.b];
+  S.ox = S.ox || {};
+  const i = +id.split('|')[1], old = oxRec(i), r = old || { b: 0, d: dayNo() };
+  if (!ok) { r.b = 0; r.d = dayNo(); }
+  else if (!old || r.d <= dayNo()) { r.b = Math.min(5, r.b + 1); r.d = dayNo() + SRS_DAYS[r.b]; }
   S.ox[i] = r;
+}
+// Words practised in other modes (vocabulary, story words, fill-in-the-word, dictation) also count.
+function oxCredit(q, ok) {
+  const w = q.mode === 'vocab' ? DATA[q.lv].vocab[+q.id.split('|')[2]][0]
+    : q.mode === 'sword' ? q.prompt : q.mode === 'cloze' ? q.answer
+    : q.mode === 'listen' && q.isWord ? q.answer : null;
+  const o = w && oxFind(w);
+  if (o) oxGrade('ox|' + o.i, ok);
 }
 function startOx(lv) {
   touchStreak(); save(); closeSheet();
@@ -7073,11 +7089,14 @@ function oxford(lv) {
       <p class="muted">คำศัพท์สำคัญ 5,000 คำตามรายการของ Oxford แบ่งตามระดับ CEFR พร้อมคำแปลไทย ระบบจะทวนคำที่ใกล้ลืมให้อัตโนมัติ</p></header>
     <section class="oxlevels">${OX_LEVELS.map(l => { const s = oxStats(l); return `
       <button class="oxlv ${l === OXV.lv ? 'on' : ''}" style="--lv:var(--${l})" data-lv="${l}" id="oxlv-${l}">
-        <b>${l}</b><span class="num">${s.known}/${s.total}</span><span class="bar"><i style="width:${Math.round(s.known / s.total * 100)}%"></i></span>
+        <b>${l}</b><span class="num" title="จำได้แล้ว">✓ ${s.known}/${s.total}</span><span class="num" title="ฝึกแล้ว">ฝึก ${s.seen}</span>
+        <span class="bar two"><i class="seen" style="width:${Math.round(s.seen / s.total * 100)}%"></i><i style="width:${Math.round(s.known / s.total * 100)}%"></i></span>
       </button>`; }).join('')}</section>
+    <p class="sub">✓ = จำได้แล้ว (แถบสีเข้ม) · ฝึก = เคยฝึกแล้ว (แถบสีอ่อน)</p>
     <section class="banner">
       <div><b>ระดับ ${OXV.lv}: จำได้แล้ว ${st.known} จาก ${st.total} คำ</b>
-        <span class="muted" style="font-size:.9rem">ฝึกแล้ว ${st.seen} คำ · ถึงเวลาทบทวน ${st.due} คำ · ตอบถูกติดกัน 3 รอบ (ห่างกัน 1, 3, 7 วัน) นับว่าจำได้</span></div>
+        <span class="muted" style="font-size:.9rem">ฝึกแล้ว ${st.seen} คำ · ถึงเวลาทบทวน ${st.due} คำ</span>
+        <span class="sub">คำจะนับว่า "จำได้" เมื่อตอบถูก 3 ครั้งในวันต่างกัน: วันแรก → ทวนอีกใน 1 วัน → ทวนอีกใน 3 วัน จึงต้องใช้เวลาอย่างน้อย 4 วัน ตอบผิดเริ่มใหม่ · ฝึกคำศัพท์ในโหมดอื่นก็นับด้วย</span></div>
       <button class="btn lv" id="oxGo">${st.due ? `ทบทวน + คำใหม่ (10)` : 'ฝึก 10 คำ'}</button>
     </section>
     <div class="row oxtools">
@@ -7523,7 +7542,7 @@ function finish(ok, given, detail, skipped) {
     markWeak(weakKeysOf(q), false, q.id);
     G.weakNotes = null;
   }
-  if (q.mode === 'ox') oxGrade(q.id, ok);
+  if (q.mode === 'ox') oxGrade(q.id, ok); else oxCredit(q, ok);
   save();
   const rq = ruleOf(q);
   const last = G.kind === 'placement' ? G.i + 1 >= G.total : (G.i + 1 >= G.queue.length || G.hearts === 0);
