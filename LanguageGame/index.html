@@ -303,6 +303,12 @@ details.again summary { cursor: pointer; color: var(--lv); font-size: .9rem; pad
 .netchip.off { background: var(--bad-bg); color: var(--bad); }
 .okline { color: var(--good); font-size: .9rem; }
 
+/* skip + remedial */
+.skip { align-self: center; font-size: .88rem; padding: 8px 14px; color: var(--muted); }
+.feedback.skip { background: var(--chip); }
+.feedback.skip h3 { color: var(--ink); }
+.banner.remedial { border-color: var(--lv); border-width: 1.5px; }
+
 /* result */
 .score { font-family: var(--display); font-weight: 800; font-size: 4rem; line-height: 1; color: var(--lv); }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -1178,6 +1184,7 @@ const OWN_EX = {
 };
 function ruleOf(q) {
   if (!q) return null;
+  if (q.ruleKey) return RULES[q.ruleKey] ? Object.assign({ key: q.ruleKey }, RULES[q.ruleKey]) : null;
   const [lv, mode, a] = q.id.split('|');
   let m = mode, i = +a;
   if (mode === 'listen') { if (a[0] !== 's') return null; m = 'order'; i = +a.slice(1); }
@@ -6423,6 +6430,9 @@ const MODES = {
   story:     { th: 'คำถามจากเรื่องอ่าน', tag: 'STORY', desc: '' },
   sword:     { th: 'คำศัพท์จากเรื่องอ่าน', tag: 'STORY WORDS', desc: '' },
   ox:        { th: 'คำศัพท์ Oxford 5000', tag: 'OXFORD', desc: '' },
+  judge:     { th: 'ถูกหรือผิด', tag: 'TRUE / FALSE', desc: '' },
+  cloze:     { th: 'เติมคำจากเรื่อง', tag: 'CLOZE', desc: '' },
+  remedial:  { th: 'สอบแก้จุดอ่อน', tag: 'REMEDIAL', desc: '' },
   exam:      { th: 'สอบผ่านระดับ', tag: 'LEVEL EXAM', desc: '' }
 };
 
@@ -6489,6 +6499,7 @@ function speak(text, slow) {
 /* ------------------------------------------------------------------ */
 function build(id) {
   if (id.startsWith('ox|')) return buildOx(id);
+  if (id.startsWith('gen|')) return buildGen(id);
   const [lv, mode, a, b] = id.split('|');
   if (mode === 'story' || mode === 'sword') return buildStory(id);
   const D = DATA[lv], li = lvIndex(lv), i = +a;
@@ -6626,6 +6637,9 @@ function home() {
     <section class="banner"><div><b>คลังคำศัพท์ Oxford 5000</b><span class="muted" style="font-size:.9rem">จำได้แล้ว ${OX_LEVELS.reduce((n, l) => n + oxStats(l).known, 0)} จาก 5,000 คำ (A1–C1) พร้อมคำแปลไทย ค้นหาได้ และทวนคำที่ใกล้ลืมให้อัตโนมัติ</span></div><button class="btn lv" id="oxHome">เปิดคลังคำ</button></section>
     <section class="banner"><div><b>คลังเรื่องอ่าน</b><span class="muted" style="font-size:.9rem">${LEVELS.reduce((n, l) => n + STORIES[l].length, 0)} เรื่อง เรียงจากสั้นไปยาว แตะคำเพื่อดูคำแปล พร้อมคำแปลและโครงสร้างทุกประโยค</span></div><button class="btn lv" id="library">เปิดคลังเรื่อง</button></section>
     <section class="banner"><div><b>คู่มือไวยากรณ์</b><span class="muted" style="font-size:.9rem">ตาราง 12 tense และกฎทั้งหมด ${Object.keys(RULES).length} ข้อ พร้อมตัวอย่างง่ายๆ</span></div><button class="btn ghost" id="handbook">เปิดคู่มือ</button></section>
+    ${(() => { const W = weakSummary(); return W.total ? `<section class="banner remedial"><div><b>สอบแก้จุดอ่อน · ${W.total} จุด</b>
+      <span class="muted" style="font-size:.9rem">สร้างโจทย์ใหม่จากข้อที่ข้ามหรือตอบผิด${W.rules.length ? ' · กฎ: ' + W.rules.slice(0, 3).map(k => RULES[k].name).join(', ') : ''}${W.words.length ? ' · คำ: ' + W.words.slice(0, 4).join(', ') : ''}</span></div>
+      <button class="btn lv" id="remedialHome">สอบแก้</button></section>` : ''; })()}
     ${missCount ? `<section class="banner"><div><b>คำที่เคยตอบผิด ${missCount} ข้อ</b><span class="muted" style="font-size:.9rem">ทบทวนจนตอบถูก แล้วข้อนั้นจะหายจากรายการ</span></div><button class="btn ghost" id="review">ทบทวน</button></section>` : ''}
     <section style="display:flex;flex-direction:column;gap:10px">
       <p class="eyebrow">เลือกระดับ · แถบสีคือความคืบหน้าของแต่ละระดับ</p>
@@ -6644,6 +6658,7 @@ function home() {
   app.querySelectorAll('.rung').forEach(b => b.onclick = () => level(b.dataset.lv));
   $('#placement').onclick = startPlacement;
   $('#handbook').onclick = handbook;
+  if ($('#remedialHome')) $('#remedialHome').onclick = startRemedial;
   $('#library').onclick = library;
   $('#oxHome').onclick = () => oxford(OX_LEVELS.includes(S.placement) ? S.placement : S.placement === 'C2' ? 'C1' : 'A1');
   if (missCount) $('#review').onclick = startReview;
@@ -7127,6 +7142,116 @@ function refreshOffline() {
   if (chip) chip.hidden = navigator.onLine !== false;
 }
 
+/* ---------------- weak points and the remedial test ---------------- */
+/* Every skipped or wrong answer adds weight to the item itself, its grammar rule ("rule:key")
+   and its word ("word:x"). The remedial test turns those weak points into new questions:
+   true/false versions of grammar items, word order and fill-in-the-word from story sentences,
+   and word order from the rule's own example sentences. Right answers take weight away. */
+function weakKeysOf(q) {
+  if (q.weak) return q.weak;
+  const keys = [q.id];
+  const r = ruleOf(q);
+  if (r) keys.push('rule:' + r.key);
+  const word = q.mode === 'vocab' ? DATA[q.lv].vocab[+q.id.split('|')[2]][0]
+    : q.mode === 'ox' ? OX[+q.id.split('|')[1]].w.split(/,\s*/)[0]
+    : q.mode === 'sword' ? q.prompt
+    : q.mode === 'listen' && q.isWord ? q.answer : null;
+  if (word) keys.push('word:' + key(word));
+  return keys;
+}
+function markWeak(keys, delta) {
+  S.weak = S.weak || {};
+  keys.forEach(k => {
+    if (delta < 0 && !S.weak[k]) return;
+    const v = (S.weak[k] || 0) + delta;
+    if (v <= 0) delete S.weak[k]; else S.weak[k] = Math.min(9, v);
+  });
+}
+function weakSummary() {
+  const W = S.weak || {}, keys = Object.keys(W);
+  const rules = keys.filter(k => k.startsWith('rule:')).sort((a, b) => W[b] - W[a]).map(k => k.slice(5)).filter(k => RULES[k]);
+  const words = keys.filter(k => k.startsWith('word:')).sort((a, b) => W[b] - W[a]).map(k => k.slice(5));
+  const items = keys.filter(k => !k.startsWith('rule:') && !k.startsWith('word:'));
+  return { total: keys.length, rules, words, items };
+}
+
+// Sentences usable for word order: 4 to 16 words.
+const fitsOrder = en => { const n = en.split(' ').length; return n >= 4 && n <= 16; };
+function candidatesFor(k) {
+  const out = [];
+  if (k.startsWith('rule:')) {
+    const R = k.slice(5);
+    for (const lv of LEVELS) {
+      (TAGS[lv].grammar || []).forEach((t, i) => { if (t === R) out.push(`gen|judge|${lv}|${i}|${Math.floor(Math.random() * 4)}`); });
+      ['errors', 'build', 'order'].forEach(m => (TAGS[lv][m] || []).forEach((t, i) => { if (t === R) out.push(`${lv}|${m}|${i}`); }));
+      STORIES[lv].forEach((st, si) => sentencesOf(st).forEach((s, k2) => { if (s[3] === R && fitsOrder(s[0])) out.push(`gen|sorder|${lv}|${si}|${k2}`); }));
+    }
+    (RULES[R] ? RULES[R].ex : []).forEach((e, n) => { if (fitsOrder(plain(e[0]))) out.push(`gen|rorder|${R}|${n}`); });
+  } else if (k.startsWith('word:')) {
+    const w = k.slice(5), re = new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[a-z]*\\b', 'i');
+    for (const lv of LEVELS) STORIES[lv].forEach((st, si) => sentencesOf(st).forEach((s, k2) => { if (re.test(s[0])) out.push(`gen|cloze|${lv}|${si}|${k2}|${w}`); }));
+    const o = OX_MAP.get(w); if (o) out.push('ox|' + o.i);
+    for (const lv of LEVELS) DATA[lv].vocab.forEach((v, i) => { if (key(v[0]) === w) out.push(`${lv}|vocab|${i}`); });
+  } else {
+    out.push(k);
+    const [lv, m, i] = k.split('|');
+    if (m === 'grammar') out.push(`gen|judge|${lv}|${i}|${1 + Math.floor(Math.random() * 3)}`);
+  }
+  return shuffle(out);
+}
+function remedialIds(n = 15) {
+  const W = S.weak || {};
+  const keys = Object.keys(W).sort((a, b) => W[b] - W[a] || Math.random() - .5);
+  const pools = keys.map(candidatesFor).filter(p => p.length);
+  const picked = [];
+  for (let round = 0; picked.length < n && pools.some(p => p.length); round++)
+    for (const p of pools) { while (p.length && picked.includes(p[0])) p.shift(); if (p.length && picked.length < n) picked.push(p.shift()); }
+  return shuffle(picked);
+}
+function startRemedial() {
+  const q = remedialIds();
+  if (!q.length) return home();
+  touchStreak(); save(); closeSheet();
+  G = { kind: 'remedial', lv: null, mode: 'remedial', queue: q, i: 0, right: 0, hearts: null, combo: 0, xp: 0, misses: [], skips: [] };
+  next();
+}
+
+function firstLevelOf(R) { return LEVELS.find(l => Object.values(TAGS[l]).some(a => a.includes(R))) || 'B1'; }
+function makeOrderQ(id, lv, en, th, extra) {
+  const words = en.split(' ');
+  let tiles = shuffle(words);
+  for (let t = 0; t < 5 && tiles.join(' ') === en; t++) tiles = shuffle(words);
+  return Object.assign({ id, lv, mode: 'order', type: 'order', prompt: th, sub: 'เรียงคำให้ได้ความหมายนี้', answer: en, tiles }, extra);
+}
+function buildGen(id) {
+  const p = id.split('|'), kind = p[1];
+  if (kind === 'judge') {
+    const [, , lv, i, c] = p, [s, ans, wrong, note] = DATA[lv].grammar[+i], R = TAGS[lv].grammar[+i];
+    const fill = +c === 0 ? ans : wrong[(+c - 1) % wrong.length], right = +c === 0;
+    return { id, lv, mode: 'judge', type: 'mc', prompt: s.replace('___', fill), sub: 'ประโยคนี้ถูกต้องตามหลักไวยากรณ์หรือไม่', choices: ['ถูกต้อง', 'ผิด'],
+      answer: right ? 'ถูกต้อง' : 'ผิด', full: s.replace('___', ans), explain: (right ? '' : `ใช้ <s>${esc(fill)}</s> ไม่ได้ ต้องเป็น <b>${esc(ans)}</b> · `) + esc(note),
+      ruleKey: R, weak: ['rule:' + R, `${lv}|grammar|${i}`] };
+  }
+  if (kind === 'sorder') {
+    const [, , lv, si, k] = p, s = sentencesOf(STORIES[lv][+si])[+k];
+    return makeOrderQ(id, lv, s[0], s[1], { sub: `เรียงประโยคจากเรื่อง “${STORIES[lv][+si].title}”`, ruleKey: s[3], weak: ['rule:' + s[3]], note: s[2] });
+  }
+  if (kind === 'rorder') {
+    const [, , R, n] = p, e = RULES[R].ex[+n];
+    return makeOrderQ(id, firstLevelOf(R), plain(e[0]), e[1], { sub: `ตัวอย่างของกฎ ${RULES[R].name}`, ruleKey: R, weak: ['rule:' + R] });
+  }
+  if (kind === 'cloze') {
+    const [, , lv, si, k, w] = p, st = STORIES[lv][+si], s = sentencesOf(st)[+k];
+    const m = s[0].match(new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[a-z]*\\b', 'i')), form = m[0];
+    const others = shuffle([...glosOf(lv, +si).values()].filter(e => !/ /.test(e.w) && key(e.w) !== key(form) && /^[a-z]/i.test(e.w)).map(e => e.w))
+      .filter((x, n, a) => a.indexOf(x) === n).slice(0, 3);
+    const gl = lookup(form, glosOf(lv, +si)) || (OX_MAP.get(w) ? { th: OX_MAP.get(w).th } : null);
+    return { id, lv, mode: 'cloze', type: 'mc', prompt: s[0].replace(form, '___'), gap: true, sub: `เติมคำที่หายไป (ประโยคจากเรื่อง “${st.title}”)`,
+      choices: shuffle([form, ...others]), answer: form, speakAfter: true, full: s[0],
+      explain: `<b>${esc(form)}</b>${gl ? ' = ' + esc(gl.th) : ''}<br>${esc(s[1])}`, weak: ['word:' + w] };
+  }
+}
+
 /* ---------------- game loop ---------------- */
 function startRound(lv, mode) {
   touchStreak(); save();
@@ -7173,7 +7298,7 @@ function header() {
 }
 
 function render(q) {
-  const label = G.kind === 'placement' ? 'วัดระดับ' : G.kind === 'exam' ? 'สอบผ่านระดับ' : G.kind === 'review' ? 'ทบทวน' : MODES[q.mode].th;
+  const label = G.kind === 'placement' ? 'วัดระดับ' : G.kind === 'exam' ? 'สอบผ่านระดับ' : G.kind === 'review' ? 'ทบทวน' : G.kind === 'remedial' ? 'สอบแก้' : MODES[q.mode].th;
   let body = '';
   if (q.type === 'mc') {
     const prompt = q.gap ? esc(q.prompt).replace('___', '<span class="gap"></span>') : esc(q.prompt);
@@ -7186,23 +7311,27 @@ function render(q) {
       </div>
       ${hasTTS && q.speakText && !q.speakAfter ? `<div class="speakrow"><button class="speak" id="say">🔊 ฟังเสียง</button></div>` : ''}
       ${hasTTS && q.speakPassage ? `<div class="speakrow"><button class="speak" id="sayP">🔊 ฟังบทความ</button></div>` : ''}
-      <div class="choices">${q.choices.map((c, k) => `<button class="choice" data-k="${k}" id="c${k}"><kbd>${k + 1}</kbd><span>${esc(c)}</span></button>`).join('')}</div>`;
+      <div class="choices">${q.choices.map((c, k) => `<button class="choice" data-k="${k}" id="c${k}"><kbd>${k + 1}</kbd><span>${esc(c)}</span></button>`).join('')}</div>
+      <button class="btn ghost skip" id="skip">ไม่รู้ · ข้ามข้อนี้</button>`;
   } else if (q.type === 'order') {
     body = `
       <div style="display:flex;flex-direction:column;gap:6px"><p class="prompt">${esc(q.prompt)}</p><p class="sub">${q.sub}</p></div>
       <div class="answer-zone" id="zone" aria-label="ประโยคของคุณ"></div>
       <div class="bank" id="bank">${q.tiles.map((t, k) => `<button class="tile" data-k="${k}" id="t${k}">${esc(t)}</button>`).join('')}</div>
-      <div class="row"><button class="btn ghost" id="clear">ล้าง</button><button class="btn lv" id="check" disabled>ตรวจคำตอบ</button></div>`;
+      <div class="row"><button class="btn ghost" id="clear">ล้าง</button><button class="btn lv" id="check" disabled>ตรวจคำตอบ</button></div>
+      <button class="btn ghost skip" id="skip">ไม่รู้ · ข้ามข้อนี้</button>`;
   } else if (q.type === 'spot') {
     body = `
       <div style="display:flex;flex-direction:column;gap:6px"><p class="prompt">แตะส่วนที่ผิด</p><p class="sub">ประโยคนี้มีที่ผิด 1 จุด</p></div>
-      <div class="segs">${q.segs.map((t, k) => `<button class="seg" data-k="${k}" id="s${k}">${esc(t)}</button>`).join('')}</div>`;
+      <div class="segs">${q.segs.map((t, k) => `<button class="seg" data-k="${k}" id="s${k}">${esc(t)}</button>`).join('')}</div>
+      <button class="btn ghost skip" id="skip">ไม่รู้ · ข้ามข้อนี้</button>`;
   } else if (q.type === 'gap') {
     body = `
       <div style="display:flex;flex-direction:column;gap:6px"><p class="sub">${esc(q.prompt)}</p><p class="prompt">${esc(q.orig)}</p></div>
       ${q.key ? `<div><span class="keyword">${esc(q.key)}</span> <span class="sub">ต้องใช้คำนี้ และห้ามเปลี่ยนรูปคำ</span></div>` : ''}
       <label class="gapline" for="typed">${q.start ? `<span>${esc(q.start)}</span>` : ''}<input class="textin" id="typed" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="พิมพ์ส่วนที่หายไป"><span>${esc(q.end)}</span></label>
-      <button class="btn lv block" id="check">ตรวจคำตอบ</button>`;
+      <button class="btn lv block" id="check">ตรวจคำตอบ</button>
+      <button class="btn ghost skip" id="skip">ไม่รู้ · ข้ามข้อนี้</button>`;
   } else if (q.type === 'type') {
     const tts = hasTTS;
     body = `
@@ -7212,7 +7341,8 @@ function render(q) {
       </div>
       ${tts ? `<div class="speakrow"><button class="speak" id="say">🔊 เล่นเสียง</button><button class="speak" id="saySlow">🐢 ช้าลง</button></div>` : ''}
       <input class="textin" id="typed" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="พิมพ์ที่นี่" aria-label="คำตอบ">
-      <button class="btn lv block" id="check">ตรวจคำตอบ</button>`;
+      <button class="btn lv block" id="check">ตรวจคำตอบ</button>
+      <button class="btn ghost skip" id="skip">ไม่รู้ · ข้ามข้อนี้</button>`;
   }
   app.innerHTML = `${header()}
     <article class="card">
@@ -7240,6 +7370,7 @@ function render(q) {
     $('#clear').onclick = () => { if (G.answered) return; placed.length = 0; draw(); };
     check.onclick = () => { if (!G.answered) answerOrder(placed.map(k => q.tiles[k]).join(' ')); };
   }
+  $('#skip').onclick = skipQ;
   if (q.type === 'spot') app.querySelectorAll('.seg').forEach(b => b.onclick = () => answerSpot(+b.dataset.k));
   if (q.type === 'gap') {
     const inp = $('#typed');
@@ -7271,9 +7402,28 @@ function answerMC(k) {
   if (q.full) extra = '<i>' + esc(q.full) + '</i><br>' + extra;
   finish(ok, chosen, extra);
 }
+// "I don't know": show the answer instead of guessing, keep hearts, and save it as a weak point.
+function skipQ() {
+  if (G.answered) return;
+  const q = G.q;
+  app.querySelectorAll('.choice, .seg, .tile, #check, #clear').forEach(b => { b.disabled = true; });
+  const t = $('#typed'); if (t) t.readOnly = true;
+  let detail = '';
+  if (q.type === 'mc') {
+    app.querySelectorAll('.choice').forEach((b, j) => { if (q.choices[j] === q.answer) b.classList.add('ok'); });
+    detail = (q.full ? '<i>' + esc(q.full) + '</i><br>' : '') + (q.explain || '');
+    if (hasTTS && (q.speakAfter || q.speakAnswer)) speak(q.answer);
+  } else if (q.type === 'spot') {
+    app.querySelectorAll('.seg').forEach((b, j) => { if (j === q.wi) b.classList.add('ok'); });
+    detail = `แก้ <s>${esc(q.segs[q.wi])}</s> เป็น <b>${esc(q.fix)}</b><br>${q.explain}`;
+  } else if (q.type === 'order') detail = '<i>' + esc(q.answer) + '</i>' + (q.note ? '<br>' + mark(q.note) : '');
+  else if (q.type === 'type') detail = '<i>' + esc(q.answer) + '</i> — ' + esc(q.th);
+  else if (q.type === 'gap') detail = '<i>' + esc(q.answer) + '</i>' + (q.answers.length > 1 ? '<br>คำตอบอื่นที่ถูก: ' + q.answers.slice(1).map(a => '<i>' + esc(a) + '</i>').join(', ') : '');
+  finish(false, '', detail, true);
+}
 function answerOrder(given) {
   const q = G.q, ok = given === q.answer;
-  finish(ok, given, '<i>' + esc(q.answer) + '</i>');
+  finish(ok, given, '<i>' + esc(q.answer) + '</i>' + (q.note ? '<br>' + mark(q.note) : ''));
   if (hasTTS) speak(q.answer);
 }
 function answerSpot(k) {
@@ -7300,8 +7450,9 @@ function answerType(given) {
   finish(ok, given, detail);
 }
 
-function finish(ok, given, detail) {
+function finish(ok, given, detail, skipped) {
   G.answered = true;
+  G.skips = G.skips || [];
   const q = G.q, li = lvIndex(q.lv);
   if (G.kind === 'placement') {
     G.tally[li][1]++; if (ok) G.tally[li][0]++;
@@ -7311,20 +7462,24 @@ function finish(ok, given, detail) {
     G.right++; G.combo++;
     const gain = Math.round((10 + 4 * li) * Math.min(2, 1 + Math.max(0, G.combo - 1) * 0.1));
     G.xp += gain; S.xp += gain;
-    S.mastered[q.id] = true;
+    if (!q.id.startsWith('gen|')) S.mastered[q.id] = true;
     if (G.kind === 'review') delete S.mistakes[q.id];
+    markWeak(weakKeysOf(q), -1);
   } else {
     G.combo = 0;
-    if (G.hearts != null) G.hearts--;
-    S.mistakes[q.id] = 1;
-    G.misses.push({ q, given });
+    if (G.hearts != null && !skipped) G.hearts--;
+    if (!q.id.startsWith('gen|')) S.mistakes[q.id] = 1;
+    (skipped ? G.skips : G.misses).push({ q, given });
+    markWeak(weakKeysOf(q), 1);
   }
   if (q.mode === 'ox') oxGrade(q.id, ok);
   save();
   const rq = ruleOf(q);
   const last = G.kind === 'placement' ? G.i + 1 >= G.total : (G.i + 1 >= G.queue.length || G.hearts === 0);
-  $('#fb').innerHTML = `<div class="feedback ${ok ? 'ok' : 'no'}" role="status">
-      <h3>${ok ? pickOne(['ถูกต้อง!', 'เยี่ยม!', 'แม่นมาก!', 'Excellent!']) : 'ยังไม่ถูก'}</h3>
+  $('#skip').disabled = true;
+  $('#fb').innerHTML = `<div class="feedback ${ok ? 'ok' : skipped ? 'skip' : 'no'}" role="status">
+      <h3>${ok ? pickOne(['ถูกต้อง!', 'เยี่ยม!', 'แม่นมาก!', 'Excellent!']) : skipped ? 'ข้ามแล้ว ดูคำตอบไว้ก่อน' : 'ยังไม่ถูก'}</h3>
+      ${skipped ? '<p class="sub">ไม่เสียหัวใจ ข้อนี้ถูกเก็บไว้ทำโจทย์ "สอบแก้จุดอ่อน"</p>' : ''}
       ${!ok && (q.type === 'mc' || q.type === 'gap') ? `<p>คำตอบที่ถูก: <b>${esc(q.answer)}</b></p>` : ''}
       ${detail ? `<p>${detail}</p>` : ''}
       ${rq ? ruleHTML(rq, !ok) : ''}
@@ -7346,8 +7501,11 @@ document.addEventListener('keydown', e => {
 });
 
 function missList() {
-  if (!G.misses.length) return '';
-  return `<section class="list"><p class="eyebrow">ข้อที่ตอบผิด · เก็บไว้ในรายการทบทวนแล้ว</p>
+  const row = m => `<div class="miss"><span class="muted">${esc(m.q.lv)} · ${esc(m.q.orig || m.q.prompt || (m.q.isWord ? 'ฟังคำศัพท์' : 'ฟังประโยค'))}</span>
+      <span>คำตอบที่ถูก: <b>${esc(m.q.answer)}</b></span></div>`;
+  const sk = (G.skips || []).length ? `<section class="list"><p class="eyebrow">ข้อที่ข้าม ${G.skips.length} ข้อ</p>${G.skips.map(row).join('')}</section>` : '';
+  if (!G.misses.length) return sk;
+  return sk + `<section class="list"><p class="eyebrow">ข้อที่ตอบผิด · เก็บไว้ในรายการทบทวนแล้ว</p>
     ${G.misses.map(m => `<div class="miss"><span class="muted">${esc(m.q.lv)} · ${esc(m.q.orig || m.q.prompt || (m.q.isWord ? 'ฟังคำศัพท์' : 'ฟังประโยค'))}</span>
       <span>คำตอบที่ถูก: <b>${esc(m.q.answer)}</b></span></div>`).join('')}</section>`;
 }
@@ -7376,7 +7534,7 @@ function result() {
   }
   app.innerHTML = `
     <header style="display:flex;flex-direction:column;gap:8px">
-      <p class="eyebrow">${G.kind === 'review' ? 'ทบทวน' : G.lv + ' · ' + MODES[G.mode].th}</p>
+      <p class="eyebrow">${G.kind === 'review' ? 'ทบทวน' : G.kind === 'remedial' ? 'สอบแก้จุดอ่อน' : G.lv + ' · ' + MODES[G.mode].th}</p>
       <h1>${headline}</h1>
     </header>
     <div class="row" style="align-items:flex-end">
@@ -7384,14 +7542,18 @@ function result() {
       <div style="text-align:right"><div class="num" style="font-size:1.6rem;font-weight:500">+${G.xp} XP</div><span class="muted">รวม ${S.xp} XP</span></div>
     </div>
     ${extra}
+    ${(() => { const W = weakSummary(); return W.total && G.kind !== 'placement' ? `<section class="banner remedial"><div><b>${(G.skips || []).length + G.misses.length ? 'เก็บข้อที่พลาดและข้อที่ข้ามไว้แล้ว' : 'ยังมีจุดอ่อนค้างอยู่'}</b>
+      <span class="muted" style="font-size:.9rem">จุดอ่อนทั้งหมด ${W.total} จุด${W.rules.length ? ' · กฎที่ต้องฝึก: ' + W.rules.slice(0, 3).map(k => RULES[k].name).join(', ') : ''}</span></div>
+      <button class="btn lv" id="remedial">สอบแก้ 15 ข้อ</button></section>` : ''; })()}
     ${missList()}
     <div class="row">
       <button class="btn ghost" id="toHome">หน้าหลัก</button>
-      ${G.kind === 'review'
+      ${G.kind === 'remedial' ? '' : G.kind === 'review'
         ? (Object.keys(S.mistakes).length ? '<button class="btn lv" id="again">ทบทวนต่อ</button>' : '')
         : `<button class="btn lv" id="again">${G.kind === 'exam' ? 'สอบอีกครั้ง' : 'เล่นอีกรอบ'}</button>`}
     </div>`;
   $('#toHome').onclick = home;
+  if ($('#remedial')) $('#remedial').onclick = startRemedial;
   if ($('#again')) $('#again').onclick = () => G.kind === 'review' ? startReview() : G.oxLv ? startOx(G.oxLv) : G.story != null ? startStoryQuiz(G.lv, G.story, G.mode) : startRound(G.lv, G.mode);
   if (G.oxLv) { const b = document.createElement('button'); b.className = 'btn ghost'; b.id = 'backOx'; b.textContent = 'คลังคำ Oxford'; const lv = G.oxLv; b.onclick = () => oxford(lv); $('#toHome').after(b); }
   if (G.story != null) { const b = document.createElement('button'); b.className = 'btn ghost'; b.id = 'backStory'; b.textContent = 'กลับไปที่เรื่อง'; const lv = G.lv, i = G.story; b.onclick = () => openStory(lv, i, 'tr'); $('#toHome').after(b); }
