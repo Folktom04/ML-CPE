@@ -304,6 +304,9 @@ details.again summary { cursor: pointer; color: var(--lv); font-size: .9rem; pad
 .okline { color: var(--good); font-size: .9rem; }
 
 /* skip + remedial */
+.weaknote { display: flex; flex-direction: column; gap: 4px; font-size: .88rem; background: var(--surface); border-radius: 10px; padding: 8px 12px; }
+.weaknote .done { color: var(--good); font-weight: 600; }
+.pips { font-style: normal; color: var(--lv); letter-spacing: 2px; margin-left: 4px; }
 .skip { align-self: center; font-size: .88rem; padding: 8px 14px; color: var(--muted); }
 .feedback.skip { background: var(--chip); }
 .feedback.skip h3 { color: var(--ink); }
@@ -6638,7 +6641,7 @@ function home() {
     <section class="banner"><div><b>คลังเรื่องอ่าน</b><span class="muted" style="font-size:.9rem">${LEVELS.reduce((n, l) => n + STORIES[l].length, 0)} เรื่อง เรียงจากสั้นไปยาว แตะคำเพื่อดูคำแปล พร้อมคำแปลและโครงสร้างทุกประโยค</span></div><button class="btn lv" id="library">เปิดคลังเรื่อง</button></section>
     <section class="banner"><div><b>คู่มือไวยากรณ์</b><span class="muted" style="font-size:.9rem">ตาราง 12 tense และกฎทั้งหมด ${Object.keys(RULES).length} ข้อ พร้อมตัวอย่างง่ายๆ</span></div><button class="btn ghost" id="handbook">เปิดคู่มือ</button></section>
     ${(() => { const W = weakSummary(); return W.total ? `<section class="banner remedial"><div><b>สอบแก้จุดอ่อน · ${W.total} จุด</b>
-      <span class="muted" style="font-size:.9rem">สร้างโจทย์ใหม่จากข้อที่ข้ามหรือตอบผิด${W.rules.length ? ' · กฎ: ' + W.rules.slice(0, 3).map(k => RULES[k].name).join(', ') : ''}${W.words.length ? ' · คำ: ' + W.words.slice(0, 4).join(', ') : ''}</span></div>
+      <span class="muted" style="font-size:.9rem">แต่ละจุดต้องตอบถูก ${WEAK_NEED} ครั้งจากโจทย์ต่างกัน · สร้างโจทย์ใหม่จากข้อที่ข้ามหรือตอบผิด${W.rules.length ? ' · กฎ: ' + W.rules.slice(0, 3).map(k => RULES[k].name).join(', ') : ''}${W.words.length ? ' · คำ: ' + W.words.slice(0, 4).join(', ') : ''}</span></div>
       <button class="btn lv" id="remedialHome">สอบแก้</button></section>` : ''; })()}
     ${missCount ? `<section class="banner"><div><b>คำที่เคยตอบผิด ${missCount} ข้อ</b><span class="muted" style="font-size:.9rem">ทบทวนจนตอบถูก แล้วข้อนั้นจะหายจากรายการ</span></div><button class="btn ghost" id="review">ทบทวน</button></section>` : ''}
     <section style="display:flex;flex-direction:column;gap:10px">
@@ -7159,15 +7162,49 @@ function weakKeysOf(q) {
   if (word) keys.push('word:' + key(word));
   return keys;
 }
-function markWeak(keys, delta) {
-  S.weak = S.weak || {};
+// S.weak[k] = correct answers still needed (starts at 3). S.weakHit[k] = questions already
+// answered correctly for it, so the same question can't be counted twice.
+const WEAK_NEED = 3;
+function migrateWeak() {
+  if (S.weakV === 3) return;
+  if (S.weakV === 2) { S.weakHit = {}; S.weakV = 3; return; }
+  S.weak = S.weak || {}; S.weakHit = {};
+  Object.keys(S.weak).forEach(k => { S.weak[k] = WEAK_NEED; });
+  S.weakV = 3;
+}
+// Returns a progress note for the feedback panel, e.g. "Present Perfect 2/3".
+// A weak point counts at most once per round, and from a question not counted before
+// whenever it has 3 or more possible questions.
+function markWeak(keys, ok, qid, rid) {
+  migrateWeak();
+  const notes = [];
   keys.forEach(k => {
-    if (delta < 0 && !S.weak[k]) return;
-    const v = (S.weak[k] || 0) + delta;
-    if (v <= 0) delete S.weak[k]; else S.weak[k] = Math.min(9, v);
+    if (!ok) { S.weak[k] = WEAK_NEED; S.weakHit[k] = []; return; }
+    if (!S.weak[k]) return;
+    const hit = S.weakHit[k] = S.weakHit[k] || [];
+    if (hit.some(h => h.r === rid)) { notes.push([k, WEAK_NEED - S.weak[k], 'round']); return; }
+    if (hit.some(h => h.q === qid) && candidatesFor(k).length >= WEAK_NEED) { notes.push([k, WEAK_NEED - S.weak[k], 'same']); return; }
+    hit.push({ q: qid, r: rid });
+    S.weak[k]--;
+    notes.push([k, WEAK_NEED - S.weak[k], false]);
+    if (S.weak[k] <= 0) { delete S.weak[k]; delete S.weakHit[k]; }
   });
+  return notes;
+}
+function weakName(k) {
+  if (k.startsWith('rule:')) return RULES[k.slice(5)] ? 'กฎ ' + RULES[k.slice(5)].name : k;
+  if (k.startsWith('word:')) return 'คำ ' + k.slice(5);
+  return 'ข้อนี้';
+}
+function weakNoteHTML(notes) {
+  if (!notes || !notes.length) return '';
+  return `<div class="weaknote">${notes.map(([k, n, dup]) => dup
+    ? `<span>${esc(weakName(k))}: ${n}/${WEAK_NEED} · ${dup === 'round' ? 'รอบนี้นับไปแล้ว ต้องตอบถูกอีกในรอบถัดไป' : 'โจทย์นี้นับไปแล้ว ต้องตอบถูกจากโจทย์อื่น'}</span>`
+    : n >= WEAK_NEED ? `<span class="done">✓ ${esc(weakName(k))}: ถูกครบ ${WEAK_NEED} ครั้ง ผ่านจุดอ่อนนี้แล้ว</span>`
+    : `<span>${esc(weakName(k))}: ถูก ${n}/${WEAK_NEED} <i class="pips">${'●'.repeat(n)}${'○'.repeat(WEAK_NEED - n)}</i></span>`).join('')}</div>`;
 }
 function weakSummary() {
+  migrateWeak();
   const W = S.weak || {}, keys = Object.keys(W);
   const rules = keys.filter(k => k.startsWith('rule:')).sort((a, b) => W[b] - W[a]).map(k => k.slice(5)).filter(k => RULES[k]);
   const words = keys.filter(k => k.startsWith('word:')).sort((a, b) => W[b] - W[a]).map(k => k.slice(5));
@@ -7200,13 +7237,25 @@ function candidatesFor(k) {
   return shuffle(out);
 }
 function remedialIds(n = 15) {
-  const W = S.weak || {};
-  const keys = Object.keys(W).sort((a, b) => W[b] - W[a] || Math.random() - .5);
-  const pools = keys.map(candidatesFor).filter(p => p.length);
+  migrateWeak();
+  const W = S.weak || {}, H = S.weakHit || {};
+  const keys = shuffle(Object.keys(W)).sort((a, b) => W[b] - W[a]);
+  // Questions already counted for a weak point go last, so each round brings new ones.
+  const used = k => (H[k] || []).map(h => h.q);
+  const pools = keys.map(k => { const c = candidatesFor(k), u = used(k); return { k, ids: [...c.filter(x => !u.includes(x)), ...c.filter(x => u.includes(x))] }; }).filter(p => p.ids.length);
   const picked = [];
-  for (let round = 0; picked.length < n && pools.some(p => p.length); round++)
-    for (const p of pools) { while (p.length && picked.includes(p[0])) p.shift(); if (p.length && picked.length < n) picked.push(p.shift()); }
-  return shuffle(picked);
+  while (picked.length < n && pools.some(p => p.ids.length))
+    for (const p of pools) { while (p.ids.length && picked.some(x => x.id === p.ids[0])) p.ids.shift(); if (p.ids.length && picked.length < n) picked.push({ id: p.ids.shift(), k: p.k }); }
+  // Spread: never two questions for the same weak point in a row.
+  picked.forEach(x => { x.keys = new Set([x.k, ...weakKeysOf(build(x.id))]); });
+  let bag = shuffle(picked); const out = [];
+  const clash = (a, b) => !!b && [...a.keys].some(k => b.keys.has(k));
+  while (bag.length) {
+    const prev = out[out.length - 1];
+    const i = bag.findIndex(x => !clash(x, prev));
+    out.push(bag.splice(i < 0 ? 0 : i, 1)[0]);
+  }
+  return out.map(x => x.id);
 }
 function startRemedial() {
   const q = remedialIds();
@@ -7464,13 +7513,15 @@ function finish(ok, given, detail, skipped) {
     G.xp += gain; S.xp += gain;
     if (!q.id.startsWith('gen|')) S.mastered[q.id] = true;
     if (G.kind === 'review') delete S.mistakes[q.id];
-    markWeak(weakKeysOf(q), -1);
+    G.rid = G.rid || Date.now();
+    G.weakNotes = markWeak(weakKeysOf(q), true, q.id, G.rid);
   } else {
     G.combo = 0;
     if (G.hearts != null && !skipped) G.hearts--;
     if (!q.id.startsWith('gen|')) S.mistakes[q.id] = 1;
     (skipped ? G.skips : G.misses).push({ q, given });
-    markWeak(weakKeysOf(q), 1);
+    markWeak(weakKeysOf(q), false, q.id);
+    G.weakNotes = null;
   }
   if (q.mode === 'ox') oxGrade(q.id, ok);
   save();
@@ -7479,7 +7530,7 @@ function finish(ok, given, detail, skipped) {
   $('#skip').disabled = true;
   $('#fb').innerHTML = `<div class="feedback ${ok ? 'ok' : skipped ? 'skip' : 'no'}" role="status">
       <h3>${ok ? pickOne(['ถูกต้อง!', 'เยี่ยม!', 'แม่นมาก!', 'Excellent!']) : skipped ? 'ข้ามแล้ว ดูคำตอบไว้ก่อน' : 'ยังไม่ถูก'}</h3>
-      ${skipped ? '<p class="sub">ไม่เสียหัวใจ ข้อนี้ถูกเก็บไว้ทำโจทย์ "สอบแก้จุดอ่อน"</p>' : ''}
+      ${skipped ? `<p class="sub">ไม่เสียหัวใจ ข้อนี้ถูกเก็บเป็นจุดอ่อน ต้องตอบถูกจากโจทย์ต่างกัน ${WEAK_NEED} ครั้งใน "สอบแก้จุดอ่อน"</p>` : !ok ? `<p class="sub">เก็บเป็นจุดอ่อนแล้ว ต้องตอบถูก ${WEAK_NEED} ครั้งจึงจะหาย</p>` : weakNoteHTML(G.weakNotes)}
       ${!ok && (q.type === 'mc' || q.type === 'gap') ? `<p>คำตอบที่ถูก: <b>${esc(q.answer)}</b></p>` : ''}
       ${detail ? `<p>${detail}</p>` : ''}
       ${rq ? ruleHTML(rq, !ok) : ''}

@@ -1,7 +1,7 @@
 // Offline support for CEFR Ladder.
 // The app is one HTML file, so caching it (plus icons and fonts) is enough to run with no internet.
 // Bump VERSION whenever index.html changes so phones pick up the new copy.
-const VERSION = 'cefr-ladder-2026-11-20';
+const VERSION = 'cefr-ladder-2026-11-20b';
 const APP = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 const FONTS = 'cefr-ladder-fonts';
 
