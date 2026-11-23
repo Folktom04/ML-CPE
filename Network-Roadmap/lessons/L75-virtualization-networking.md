@@ -144,7 +144,7 @@ ovs-vsctl show ; ovs-ofctl dump-flows br0
 
 | Traffic | VLAN ตัวอย่าง | หมายเหตุ |
 |---|---|---|
-| Management | 10 | เข้าถึงจาก admin เท่านั้น (Level 92 hardening) |
+| Management | 10 | เข้าถึงจาก admin เท่านั้น (management plane hardening) |
 | vMotion/Live Migration | 11 | bandwidth สูง, ไม่ route ออกนอก (มัก non-routable) |
 | Storage (iSCSI/NFS/vSAN/Ceph) | 12, 13 | **jumbo MTU**, latency ต่ำ, iSCSI ใช้ **multipathing** (2 subnet/2 NIC) ไม่ใช่ teaming |
 | VM networks | 100+ | ตาม segment ของแอป/tenant |

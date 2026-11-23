@@ -6,6 +6,8 @@
 
 ## Level 81 — Python for Network Engineers
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L81-python-for-network.md](lessons/L81-python-for-network.md)
+
 **สิ่งที่ต้องรู้**
 - พื้นฐาน: data types, loops, functions, venv, pip, error handling
 - Library: Netmiko (SSH multi-vendor), Paramiko, NAPALM (getters, config replace/merge), Scrapli, Nornir (concurrency)
@@ -50,6 +52,8 @@ with ConnectHandler(**dev) as c:
 ---
 
 ## Level 82 — Ansible for Network
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L82-ansible-network.md](lessons/L82-ansible-network.md)
 
 **สิ่งที่ต้องรู้**
 - Agentless, inventory, playbook, role, variables (group_vars/host_vars), Jinja2 templates
@@ -96,6 +100,8 @@ with ConnectHandler(**dev) as c:
 
 ## Level 83 — APIs: REST, NETCONF, RESTCONF, YANG, gNMI
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L83-network-apis.md](lessons/L83-network-apis.md)
+
 **สิ่งที่ต้องรู้**
 - REST: methods, JSON, authentication (token, basic, OAuth), status codes, pagination, rate limit
 - YANG = data model; NETCONF (SSH 830, XML, candidate/running, commit/rollback); RESTCONF (HTTPS, JSON/XML)
@@ -137,6 +143,8 @@ print(r.json())
 
 ## Level 84 — Git, CI/CD & NetDevOps
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L84-git-cicd-netdevops.md](lessons/L84-git-cicd-netdevops.md)
+
 **สิ่งที่ต้องรู้**
 - Git: commit, branch, merge, pull request, review, revert
 - Config as code: เก็บ template/variables/intended config ใน Git
@@ -170,6 +178,8 @@ print(r.json())
 ---
 
 ## Level 85 — Infrastructure as Code: Terraform
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L85-terraform.md](lessons/L85-terraform.md)
 
 **สิ่งที่ต้องรู้**
 - Declarative, provider, resource, data source, variable, output, module
@@ -217,6 +227,8 @@ resource "aws_subnet" "private_a" {
 
 ## Level 86 — Monitoring & Observability
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L86-monitoring-observability.md](lessons/L86-monitoring-observability.md)
+
 **สิ่งที่ต้องรู้**
 - Metrics (Prometheus, InfluxDB), Logs (Loki/ELK), Traces; Dashboard (Grafana)
 - NMS: Zabbix, LibreNMS, PRTG, Observium, SolarWinds
@@ -251,6 +263,8 @@ resource "aws_subnet" "private_a" {
 
 ## Level 87 — Flow Analysis: NetFlow, sFlow, IPFIX
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L87-flow-analysis.md](lessons/L87-flow-analysis.md)
+
 **สิ่งที่ต้องรู้**
 - Flow = 5-tuple + bytes/packets/timestamp; NetFlow v5/v9, IPFIX, sFlow (sampling), J-Flow
 - Exporter → Collector → Analyzer (ntopng, ElastiFlow, Akvorado, pmacct, nfdump/nfsen)
@@ -283,6 +297,8 @@ resource "aws_subnet" "private_a" {
 ---
 
 ## Level 88 — SDN Concepts & Intent-Based Networking
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L88-sdn-intent-based.md](lessons/L88-sdn-intent-based.md)
 
 **สิ่งที่ต้องรู้**
 - SDN: แยก control plane ออกจาก data plane, controller ศูนย์กลาง, northbound/southbound API
@@ -318,6 +334,8 @@ resource "aws_subnet" "private_a" {
 
 ## Level 89 — Source of Truth & IPAM (NetBox)
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L89-netbox-source-of-truth.md](lessons/L89-netbox-source-of-truth.md)
+
 **สิ่งที่ต้องรู้**
 - Source of Truth (SoT) = ข้อมูลที่ "ควรเป็น" (intended state)
 - NetBox/Nautobot: DCIM (site, rack, device, cable), IPAM (prefix, IP, VLAN, VRF), circuits, custom fields
@@ -351,6 +369,8 @@ resource "aws_subnet" "private_a" {
 ---
 
 ## Level 90 — Performance Testing & Tuning
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L90-performance-testing.md](lessons/L90-performance-testing.md)
 
 **สิ่งที่ต้องรู้**
 - iperf3 (TCP/UDP, parallel streams), flent, TRex (traffic generator), RFC 2544/Y.1564

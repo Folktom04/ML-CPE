@@ -198,7 +198,7 @@ resource "aws_security_group" "db" {
   }
 }
 ```
-`terraform plan` → review ใน pull request → `terraform apply` (Level 87)
+`terraform plan` → review ใน pull request → `terraform apply` (Level 85)
 
 ---
 
