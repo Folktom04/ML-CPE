@@ -8,6 +8,8 @@
 
 ## Level 61 — Security Fundamentals
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L61-security-fundamentals.md](lessons/L61-security-fundamentals.md)
+
 **สิ่งที่ต้องรู้**
 - CIA Triad, AAA, Least privilege, Defense in depth
 - Threat / Vulnerability / Risk / Exploit; CVE, CVSS
@@ -41,6 +43,8 @@
 ---
 
 ## Level 62 — Firewall: Stateful, NGFW, iptables/nftables
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L62-firewall-ngfw.md](lessons/L62-firewall-ngfw.md)
 
 **สิ่งที่ต้องรู้**
 - Packet filter → Stateful → NGFW (App-ID, User-ID, IPS, URL filtering, SSL inspection)
@@ -85,6 +89,8 @@ nft add rule inet fw input tcp dport 22 ip saddr 10.0.0.0/24 accept
 
 ## Level 63 — Layer 2 Security
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L63-layer2-security.md](lessons/L63-layer2-security.md)
+
 **สิ่งที่ต้องรู้**
 - การโจมตี: MAC flooding, ARP spoofing, DHCP starvation/rogue, VLAN hopping, STP manipulation
 - ป้องกัน: Port security, DHCP snooping (trusted port), Dynamic ARP Inspection, IP Source Guard, BPDU Guard/Root Guard, ปิด DTP, native VLAN ไม่ใช้งาน
@@ -125,6 +131,8 @@ ip arp inspection vlan 10,20
 
 ## Level 64 — IDS/IPS
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L64-ids-ips.md](lessons/L64-ids-ips.md)
+
 **สิ่งที่ต้องรู้**
 - IDS (passive, ตรวจจับ) vs IPS (inline, block)
 - Signature-based vs Anomaly-based; False positive/negative
@@ -162,6 +170,8 @@ alert tcp any any -> $HOME_NET 22 (msg:"SSH brute force"; flags:S; threshold: ty
 ---
 
 ## Level 65 — Cryptography & PKI สำหรับ Network Engineer
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L65-crypto-pki.md](lessons/L65-crypto-pki.md)
 
 **สิ่งที่ต้องรู้**
 - Symmetric (AES) vs Asymmetric (RSA, ECC), Hash (SHA-256), HMAC, Digital signature
@@ -203,6 +213,8 @@ openssl verify -CAfile chain.pem cert.pem
 
 ## Level 66 — 802.1X, NAC & Zero Trust
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L66-8021x-nac-zero-trust.md](lessons/L66-8021x-nac-zero-trust.md)
+
 **สิ่งที่ต้องรู้**
 - 802.1X: Supplicant – Authenticator (switch/AP) – Authentication server (RADIUS)
 - EAP methods: EAP-TLS (cert, ดีที่สุด), PEAP-MSCHAPv2, EAP-TTLS
@@ -238,6 +250,8 @@ openssl verify -CAfile chain.pem cert.pem
 
 ## Level 67 — Segmentation, DMZ & Secure Architecture
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L67-segmentation-dmz.md](lessons/L67-segmentation-dmz.md)
+
 **สิ่งที่ต้องรู้**
 - DMZ (single/dual firewall), Management network แยก (OOB)
 - Zone model: Internet, DMZ, User, Server, Database, Management, OT/IoT, Guest
@@ -271,6 +285,8 @@ openssl verify -CAfile chain.pem cert.pem
 ---
 
 ## Level 68 — Logging, SIEM & Visibility
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L68-siem-logging.md](lessons/L68-siem-logging.md)
 
 **สิ่งที่ต้องรู้**
 - แหล่ง log: firewall, DNS, DHCP, proxy, VPN, AAA, NetFlow, IDS
@@ -306,6 +322,8 @@ openssl verify -CAfile chain.pem cert.pem
 
 ## Level 69 — Penetration Testing สำหรับ Network (Authorized)
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L69-pentest-authorized.md](lessons/L69-pentest-authorized.md)
+
 **สิ่งที่ต้องรู้**
 - ขอบเขต/Rules of Engagement/หนังสืออนุญาต — ห้ามทำโดยไม่ได้รับอนุญาต
 - Phase: Recon → Scanning → Enumeration → Exploitation → Post-exploitation → Reporting
@@ -339,6 +357,8 @@ openssl verify -CAfile chain.pem cert.pem
 ---
 
 ## Level 70 — Incident Response & DDoS Mitigation
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L70-incident-response-ddos.md](lessons/L70-incident-response-ddos.md)
 
 **สิ่งที่ต้องรู้**
 - NIST IR: Preparation → Detection & Analysis → Containment, Eradication, Recovery → Post-incident
