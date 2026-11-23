@@ -6,6 +6,8 @@
 
 ## Level 91 — Advanced Troubleshooting ระดับองค์กร
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L91-advanced-troubleshooting.md](lessons/L91-advanced-troubleshooting.md)
+
 **สิ่งที่ต้องรู้**
 - ปัญหาแบบ intermittent: เก็บหลักฐานต่อเนื่อง (ring capture, flow, syslog correlation)
 - Asymmetric routing + stateful firewall, MTU black hole, ECMP hash polarization
@@ -40,6 +42,8 @@
 ---
 
 ## Level 92 — Network Design Methodology
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L92-network-design-methodology.md](lessons/L92-network-design-methodology.md)
 
 **สิ่งที่ต้องรู้**
 - Requirements: business, technical, constraints (งบ, เวลา, ทีม), ความต้องการด้าน compliance
@@ -76,6 +80,8 @@
 
 ## Level 93 — High Availability & Disaster Recovery
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L93-ha-dr.md](lessons/L93-ha-dr.md)
+
 **สิ่งที่ต้องรู้**
 - Availability = MTBF / (MTBF + MTTR); serial vs parallel availability
 - Redundancy ทุกชั้น: link, device, power, path, site, provider, DNS
@@ -111,6 +117,8 @@
 
 ## Level 94 — Capacity Planning, Cost & Vendor Management
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L94-capacity-cost-vendor.md](lessons/L94-capacity-cost-vendor.md)
+
 **สิ่งที่ต้องรู้**
 - Baseline + trend + forecast, upgrade trigger (เช่น 95th > 70%)
 - TCO: CAPEX + OPEX (license, support, power, คน), subscription model
@@ -144,6 +152,8 @@
 ---
 
 ## Level 95 — Change Management, ITIL & Documentation
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L95-change-itil-documentation.md](lessons/L95-change-itil-documentation.md)
 
 **สิ่งที่ต้องรู้**
 - ITIL 4: Incident, Problem, Change, Configuration (CMDB), Service Request
@@ -180,6 +190,8 @@
 
 ## Level 96 — Multicast
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L96-multicast.md](lessons/L96-multicast.md)
+
 **สิ่งที่ต้องรู้**
 - Multicast address 224.0.0.0/4, SSM 232/8, ff00::/8; IP → MAC mapping (01:00:5E + 23 บิต)
 - IGMP v2/v3 (host ↔ router), IGMP snooping (switch), MLD (IPv6)
@@ -213,6 +225,8 @@
 ---
 
 ## Level 97 — MPLS & Segment Routing (Service Provider)
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L97-mpls-segment-routing.md](lessons/L97-mpls-segment-routing.md)
 
 **สิ่งที่ต้องรู้**
 - MPLS label (20 บิต), LSR/LER, push/swap/pop, PHP, LDP
@@ -248,6 +262,8 @@
 
 ## Level 98 — Networking for AI / HPC Data Centers
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L98-ai-hpc-networking.md](lessons/L98-ai-hpc-networking.md)
+
 **สิ่งที่ต้องรู้**
 - AI training traffic: east-west หนัก, collective ops (all-reduce), elephant flows, sync → tail latency สำคัญ
 - RDMA, RoCEv2 (RDMA over UDP 4791), InfiniBand, Ultra Ethernet
@@ -282,6 +298,8 @@
 ---
 
 ## Level 99 — Career Path, Certifications & Interview
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L99-career-cert-interview.md](lessons/L99-career-cert-interview.md)
 
 **สิ่งที่ต้องรู้**
 - เส้นทางอาชีพ: Helpdesk → NOC → Network Admin → Network Engineer → Senior → Architect / แยกสาย Security, Cloud, Automation, SP, Wireless, Pre-sales
@@ -319,6 +337,8 @@
 ---
 
 ## Level 100 — Final Capstone: Enterprise Network End-to-End
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L100-final-capstone.md](lessons/L100-final-capstone.md)
 
 **โจทย์:** บริษัท "ThaiTech Co." (สมมติ) มีพนักงาน 1,500 คน — HQ กรุงเทพ (5 ชั้น + data center เล็ก), 4 สาขา (เชียงใหม่ ขอนแก่น ชลบุรี หาดใหญ่), ใช้ AWS สำหรับแอปลูกค้า, มีโรงงาน 1 แห่ง (OT), ต้องรองรับ remote work 40%
 

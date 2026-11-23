@@ -49,7 +49,7 @@
  utilization = 60 / ifHighSpeed(1000 Mbps) = 6%
 ```
 - ใช้ **counter 64-bit (ifHC*)** สำหรับลิงก์ ≥1G — counter 32-bit วนกลับเร็ว (1G วนทุก ~34 วินาที) ทำให้กราฟเพี้ยน
-- **SNMPv3 authPriv** (Level 68/63) · จำกัด ACL ให้เฉพาะ NMS
+- **SNMPv3 authPriv** (Level 55) · จำกัด ACL ให้เฉพาะ NMS
 - Polling interval 1–5 นาที → **ค่าเฉลี่ยกลบ microburst** (ระดับ ms) — ต้องใช้ telemetry/ตรวจ output discards (Level 90)
 
 ### 95th Percentile

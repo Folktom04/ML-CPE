@@ -13,7 +13,7 @@
 | **Latency (RTT)** | เวลาไป-กลับ | หน่วง, เว็บโหลดช้า (หลาย round trip) |
 | **Jitter** | ความแปรปรวนของ latency | เสียง/วิดีโอกระตุก |
 | **Packet loss** | packet หาย | TCP ช้าลงมาก, เสียงขาด |
-(ทบทวน Level 1/31) — **ต้องวัดให้ถูกตัว** ก่อนสรุปว่า "ต้องซื้อ bandwidth เพิ่ม"
+(ทบทวน Level 1/13) — **ต้องวัดให้ถูกตัว** ก่อนสรุปว่า "ต้องซื้อ bandwidth เพิ่ม"
 
 ---
 
@@ -44,7 +44,7 @@ TCP ส่งได้ไม่เกิน **window** ก่อนต้อง�
  Window 64 KB (ไม่มี window scaling), RTT 50 ms → 65,535 × 8 / 0.05 ≈ 10.5 Mbps  (แม้ลิงก์ 1 Gbps!)
  ต้องการ 1 Gbps ที่ RTT 50 ms → window ≥ 6.25 MB
 ```
-→ ลิงก์ระยะไกล (สาขาต่างประเทศ, DR site, cloud ข้ามภูมิภาค) **ช้าต่อ flow** แม้ bandwidth เหลือ — แก้ด้วย window scaling + buffer ใหญ่ขึ้น, หลาย stream, protocol ที่เหมาะ (Level 31)
+→ ลิงก์ระยะไกล (สาขาต่างประเทศ, DR site, cloud ข้ามภูมิภาค) **ช้าต่อ flow** แม้ bandwidth เหลือ — แก้ด้วย window scaling + buffer ใหญ่ขึ้น, หลาย stream, protocol ที่เหมาะ (Level 13)
 
 ### Loss กับ TCP (Mathis formula — ประมาณ)
 ```
@@ -149,7 +149,7 @@ sysctl net.ipv4.tcp_congestion_control ; ss -tin dst 10.0.0.10     # ดู cwnd
  ปกติ: ping 15 ms · ระหว่างอัปโหลดไฟล์ใหญ่: ping 600 ms → VoIP/Teams พัง
 ```
 - ทดสอบ: **flent RRUL** (โหลดเต็มทั้งสองทิศพร้อมวัด latency), Waveform bufferbloat test
-- แก้: **AQM — fq_codel / CAKE** (SQM บน OpenWrt/Linux), ตั้ง shaper ต่ำกว่าความเร็วจริงเล็กน้อย (~90–95%) เพื่อให้คิวอยู่ที่อุปกรณ์ที่เราควบคุม, QoS ให้ priority กับ real-time (Level 51)
+- แก้: **AQM — fq_codel / CAKE** (SQM บน OpenWrt/Linux), ตั้ง shaper ต่ำกว่าความเร็วจริงเล็กน้อย (~90–95%) เพื่อให้คิวอยู่ที่อุปกรณ์ที่เราควบคุม, QoS ให้ priority กับ real-time (Level 54)
 ```bash
 sudo tc qdisc replace dev eth0 root cake bandwidth 95mbit
 flent rrul -p all_scaled -l 60 -H netperf-server.example -o rrul.png
@@ -181,7 +181,7 @@ traffic พุ่งเกินความเร็วพอร์ตในช
 💡 **Frame 64 bytes = pps สูงสุด** → แสดงขีดจำกัดของ CPU/forwarding engine (10G line rate ที่ 64B ≈ 14.88 Mpps) — datasheet ที่บอก "10 Gbps" มักวัดที่ frame ใหญ่
 
 ### ITU-T Y.1564 (Ethernet service activation)
-ทดสอบ **วงจรของผู้ให้บริการ** ตาม SLA: CIR/EIR, frame delay, delay variation, loss — หลาย service (VoIP/data) พร้อมกัน → ใช้ตอนรับมอบวงจร Metro Ethernet/MPLS (Level 56/58)
+ทดสอบ **วงจรของผู้ให้บริการ** ตาม SLA: CIR/EIR, frame delay, delay variation, loss — หลาย service (VoIP/data) พร้อมกัน → ใช้ตอนรับมอบวงจร Metro Ethernet/MPLS (Level 57)
 
 ### TRex
 traffic generator open source (DPDK) ของ Cisco — สร้าง traffic ระดับหลายสิบ Gbps/หลายล้าน pps, stateful (จำลอง HTTP/แอปจริง) หรือ stateless → ใช้ทดสอบ firewall/router/VM ว่ารองรับเท่าไร (ใช้ใน lab เท่านั้น)

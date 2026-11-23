@@ -83,7 +83,7 @@ VXLAN ดั้งเดิม (ไม่มี control plane):
 | 4 | Ethernet Segment | เลือก DF (designated forwarder) ใน multihoming |
 | **5** ⭐ | **IP Prefix** | ประกาศ subnet/route (เช่น default route จาก border leaf, route ภายนอก) |
 
-### การแยก tenant: RD และ RT (เหมือน MPLS L3VPN — Level 56)
+### การแยก tenant: RD และ RT (เหมือน MPLS L3VPN — Level 97)
 - **RD (Route Distinguisher)** ทำให้ route ซ้ำกันของ VRF ต่างกันแยกกันได้
 - **RT (Route Target)** import/export ควบคุมว่า route ไปเข้า VNI/VRF ไหน (มักตั้ง `auto`)
 

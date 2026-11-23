@@ -8,6 +8,8 @@
 
 รวม **100 Level · 500 คำถาม · 500 โปรเจค**
 
+> 📖 **บทเรียนฉบับละเอียดทุก Level (1–100):** ดู **[สารบัญบทเรียน](lessons/README.md)**: อธิบายเนื้อหาแบบเข้าใจง่าย มีตัวอย่าง config, ข้อผิดพลาดที่พบบ่อย, cheat sheet และแบบทดสอบ 10 ข้อต่อบท (ในไฟล์ Tier แต่ละ Level ก็มีลิงก์ไปบทเรียนของ Level นั้น)
+
 > 🎯 **เตรียมทำงานที่ ISC (isc-th.com)?** ดู **[ISC-Track](ISC-Track/README.md)**: Level 1–100 ที่จัดตามขอบเขตงานจริงของบริษัท ครอบคลุม Network, DC, Backup/DR, Security, HCI, Virtualization, Cloud, Mail, Big Data, HPC/AI, Support/MA, Outsourcing และ ISO 9001
 >
 > 🏢 **ต้องการเน้นงานบริษัท System Integrator?** ดู **[SI-Track](SI-Track/README.md)**: Level 1–100 ที่เน้น Data Center (Server, Storage SAN, HA Cluster), Cybersecurity (NGFW, Zero Trust Segmentation, เฝ้าระวังภัยคุกคาม), Cloud & HCI (HCI, Cloud Migration) และ Support 24x7 (ดูแลระบบฉุกเฉิน, Preventive Maintenance)

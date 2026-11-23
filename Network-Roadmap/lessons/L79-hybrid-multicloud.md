@@ -76,7 +76,7 @@ crypto ipsec profile AWS-IPSEC
 interface Tunnel1
  ip address 169.254.10.2 255.255.255.252
  ip mtu 1436
- ip tcp adjust-mss 1379                 ! สำคัญ: กันปัญหา MTU (Level 52)
+ ip tcp adjust-mss 1379                 ! สำคัญ: กันปัญหา MTU (Level 58)
  tunnel source GigabitEthernet0/0
  tunnel destination 52.x.x.1
  tunnel mode ipsec ipv4
@@ -105,7 +105,7 @@ ip prefix-list FROM-AWS seq 10 permit 10.20.0.0/16 le 24
  Critical:       DX 2 วงจร 2 location (คนละ device/ผู้ให้บริการ) + VPN สำรอง
                  (AWS เรียก "Maximum Resiliency")
 ```
-### ควบคุมเส้นทางหลัก/สำรองด้วย BGP (Level 55)
+### ควบคุมเส้นทางหลัก/สำรองด้วย BGP (Level 49)
 | ต้องการ | ทำ |
 |---|---|
 | **ขาออกจาก on-prem** ใช้ DX เป็นหลัก | **Local Preference** สูงกว่าสำหรับ route ที่รับจาก DX |

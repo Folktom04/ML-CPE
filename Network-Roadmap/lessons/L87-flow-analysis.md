@@ -12,7 +12,7 @@
 | รายละเอียด | ตัวเลขรวมต่อ interface | metadata ต่อ conversation | ครบทุก byte รวม payload |
 | ขนาดข้อมูล | เล็กมาก | กลาง (~1–2% ของ traffic หรือน้อยกว่าด้วย sampling) | ใหญ่มาก |
 | เก็บย้อนหลัง | ปี | เดือน–ปี | ชั่วโมง–วัน |
-| ใช้ | utilization, trending | top talkers, capacity, security, billing | debug protocol เชิงลึก (Level 29) |
+| ใช้ | utilization, trending | top talkers, capacity, security, billing | debug protocol เชิงลึก (Level 22) |
 
 ```
  SNMP:  "WAN สาขา A ใช้ 95% ช่วง 10:00"
@@ -188,7 +188,7 @@ nfdump -R ... 'src ip 10.1.5.23 and dst port 443' -o long                    # �
 "เครื่องที่ติด malware คุยกับ IP ใดบ้างใน 30 วันที่ผ่านมา" → flow ตอบได้แม้ไม่มี pcap (ต้องเก็บ unsampled/ย้อนหลังนานพอ) → ส่ง flow เข้า SIEM (Level 68)
 
 ### ⑤ Billing / Chargeback, Peering Analysis
-แยกค่าใช้จ่ายตามแผนก/ลูกค้า · ISP ดูว่า traffic ไป AS ไหนมาก → ตัดสินใจ peering (Level 55)
+แยกค่าใช้จ่ายตามแผนก/ลูกค้า · ISP ดูว่า traffic ไป AS ไหนมาก → ตัดสินใจ peering (Level 49)
 
 ---
 

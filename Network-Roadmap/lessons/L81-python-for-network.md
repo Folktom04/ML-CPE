@@ -125,7 +125,7 @@ password = os.environ.get("NET_PASS") or getpass.getpass("Password: ")
 | Environment variable | CI/ตั้งเวลา (ระวังเก็บใน shell history) |
 | **Secret manager** (HashiCorp Vault, Azure Key Vault, AWS Secrets Manager, CyberArk) ⭐ | production |
 | `.env` + `python-dotenv` | dev เท่านั้น — **ใส่ `.env` ใน `.gitignore`** |
-- ใช้ **บัญชี automation แยก** (ใน TACACS+/RADIUS) สิทธิ์ตามจำเป็น บันทึก log ทุกคำสั่ง (Level 63/68)
+- ใช้ **บัญชี automation แยก** (ใน TACACS+/RADIUS) สิทธิ์ตามจำเป็น บันทึก log ทุกคำสั่ง (Level 56/68)
 
 ---
 
