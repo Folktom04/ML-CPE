@@ -6,6 +6,8 @@
 
 ## Level 11 — ARP
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L11-arp.md](lessons/L11-arp.md)
+
 **สิ่งที่ต้องรู้**
 - ARP แปลง IPv4 → MAC ภายใน broadcast domain เดียวกัน
 - ARP Request (broadcast) / ARP Reply (unicast), ARP cache + timeout
@@ -45,6 +47,8 @@ arp -a                 # Windows/macOS
 
 ## Level 12 — ICMP, ping, traceroute
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L12-icmp-ping-traceroute.md](lessons/L12-icmp-ping-traceroute.md)
+
 **สิ่งที่ต้องรู้**
 - ICMP Type: 0 Echo Reply, 3 Destination Unreachable, 8 Echo Request, 11 Time Exceeded
 - traceroute ใช้ TTL เพิ่มทีละ 1 (Linux ใช้ UDP, Windows tracert ใช้ ICMP)
@@ -83,6 +87,8 @@ ping -c 5 8.8.8.8 ; traceroute 1.1.1.1 ; mtr -rwc 100 google.com
 
 ## Level 13 — TCP
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L13-tcp.md](lessons/L13-tcp.md)
+
 **สิ่งที่ต้องรู้**
 - Connection-oriented, reliable, ordered
 - 3-way handshake SYN → SYN/ACK → ACK; 4-way close FIN/ACK; RST
@@ -119,6 +125,8 @@ ping -c 5 8.8.8.8 ; traceroute 1.1.1.1 ; mtr -rwc 100 google.com
 
 ## Level 14 — UDP & Port Numbers
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L14-udp-ports.md](lessons/L14-udp-ports.md)
+
 **สิ่งที่ต้องรู้**
 - UDP: connectionless, header 8 byte, ไม่มี retransmit — เหมาะ DNS, VoIP, game, streaming, QUIC
 - Port: Well-known 0–1023, Registered 1024–49151, Ephemeral 49152–65535
@@ -151,6 +159,8 @@ ping -c 5 8.8.8.8 ; traceroute 1.1.1.1 ; mtr -rwc 100 google.com
 ---
 
 ## Level 15 — DHCP
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L15-dhcp.md](lessons/L15-dhcp.md)
 
 **สิ่งที่ต้องรู้**
 - DORA: Discover → Offer → Request → Acknowledge (UDP 67/68)
@@ -197,6 +207,8 @@ interface g0/1
 
 ## Level 16 — DNS
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L16-dns.md](lessons/L16-dns.md)
+
 **สิ่งที่ต้องรู้**
 - ลำดับ resolution: cache → hosts → resolver → root → TLD → authoritative
 - Recursive vs Iterative, TTL, negative caching
@@ -235,6 +247,8 @@ dig example.com A +short ; dig +trace example.com ; dig -x 8.8.8.8 ; nslookup -t
 ---
 
 ## Level 17 — NAT / PAT
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L17-nat-pat.md](lessons/L17-nat-pat.md)
 
 **สิ่งที่ต้องรู้**
 - Static NAT (1:1), Dynamic NAT (pool), PAT/NAT Overload (many:1 ด้วย port)
@@ -280,6 +294,8 @@ ip nat inside source static tcp 192.168.1.10 80 203.0.113.5 80
 
 ## Level 18 — IPv6 พื้นฐาน
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L18-ipv6-basics.md](lessons/L18-ipv6-basics.md)
+
 **สิ่งที่ต้องรู้**
 - 128 bit, เขียนเป็น hex 8 กลุ่ม, การย่อ (ตัด 0 นำหน้า, `::` ได้ครั้งเดียว)
 - ไม่มี broadcast; ใช้ multicast (ff02::1 all-nodes, ff02::2 all-routers)
@@ -313,6 +329,8 @@ ip nat inside source static tcp 192.168.1.10 80 203.0.113.5 80
 ---
 
 ## Level 19 — IPv6 Addressing: SLAAC, DHCPv6, NDP
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L19-ipv6-slaac-ndp.md](lessons/L19-ipv6-slaac-ndp.md)
 
 **สิ่งที่ต้องรู้**
 - NDP: RS/RA/NS/NA/Redirect (ICMPv6 133–137)
@@ -348,6 +366,8 @@ ip nat inside source static tcp 192.168.1.10 80 203.0.113.5 80
 ---
 
 ## Level 20 — HTTP, HTTPS & TLS พื้นฐาน
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L20-http-https-tls.md](lessons/L20-http-https-tls.md)
 
 **สิ่งที่ต้องรู้**
 - HTTP method (GET/POST/PUT/DELETE), status code (2xx/3xx/4xx/5xx), headers, cookies
