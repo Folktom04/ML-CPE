@@ -6,6 +6,8 @@
 
 ## Level 31 — การทำงานของ Switch & MAC Address Table
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L31-switch-mac-table.md](lessons/L31-switch-mac-table.md)
+
 **สิ่งที่ต้องรู้**
 - Learning (src MAC), Forwarding (dst MAC รู้จัก), Flooding (unknown unicast/broadcast/multicast), Filtering
 - MAC aging 300 วินาที, CAM table
@@ -39,6 +41,8 @@
 ---
 
 ## Level 32 — VLAN
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L32-vlan.md](lessons/L32-vlan.md)
 
 **สิ่งที่ต้องรู้**
 - VLAN แบ่ง broadcast domain แบบ logical, VLAN ID 1–4094 (normal 1–1005, extended 1006–4094)
@@ -83,6 +87,8 @@ interface range g0/1-20
 
 ## Level 33 — Trunk 802.1Q & DTP
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L33-trunk-8021q.md](lessons/L33-trunk-8021q.md)
+
 **สิ่งที่ต้องรู้**
 - 802.1Q tag 4 byte (TPID 0x8100, PCP 3 bit, VID 12 bit)
 - Native VLAN ส่ง untagged; native mismatch → CDP warning + traffic รั่ว
@@ -125,6 +131,8 @@ interface g0/24
 ---
 
 ## Level 34 — Inter-VLAN Routing
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L34-inter-vlan-routing.md](lessons/L34-inter-vlan-routing.md)
 
 **สิ่งที่ต้องรู้**
 - Router-on-a-stick (subinterface `encapsulation dot1Q 10`)
@@ -170,6 +178,8 @@ interface vlan 10
 
 ## Level 35 — Spanning Tree Protocol (STP 802.1D)
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L35-stp.md](lessons/L35-stp.md)
+
 **สิ่งที่ต้องรู้**
 - ทำไมต้องมี: broadcast storm, MAC instability, duplicate frame
 - Root bridge election: Bridge ID ต่ำสุด (priority 32768 + VLAN + MAC)
@@ -209,6 +219,8 @@ show spanning-tree vlan 10
 ---
 
 ## Level 36 — RSTP, MST & STP Toolkit
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L36-rstp-mst-stp-toolkit.md](lessons/L36-rstp-mst-stp-toolkit.md)
 
 **สิ่งที่ต้องรู้**
 - RSTP 802.1w: converge เร็ว (proposal/agreement), port roles: alternate/backup, states: discarding/learning/forwarding
@@ -252,6 +264,8 @@ interface g0/24
 
 ## Level 37 — EtherChannel / Link Aggregation (LACP)
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L37-etherchannel-lacp.md](lessons/L37-etherchannel-lacp.md)
+
 **สิ่งที่ต้องรู้**
 - รวมหลายลิงก์เป็น logical link: bandwidth + redundancy, STP มองเป็นลิงก์เดียว
 - LACP (802.3ad: active/passive), PAgP (Cisco), Static (on)
@@ -293,6 +307,8 @@ show etherchannel summary
 ---
 
 ## Level 38 — Port Security & Access Control บน Switch
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L38-port-security.md](lessons/L38-port-security.md)
 
 **สิ่งที่ต้องรู้**
 - Port security: maximum MAC, sticky, violation mode (protect/restrict/shutdown)
@@ -337,6 +353,8 @@ errdisable recovery cause psecure-violation
 
 ## Level 39 — CDP, LLDP & เอกสารเครือข่าย
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L39-cdp-lldp-documentation.md](lessons/L39-cdp-lldp-documentation.md)
+
 **สิ่งที่ต้องรู้**
 - CDP (Cisco), LLDP (มาตรฐาน 802.1AB), LLDP-MED (voice VLAN, PoE)
 - ใช้ทำ topology discovery และหาว่า "พอร์ตนี้ต่อไปไหน"
@@ -375,6 +393,8 @@ show lldp neighbors
 ---
 
 ## Level 40 — L3 Switching & Campus Design
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L40-campus-design.md](lessons/L40-campus-design.md)
 
 **สิ่งที่ต้องรู้**
 - Hierarchical: Access / Distribution / Core, Collapsed core (บริษัทเล็ก-กลาง)
