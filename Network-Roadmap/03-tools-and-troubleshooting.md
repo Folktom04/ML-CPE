@@ -6,6 +6,8 @@
 
 ## Level 21 — คำสั่งเครือข่ายพื้นฐานบน OS
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L21-os-network-commands.md](lessons/L21-os-network-commands.md)
+
 **สิ่งที่ต้องรู้**
 | งาน | Linux | Windows | macOS |
 |---|---|---|---|
@@ -45,6 +47,8 @@
 
 ## Level 22 — Wireshark
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L22-wireshark.md](lessons/L22-wireshark.md)
+
 **สิ่งที่ต้องรู้**
 - Capture filter (BPF) vs Display filter
 - Display filter: `ip.addr==10.0.0.1`, `tcp.port==443`, `dns`, `tcp.flags.syn==1 && tcp.flags.ack==0`, `tcp.analysis.retransmission`, `http.response.code>=400`
@@ -78,6 +82,8 @@
 ---
 
 ## Level 23 — tcpdump & CLI capture
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L23-tcpdump.md](lessons/L23-tcpdump.md)
 
 **สิ่งที่ต้องรู้**
 ```bash
@@ -115,6 +121,8 @@ tshark -r cap.pcap -Y http -T fields -e ip.src -e http.host
 ---
 
 ## Level 24 — Nmap & Network Discovery
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L24-nmap-discovery.md](lessons/L24-nmap-discovery.md)
 
 > ⚠️ สแกนเฉพาะเครือข่ายที่ตัวเองเป็นเจ้าของหรือได้รับอนุญาตเป็นลายลักษณ์อักษรเท่านั้น
 
@@ -156,6 +164,8 @@ nmap --script ssl-enum-ciphers -p 443 host
 
 ## Level 25 — dig, curl, openssl, nc, iperf
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L25-dig-curl-openssl-nc-iperf.md](lessons/L25-dig-curl-openssl-nc-iperf.md)
+
 **สิ่งที่ต้องรู้**
 - `dig @8.8.8.8 example.com +short`, `dig +trace`, `dig -x`
 - `curl -v`, `curl -w "%{time_connect} %{time_starttransfer}\n"`, `--resolve`
@@ -189,6 +199,8 @@ nmap --script ssl-enum-ciphers -p 443 host
 ---
 
 ## Level 26 — Linux Networking Configuration
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L26-linux-networking.md](lessons/L26-linux-networking.md)
 
 **สิ่งที่ต้องรู้**
 - Netplan (Ubuntu), NetworkManager (`nmcli`), systemd-networkd, `/etc/network/interfaces`
@@ -237,6 +249,8 @@ network:
 
 ## Level 27 — Windows Networking & PowerShell
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L27-windows-networking.md](lessons/L27-windows-networking.md)
+
 **สิ่งที่ต้องรู้**
 ```powershell
 Get-NetIPConfiguration
@@ -276,6 +290,8 @@ pktmon start --capture ; pktmon stop
 ---
 
 ## Level 28 — ตั้ง Lab: Packet Tracer, GNS3, EVE-NG, Containerlab
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L28-network-labs.md](lessons/L28-network-labs.md)
 
 **สิ่งที่ต้องรู้**
 - Cisco Packet Tracer: ฟรี เรียน CCNA ง่ายสุด แต่ฟีเจอร์จำกัด
@@ -322,6 +338,8 @@ topology:
 
 ## Level 29 — Cisco IOS พื้นฐาน (CLI ที่พบมากที่สุดในงาน)
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L29-cisco-ios-basics.md](lessons/L29-cisco-ios-basics.md)
+
 **สิ่งที่ต้องรู้**
 - Mode: User EXEC `>` → Privileged `#` → Global config `(config)#` → Interface `(config-if)#`
 - ตั้งค่าเริ่มต้น: hostname, enable secret, console/vty password, `service password-encryption`, banner
@@ -356,6 +374,8 @@ topology:
 ---
 
 ## Level 30 — วิธีการ Troubleshoot อย่างเป็นระบบ
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L30-troubleshooting-methodology.md](lessons/L30-troubleshooting-methodology.md)
 
 **สิ่งที่ต้องรู้**
 - Approaches: Bottom-up, Top-down, Divide-and-conquer (เริ่มที่ L3 ping), Follow-the-path, Compare-config, Swap
