@@ -6,6 +6,8 @@
 
 ## Level 41 — Routing Table & Static Routing
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L41-routing-table-static.md](lessons/L41-routing-table-static.md)
+
 **สิ่งที่ต้องรู้**
 - Router เลือก route ด้วย: **Longest prefix match** → Administrative Distance → Metric
 - AD: Connected 0, Static 1, eBGP 20, EIGRP 90, OSPF 110, IS-IS 115, RIP 120, iBGP 200
@@ -45,6 +47,8 @@ show ip route 10.2.3.4
 ---
 
 ## Level 42 — Default Route, Floating Static & IP SLA
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L42-default-floating-ipsla.md](lessons/L42-default-floating-ipsla.md)
 
 **สิ่งที่ต้องรู้**
 - Default route `0.0.0.0/0`, Gateway of last resort
@@ -90,6 +94,8 @@ ip route 0.0.0.0 0.0.0.0 198.51.100.1 250
 
 ## Level 43 — แนวคิด Dynamic Routing
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L43-dynamic-routing-concepts.md](lessons/L43-dynamic-routing-concepts.md)
+
 **สิ่งที่ต้องรู้**
 - IGP vs EGP; Distance Vector vs Link State vs Path Vector
 - Metric ของแต่ละ protocol, Convergence
@@ -124,6 +130,8 @@ ip route 0.0.0.0 0.0.0.0 198.51.100.1 250
 ---
 
 ## Level 44 — RIP (เพื่อเข้าใจ Distance Vector)
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L44-rip.md](lessons/L44-rip.md)
 
 **สิ่งที่ต้องรู้**
 - RIPv2: metric = hop count (max 15, 16 = unreachable), update 30 วินาที, multicast 224.0.0.9
@@ -165,6 +173,8 @@ router rip
 ---
 
 ## Level 45 — OSPF Single Area
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L45-ospf-single-area.md](lessons/L45-ospf-single-area.md)
 
 **สิ่งที่ต้องรู้**
 - Link-state, Dijkstra SPF, cost = reference BW / interface BW (ควรตั้ง `auto-cost reference-bandwidth 100000`)
@@ -211,6 +221,8 @@ interface g0/0
 
 ## Level 46 — OSPF Multi-Area & LSA
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L46-ospf-multi-area.md](lessons/L46-ospf-multi-area.md)
+
 **สิ่งที่ต้องรู้**
 - ABR, ASBR, Backbone area 0 (ทุก area ต้องต่อ area 0 หรือใช้ virtual link)
 - LSA Type 1 Router, 2 Network, 3 Summary, 4 ASBR Summary, 5 External, 7 NSSA
@@ -245,6 +257,8 @@ interface g0/0
 
 ## Level 47 — EIGRP
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L47-eigrp.md](lessons/L47-eigrp.md)
+
 **สิ่งที่ต้องรู้**
 - Advanced distance vector (Cisco, เปิดเป็น informational RFC 7868)
 - DUAL: Successor, Feasible Successor, Feasible Distance, Reported Distance, Feasibility condition
@@ -278,6 +292,8 @@ interface g0/0
 ---
 
 ## Level 48 — BGP พื้นฐาน
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L48-bgp-basics.md](lessons/L48-bgp-basics.md)
 
 **สิ่งที่ต้องรู้**
 - Path-vector, TCP 179, AS number (public/private 64512–65534, 4-byte)
@@ -323,6 +339,8 @@ router bgp 65001
 
 ## Level 49 — BGP Path Selection & Policy
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L49-bgp-path-selection-policy.md](lessons/L49-bgp-path-selection-policy.md)
+
 **สิ่งที่ต้องรู้**
 - ลำดับตัดสิน (Cisco): Weight → Local Preference → Locally originated → AS-path สั้น → Origin → MED → eBGP>iBGP → IGP metric ถึง next-hop → ... → Router ID
 - Outbound traffic ควบคุมด้วย Local Pref/Weight; Inbound ควบคุมด้วย AS-path prepend, MED, community, more-specific
@@ -356,6 +374,8 @@ router bgp 65001
 ---
 
 ## Level 50 — First Hop Redundancy (HSRP / VRRP / GLBP)
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L50-fhrp-hsrp-vrrp.md](lessons/L50-fhrp-hsrp-vrrp.md)
 
 **สิ่งที่ต้องรู้**
 - ปัญหา: default gateway เป็น single point of failure
