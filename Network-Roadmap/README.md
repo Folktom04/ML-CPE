@@ -8,6 +8,8 @@
 
 รวม **100 Level · 500 คำถาม · 500 โปรเจค**
 
+> 🏢 **ต้องการเน้นงานบริษัท System Integrator?** ดู **[SI-Track](SI-Track/README.md)**: Level 1–100 ที่เน้น Data Center (Server, Storage SAN, HA Cluster), Cybersecurity (NGFW, Zero Trust Segmentation, เฝ้าระวังภัยคุกคาม), Cloud & HCI (HCI, Cloud Migration) และ Support 24x7 (ดูแลระบบฉุกเฉิน, Preventive Maintenance)
+
 ---
 
 ## 📚 สารบัญ
