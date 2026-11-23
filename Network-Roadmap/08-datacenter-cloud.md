@@ -6,6 +6,8 @@
 
 ## Level 71 — Load Balancing
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L71-load-balancing.md](lessons/L71-load-balancing.md)
+
 **สิ่งที่ต้องรู้**
 - L4 (TCP/UDP) vs L7 (HTTP: path, header, cookie)
 - Algorithm: round robin, least connections, weighted, IP hash, consistent hashing
@@ -52,6 +54,8 @@ backend app
 
 ## Level 72 — Proxy, Reverse Proxy, CDN & WAF
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L72-proxy-cdn-waf.md](lessons/L72-proxy-cdn-waf.md)
+
 **สิ่งที่ต้องรู้**
 - Forward proxy (Squid, explicit/transparent, PAC/WPAD) vs Reverse proxy
 - Secure Web Gateway (URL filtering)
@@ -85,6 +89,8 @@ backend app
 ---
 
 ## Level 73 — Data Center Design: Spine-Leaf
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L73-dc-spine-leaf.md](lessons/L73-dc-spine-leaf.md)
 
 **สิ่งที่ต้องรู้**
 - 3-tier เดิม vs Clos/Spine-Leaf (ทุก leaf ต่อทุก spine, east-west traffic)
@@ -120,6 +126,8 @@ backend app
 
 ## Level 74 — VXLAN & EVPN
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L74-vxlan-evpn.md](lessons/L74-vxlan-evpn.md)
+
 **สิ่งที่ต้องรู้**
 - VXLAN: L2 over L3 (UDP 4789), VNI 24 บิต (16 ล้าน), VTEP
 - Flood-and-learn vs BGP EVPN control plane
@@ -154,6 +162,8 @@ backend app
 
 ## Level 75 — Virtualization Networking
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L75-virtualization-networking.md](lessons/L75-virtualization-networking.md)
+
 **สิ่งที่ต้องรู้**
 - vSwitch: VMware vSS/vDS, Hyper-V vSwitch, Linux bridge, Open vSwitch (OVS)
 - Port group, VLAN tagging (VST/EST/VGT), NIC teaming policy
@@ -187,6 +197,8 @@ backend app
 ---
 
 ## Level 76 — Container Networking (Docker)
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L76-docker-networking.md](lessons/L76-docker-networking.md)
 
 **สิ่งที่ต้องรู้**
 - Network drivers: bridge (docker0), host, none, overlay, macvlan, ipvlan
@@ -227,6 +239,8 @@ docker run -d --name web --network appnet -p 8080:80 nginx
 ---
 
 ## Level 77 — Kubernetes Networking
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L77-kubernetes-networking.md](lessons/L77-kubernetes-networking.md)
 
 **สิ่งที่ต้องรู้**
 - Model: ทุก Pod มี IP, Pod คุยกันได้ไม่ผ่าน NAT
@@ -274,6 +288,8 @@ spec:
 
 ## Level 78 — Cloud Networking (AWS VPC เป็นหลัก)
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L78-cloud-aws-vpc.md](lessons/L78-cloud-aws-vpc.md)
+
 **สิ่งที่ต้องรู้**
 - VPC, Subnet (public/private, ต่อ AZ), Route table, Internet Gateway, NAT Gateway
 - Security Group (stateful, ระดับ ENI) vs NACL (stateless, ระดับ subnet)
@@ -310,6 +326,8 @@ spec:
 
 ## Level 79 — Hybrid & Multi-Cloud Connectivity
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L79-hybrid-multicloud.md](lessons/L79-hybrid-multicloud.md)
+
 **สิ่งที่ต้องรู้**
 - Site-to-site VPN ไป cloud (BGP over IPsec), Direct Connect / ExpressRoute / Cloud Interconnect
 - Redundancy: 2 tunnel/2 device/2 location, BGP failover
@@ -343,6 +361,8 @@ spec:
 ---
 
 ## Level 80 — Service Mesh, eBPF & Cloud-Native Networking
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L80-service-mesh-ebpf.md](lessons/L80-service-mesh-ebpf.md)
 
 **สิ่งที่ต้องรู้**
 - Service mesh: sidecar (Envoy) หรือ ambient/sidecarless; Istio, Linkerd, Cilium Service Mesh
