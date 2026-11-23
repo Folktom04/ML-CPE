@@ -6,6 +6,8 @@
 
 ## Level 51 — Wireless 802.11 พื้นฐาน
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L51-wireless-basics.md](lessons/L51-wireless-basics.md)
+
 **สิ่งที่ต้องรู้**
 - มาตรฐาน: 802.11n (Wi-Fi 4), ac (5), ax (6/6E), be (7)
 - ย่าน 2.4 GHz (channel ไม่ทับ 1/6/11), 5 GHz (DFS), 6 GHz
@@ -41,6 +43,8 @@
 
 ## Level 52 — WLAN องค์กร: Controller, Design & Security
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L52-wlan-enterprise.md](lessons/L52-wlan-enterprise.md)
+
 **สิ่งที่ต้องรู้**
 - Autonomous AP vs Controller-based (WLC, CAPWAP UDP 5246/5247) vs Cloud-managed (Meraki, Mist, Aruba Central)
 - Local mode vs FlexConnect
@@ -75,6 +79,8 @@
 ---
 
 ## Level 53 — ACL (Access Control List)
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L53-acl.md](lessons/L53-acl.md)
 
 **สิ่งที่ต้องรู้**
 - Standard (src only, วางใกล้ปลายทาง), Extended (src/dst/proto/port, วางใกล้ต้นทาง)
@@ -119,6 +125,8 @@ interface vlan 50
 ---
 
 ## Level 54 — QoS
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L54-qos.md](lessons/L54-qos.md)
 
 **สิ่งที่ต้องรู้**
 - ปัญหา: delay, jitter, loss; VoIP ต้องการ delay < 150ms, jitter < 30ms, loss < 1%
@@ -171,6 +179,8 @@ interface g0/0
 
 ## Level 55 — NTP, Syslog, SNMP
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L55-ntp-syslog-snmp.md](lessons/L55-ntp-syslog-snmp.md)
+
 **สิ่งที่ต้องรู้**
 - NTP (UDP 123), stratum, ทำไมเวลาสำคัญ (log correlation, cert, Kerberos), NTP authentication, chrony
 - Syslog severity 0–7 (Emergency → Debug) "Every Awesome Cisco Engineer Will Need Ice cream Daily"
@@ -213,6 +223,8 @@ snmp-server user nms NMS v3 auth sha AuthPass priv aes 128 PrivPass
 
 ## Level 56 — AAA: RADIUS & TACACS+
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L56-aaa-radius-tacacs.md](lessons/L56-aaa-radius-tacacs.md)
+
 **สิ่งที่ต้องรู้**
 - Authentication, Authorization, Accounting
 - RADIUS (UDP 1812/1813, encrypt เฉพาะ password, ใช้กับ network access/802.1X/VPN)
@@ -254,6 +266,8 @@ aaa accounting commands 15 default start-stop group tacacs+
 
 ## Level 57 — WAN Technologies
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L57-wan-technologies.md](lessons/L57-wan-technologies.md)
+
 **สิ่งที่ต้องรู้**
 - Leased line, MPLS L3VPN (PE/CE/P), Metro Ethernet/EPL/EVPL, Broadband (FTTx), 4G/5G, Satellite (LEO)
 - SLA: availability (99.9% = 8.76 ชม./ปี), latency, jitter, MTTR
@@ -287,6 +301,8 @@ aaa accounting commands 15 default start-stop group tacacs+
 ---
 
 ## Level 58 — Site-to-Site VPN (IPsec)
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L58-ipsec-site-to-site.md](lessons/L58-ipsec-site-to-site.md)
 
 **สิ่งที่ต้องรู้**
 - IPsec: IKEv1/IKEv2, Phase 1 (IKE SA) / Phase 2 (IPsec SA, Child SA)
@@ -322,6 +338,8 @@ aaa accounting commands 15 default start-stop group tacacs+
 ---
 
 ## Level 59 — Remote Access VPN (SSL VPN, WireGuard, OpenVPN)
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L59-remote-access-vpn.md](lessons/L59-remote-access-vpn.md)
 
 **สิ่งที่ต้องรู้**
 - Client-based (AnyConnect/Secure Client, GlobalProtect, FortiClient) vs clientless
@@ -367,6 +385,8 @@ AllowedIPs = 10.99.0.2/32
 ---
 
 ## Level 60 — SD-WAN & SASE
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L60-sdwan-sase.md](lessons/L60-sdwan-sase.md)
 
 **สิ่งที่ต้องรู้**
 - SD-WAN: แยก control/data plane, overlay บน transport หลายแบบ (MPLS+Internet+LTE)
