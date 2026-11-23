@@ -45,6 +45,8 @@
 
 ## Level 2 — OSI Model 7 Layers
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L02-osi-model.md](lessons/L02-osi-model.md)
+
 **เป้าหมาย:** จำและอธิบาย 7 ชั้นได้ พร้อมตัวอย่าง Protocol/อุปกรณ์ในแต่ละชั้น
 
 **สิ่งที่ต้องรู้**
@@ -80,6 +82,8 @@
 
 ## Level 3 — TCP/IP Model
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L03-tcp-ip-model.md](lessons/L03-tcp-ip-model.md)
+
 **เป้าหมาย:** เข้าใจโมเดลที่ใช้จริงบนอินเทอร์เน็ตและ map กับ OSI
 
 **สิ่งที่ต้องรู้**
@@ -114,6 +118,8 @@
 ---
 
 ## Level 4 — สาย สื่อนำสัญญาณ และ Physical Layer
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L04-cabling-physical.md](lessons/L04-cabling-physical.md)
 
 **เป้าหมาย:** เลือกสาย/หัว/ไฟเบอร์ได้ถูกงาน เข้าหัวสาย LAN เองได้
 
@@ -152,6 +158,8 @@
 
 ## Level 5 — อุปกรณ์เครือข่าย
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L05-network-devices.md](lessons/L05-network-devices.md)
+
 **เป้าหมาย:** รู้หน้าที่และตำแหน่งการวางอุปกรณ์แต่ละชนิด
 
 **สิ่งที่ต้องรู้**
@@ -189,6 +197,8 @@
 
 ## Level 6 — เลขฐาน 2 / 16 สำหรับงานเน็ตเวิร์ก
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L06-binary-hex.md](lessons/L06-binary-hex.md)
+
 **เป้าหมาย:** แปลงเลขฐานในหัวได้เร็ว (พื้นฐานของ subnetting และ IPv6/MAC)
 
 **สิ่งที่ต้องรู้**
@@ -223,6 +233,8 @@
 ---
 
 ## Level 7 — MAC Address & Ethernet Frame
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L07-mac-ethernet.md](lessons/L07-mac-ethernet.md)
 
 **เป้าหมาย:** อ่าน Ethernet frame ได้ และเข้าใจ MAC
 
@@ -261,6 +273,8 @@
 
 ## Level 8 — IPv4 Addressing
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L08-ipv4-addressing.md](lessons/L08-ipv4-addressing.md)
+
 **เป้าหมาย:** แยกประเภท IP และใช้ IP ได้ถูกต้อง
 
 **สิ่งที่ต้องรู้**
@@ -298,6 +312,8 @@
 
 ## Level 9 — Subnetting
 
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L09-subnetting.md](lessons/L09-subnetting.md)
+
 **เป้าหมาย:** Subnet ในหัวได้ภายใน 30 วินาที (ทักษะสัมภาษณ์งานอันดับ 1)
 
 **สิ่งที่ต้องรู้**
@@ -333,6 +349,8 @@
 ---
 
 ## Level 10 — VLSM, CIDR & Route Summarization
+
+> 📖 **อ่านบทเรียนฉบับละเอียด:** [lessons/L10-vlsm-cidr-summarization.md](lessons/L10-vlsm-cidr-summarization.md)
 
 **เป้าหมาย:** วางแผน IP ให้ประหยัด และสรุป route ได้
 
