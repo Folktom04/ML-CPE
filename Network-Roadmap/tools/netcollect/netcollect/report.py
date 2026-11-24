@@ -96,7 +96,8 @@ def write_reports(results: list[DeviceResult], findings: list[Finding], outdir: 
     return files
 
 
-def _write_excel(tables: dict[str, list[dict[str, Any]]], path: Path) -> Path | None:
+def _write_excel(tables: dict[str, list[dict[str, Any]]], path: Path,
+                 columns: dict[str, list[str]] | None = None) -> Path | None:
     try:
         from openpyxl import Workbook
         from openpyxl.styles import Font, PatternFill
@@ -109,7 +110,8 @@ def _write_excel(tables: dict[str, list[dict[str, Any]]], path: Path) -> Path | 
         if not rows:
             continue
         ws = wb.create_sheet(name[:31])
-        cols = SUMMARY_COLUMNS if name == "summary" else list(dict.fromkeys(k for row in rows for k in row))
+        cols = (columns or {}).get(name) or (
+            SUMMARY_COLUMNS if name == "summary" else list(dict.fromkeys(k for row in rows for k in row)))
         ws.append(cols)
         for cell in ws[1]:
             cell.font = Font(bold=True)
@@ -127,6 +129,8 @@ def _write_excel(tables: dict[str, list[dict[str, Any]]], path: Path) -> Path | 
 
 
 def _cell(value: Any) -> Any:
+    if isinstance(value, list) and all(isinstance(v, (str, int, float)) for v in value):
+        return ", ".join(str(v) for v in value)       # e.g. stack serials "FOC1, FOC2"
     if isinstance(value, (list, dict)):
         return json.dumps(value, ensure_ascii=False)
     return value

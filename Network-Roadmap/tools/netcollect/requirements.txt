@@ -3,3 +3,4 @@ requests>=2.31
 openpyxl>=3.1          # optional: report.xlsx
 netmiko>=4.3           # needed only for Cisco (SSH)
 ntc-templates>=4.0     # TextFSM templates used by netmiko use_textfsm=True
+pysnmp>=7.1            # needed only for 'discover' (SNMP)

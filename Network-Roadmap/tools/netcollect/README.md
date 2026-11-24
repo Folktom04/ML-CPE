@@ -19,6 +19,11 @@
 
 ---
 
+> 🔎 **ยังไม่มีรายชื่ออุปกรณ์?** ใช้คำสั่ง **`discover`** สแกนวง IP ผ่าน SNMP เพื่อหา **ชื่อ ยี่ห้อ รุ่น serial และ version** ของ switch/router/firewall/printer ทั้งหมด ไล่ CDP/LLDP ต่อจาก core switch และ **สร้าง `inventory.yaml` ให้อัตโนมัติ** — ดูคู่มือ **[DISCOVER.md](DISCOVER.md)**
+> ```bash
+> python -m netcollect discover --mock --subnet 10.0.10.0/24 --seed 10.0.10.2 --ping --arp
+> ```
+
 ## 1. ลองใช้ภายใน 2 นาที (ไม่ต้องมีอุปกรณ์จริง)
 
 ```bash
@@ -60,8 +65,9 @@ Reports written to: output/20261124-103000
 | `netcollect/runner.py` | รันหลายเครื่องพร้อมกัน (ThreadPoolExecutor), เครื่องหนึ่งพังไม่กระทบเครื่องอื่น | concurrency, error handling |
 | `netcollect/checks.py` | กฎตรวจสุขภาพ → findings | แปลงความรู้ network เป็นโค้ด |
 | `netcollect/report.py` | เขียน JSON/CSV/Excel | csv, json, openpyxl |
-| `netcollect/cli.py` | คำสั่ง `collect` / `list`, ตัวเลือก, exit code | argparse |
-| `tests/` | unit test 22 ข้อ (ไม่ต้องใช้ network) | pytest, การ mock |
+| `netcollect/cli.py` | คำสั่ง `collect` / `list` / `discover`, ตัวเลือก, exit code | argparse |
+| `netcollect/discovery/` | ค้นหาอุปกรณ์ผ่าน SNMP + CDP/LLDP (ดู [DISCOVER.md](DISCOVER.md)) | SNMP, asyncio |
+| `tests/` | unit test 36 ข้อ (ไม่ต้องใช้ network) | pytest, การ mock |
 
 ### แนวคิดสำคัญ 3 ข้อ
 1. **ทุกยี่ห้อกรอก "แบบฟอร์มเดียวกัน"** (`DeviceResult`) — ส่วนตรวจกฎและรายงานจึงเขียนครั้งเดียวใช้ได้ทุกยี่ห้อ
