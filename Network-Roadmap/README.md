@@ -12,6 +12,8 @@
 
 > 🧰 **รวมคำสั่งตรวจเช็ค (Ping/Traceroute/Route, Cisco, FortiGate, Palo Alto, Check Point):** ดู **[Cheat Sheets](cheatsheets/README.md)** พร้อมวิธีอ่านผลและลำดับการไล่ปัญหา
 
+> 🐍 **เครื่องมือ Python กวาดข้อมูลอุปกรณ์ทั้งหมดในครั้งเดียว (Cisco SSH, FortiGate/Palo Alto API, REST API, probe):** ดู **[tools/netcollect](tools/netcollect/README.md)** — ลองได้ทันทีด้วย `--mock`
+
 > 🎯 **เตรียมทำงานที่ ISC (isc-th.com)?** ดู **[ISC-Track](ISC-Track/README.md)**: Level 1–100 ที่จัดตามขอบเขตงานจริงของบริษัท ครอบคลุม Network, DC, Backup/DR, Security, HCI, Virtualization, Cloud, Mail, Big Data, HPC/AI, Support/MA, Outsourcing และ ISO 9001
 >
 > 🏢 **ต้องการเน้นงานบริษัท System Integrator?** ดู **[SI-Track](SI-Track/README.md)**: Level 1–100 ที่เน้น Data Center (Server, Storage SAN, HA Cluster), Cybersecurity (NGFW, Zero Trust Segmentation, เฝ้าระวังภัยคุกคาม), Cloud & HCI (HCI, Cloud Migration) และ Support 24x7 (ดูแลระบบฉุกเฉิน, Preventive Maintenance)

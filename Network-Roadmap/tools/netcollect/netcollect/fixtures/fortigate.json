@@ -1,0 +1,94 @@
+{
+  "_comment": "Sample FortiOS REST API answers (fictional data) used by --mock. A block named after a device overrides 'default'.",
+  "default": {
+    "/api/v2/monitor/system/status": {
+      "http_method": "GET", "status": "success", "serial": "FG100FTK20012345", "version": "v7.2.8", "build": 1639,
+      "results": {"model_name": "FortiGate", "model_number": "100F", "model": "FGT100F", "hostname": "FGT-HQ"}
+    },
+    "/api/v2/monitor/system/resource/usage": {
+      "status": "success",
+      "results": {"cpu": [{"current": 23}], "mem": [{"current": 47}], "session": [{"current": 18432}]}
+    },
+    "/api/v2/monitor/system/interface": {
+      "status": "success",
+      "results": {
+        "wan1": {"name": "wan1", "ip": "203.0.113.10", "mask": 29, "link": true, "speed": 1000, "duplex": 1, "rx_errors": 0, "tx_errors": 0},
+        "wan2": {"name": "wan2", "ip": "198.51.100.10", "mask": 29, "link": true, "speed": 1000, "duplex": 1, "rx_errors": 0, "tx_errors": 0},
+        "internal": {"name": "internal", "ip": "10.0.20.1", "mask": 24, "link": true, "speed": 1000, "duplex": 1, "rx_errors": 0, "tx_errors": 0},
+        "port3": {"name": "port3", "ip": "10.0.0.254", "mask": 24, "link": true, "speed": 1000, "duplex": 1, "rx_errors": 0, "tx_errors": 0}
+      }
+    },
+    "/api/v2/monitor/router/ipv4": {
+      "status": "success",
+      "results": [
+        {"ip_mask": "0.0.0.0/0", "gateway": "203.0.113.1", "interface": "wan1", "type": "static", "distance": 10},
+        {"ip_mask": "10.0.0.0/24", "gateway": "0.0.0.0", "interface": "port3", "type": "connect", "distance": 0},
+        {"ip_mask": "10.0.20.0/24", "gateway": "0.0.0.0", "interface": "internal", "type": "connect", "distance": 0},
+        {"ip_mask": "10.1.0.0/16", "gateway": "0.0.0.0", "interface": "VPN-CNX", "type": "static", "distance": 10},
+        {"ip_mask": "10.2.0.0/16", "gateway": "0.0.0.0", "interface": "VPN-KKC", "type": "static", "distance": 10},
+        {"ip_mask": "10.16.0.0/12", "gateway": "169.254.10.1", "interface": "VPN-AWS", "type": "bgp", "distance": 20}
+      ]
+    },
+    "/api/v2/monitor/router/bgp/neighbors": {
+      "status": "success",
+      "results": [{"neighbor_ip": "169.254.10.1", "local_ip": "169.254.10.2", "remote_as": 64512, "admin_status": true, "state": "Established", "type": "ipv4"}]
+    },
+    "/api/v2/monitor/vpn/ipsec": {
+      "status": "success",
+      "results": [
+        {"name": "VPN-CNX", "rgwy": "198.51.100.20", "proxyid": [{"p2name": "VPN-CNX-P2", "status": "up", "incoming_bytes": 152330112, "outgoing_bytes": 98765432}]},
+        {"name": "VPN-KKC", "rgwy": "198.51.100.30", "proxyid": [{"p2name": "VPN-KKC-P2", "status": "down", "incoming_bytes": 0, "outgoing_bytes": 0}]},
+        {"name": "VPN-AWS", "rgwy": "52.0.0.10", "proxyid": [{"p2name": "VPN-AWS-P2", "status": "up", "incoming_bytes": 0, "outgoing_bytes": 532880}]}
+      ]
+    },
+    "/api/v2/monitor/system/ha-checksums": {
+      "status": "success",
+      "results": [
+        {"serial_no": "FG100FTK20012345", "is_manage_master": 1, "checksum": {"all": "4f1a9c0e"}},
+        {"serial_no": "FG100FTK20067890", "is_manage_master": 0, "checksum": {"all": "4f1a9c0e"}}
+      ]
+    },
+    "/api/v2/monitor/virtual-wan/health-check": {
+      "status": "success",
+      "results": {
+        "Ping-Internet": {
+          "wan1": {"status": "up", "latency": 12.5, "jitter": 0.8, "packet_loss": 0},
+          "wan2": {"status": "up", "latency": 85.2, "jitter": 25.1, "packet_loss": 6}
+        }
+      }
+    }
+  },
+  "fgt-branch-cnx": {
+    "/api/v2/monitor/system/status": {
+      "status": "success", "serial": "FG60FTK21000111", "version": "v7.2.8", "build": 1639,
+      "results": {"model_name": "FortiGate", "model": "FGT60F", "hostname": "FGT-CNX"}
+    },
+    "/api/v2/monitor/system/resource/usage": {
+      "status": "success", "results": {"cpu": [{"current": 91}], "mem": [{"current": 88}], "session": [{"current": 5210}]}
+    },
+    "/api/v2/monitor/system/interface": {
+      "status": "success",
+      "results": {
+        "wan1": {"name": "wan1", "ip": "198.51.100.20", "mask": 29, "link": true, "speed": 1000, "duplex": 1, "rx_errors": 1834, "tx_errors": 0},
+        "internal": {"name": "internal", "ip": "10.1.20.1", "mask": 24, "link": true, "speed": 1000, "duplex": 1, "rx_errors": 0, "tx_errors": 0}
+      }
+    },
+    "/api/v2/monitor/router/ipv4": {
+      "status": "success",
+      "results": [
+        {"ip_mask": "0.0.0.0/0", "gateway": "198.51.100.17", "interface": "wan1", "type": "static", "distance": 10},
+        {"ip_mask": "10.0.0.0/16", "gateway": "0.0.0.0", "interface": "VPN-HQ", "type": "static", "distance": 10}
+      ]
+    },
+    "/api/v2/monitor/router/bgp/neighbors": {"status": "success", "results": []},
+    "/api/v2/monitor/vpn/ipsec": {
+      "status": "success",
+      "results": [{"name": "VPN-HQ", "rgwy": "203.0.113.10", "proxyid": [{"status": "up", "incoming_bytes": 98765432, "outgoing_bytes": 152330112}]}]
+    },
+    "/api/v2/monitor/system/ha-checksums": {"status": "success", "results": []},
+    "/api/v2/monitor/virtual-wan/health-check": {"__error__": "HTTP 404 for /api/v2/monitor/virtual-wan/health-check: SD-WAN not enabled"}
+  },
+  "fgt-branch-hdy": {
+    "/api/v2/monitor/system/status": {"__error__": "ConnectTimeout: HTTPSConnectionPool(host='10.4.10.1', port=443): Max retries exceeded (connect timeout=20)"}
+  }
+}

@@ -1,0 +1,8 @@
+# เกณฑ์การแจ้งเตือน (ใช้กับ --thresholds) — ค่าที่ไม่ระบุจะใช้ค่าเริ่มต้นในโค้ด
+cpu_pct: 80
+mem_pct: 85
+interface_errors: 0        # error counter มากกว่าค่านี้จะถูกรายงาน
+sdwan_loss_pct: 2
+sdwan_latency_ms: 150
+sdwan_jitter_ms: 30
+probe_loss_pct: 5

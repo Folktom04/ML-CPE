@@ -1,0 +1,11 @@
+{
+  "_comment": "Sample probe results (fictional) used by --mock.",
+  "default": {
+    "probes": [
+      {"test": "dns", "target": "erp.corp.example", "ok": true, "addresses": ["10.0.100.25"], "lookup_ms": 3.1},
+      {"test": "ping", "target": "erp.corp.example", "ok": true, "loss_pct": 0.0, "avg_ms": 1.4},
+      {"test": "tcp", "target": "erp.corp.example:443", "ok": true, "detail": "open", "connect_ms": 1.9},
+      {"test": "tcp", "target": "erp.corp.example:1433", "ok": false, "detail": "timeout (dropped by firewall or no route)"}
+    ]
+  }
+}

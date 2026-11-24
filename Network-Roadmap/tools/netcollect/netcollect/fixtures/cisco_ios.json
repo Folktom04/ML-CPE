@@ -1,0 +1,290 @@
+{
+  "_comment": "Sample Netmiko+TextFSM output (fictional data), keyed by CLI command. Text values are unparsed output.",
+  "default": {
+    "show version": [
+      {
+        "version": "17.09.04a",
+        "hostname": "CORE-SW-01",
+        "uptime": "2 weeks, 3 days, 4 hours, 12 minutes",
+        "hardware": [
+          "C9300-48P"
+        ],
+        "serial": [
+          "FOC2412X0AB"
+        ]
+      }
+    ],
+    "show processes cpu": "CPU utilization for five seconds: 12%/3%; one minute: 11%; five minutes: 10%\n PID Runtime(ms) ...",
+    "show ip interface brief": [
+      {
+        "interface": "Vlan20",
+        "ip_address": "10.0.20.2",
+        "status": "up",
+        "proto": "up"
+      },
+      {
+        "interface": "Vlan30",
+        "ip_address": "10.0.30.2",
+        "status": "up",
+        "proto": "up"
+      },
+      {
+        "interface": "GigabitEthernet1/0/1",
+        "ip_address": "unassigned",
+        "status": "up",
+        "proto": "up"
+      },
+      {
+        "interface": "GigabitEthernet1/0/2",
+        "ip_address": "unassigned",
+        "status": "down",
+        "proto": "down"
+      },
+      {
+        "interface": "GigabitEthernet1/0/3",
+        "ip_address": "unassigned",
+        "status": "administratively down",
+        "proto": "down"
+      },
+      {
+        "interface": "TenGigabitEthernet1/1/1",
+        "ip_address": "10.0.0.2",
+        "status": "up",
+        "proto": "up"
+      }
+    ],
+    "show interfaces": [
+      {
+        "interface": "GigabitEthernet1/0/1",
+        "link_status": "up",
+        "protocol_status": "up",
+        "description": "Uplink-ACC-2F",
+        "duplex": "Full-duplex",
+        "speed": "1000Mb/s",
+        "input_errors": "0",
+        "crc": "0",
+        "output_errors": "0"
+      },
+      {
+        "interface": "GigabitEthernet1/0/2",
+        "link_status": "down",
+        "protocol_status": "down",
+        "description": "",
+        "duplex": "Auto-duplex",
+        "speed": "Auto-speed",
+        "input_errors": "0",
+        "crc": "0",
+        "output_errors": "0"
+      },
+      {
+        "interface": "TenGigabitEthernet1/1/1",
+        "link_status": "up",
+        "protocol_status": "up",
+        "description": "to-FW-HQ",
+        "duplex": "Full-duplex",
+        "speed": "10Gb/s",
+        "input_errors": "0",
+        "crc": "0",
+        "output_errors": "0"
+      }
+    ],
+    "show ip route": [
+      {
+        "protocol": "S",
+        "network": "0.0.0.0",
+        "prefix_length": "0",
+        "nexthop_ip": [
+          "10.0.0.254"
+        ],
+        "nexthop_if": [
+          ""
+        ]
+      },
+      {
+        "protocol": "C",
+        "network": "10.0.20.0",
+        "prefix_length": "24",
+        "nexthop_ip": [
+          ""
+        ],
+        "nexthop_if": [
+          "Vlan20"
+        ]
+      },
+      {
+        "protocol": "O",
+        "network": "10.30.0.0",
+        "prefix_length": "16",
+        "nexthop_ip": [
+          "10.0.0.3"
+        ],
+        "nexthop_if": [
+          "TenGigabitEthernet1/1/1"
+        ]
+      }
+    ],
+    "show ip bgp summary": [],
+    "show ip ospf neighbor": [
+      {
+        "neighbor_id": "10.255.0.3",
+        "priority": "1",
+        "state": "FULL/DR",
+        "dead_time": "00:00:35",
+        "address": "10.0.0.3",
+        "interface": "TenGigabitEthernet1/1/1"
+      }
+    ],
+    "show standby brief": [
+      {
+        "interface": "Vl20",
+        "group": "20",
+        "priority": "110",
+        "state": "Active",
+        "active": "local",
+        "standby": "10.0.20.3",
+        "virtual_ip": "10.0.20.1"
+      },
+      {
+        "interface": "Vl30",
+        "group": "30",
+        "priority": "110",
+        "state": "Active",
+        "active": "local",
+        "standby": "10.0.30.3",
+        "virtual_ip": "10.0.30.1"
+      }
+    ]
+  },
+  "core-sw-02": {
+    "show version": [
+      {
+        "version": "17.09.04a",
+        "hostname": "CORE-SW-02",
+        "uptime": "3 hours, 2 minutes",
+        "hardware": [
+          "C9300-48P"
+        ],
+        "serial": [
+          "FOC2412X0CD"
+        ]
+      }
+    ],
+    "show processes cpu": "CPU utilization for five seconds: 88%/62%; one minute: 85%; five minutes: 84%\n PID Runtime(ms) ...",
+    "show ip interface brief": [
+      {
+        "interface": "Vlan20",
+        "ip_address": "10.0.20.3",
+        "status": "up",
+        "proto": "up"
+      },
+      {
+        "interface": "GigabitEthernet1/0/8",
+        "ip_address": "unassigned",
+        "status": "up",
+        "proto": "up"
+      },
+      {
+        "interface": "TenGigabitEthernet1/1/1",
+        "ip_address": "10.0.0.4",
+        "status": "up",
+        "proto": "up"
+      }
+    ],
+    "show interfaces": [
+      {
+        "interface": "GigabitEthernet1/0/8",
+        "link_status": "up",
+        "protocol_status": "up",
+        "description": "PC-HR-2F-08",
+        "duplex": "Half-duplex",
+        "speed": "100Mb/s",
+        "input_errors": "235",
+        "crc": "235",
+        "output_errors": "0"
+      },
+      {
+        "interface": "TenGigabitEthernet1/1/1",
+        "link_status": "up",
+        "protocol_status": "up",
+        "description": "to-FW-HQ",
+        "duplex": "Full-duplex",
+        "speed": "10Gb/s",
+        "input_errors": "0",
+        "crc": "0",
+        "output_errors": "0"
+      }
+    ],
+    "show ip ospf neighbor": [
+      {
+        "neighbor_id": "10.255.0.3",
+        "priority": "1",
+        "state": "EXSTART/DROTHER",
+        "dead_time": "00:00:33",
+        "address": "10.0.0.3",
+        "interface": "TenGigabitEthernet1/1/1"
+      }
+    ],
+    "show standby brief": [
+      {
+        "interface": "Vl20",
+        "group": "20",
+        "priority": "100",
+        "state": "Standby",
+        "active": "10.0.20.2",
+        "standby": "local",
+        "virtual_ip": "10.0.20.1"
+      }
+    ]
+  },
+  "edge-rtr-01": {
+    "show version": [
+      {
+        "version": "17.12.3",
+        "hostname": "EDGE-RTR-01",
+        "uptime": "45 days, 2 hours",
+        "hardware": [
+          "C8300-1N1S-4T2X"
+        ],
+        "serial": [
+          "FDO2501A0XY"
+        ]
+      }
+    ],
+    "show ip bgp summary": [
+      {
+        "bgp_neigh": "203.0.113.1",
+        "neigh_as": "65001",
+        "up_down": "3d04h",
+        "state_pfxrcd": "1"
+      },
+      {
+        "bgp_neigh": "198.51.100.1",
+        "neigh_as": "65002",
+        "up_down": "never",
+        "state_pfxrcd": "Active"
+      }
+    ],
+    "show ip ospf neighbor": [],
+    "show standby brief": [],
+    "show ip interface brief | exclude unassigned": [
+      {
+        "interface": "GigabitEthernet0/0/0",
+        "ip_address": "203.0.113.2",
+        "status": "up",
+        "proto": "up"
+      },
+      {
+        "interface": "GigabitEthernet0/0/1",
+        "ip_address": "198.51.100.2",
+        "status": "up",
+        "proto": "up"
+      },
+      {
+        "interface": "TenGigabitEthernet0/1/0",
+        "ip_address": "10.0.0.1",
+        "status": "up",
+        "proto": "up"
+      }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+inventory.yaml
+secrets.env
+*.env
+output/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
