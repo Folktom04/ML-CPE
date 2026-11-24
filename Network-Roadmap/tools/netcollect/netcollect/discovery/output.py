@@ -24,8 +24,8 @@ ERROR_COLUMNS = ["ip", "stage", "error"]
 PLATFORM_DEFAULTS = {
     "cisco_ios": {"group": "cisco"},
     "cisco_nxos": {"group": "cisco"},
-    "fortigate": {"token_env": "{NAME}_TOKEN"},
-    "paloalto": {"token_env": "{NAME}_KEY"},
+    "fortigate": {"group": "fortigate", "token_env": "{NAME}_TOKEN"},
+    "paloalto": {"group": "paloalto", "token_env": "{NAME}_KEY"},
 }
 
 
@@ -43,7 +43,8 @@ def assign_names(devices: list[dict[str, Any]]) -> None:
         dev["name"] = base if used[base] == 1 else f"{base}-{used[base]}"
 
 
-def build_inventory(devices: list[dict[str, Any]], subnets: list[str]) -> str:
+def build_inventory(devices: list[dict[str, Any]], subnets: list[str],
+                    defaults: dict[str, Any] | None = None) -> str:
     supported, unsupported = [], []
     for dev in devices:
         if dev.get("platform") and dev.get("ip"):
@@ -64,10 +65,15 @@ def build_inventory(devices: list[dict[str, Any]], subnets: list[str]) -> str:
         "# ใช้ต่อ:  python -m netcollect collect -i <ไฟล์นี้>",
         "",
     ]
-    body = {
-        "groups": {"cisco": {"username_env": "NET_USER", "password_env": "NET_PASS"}},
-        "devices": supported,
-    }
+    groups: dict[str, dict[str, Any]] = {"cisco": {"username_env": "NET_USER", "password_env": "NET_PASS"},
+                                         "fortigate": {}, "paloalto": {}}
+    for name, values in ((defaults or {}).get("groups") or {}).items():
+        groups.setdefault(name, {}).update(values or {})
+    body: dict[str, Any] = {}
+    if (defaults or {}).get("defaults"):
+        body["defaults"] = defaults["defaults"]
+    body["groups"] = {k: v for k, v in groups.items() if v or k == "cisco"}
+    body["devices"] = supported
     if not supported:
         body["devices"] = [{"name": "example", "platform": "probe", "host": "127.0.0.1"}]
         header.append("# ไม่พบอุปกรณ์ที่ collect รองรับ จึงใส่ตัวอย่าง probe ไว้แทน")
@@ -81,7 +87,7 @@ def build_inventory(devices: list[dict[str, Any]], subnets: list[str]) -> str:
 
 
 def write_discovery(result: DiscoveryResult, outdir: Path, subnets: list[str], excel: bool = True,
-                    inventory_path: Path | None = None) -> dict[str, Path]:
+                    inventory_path: Path | None = None, inventory_defaults: Path | None = None) -> dict[str, Path]:
     outdir.mkdir(parents=True, exist_ok=True)
     assign_names(result.devices)
     files: dict[str, Path] = {}
@@ -108,6 +114,7 @@ def write_discovery(result: DiscoveryResult, outdir: Path, subnets: list[str], e
     files["json"] = outdir / "discovery.json"
     inv = inventory_path or outdir / "inventory.discovered.yaml"
     inv.parent.mkdir(parents=True, exist_ok=True)
-    inv.write_text(build_inventory(result.devices, subnets), encoding="utf-8")
+    defaults = yaml.safe_load(Path(inventory_defaults).read_text(encoding="utf-8")) if inventory_defaults else None
+    inv.write_text(build_inventory(result.devices, subnets, defaults), encoding="utf-8")
     files["inventory"] = inv
     return files

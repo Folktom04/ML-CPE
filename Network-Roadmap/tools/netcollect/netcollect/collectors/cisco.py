@@ -156,8 +156,8 @@ class CiscoCollector(Collector):
             state_text = str(state_raw or "").strip()
             established = state_text.isdigit()
             peers.append({
-                "peer": pick(r, "bgp_neigh", "neighbor", "neighbor_ip"),
-                "remote_as": pick(r, "neigh_as", "remote_as"),
+                "peer": pick(r, "bgp_neighbor", "bgp_neigh", "neighbor", "neighbor_ip"),
+                "remote_as": pick(r, "neighbor_as", "neigh_as", "remote_as"),
                 "state": "established" if established else state_text.lower(),
                 "prefixes": to_int(state_text) if established else None,
                 "up_down": pick(r, "up_down", "uptime"),
@@ -181,7 +181,7 @@ class CiscoCollector(Collector):
                 "interface": pick(r, "interface"),
                 "group": pick(r, "group"),
                 "state": str(pick(r, "state") or "").lower(),
-                "virtual_ip": pick(r, "virtual_ip", "vip"),
+                "virtual_ip": pick(r, "virtual_ip_address", "virtual_ip", "vip"),
                 "priority": to_float(pick(r, "priority")),
             }
             for r in rows(self._run(t, "hsrp", result))

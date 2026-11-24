@@ -149,10 +149,13 @@ def parse_version(*candidates: str | None) -> str | None:
 
 
 def guess_type(*hints: str | None) -> str | None:
-    joined = " | ".join(h for h in hints if h)
-    for name, pattern in TYPE_RULES:
-        if pattern.search(joined):
-            return name
+    """Check hints in order (model first, then description, then name)."""
+    for hint in hints:
+        if not hint:
+            continue
+        for name, pattern in TYPE_RULES:
+            if pattern.search(hint):
+                return name
     return None
 
 

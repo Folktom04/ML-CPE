@@ -1,0 +1,166 @@
+# LAN จำลองสำหรับทดสอบ netcollect (ทุกอย่างเป็นข้อมูลสมมติ)
+# - ใช้ IP วง 127.x.x.x (loopback) จึงรันบนเครื่องเดียวได้ ไม่ส่ง traffic ออกเครือข่ายจริง
+# - แก้ไข/เพิ่มอุปกรณ์ได้เอง แล้วรัน: python -m netcollect lab start --topology <ไฟล์นี้>
+#
+# kind ที่รองรับ:
+#   cisco_ios      SNMP + SSH (CLI จำลอง) + CDP/LLDP
+#   aruba_switch   SNMP + LLDP           huawei_switch  SNMP + LLDP
+#   fortigate      SNMP + REST API       paloalto       SNMP + XML API
+#   printer        SNMP                  linux          SNMP
+#   ap / phone     ไม่มี SNMP: มองเห็นได้จาก CDP/LLDP ของ switch เท่านั้น
+#   host           ไม่มี SNMP: อยู่ในตาราง ARP ของ arp_device (PC, กล้อง, IoT)
+
+lab:
+  snmp:
+    port: 1161                 # Linux ต้องเป็น root ถึงจะใช้ 161 ได้ จึงใช้ 1161 (discover ใส่ --snmp-port 1161)
+    community: lab-community
+    v3_user: labuser
+    v3_auth_pass: lab-auth-pass
+    v3_priv_pass: lab-priv-pass       # SHA + AES128
+  ssh:
+    port: 2222
+    username: labadmin
+    password: lab-ssh-pass
+  api:
+    port: 8443
+
+devices:
+  - name: CORE-SW-01
+    kind: cisco_ios
+    ip: 127.0.10.2
+    extra_ips: [127.0.10.252]          # ตอบ SNMP อีก IP (เหมือน SVI) เพื่อทดสอบการรวมอุปกรณ์ซ้ำ
+    model: C9300-48P
+    serials: [FOC2412X0AB, FOC2412X0AC] # stack 2 ตัว
+    version: 17.9.4a
+    location: BKK HQ, DC room, Rack A1
+    cli:
+      default_gateway: 127.0.10.254
+      cpu: 12
+      interfaces:
+        - {name: Vlan10, ip: 127.0.10.2/24, description: MGMT}
+        - {name: Vlan20, ip: 10.0.20.2/24, description: USERS}
+        - {name: TenGigabitEthernet1/1/1, description: to-CORE-SW-02}
+        - {name: GigabitEthernet1/0/47, description: to-ACC-SW-2F}
+        - {name: GigabitEthernet1/0/48, description: to-FGT-HQ}
+        - {name: GigabitEthernet1/0/2, status: down}
+        - {name: GigabitEthernet1/0/3, status: admin-down}
+      ospf:
+        - {neighbor_id: 10.255.0.3, state: FULL/DR, address: 10.0.0.3, interface: TenGigabitEthernet1/1/1}
+      ospf_routes:
+        - {prefix: 10.30.0.0/16, via: 10.0.0.3, interface: TenGigabitEthernet1/1/1}
+      hsrp:
+        - {interface: Vl10, group: 10, priority: 110, state: Active, vip: 127.0.10.4, standby: 127.0.10.3}
+        - {interface: Vl20, group: 20, priority: 110, state: Active, vip: 10.0.20.1, standby: 10.0.20.3}
+
+  - name: CORE-SW-02
+    kind: cisco_ios
+    ip: 127.0.10.3
+    model: C9300-48P
+    serials: [FOC2412X0CD]
+    version: 17.9.4a
+    location: BKK HQ, DC room, Rack A2
+    cli:
+      default_gateway: 127.0.10.254
+      cpu: 84                                   # ← ปัญหาจำลอง: CPU สูง
+      interfaces:
+        - {name: Vlan10, ip: 127.0.10.3/24, description: MGMT}
+        - {name: TenGigabitEthernet1/1/1, description: to-CORE-SW-01}
+        - {name: GigabitEthernet1/0/8, description: PC-HR-2F-08, crc: 235, duplex: Half, speed: "100"}   # ← CRC + half duplex
+      ospf:
+        - {neighbor_id: 10.255.0.2, state: EXSTART/DROTHER, address: 10.0.0.2, interface: TenGigabitEthernet1/1/1}  # ← MTU mismatch
+      hsrp:
+        - {interface: Vl10, group: 10, priority: 100, state: Standby, vip: 127.0.10.4, active: 127.0.10.2, standby: local}
+
+  - name: EDGE-RTR-01
+    kind: cisco_ios
+    ip: 127.0.10.1
+    model: C8300-1N1S-4T2X
+    serials: [FDO2501A0XY]
+    version: 17.12.3
+    location: BKK HQ, DC room, Rack A1
+    cli:
+      default_gateway: 203.0.113.1
+      interfaces:
+        - {name: Vlan10, ip: 127.0.10.1/24, description: MGMT}
+        - {name: GigabitEthernet0/0/0, ip: 203.0.113.2/30, description: ISP-A}
+        - {name: GigabitEthernet0/0/1, ip: 198.51.100.2/30, description: ISP-B}
+      bgp_as: 65010
+      bgp:
+        - {neighbor: 203.0.113.1, as: 65001, state: "1"}
+        - {neighbor: 198.51.100.1, as: 65002, state: Active}   # ← BGP ไม่ขึ้น
+
+  - name: ACC-SW-2F
+    kind: aruba_switch
+    ip: 127.0.10.12
+    model: JL322A
+    model_text: Aruba JL322A 2930M-48G-PoE+ Switch
+    serials: [SG03KW1234]
+    version: WC.16.10.0012
+    location: BKK HQ, 2nd floor IDF
+
+  - name: ACC-SW-3F
+    kind: huawei_switch
+    ip: 127.0.11.13                     # คนละวง: discover จะเจอได้จากการไล่ LLDP เท่านั้น
+    model: S5735-L48P4X-A1
+    serials: ["102345678901"]
+    version: 5.170 (S5735 V200R021C10SPC600)
+    location: BKK HQ, 3rd floor IDF
+
+  - name: FGT-HQ
+    kind: fortigate
+    ip: 127.0.10.254
+    model: FortiGate-100F
+    serials: [FG100FTK20012345]
+    version: v7.2.8,build1639,240313 (GA.M)
+    location: BKK HQ, DC room, Rack A1
+    api_token: lab-fgt-hq-token
+
+  - name: PA-DMZ-01
+    kind: paloalto
+    ip: 127.0.10.21
+    model: PA-3410
+    serials: ["013201001234"]
+    version: 11.1.4
+    location: BKK HQ, DC room, Rack A3
+    api_token: lab-pa-dmz-key
+
+  - name: PRN-ACC-2F
+    kind: printer
+    ip: 127.0.10.50
+    model: HP LaserJet Pro M404dn
+    serials: [VNB3K12345]
+    location: 2nd floor, Accounting
+
+  - name: nms01
+    kind: linux
+    ip: 127.0.10.60
+    location: BKK HQ, DC room, Rack B1
+
+  - name: AP-2F-01
+    kind: ap
+    ip: 127.0.50.21
+    model: Aruba AP-515 Access Point, ArubaOS 8.10.0.6
+
+  - name: SEP001122334455
+    kind: phone
+    ip: 127.0.30.55
+    model: Cisco IP Phone 8841
+
+# สายเชื่อมระหว่างอุปกรณ์: [อุปกรณ์ A, พอร์ต A, อุปกรณ์ B, พอร์ต B, โปรโตคอล (lldp | cdp | both)]
+links:
+  - [CORE-SW-01, TenGigabitEthernet1/1/1, CORE-SW-02, TenGigabitEthernet1/1/1, cdp]
+  - [CORE-SW-01, GigabitEthernet1/0/47, ACC-SW-2F, "49", lldp]
+  - [CORE-SW-01, GigabitEthernet1/0/48, FGT-HQ, port3, lldp]
+  - [CORE-SW-01, GigabitEthernet1/0/24, AP-2F-01, eth0, lldp]
+  - [CORE-SW-01, GigabitEthernet1/0/10, SEP001122334455, Port 1, cdp]
+  - [CORE-SW-01, GigabitEthernet1/0/1, EDGE-RTR-01, GigabitEthernet0/0/2, cdp]
+  - [ACC-SW-2F, "50", ACC-SW-3F, GigabitEthernet0/0/52, lldp]
+
+# เครื่องที่ไม่มี SNMP (PC, กล้อง, IoT) จะปรากฏในตาราง ARP ของ arp_device
+hosts:
+  arp_device: CORE-SW-01
+  list:
+    - [127.0.10.100, d4:81:d7:aa:bb:cc]
+    - [127.0.10.101, d4:81:d7:aa:bb:cd]
+    - [10.0.20.55, a4:bb:6d:11:22:33]
+    - [10.0.20.56, a4:bb:6d:11:22:34]

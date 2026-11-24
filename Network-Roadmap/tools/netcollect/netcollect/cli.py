@@ -75,9 +75,17 @@ def _parser() -> argparse.ArgumentParser:
     d.add_argument("--allow-large", action="store_true", help="allow sweeping more than 1024 addresses")
     d.add_argument("-o", "--output", default="output", help="output folder (a timestamped subfolder is created)")
     d.add_argument("--inventory-out", help="where to write the generated inventory YAML")
+    d.add_argument("--inventory-defaults", help="YAML with 'defaults'/'groups' (ports, verify_tls) merged into "
+                                               "the generated inventory")
     d.add_argument("--no-excel", action="store_true")
     d.add_argument("--mock", action="store_true", help="use built-in sample network, no network access")
     d.add_argument("-v", "--verbose", action="store_true")
+
+    lb = sub.add_parser("lab", help="simulated LAN for testing (SNMP agents, Cisco SSH, FortiGate/Palo Alto API)")
+    lb.add_argument("action", choices=["start", "selftest", "aliases"])
+    lb.add_argument("--topology", help="lab topology YAML (default: built-in sample network)")
+    lb.add_argument("-o", "--output", default="lab-run", help="folder for lab CA, env files and results")
+    lb.add_argument("--snmp-version", choices=["2c", "3"], default="3", help="SNMP version used by selftest")
     return p
 
 
@@ -100,6 +108,8 @@ def main(argv: list[str] | None = None) -> int:
                         format="%(levelname)s %(name)s: %(message)s")
     if args.command == "discover":
         return _discover(args)
+    if args.command == "lab":
+        return _lab(args)
     try:
         devices = load_inventory(args.inventory, mock=args.mock)
         devices = filter_devices(devices, args.device, args.platform, args.tag)
@@ -185,8 +195,13 @@ def _discover(args: argparse.Namespace) -> int:
         return EXIT_USAGE
 
     outdir = Path(args.output) / ("discover-" + datetime.now().strftime("%Y%m%d-%H%M%S"))
-    files = write_discovery(result, outdir, args.subnet, excel=not args.no_excel,
-                            inventory_path=Path(args.inventory_out) if args.inventory_out else None)
+    try:
+        files = write_discovery(result, outdir, args.subnet, excel=not args.no_excel,
+                                inventory_path=Path(args.inventory_out) if args.inventory_out else None,
+                                inventory_defaults=Path(args.inventory_defaults) if args.inventory_defaults else None)
+    except (OSError, yaml.YAMLError) as exc:
+        print(f"cannot write results: {exc}", file=sys.stderr)
+        return EXIT_USAGE
     st = result.stats
     seeds = f" + {st['seeds']} seed(s)" if st.get("seeds") else ""
     print(f"\nSwept {st.get('addresses_swept', 0)} address(es){seeds}: {st.get('snmp_answered', 0)} answered SNMP · "
@@ -205,6 +220,26 @@ def _discover(args: argparse.Namespace) -> int:
     for name, path in files.items():
         print(f"  {name:<10} {path}")
     return EXIT_OK
+
+
+def _lab(args: argparse.Namespace) -> int:
+    try:
+        from .lab import LabError, alias_commands, load_lab, run_forever
+        from .lab.selftest import run_selftest
+    except ImportError as exc:
+        print(f"lab needs extra packages ({exc.name}): pip install pysnmp paramiko cryptography", file=sys.stderr)
+        return EXIT_USAGE
+    try:
+        if args.action == "aliases":
+            print("# macOS only: add loopback aliases for the lab addresses (Linux/Windows do not need this)")
+            print("\n".join(alias_commands(load_lab(args.topology))))
+            return EXIT_OK
+        if args.action == "selftest":
+            return run_selftest(args.topology, Path(args.output), args.snmp_version)
+        return run_forever(args.topology, Path(args.output))
+    except (LabError, OSError, yaml.YAMLError) as exc:
+        print(f"lab error: {exc}", file=sys.stderr)
+        return EXIT_USAGE
 
 
 if __name__ == "__main__":  # pragma: no cover
