@@ -1,5 +1,7 @@
 # คำสั่งตรวจเช็คพื้นฐาน: Ping, Traceroute, Route, DNS, Port (Windows / Linux / macOS)
 
+> 📘 คำอธิบายละเอียดพร้อมตัวอย่างผลลัพธ์: [explained/01-ping-traceroute-route-explained.md](explained/01-ping-traceroute-route-explained.md)
+
 > ใช้ตรวจจากเครื่องผู้ใช้หรือ server ก่อนไปดูอุปกรณ์เครือข่าย · ดูคำสั่งบนอุปกรณ์ได้ใน [Cisco](02-cisco.md) · [FortiGate](03-fortigate.md) · [Firewall อื่น ๆ](04-paloalto-checkpoint.md) · [ลำดับการไล่ปัญหา](05-troubleshooting-flow.md)
 
 ---

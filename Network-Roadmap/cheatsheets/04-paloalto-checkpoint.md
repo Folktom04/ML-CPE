@@ -1,5 +1,7 @@
 # คำสั่งตรวจเช็ค Firewall อื่น ๆ: Palo Alto, Check Point, Linux (nftables/iptables)
 
+> 📘 คำอธิบายละเอียดพร้อมตัวอย่างผลลัพธ์: [explained/04-paloalto-checkpoint-explained.md](explained/04-paloalto-checkpoint-explained.md)
+
 > หลักการเหมือน FortiGate: ดูสถานะ → route → policy ที่ match → session → debug/capture · ใช้ filter ทุกครั้งที่ debug และปิด debug เมื่อเสร็จ
 
 ---

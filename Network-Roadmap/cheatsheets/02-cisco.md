@@ -1,5 +1,7 @@
 # คำสั่งตรวจเช็ค Cisco (IOS / IOS-XE / NX-OS)
 
+> 📘 คำอธิบายละเอียดพร้อมตัวอย่างผลลัพธ์: [explained/02-cisco-explained.md](explained/02-cisco-explained.md)
+
 > คำสั่ง `show` ใช้อ่านอย่างเดียว ปลอดภัยต่อการรันบนระบบจริง · คำสั่ง `debug`, `clear` และการตั้งค่าต้องทำตาม change process ([Level 95](../lessons/L95-change-itil-documentation.md))
 > ส่วนใหญ่ใช้ได้ทั้ง IOS และ IOS-XE · ช่องที่ระบุ NX-OS คือ Nexus
 

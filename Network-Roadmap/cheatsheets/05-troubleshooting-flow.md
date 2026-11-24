@@ -1,5 +1,7 @@
 # ลำดับการตรวจเช็คเมื่อ "เข้าไม่ได้ / ใช้งานไม่ได้ / ช้า"
 
+> 📘 คำอธิบายละเอียดพร้อมตัวอย่างผลลัพธ์: [explained/05-troubleshooting-flow-explained.md](explained/05-troubleshooting-flow-explained.md)
+
 > ใช้คำสั่งจาก [Ping/Route](01-ping-traceroute-route.md) · [Cisco](02-cisco.md) · [FortiGate](03-fortigate.md) · [Palo Alto / Check Point](04-paloalto-checkpoint.md) · หลักการละเอียดดู [Level 30](../lessons/L30-troubleshooting-methodology.md) และ [Level 91](../lessons/L91-advanced-troubleshooting.md)
 
 ---

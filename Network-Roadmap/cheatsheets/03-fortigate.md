@@ -1,5 +1,7 @@
 # คำสั่งตรวจเช็ค FortiGate (FortiOS CLI)
 
+> 📘 คำอธิบายละเอียดพร้อมตัวอย่างผลลัพธ์: [explained/03-fortigate-explained.md](explained/03-fortigate-explained.md)
+
 > เข้า CLI ได้ทาง SSH, console หรือปุ่ม **CLI Console** มุมขวาบนของ GUI
 > คำสั่ง `get` และ `show` อ่านอย่างเดียว · `diagnose debug` ใช้ CPU เพิ่ม: **ตั้ง filter ทุกครั้ง** และปิดเมื่อเสร็จด้วย `diagnose debug disable` และ `diagnose debug reset`
 > คำสั่งบางตัวต่างกันตาม version ของ FortiOS (6.4 / 7.0 / 7.2 / 7.4 / 7.6) · ถ้าใช้ VDOM ต้องเข้า `config vdom` → `edit <ชื่อ>` ก่อน (หรือ `config global` สำหรับคำสั่งระดับระบบ)

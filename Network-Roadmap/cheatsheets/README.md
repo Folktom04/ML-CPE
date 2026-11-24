@@ -10,6 +10,8 @@
 | [04-paloalto-checkpoint.md](04-paloalto-checkpoint.md) | Palo Alto, Check Point, Linux firewall + ตารางเทียบคำสั่งระหว่างยี่ห้อ |
 | [05-troubleshooting-flow.md](05-troubleshooting-flow.md) | ลำดับการไล่ปัญหา และชุดคำสั่งสำหรับสถานการณ์ที่พบบ่อย (เน็ตไม่ได้, VLAN ล่ม, ออกเน็ตไม่ได้, เข้า server ไม่ได้, VPN, ช้า, หาเครื่องจาก IP) |
 
+📘 **อ่านคำอธิบายละเอียด (หลักการ, ตัวอย่างผลลัพธ์พร้อมอธิบายทีละบรรทัด, กรณีศึกษา):** [explained/README.md](explained/README.md)
+
 ## ลำดับสั้นที่สุดเมื่อมีปัญหา
 
 ```
