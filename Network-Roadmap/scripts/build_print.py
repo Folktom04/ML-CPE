@@ -77,7 +77,8 @@ a { color: inherit; text-decoration: none; }
          break-after: page; }
 .cover .kicker { font-size: 12pt; letter-spacing: 1pt; color: var(--muted); }
 .cover h1 { font-size: 30pt; border: 0; margin: 10pt 0 6pt; }
-.cover .range { font-size: 18pt; margin: 4pt 0 22pt; }
+.cover .range { font-size: 18pt; margin: 4pt 0 6pt; }
+.cover .tier { font-size: 13pt; color: var(--muted); margin: 0 0 22pt; }
 .cover .box { margin: 0 auto; text-align: left; border: 1pt solid #333; padding: 10pt 16pt; width: 135mm;
               font-size: 10.5pt; }
 .cover .meta { margin-top: 26pt; color: var(--muted); font-size: 10pt; }
@@ -197,6 +198,16 @@ def keep_together(fragment: str) -> str:
     return str(soup)
 
 
+def tier_title(first: int, last: int) -> str:
+    """'Tier 2 — Protocol หลัก' when the range lies inside one tier, else ''."""
+    for f in sorted(ROOT.glob("[01][0-9]-*.md")):
+        head = f.read_text(encoding="utf-8").splitlines()[0].lstrip("# ").strip()
+        m = re.search(r"\(Level (\d+)[–-](\d+)\)", head)
+        if m and int(m.group(1)) <= first and last <= int(m.group(2)):
+            return re.sub(r"\s*\(Level .*?\)", "", head)
+    return ""
+
+
 def build_html(lessons: list[tuple[int, Path]], pages: dict[str, int] | None, first: int, last: int,
                learner_name: bool) -> str:
     today = date.today()
@@ -226,6 +237,7 @@ def build_html(lessons: list[tuple[int, Path]], pages: dict[str, int] | None, fi
     toc_rows.append(f"<div class='row'><span class='t'>เฉลยแบบทดสอบทุกบท</span><span class='dots'></span>"
                     f"<span class='p'>{answer_page}</span></div>")
 
+    tier = tier_title(first, last)
     contents = "<br>".join("• " + html.escape(t) for t in short_titles)
     name_line = ("<div class='name'>ชื่อ ______________________________ &nbsp; เริ่มเรียน ____/____/______</div>"
                  if learner_name else "")
@@ -234,6 +246,7 @@ def build_html(lessons: list[tuple[int, Path]], pages: dict[str, int] | None, fi
   <div class='kicker'>NETWORK ENGINEER ROADMAP · LEVEL 1–100</div>
   <h1>บทเรียนเครือข่ายคอมพิวเตอร์<br>ฉบับละเอียด</h1>
   <div class='range'>Level {first} – {last}</div>
+  {f"<div class='tier'>{html.escape(tier)}</div>" if tier else ""}
   <div class='box'>
     <b>ในเล่มนี้</b><br>
     {contents}
