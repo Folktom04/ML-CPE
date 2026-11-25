@@ -22,6 +22,7 @@
 ## 2. พื้นฐาน REST API
 
 ### HTTP Methods ↔ CRUD
+
 | Method | ความหมาย | ตัวอย่าง |
 |---|---|---|
 | **GET** | อ่าน | ดูรายการ interface |
@@ -31,6 +32,7 @@
 | **DELETE** | ลบ | ลบ loopback |
 
 ### Status Codes
+
 | Code | ความหมาย |
 |---|---|
 | 200 OK / 201 Created / 204 No Content | สำเร็จ |
@@ -53,12 +55,14 @@
 }
 ```
 ### Authentication ที่พบบ่อย
+
 | วิธี | หมายเหตุ |
 |---|---|
 | Basic auth (user:password base64) | ต้องใช้กับ HTTPS เท่านั้น |
 | **API key / token** ใน header (`X-Cisco-Meraki-API-Key`, `Authorization: Bearer ...`) | นิยม · เก็บใน vault, กำหนดสิทธิ์/อายุ |
 | Session token (login → ได้ token → ใช้ต่อ) | Catalyst Center, FortiGate (บางแบบ), Palo Alto |
 | **OAuth 2.0** | cloud API (Microsoft Graph, Google) |
+
 ### Pagination & Rate limit
 - API คืนข้อมูลทีละหน้า (`?page=`, `perPage`, header `Link`/`next`) → ต้องวน loop จนครบ
 - **Rate limit** (เช่น Meraki ~10 requests/วินาทีต่อ org) → ใช้ retry with backoff
@@ -89,6 +93,7 @@ module example-interfaces {
   }
 }
 ```
+
 | องค์ประกอบ | ความหมาย |
 |---|---|
 | **module** | ไฟล์ model หนึ่ง |
@@ -99,11 +104,13 @@ module example-interfaces {
 | config true/false | ค่าตั้ง vs สถานะ (operational state เช่น counters) |
 
 ### แหล่ง YANG model
+
 | ประเภท | ตัวอย่าง |
 |---|---|
 | **IETF** (มาตรฐาน) | `ietf-interfaces`, `ietf-ip`, `ietf-routing` |
 | **OpenConfig** (กลุ่มผู้ให้บริการขนาดใหญ่) ⭐ | `openconfig-interfaces`, `openconfig-bgp` — **ข้ามยี่ห้อ** |
 | **Native/Vendor** | `Cisco-IOS-XE-native`, Junos models — ครบฟีเจอร์ที่สุดแต่ผูกยี่ห้อ |
+
 เครื่องมือ: `pyang` (แสดง tree), YANG Suite (Cisco), GitHub `YangModels/yang`
 ```bash
 pyang -f tree ietf-interfaces.yang
@@ -121,11 +128,13 @@ pyang -f tree ietf-interfaces.yang
    <rpc-reply> ok / data / rpc-error
 ```
 ### Datastores
+
 | Datastore | ความหมาย |
 |---|---|
 | **running** | config ที่ใช้งานอยู่ |
 | **candidate** | พื้นที่ร่าง — แก้หลายอย่างแล้ว **validate + commit ทีเดียว** (atomic) |
 | startup | config ตอนบูต |
+
 ### Operations สำคัญ
 `get` (config + state) · `get-config` · `edit-config` (operation: merge/replace/create/delete/remove) · `lock`/`unlock` (กันคนอื่นแก้พร้อมกัน) · `validate` · `commit` (+ **confirmed commit**: ถ้าไม่ยืนยันภายในเวลาที่กำหนด → rollback อัตโนมัติ ⭐ กันตัดตัวเอง) · `discard-changes`
 
@@ -181,11 +190,13 @@ body = {"ietf-interfaces:interface": {
 r = requests.put(url, json=body, auth=(user, pw), headers=hdr, verify="ca.pem", timeout=15)
 print(r.status_code)          # 201 Created หรือ 204 No Content
 ```
+
 | NETCONF | RESTCONF |
 |---|---|
 | SSH 830, XML | HTTPS 443, JSON/XML |
 | candidate datastore, lock, confirmed commit | ไม่มี candidate/transaction หลายขั้น (แต่ละ request = 1 การเปลี่ยน) |
 | เหมาะกับ automation ที่ต้องการ transaction | เหมาะกับการเรียกง่าย ๆ/เว็บ |
+
 ⚠️ อย่าใช้ `verify=False` ใน production — ใช้ cert ที่ถูกต้อง (Level 65)
 
 ---
@@ -195,6 +206,7 @@ print(r.status_code)          # 201 Created หรือ 204 No Content
 **gNMI (gRPC Network Management Interface)** = protocol บน **gRPC (HTTP/2 + Protocol Buffers)** ใช้ได้ทั้ง get/set config และ **subscribe** (telemetry)
 
 ### SNMP Polling vs Streaming Telemetry
+
 | | SNMP polling | Streaming telemetry (gNMI) |
 |---|---|---|
 | รูปแบบ | NMS ถามทุก 1–5 นาที (pull) | อุปกรณ์ **push** ข้อมูลเอง |
@@ -228,6 +240,7 @@ gnmic ... set --update-path /interfaces/interface[name=Ethernet2]/config/descrip
 ## 7. Controller / Cloud APIs
 
 ในองค์กรจริงมักคุยกับ **controller** มากกว่าอุปกรณ์ตรง ๆ
+
 | ระบบ | ใช้ทำอะไรได้ |
 |---|---|
 | **Cisco Meraki Dashboard API** | inventory, client, SSID, VLAN, firmware ของหลายร้อย site |
@@ -237,6 +250,7 @@ gnmic ... set --update-path /interfaces/interface[name=Ethernet2]/config/descrip
 | **Palo Alto PAN-OS/Panorama** | security policy, object (XML API/REST) |
 | Juniper Mist / Apstra | Wi-Fi/wired AI-ops, DC intent |
 | Cloud provider API/SDK | VPC, SG, LB (มักใช้ผ่าน Terraform — Level 85) |
+
 ```python
 import meraki, os
 dash = meraki.DashboardAPI(os.environ["MERAKI_API_KEY"], suppress_logging=True)  # SDK จัดการ rate limit/pagination

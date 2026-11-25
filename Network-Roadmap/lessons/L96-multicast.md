@@ -12,6 +12,7 @@
  Broadcast : ส่งถึงทุกเครื่องใน subnet (แม้ไม่ต้องการ) และไม่ข้าม router
  Multicast : ส่ง 1 ชุด → เครือข่าย "ทำสำเนา" ที่จุดแยกทาง เฉพาะไปยังผู้ที่สมัครรับ → 8 Mbps ต่อลิงก์ไม่ว่าผู้ชมกี่คน
 ```
+
 | Use case | เหตุผล |
 |---|---|
 | **IPTV/ทีวีในโรงแรม/โรงพยาบาล** | หลายห้องดูช่องเดียวกัน |
@@ -29,6 +30,7 @@
 ## 2. Multicast Addressing
 
 ### IPv4: 224.0.0.0/4 (224.0.0.0 – 239.255.255.255)
+
 | ช่วง | ความหมาย |
 |---|---|
 | **224.0.0.0/24** | **Link-local** (TTL=1, ไม่ข้าม router) — OSPF, VRRP, PIM, mDNS |
@@ -36,6 +38,7 @@
 | **232.0.0.0/8** | **SSM (Source-Specific Multicast)** |
 | 233.0.0.0/8 | GLOP (ตาม AS number) |
 | **239.0.0.0/8** | **Administratively scoped** — ใช้ภายในองค์กร (เหมือน "private" ของ multicast) ⭐ |
+
 ### IPv6: ff00::/8
 `ff02::1` (all nodes — แทน broadcast), `ff02::2` (all routers), `ff02::5`/`::6` (OSPFv3), `ff02::1:ff00:0/104` (solicited-node — ใช้ใน NDP), `ff05::/16` site-local, `ff3x::/32` SSM
 
@@ -53,12 +56,14 @@ IPv6: `33:33` + 32 บิตล่าง
 ## 3. IGMP — Host บอก Router ว่าต้องการกลุ่มไหน
 
 **IGMP (Internet Group Management Protocol)** ระหว่าง **host ↔ router** (first-hop) บน subnet เดียวกัน (IPv6 ใช้ **MLD**)
+
 | Version | ความสามารถ |
 |---|---|
 | IGMPv1 | Join (Membership Report) + Query — ไม่มี Leave (รอ timeout) |
 | **IGMPv2** | + **Leave Group** (ออกเร็ว), group-specific query, เลือก querier |
 | **IGMPv3** | + **Source filtering** (INCLUDE/EXCLUDE source) → ใช้กับ **SSM** ⭐ |
 | MLDv1 / MLDv2 | IPv6 เทียบเท่า IGMPv2 / v3 |
+
 ```
  1. Host เปิดช่อง TV → ส่ง IGMP Membership Report "ขอ 239.1.1.10"
  2. Router บันทึกว่ามีผู้รับบน interface นี้ → ขอ traffic จาก upstream (PIM)
@@ -102,12 +107,14 @@ ip igmp snooping querier address 10.50.0.2
 ปัญหาที่พบบ่อย: unicast routing ไม่สมมาตรกับ path ของ multicast, PIM ไม่ได้เปิดบน interface ที่ unicast ใช้กลับหา source → **RPF failure** → แก้ด้วยเปิด PIM ให้ครบ หรือ `ip mroute` (static mroute) / MBGP
 
 ### ประเภทของ Tree
+
 | Tree | ลักษณะ | สัญลักษณ์ |
 |---|---|---|
 | **Source tree / SPT (Shortest Path Tree)** | จาก source ตรงไปหาผู้รับ (path สั้นสุด) | **(S, G)** — source เจาะจง, group |
 | **Shared tree / RPT (RP Tree)** | ทุก source ส่งผ่านจุดกลาง **RP (Rendezvous Point)** | **(\*, G)** — source ใดก็ได้ |
 
 ### PIM Modes
+
 | Mode | หลักการ | เหมาะกับ |
 |---|---|---|
 | **Dense Mode (PIM-DM)** | **flood ทั่วเครือข่ายก่อน แล้ว prune** ส่วนที่ไม่มีผู้รับ (ทุก 3 นาที flood ใหม่) | ผู้รับหนาแน่นทุกที่ — **ไม่แนะนำ** ในปัจจุบัน (สิ้นเปลือง) |
@@ -124,6 +131,7 @@ ip igmp snooping querier address 10.50.0.2
  5. Last-hop router เห็น source แล้ว → join (S,G) ตรงไปหา source (SPT switchover) → prune ออกจาก RPT
 ```
 ### การกำหนด RP
+
 | วิธี | หมายเหตุ |
 |---|---|
 | **Static RP** (`ip pim rp-address`) | ง่าย ต้องตั้งทุก router |
@@ -225,6 +233,7 @@ mtrace 10.1.1.100 10.50.0.25 239.1.1.10       ! trace path ของ multicast
  6. First-hop router: เห็น traffic จาก source ไหม (show ip mroute count), TTL ของ source พอไหม (บางแอปตั้ง TTL=1!)
  7. Data plane: ดู packet counters เพิ่มขึ้นจริง, MTU
 ```
+
 | อาการ | สาเหตุที่พบบ่อย |
 |---|---|
 | ภาพหยุดทุก 3–5 นาที | ไม่มี IGMP querier ใน VLAN |

@@ -81,6 +81,7 @@ TcpTestSucceeded : False        ← เครื่องอยู่ แต่ 
 ## 5. Network Profile และ Windows Defender Firewall
 
 ### Network Location Profile
+
 | Profile | ใช้เมื่อ | ค่าเริ่มต้นของ firewall |
 |---|---|---|
 | **Domain** | เครื่องเชื่อมต่อแล้วติดต่อ Domain Controller ได้ | ตาม GPO ขององค์กร |

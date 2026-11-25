@@ -24,6 +24,7 @@
 - AP หา WLC ได้จาก: DHCP **Option 43**, DNS (`CISCO-CAPWAP-CONTROLLER.<domain>`), broadcast ในวงเดียวกัน, ตั้งค่าตรง
 
 ### Local Mode vs FlexConnect
+
 | | **Local (Central switching)** | **FlexConnect (Local switching)** |
 |---|---|---|
 | ข้อมูลผู้ใช้ | ส่งผ่าน CAPWAP **ไปที่ WLC** แล้วจึงออกเครือข่าย | **ออกที่ switch ของ AP โดยตรง** (VLAN ที่สาขา) |
@@ -106,6 +107,7 @@ Controller/cloud ปรับ **channel และ TX power อัตโนมั
 → **องค์กรปัจจุบันส่วนใหญ่ต้องออกแบบตาม capacity**
 
 ### ขั้นตอน Site Survey
+
 | ขั้น | ทำอะไร |
 |---|---|
 | **1. Requirements** | จำนวนผู้ใช้/อุปกรณ์ต่อพื้นที่, แอป (voice/video/data), พื้นที่ที่ต้องครอบคลุม, RSSI/SNR เป้าหมาย, อุปกรณ์ client ที่ใช้ |

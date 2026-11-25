@@ -34,6 +34,7 @@
  └───────────┴──────────┴──────────┴───────────────┴─────────────────────────────┘
           Overhead ≈ 50 bytes (IPv4)
 ```
+
 | ส่วน | หน้าที่ |
 |---|---|
 | **VNI** (VXLAN Network Identifier) **24 bit** | ระบุ segment — **~16 ล้าน** ค่า (เทียบ VLAN 4,094) |
@@ -75,6 +76,7 @@ VXLAN ดั้งเดิม (ไม่มี control plane):
  Leaf5 รู้ทันทีว่าจะส่งไป VM-A ต้องห่อไป VTEP 10.0.0.11 — ไม่ต้อง flood
 ```
 ### EVPN Route Types ที่สำคัญ
+
 | Type | ชื่อ | ใช้ทำ |
 |---|---|---|
 | **1** | Ethernet Auto-Discovery | multihoming (ESI), fast convergence |
@@ -138,11 +140,13 @@ leaf รู้ MAC/IP ของ host ทั้งหมดจาก EVPN Type-2 
 ## 8. EVPN Multihoming (ESI) vs MLAG
 
 server ต่อกับ 2 leaf:
+
 | | **MLAG/vPC** | **EVPN Multihoming (ESI-LAG)** |
 |---|---|---|
 | หลักการ | 2 switch จำลองเป็นตัวเดียว + peer link | ใช้มาตรฐาน EVPN (Type 1/4) — ไม่ต้องมี peer link |
 | มาตรฐาน | proprietary ต่อผู้ผลิต | มาตรฐานเปิด |
 | ขยาย | 2 ตัว | 2 ตัวขึ้นไป (ส่วนใหญ่ใช้ 2) |
+
 - server เห็นเป็น LACP bond ปกติทั้งสองแบบ
 - ESI (Ethernet Segment Identifier) 10 bytes ระบุลิงก์กลุ่มเดียวกัน
 
@@ -224,6 +228,7 @@ show l2route evpn mac all                ! MAC ที่เรียนรู้
 show ip route vrf PROD                   ! route ใน tenant
 ping 10.0.0.15 source 10.0.0.11 df-bit packet-size 9000   ! ตรวจ underlay/MTU
 ```
+
 | อาการ | สาเหตุที่พบบ่อย |
 |---|---|
 | NVE peer ไม่ขึ้น | underlay ไม่เห็น loopback, BGP EVPN ไม่ขึ้น, ไม่ได้ `send-community extended` |

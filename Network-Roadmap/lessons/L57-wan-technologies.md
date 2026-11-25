@@ -75,6 +75,7 @@
 **SLA (Service Level Agreement)** — ข้อตกลงคุณภาพบริการกับผู้ให้บริการ: **availability**, latency, jitter, packet loss, **MTTR (เวลาซ่อม)**, เวลาตอบสนอง, ค่าปรับ (service credit)
 
 ### Availability → Downtime ต่อปี
+
 | Availability | Downtime ต่อปี | ต่อเดือน (โดยประมาณ) |
 |---|---|---|
 | 99% | 3.65 วัน | 7.3 ชม. |
@@ -112,6 +113,7 @@
 ## 5. MTU และ MSS บน WAN — ปัญหาที่พบบ่อยที่สุด
 
 overhead ที่เพิ่มขึ้นบน WAN ทำให้ packet 1500 byte ใส่ไม่ได้
+
 | เทคโนโลยี | Overhead โดยประมาณ | MTU ที่เหลือ |
 |---|---|---|
 | **PPPoE** (เน็ตบ้าน/broadband หลายราย) | 8 byte | **1492** |

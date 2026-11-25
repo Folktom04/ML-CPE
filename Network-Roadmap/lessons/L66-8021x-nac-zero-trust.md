@@ -131,6 +131,7 @@ show access-session
 ## 8. NAC (Network Access Control) — มากกว่า 802.1X
 
 ผลิตภัณฑ์ NAC (Cisco ISE, Aruba ClearPass, Fortinet FortiNAC, Forescout, Portnox) รวมความสามารถ:
+
 | ความสามารถ | รายละเอียด |
 |---|---|
 | **Authentication** | 802.1X, MAB, web auth |
@@ -168,6 +169,7 @@ show access-session
 **Identity · Devices · Networks · Applications & Workloads · Data** (+ ฐานรากร่วม: Visibility & Analytics, Automation & Orchestration, Governance) — แต่ละ pillar มีระดับ Traditional → Initial → Advanced → Optimal
 
 ### Zero Trust ในงาน Network
+
 | ด้าน | มาตรการ |
 |---|---|
 | เข้าเครือข่าย | **802.1X/NAC** + posture |

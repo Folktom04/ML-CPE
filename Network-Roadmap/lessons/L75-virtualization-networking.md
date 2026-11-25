@@ -28,6 +28,7 @@ host เครื่องเดียวมี VM หลายสิบตั�
 ## 2. VMware vSphere
 
 ### Standard vSwitch (vSS) vs Distributed vSwitch (vDS)
+
 | | **vSS** | **vDS** ⭐ |
 |---|---|---|
 | ตั้งค่าที่ | ทีละ host | **vCenter ที่เดียว** ใช้กับทุก host |
@@ -37,6 +38,7 @@ host เครื่องเดียวมี VM หลายสิบตั�
 
 ### Port Group
 "กลุ่มพอร์ต" ที่มีนโยบายเดียวกัน — สำคัญที่สุดคือ **VLAN ID**
+
 | VLAN setting | ความหมาย |
 |---|---|
 | **VST (VLAN 10)** ⭐ | vSwitch ติด/ถอด tag ให้ VM (VM ไม่รู้เรื่อง VLAN) |
@@ -44,6 +46,7 @@ host เครื่องเดียวมี VM หลายสิบตั�
 | VGT (4095 / trunk) | ส่ง tag เข้า VM (VM จัดการ VLAN เอง เช่น virtual firewall/router) |
 
 ### VMkernel Adapter (vmk) — NIC ของ hypervisor เอง
+
 | vmk | traffic |
 |---|---|
 | vmk0 | **Management** (vCenter คุยกับ host) |
@@ -52,6 +55,7 @@ host เครื่องเดียวมี VM หลายสิบตั�
 | อื่น ๆ | Fault Tolerance, replication, backup |
 
 ### Security Policy ของ Port Group
+
 | ตัวเลือก | ค่าแนะนำ | หมายเหตุ |
 |---|---|---|
 | Promiscuous mode | Reject | เปิดเฉพาะ IDS/nested lab |

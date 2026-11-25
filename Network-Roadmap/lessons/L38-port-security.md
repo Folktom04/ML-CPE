@@ -36,6 +36,7 @@ interface GigabitEthernet1/0/5
 ```
 
 ### วิธีกำหนด MAC ที่อนุญาต
+
 | วิธี | ลักษณะ |
 |---|---|
 | **Dynamic** (ค่าเริ่มต้น) | เรียนรู้ MAC แรก ๆ จนครบ maximum แต่ **หายเมื่อ reboot/พอร์ต down** |

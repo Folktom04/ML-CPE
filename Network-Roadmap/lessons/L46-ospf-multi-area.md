@@ -36,6 +36,7 @@ Single area ที่ใหญ่มาก (router หลายร้อยต�
 **กฎสำคัญ:** **ทุก area ต้องต่อกับ Area 0** และ traffic ระหว่าง area ต้องผ่าน Area 0 (ป้องกัน loop ระหว่าง area)
 
 ### ประเภท Router
+
 | ประเภท | ลักษณะ |
 |---|---|
 | **Internal router** | ทุก interface อยู่ area เดียว |

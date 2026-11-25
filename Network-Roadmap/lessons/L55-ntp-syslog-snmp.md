@@ -9,6 +9,7 @@
 ## 1. NTP — Network Time Protocol
 
 ### ทำไมเวลาต้องตรง
+
 | ระบบ | ถ้าเวลาไม่ตรง |
 |---|---|
 | **Log correlation** | เทียบเหตุการณ์ข้ามอุปกรณ์ไม่ได้ (firewall บอก 10:05 router บอก 09:58) — สืบสวนเหตุการณ์ไม่ได้ |
@@ -77,6 +78,7 @@ w32tm /query /status ; w32tm /query /peers ; w32tm /resync
 - รูปแบบ: RFC 3164 (เดิม), RFC 5424 (มาตรฐานใหม่)
 
 ### Severity Levels (ต้องจำ)
+
 | Level | ชื่อ | ความหมาย | ตัวอย่าง |
 |---|---|---|---|
 | **0** | **Emergency** | ระบบใช้งานไม่ได้ | |
@@ -147,6 +149,7 @@ rsyslog, syslog-ng (Linux), Graylog, **ELK/OpenSearch**, Splunk, **Wazuh**, Fort
 > ค่าเฉลี่ย 5 นาที **มองไม่เห็น microburst** (Level 90)
 
 ### เวอร์ชันของ SNMP
+
 | เวอร์ชัน | การยืนยันตัวตน | เข้ารหัส | ใช้ไหม |
 |---|---|---|---|
 | v1 | community string (ข้อความธรรมดา) | ❌ | ❌ |

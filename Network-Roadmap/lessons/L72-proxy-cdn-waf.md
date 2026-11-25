@@ -17,6 +17,7 @@
    อินเทอร์เน็ต ──► [Reverse Proxy] ──► [Web/App server ภายใน]
    ผู้ใช้เห็นแค่ reverse proxy ไม่รู้ว่ามี server กี่ตัวอยู่ข้างหลัง
 ```
+
 | | Forward Proxy | Reverse Proxy |
 |---|---|---|
 | ทำงานแทน | **client** | **server** |
@@ -94,6 +95,7 @@ server {
  ผู้ใช้ในเชียงใหม่ ──► [CDN edge กรุงเทพ] ──(cache miss เท่านั้น)──► [Origin server ที่สิงคโปร์]
                          cache hit → ตอบทันที (RTT สั้น)
 ```
+
 | ประโยชน์ | อธิบาย |
 |---|---|
 | **เร็วขึ้น** | latency ต่ำ (edge ใกล้ผู้ใช้), TLS handshake สั้นลง |
@@ -108,6 +110,7 @@ server {
 **IP เดียวกันถูกประกาศ (BGP) จากหลาย PoP** → routing ของอินเทอร์เน็ตพาผู้ใช้ไป PoP ที่ "ใกล้" ที่สุดเอง (ใช้กับ CDN, public DNS 1.1.1.1/8.8.8.8) → ถ้า PoP หนึ่งล่ม route หายและผู้ใช้ไปที่อื่นอัตโนมัติ
 
 ### Cache Control (ต้องเข้าใจเพื่อแก้ปัญหา "แก้เว็บแล้วผู้ใช้ยังเห็นของเก่า")
+
 | Header | ความหมาย |
 |---|---|
 | `Cache-Control: public, max-age=86400` | cache ได้ 1 วัน |
@@ -115,6 +118,7 @@ server {
 | `Cache-Control: no-store` | ห้าม cache (หน้าที่มีข้อมูลอ่อนไหว) |
 | `s-maxage` | อายุ cache สำหรับ shared cache (CDN) |
 | `ETag` / `Last-Modified` | ตรวจว่าเปลี่ยนไหม (304 Not Modified) |
+
 - **Cache hit ratio** = ตัวชี้วัดประสิทธิภาพของ CDN
 - **Purge/Invalidate** — ล้าง cache เมื่อแก้เนื้อหา · หรือใช้ **ชื่อไฟล์แบบมี version/hash** (`app.3f9a2c.js`) เพื่อไม่ต้อง purge
 - ⚠️ **ระวัง cache ข้อมูลส่วนตัว:** ถ้า CDN cache หน้าที่มีข้อมูลของผู้ใช้คนหนึ่งแล้วส่งให้คนอื่น = ข้อมูลรั่ว (ตั้ง `private/no-store` ให้ถูก)
@@ -131,6 +135,7 @@ server {
 **WAF** ตรวจ **HTTP/HTTPS ระดับแอปพลิเคชัน (L7)** เพื่อป้องกันการโจมตีเว็บที่ firewall ทั่วไป (L3/L4) มองไม่เห็น
 
 ### OWASP Top 10 (2021 — ฉบับที่ใช้อ้างอิงแพร่หลาย; ตรวจฉบับล่าสุดเมื่อใช้งาน)
+
 | # | หมวด | ตัวอย่าง |
 |---|---|---|
 | A01 | Broken Access Control | เปลี่ยน id ใน URL แล้วเห็นข้อมูลคนอื่น |

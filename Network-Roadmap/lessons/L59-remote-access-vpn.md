@@ -36,6 +36,7 @@
  Full tunnel:   ทุก traffic ของผู้ใช้ (รวม YouTube/อินเทอร์เน็ต) → วิ่งเข้า VPN → ออกอินเทอร์เน็ตที่องค์กร
  Split tunnel:  เฉพาะ traffic ไประบบภายใน (10.0.0.0/8) → VPN · อินเทอร์เน็ตทั่วไป → ออกจากบ้านผู้ใช้โดยตรง
 ```
+
 | | Full tunnel | Split tunnel |
 |---|---|---|
 | ความปลอดภัย | ✅ ทุก traffic ผ่าน security stack ขององค์กร (web filter, IPS, DLP, log) | ❌ traffic อินเทอร์เน็ตไม่ถูกตรวจ (ต้องพึ่ง EDR/SSE) |

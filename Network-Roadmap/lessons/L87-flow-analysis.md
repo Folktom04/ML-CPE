@@ -49,6 +49,7 @@
 | Cloud flow logs | AWS/Azure/GCP VPC Flow Logs (Level 78) — แนวคิดเดียวกัน |
 
 ### NetFlow/IPFIX vs sFlow
+
 | | NetFlow/IPFIX | sFlow |
 |---|---|---|
 | ทำงาน | อุปกรณ์สร้าง **flow cache** รวม packet เป็น flow แล้วส่งเมื่อ flow จบ/timeout | **สุ่ม packet** ส่ง header ไปทันที collector รวมเอง |
@@ -73,6 +74,7 @@
 - **Analyzer:** ตีความ เพิ่มบริบท (enrichment): ชื่อ host (DNS), ชื่อ site/interface (จาก SNMP/NetBox), **ASN/ประเทศ** (GeoIP), ชื่อแอป
 
 ### เครื่องมือ
+
 | เครื่องมือ | ลักษณะ |
 |---|---|
 | **nfdump/nfcapd (+ nfsen)** | CLI open source คลาสสิก ทรงพลัง |
@@ -149,12 +151,14 @@ sflow run
 ```
  Sampling 1:1000 → วิเคราะห์ 1 ใน 1000 packet แล้วคูณกลับ (× 1000)
 ```
+
 | ผล | อธิบาย |
 |---|---|
 | ✅ ลดโหลด CPU/memory/ปริมาณ export | จำเป็นบนลิงก์ 10/100G |
 | ✅ แม่นยำสำหรับ **traffic ปริมาณมาก** (top talkers, DDoS) | สถิติของ sample จำนวนมาก |
 | ❌ **flow เล็ก/สั้นอาจไม่ถูกเห็นเลย** | ไม่เหมาะกับ forensics ที่ต้องเห็นทุกการเชื่อมต่อ (เช่น beaconing ของ malware) |
 | ⚠️ ต้องตั้ง sampling rate ให้ collector รู้ | ไม่เช่นนั้นตัวเลขเล็กกว่าจริง 1000 เท่า |
+
 **แนวทาง:** edge/WAN ความเร็วต่ำ → unsampled (1:1) ถ้าอุปกรณ์รับไหว · DC/core 10–100G → 1:1000–1:8192 (sFlow)
 
 ---
@@ -174,6 +178,7 @@ nfdump -R ... 'src ip 10.1.5.23 and dst port 443' -o long                    # �
 - ร่วมกับ 95th percentile ของ SNMP (Level 86) และ forecast (Level 94)
 
 ### ③ ตรวจจับ DDoS / Anomaly
+
 | สัญญาณ | อาจหมายถึง |
 |---|---|
 | pps/bps ไป **IP ปลายทางเดียว** พุ่ง จาก src จำนวนมาก | volumetric DDoS (Level 70) |
@@ -182,6 +187,7 @@ nfdump -R ... 'src ip 10.1.5.23 and dst port 443' -o long                    # �
 | host ภายในเชื่อมต่อ **หลาย IP/port** ในเวลาสั้น | scanning/worm |
 | ภายในส่งข้อมูลออกปริมาณผิดปกติไปปลายทางที่ไม่รู้จัก | data exfiltration |
 | การเชื่อมต่อออกสม่ำเสมอทุก N วินาที ขนาดเท่ากัน | C2 beaconing (ต้องใช้ unsampled) |
+
 - เครื่องมือ: FastNetMon (ตรวจ DDoS จาก flow/sFlow และสั่ง **RTBH/FlowSpec** อัตโนมัติ — Level 70), Kentik, NDR (Level 64)
 
 ### ④ Security Forensics
@@ -200,6 +206,7 @@ nfdump -R ... 'src ip 10.1.5.23 and dst port 443' -o long                    # �
 | ifIndex 3 | **Gi0/0/0 "WAN-ISP1"** (จาก SNMP/option template) |
 | 10.1.5.23 | **PC-ACC-023, ฝ่ายบัญชี, site BKK** (จาก DNS/DHCP/NetBox/NAC) |
 | port 443 | แอป (ต้องมี NBAR/AVC/DPI หรือ SNI เพื่อแยก Teams/YouTube) |
+
 - **NBAR2/AVC (Cisco), App-ID (Palo Alto)** ส่ง field ชื่อแอปใน IPFIX ได้
 
 ---

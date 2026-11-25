@@ -111,12 +111,14 @@ show ip verify source
 ## 6. IPv6 First-Hop Security
 
 IPv6 มีปัญหาคล้ายกัน แต่ใช้ NDP/RA แทน ARP/DHCP
+
 | ฟีเจอร์ | ป้องกัน |
 |---|---|
 | **RA Guard** | Rogue Router Advertisement (เครื่องอ้างเป็น IPv6 router) |
 | **DHCPv6 Guard** | Rogue DHCPv6 server |
 | **ND Inspection / Snooping** | NDP spoofing (เทียบเท่า DAI) |
 | **IPv6 Source Guard** | IPv6 source spoofing |
+
 ```
 ipv6 nd raguard policy HOSTS
  device-role host

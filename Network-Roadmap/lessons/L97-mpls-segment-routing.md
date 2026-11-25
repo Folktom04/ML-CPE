@@ -11,12 +11,14 @@
                      PE1 ═══ P ═══ P ═══ P ═══ PE2
  [ลูกค้า B สาขา 1]─CE─┘      (MPLS core: รู้แค่ label/loopback)  └─CE─[ลูกค้า B สาขา 2]
 ```
+
 | บทบาท | หน้าที่ |
 |---|---|
 | **CE** (Customer Edge) | router ของลูกค้า — ไม่รู้เรื่อง MPLS |
 | **PE** (Provider Edge) | ขอบของผู้ให้บริการ — มี **VRF** ต่อลูกค้า, ใส่/ถอด label, คุย MP-BGP |
 | **P** (Provider) | core router — **swap label อย่างเดียว ไม่รู้ route ของลูกค้า** ⭐ |
 | Route Reflector | กระจาย VPN route ระหว่าง PE (ไม่ต้อง full mesh iBGP) |
+
 **ชั้นของ SP:** Access (สายไปลูกค้า: ไฟเบอร์/GPON/Metro-E) → Aggregation → Core (ความจุสูงมาก) → Peering/Transit (อินเทอร์เน็ต — Level 48/49)
 
 **ทำไม enterprise engineer ควรรู้:** ใช้บริการ MPLS VPN/Metro-E/EVPN ของ ISP, DC ขนาดใหญ่ใช้ EVPN/SR, งานที่ ISP/telco/integrator (เช่น งาน SI ใน SI-Track) ต้องใช้ตรง ๆ
@@ -37,11 +39,13 @@
 - Ethertype 0x8847
 
 ### การทำงาน
+
 | ตำแหน่ง | การกระทำ |
 |---|---|
 | Ingress **LER** (Label Edge Router = PE ขาเข้า) | **Push** label |
 | **LSR** (Label Switch Router = P) | **Swap** label (ตาม LFIB) |
 | Egress LER (PE ขาออก) | **Pop** label แล้วส่งตาม IP/VRF |
+
 ```
  PE1 --[push 100]--> P1 --[swap 100→200]--> P2 --[swap 200→300]--> PE2 --[pop]--> CE
  เส้นทางของ label จาก PE1 ถึง PE2 = LSP (Label Switched Path) — ทิศเดียว
@@ -62,11 +66,13 @@ router **ก่อนสุดท้าย** ถอด label ด้านบน�
 ## 3. IGP ของ SP: IS-IS
 
 SP ส่วนใหญ่ใช้ **IS-IS** เป็น underlay IGP (แทน OSPF)
+
 | เหตุผล | อธิบาย |
 |---|---|
 | ทำงานบน L2 โดยตรง (ไม่ใช่ IP) | ไม่ถูกโจมตีด้วย IP spoofing ง่าย ๆ, รองรับ IPv4/IPv6 พร้อมกันใน instance เดียว |
 | **TLV** ขยายง่าย | เพิ่มข้อมูลใหม่ (TE, Segment Routing) ได้สะดวก |
 | scale ดีใน area ใหญ่ | ออกแบบ flat L2 ได้หลายร้อย router |
+
 - Level 1 (ภายใน area) / Level 2 (backbone) / L1/L2 — คล้าย area ของ OSPF
 - **NET address:** `49.0001.0100.0000.0001.00` (area 49.0001, system ID 0100.0000.0001)
 ```
@@ -102,6 +108,7 @@ traceroute mpls ipv4 10.255.0.2/32      ! ตรวจ LSP
 ## 5. MPLS L3VPN (ลงลึก — ต่อจาก Level 57)
 
 ### องค์ประกอบ
+
 | องค์ประกอบ | หน้าที่ |
 |---|---|
 | **VRF** | routing table แยกต่อลูกค้าบน PE |
@@ -162,6 +169,7 @@ show mpls forwarding-table vrf CUST-A
 | **VPWS / E-Line** (point-to-point) | "สายเสมือน" L2 ระหว่าง 2 จุด | AToM/pseudowire (LDP) → **EVPN-VPWS** |
 | **VPLS / E-LAN** (multipoint) | "switch เสมือน" หลายจุดอยู่ใน broadcast domain เดียว | VPLS (LDP/BGP, flood-and-learn, full mesh PW) → **EVPN (MPLS หรือ VXLAN)** |
 | E-Tree | hub-and-spoke L2 | EVPN-ETREE |
+
 **ทำไม EVPN มาแทน VPLS:** ใช้ BGP เรียนรู้ MAC (control plane) แทน flood-and-learn, **active-active multihoming** (ESI) ซึ่ง VPLS ทำได้ยาก, MAC mobility, ARP suppression, รวม L2+L3 ใน protocol เดียว (เหมือนใน DC — Level 74)
 
 ---
@@ -176,11 +184,13 @@ IGP เลือก **shortest path เส้นเดียว** → ลิง�
 
 ### Segment Routing (SR) ⭐
 **Source routing:** router ต้นทางใส่ "รายการคำสั่ง" (segment list) ลงใน packet → router กลางทางทำตามโดย **ไม่ต้องเก็บ state ต่อ flow/tunnel**
+
 | ประเภท Segment | ความหมาย |
 |---|---|
 | **Prefix-SID** (Node-SID) | "ไปหา router X ด้วย shortest path" — ค่า **global** (index + SRGB เช่น 16000 + 1 = 16001) |
 | **Adjacency-SID** | "ออกทางลิงก์นี้" — ค่า local |
 | Binding-SID, Anycast-SID | อ้างอิง policy/กลุ่ม |
+
 ```
  ต้องการไป PE2 แต่บังคับให้ผ่าน P3 (หลีกลิงก์ที่แน่น):
  segment list = [16003 (ไป P3), 16002 (ไป PE2)]
@@ -213,6 +223,7 @@ router isis CORE
 ```
 
 ### เปรียบเทียบ
+
 | | LDP + RSVP-TE | Segment Routing |
 |---|---|---|
 | Protocols | IGP + LDP + RSVP | **IGP อย่างเดียว** (+ BGP สำหรับ VPN) |
@@ -239,6 +250,7 @@ router isis CORE
 | Juniper vMX/cRPD/vJunos | MPLS/L3VPN/SR ครบ |
 | **FRRouting** (ฟรี) | IS-IS SR, LDP, L3VPN, BGP บน Linux — ทดลองแนวคิดได้ดี |
 | containerlab | สร้าง topology หลาย router จาก YAML (Level 84) |
+
 **ลำดับ lab:** IS-IS core 4 router → LDP + ping PE loopback ด้วย label → L3VPN 2 ลูกค้า IP ซ้ำ → แทน LDP ด้วย SR-MPLS → TI-LFA (ตัดลิงก์ วัด loss) → EVPN-VPWS → SR-TE policy
 
 ---

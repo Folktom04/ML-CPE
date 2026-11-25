@@ -13,6 +13,7 @@
 **Top-down design:** เริ่มจาก **ชั้นบน (ธุรกิจ/แอป/ผู้ใช้)** ลงมาหา **ชั้นล่าง (เทคโนโลยี/อุปกรณ์)** — ไม่ใช่เริ่มจากอุปกรณ์ที่ชอบ
 
 ### Lifecycle
+
 | Cisco PPDIOO (คลาสสิก) | ความหมาย |
 |---|---|
 | **P**repare | business case, งบ, กลยุทธ์ |
@@ -21,6 +22,7 @@
 | **I**mplement | ติดตั้งตาม plan + ทดสอบ |
 | **O**perate | ดูแลประจำวัน, monitoring |
 | **O**ptimize | ปรับปรุงจากข้อมูลจริง → วนกลับไป plan |
+
 (ปัจจุบันมักเรียกย่อ: **Plan → Build → Manage**)
 
 ---
@@ -28,6 +30,7 @@
 ## 2. Requirements Gathering
 
 ### 3 กลุ่ม
+
 | กลุ่ม | ตัวอย่างคำถาม |
 |---|---|
 | **Business** | เป้าหมายธุรกิจ (ขยายสาขา? ย้ายขึ้น cloud? ทำงานจากที่ไหนก็ได้?), แอปที่สร้างรายได้, ต้นทุน downtime ต่อชั่วโมง, แผน 3–5 ปี, กฎหมาย/compliance (PDPA, PCI DSS, ISO 27001, มาตรฐานของ ธปท./คปภ./กระทรวงสาธารณสุข) |
@@ -41,6 +44,7 @@
 - **Workshop** สรุป requirement + ลำดับความสำคัญ (Must/Should/Could/Won't — MoSCoW)
 
 ### เขียน requirement ให้วัดได้
+
 | ❌ คลุมเครือ | ✅ วัดได้ |
 |---|---|
 | "เครือข่ายต้องเร็ว" | "latency ไป ERP จากสาขา ≤ 30 ms (95th percentile)" |
@@ -105,6 +109,7 @@
          /    \
  Availability ── Complexity     (และ Performance, Security, Time-to-deploy)
 ```
+
 | การตัดสินใจ | ทางเลือก A | ทางเลือก B |
 |---|---|---|
 | **Build vs Buy** | สร้างเองด้วย open source (ยืดหยุ่น, ถูก, ต้องมีทักษะ) | ซื้อผลิตภัณฑ์/บริการ (เร็ว, มี support, แพง/ผูกขาด) |
@@ -113,6 +118,7 @@
 | **L2 ขยาย vs L3 routed** | ง่ายกับแอปเก่า (VM mobility) | failure domain เล็ก, scale ดี |
 | **MPLS vs SD-WAN/Internet** | SLA, latency คงที่ | ราคาถูก bandwidth มาก, ต้องมี overlay ที่ดี |
 | **Active-active vs Active-standby** | ใช้ทรัพยากรเต็ม | ง่าย คาดเดาได้ |
+
 **ไม่มีคำตอบที่ถูกเสมอ** — คำตอบที่ดีคือคำตอบที่ **สอดคล้องกับ requirement และ constraint และอธิบายเหตุผลได้**
 
 ---
@@ -158,6 +164,7 @@ DC ใหม่ 20 rack, spine-leaf, ต้องการ EVPN-VXLAN, ทีม
 - [ ] **Migration/cutover plan** + rollback (Level 95)
 
 ### Firewall Policy Matrix ตัวอย่าง
+
 | From \ To | Users | Servers | DMZ | Internet | Mgmt |
 |---|---|---|---|---|---|
 | **Users** | — | HTTPS, RDP(IT group) | HTTPS | Web (ผ่าน SWG) | ✖ |

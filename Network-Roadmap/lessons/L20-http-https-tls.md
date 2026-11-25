@@ -45,6 +45,7 @@ Strict-Transport-Security: max-age=31536000
 ```
 
 ### HTTP Methods
+
 | Method | ใช้ทำ | ตัวอย่าง |
 |---|---|---|
 | **GET** | ขอข้อมูล | เปิดหน้าเว็บ |
@@ -55,6 +56,7 @@ Strict-Transport-Security: max-age=31536000
 | **OPTIONS** | ถามว่ารองรับอะไร | CORS preflight |
 
 ### Status Codes — ต้องจำเป็นกลุ่ม
+
 | กลุ่ม | ความหมาย | ที่เจอบ่อย |
 |---|---|---|
 | **1xx** | กำลังดำเนินการ | 101 Switching Protocols (WebSocket) |
@@ -133,6 +135,7 @@ Browser ตรวจว่า
 3. **ยังไม่หมดอายุ** และยังไม่ถูกเพิกถอน (revoke)
 
 **ข้อผิดพลาดที่พบบ่อย**
+
 | คำเตือน | สาเหตุ |
 |---|---|
 | `NET::ERR_CERT_DATE_INVALID` | cert หมดอายุ (หรือนาฬิกาเครื่องผิด) |
@@ -160,6 +163,7 @@ echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/
 **Browser DevTools (F12) → Network tab:** ดู status, เวลาแต่ละขั้น (DNS, connect, SSL, waiting/TTFB), header, protocol (h2/h3), cookie
 
 **วิเคราะห์ความช้าจาก curl timing**
+
 | ส่วนที่ช้า | สงสัย |
 |---|---|
 | `time_namelookup` สูง | DNS |

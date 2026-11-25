@@ -73,6 +73,7 @@ tcp port 443             not port 22              host 10.0.0.5 and not port 338
 ```
 
 **Display filter ที่ต้องรู้**
+
 | Filter | แสดง |
 |---|---|
 | `ip.addr == 10.0.0.5` | packet ที่มี IP นี้ (ต้นทางหรือปลายทาง) |

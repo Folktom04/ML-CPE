@@ -18,6 +18,7 @@
 ## 2. ITIL 4 — Practices ที่เกี่ยวกับงาน Network
 
 **ITIL** = กรอบแนวปฏิบัติการบริหารบริการ IT ที่ใช้แพร่หลาย (ITIL 4 ใช้คำว่า "practices")
+
 | Practice | ความหมาย | ตัวอย่างงาน network |
 |---|---|---|
 | **Incident Management** | กู้บริการให้กลับมาเร็วที่สุด | "สาขาเชียงใหม่ใช้งานไม่ได้" → กู้ก่อน (เปลี่ยนไป ISP2) |
@@ -46,9 +47,11 @@
 | **Standard** | ความเสี่ยงต่ำ ทำบ่อย ขั้นตอนตายตัว ผ่านการพิสูจน์แล้ว | **อนุมัติล่วงหน้า** (pre-approved) — ทำตาม template | เปลี่ยน VLAN พอร์ตผู้ใช้, เพิ่ม description, เพิ่ม user VPN |
 | **Normal** | ต้องประเมินความเสี่ยงเป็นรายครั้ง | **CAB** (Change Advisory Board) หรือผู้มีอำนาจตามระดับความเสี่ยง | เพิ่ม route policy, upgrade core switch, เปลี่ยน firewall rule ที่กระทบหลายระบบ |
 | **Emergency** | ต้องทำทันทีเพื่อแก้ incident/ช่องโหว่ร้ายแรง | ECAB (กลุ่มเล็ก/ผู้มีอำนาจ) อนุมัติเร็ว + **บันทึกย้อนหลัง** | patch ช่องโหว่ที่ถูกโจมตีอยู่, แก้ config ที่ทำให้ระบบล่ม |
+
 💡 **เป้าหมาย:** ย้าย change ที่ทำบ่อยให้เป็น **Standard** (ด้วย template + automation + pre/post check — Level 84) → CAB โฟกัสเฉพาะ change ที่เสี่ยงจริง
 
 ### ระดับความเสี่ยง (ตัวอย่างเกณฑ์)
+
 | ปัจจัย | ต่ำ | สูง |
 |---|---|---|
 | ผลกระทบถ้าผิด | พอร์ตเดียว | ทั้ง site/บริการหลัก |
@@ -104,6 +107,7 @@
 | FortiGate | `config system global` → `set cfg-save revert` + `set cfg-revert-timeout` | revert ถ้าไม่ยืนยัน |
 | NETCONF | confirmed commit (Level 83) | |
 | Linux | `at now + 5 minutes <<< "nft -f /etc/nftables.conf.bak"` | ตั้ง job คืนค่าไว้ก่อนแก้ firewall |
+
 **หลักทอง:** แก้อุปกรณ์ที่ remote เสมอ **ตั้ง safety net ก่อน** + มี **OOB/console** สำรอง (Level 93)
 
 ---

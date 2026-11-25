@@ -26,6 +26,7 @@
 ```
 
 ### ชนิดของ Packet ใน OSPF
+
 | Type | ชื่อ | หน้าที่ |
 |---|---|---|
 | 1 | **Hello** | ค้นหาและรักษาความสัมพันธ์กับเพื่อนบ้าน |
@@ -53,6 +54,7 @@
 ```
  Down → Init → 2-Way → ExStart → Exchange → Loading → Full
 ```
+
 | State | เกิดอะไรขึ้น |
 |---|---|
 | **Down** | ยังไม่ได้ยิน hello |
@@ -101,6 +103,7 @@ interface Gi0/0
 ```
 
 ### Network Types
+
 | Type | DR/BDR | Hello/Dead | ใช้กับ |
 |---|---|---|---|
 | **Broadcast** | ✅ | 10/40 | Ethernet (ค่าเริ่มต้น) |

@@ -72,12 +72,14 @@
 
 - **CVE (Common Vulnerabilities and Exposures):** หมายเลขอ้างอิงของช่องโหว่ เช่น `CVE-2024-XXXXX`
 - **CVSS (Common Vulnerability Scoring System):** คะแนนความรุนแรง 0.0–10.0
+
 | คะแนน | ระดับ |
 |---|---|
 | 0.1–3.9 | Low |
 | 4.0–6.9 | Medium |
 | 7.0–8.9 | High |
 | **9.0–10.0** | **Critical** |
+
 - **EPSS:** ความน่าจะเป็นที่ช่องโหว่จะถูกใช้โจมตีจริงใน 30 วัน
 - **CISA KEV (Known Exploited Vulnerabilities):** รายการช่องโหว่ที่ **ถูกโจมตีจริงแล้ว** → ควร patch ก่อน
 - **Vendor PSIRT advisory:** ประกาศของผู้ผลิต (Cisco, Fortinet, Palo Alto) — ต้องติดตามสม่ำเสมอ

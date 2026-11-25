@@ -27,6 +27,7 @@
 → **Kubernetes ไม่ได้ implement เอง** — ให้ **CNI plugin** เป็นผู้ทำ
 
 ### 4 ปัญหาการสื่อสาร
+
 | ระดับ | แก้ด้วย |
 |---|---|
 | Container ↔ container ใน pod เดียวกัน | `localhost` (namespace เดียวกัน) |
@@ -47,6 +48,7 @@
  └──────────────┬────────────┘              └──────────────┬────────────┘
                 └────── Pod A → Pod C ข้าม node: 2 วิธี ────┘
 ```
+
 | วิธีส่งข้าม node | หลักการ | ข้อดี/ข้อเสีย |
 |---|---|---|
 | **Overlay (VXLAN/Geneve/IP-in-IP)** | ห่อ packet ของ pod ใน IP ของ node | ✅ ไม่ต้องแก้ network จริง ❌ overhead, MTU ลด |
@@ -54,6 +56,7 @@
 | **Cloud native (VPC IP)** | pod ได้ IP จาก VPC ตรง (AWS VPC CNI, Azure CNI) | ✅ pod เป็น first-class ใน VPC ❌ ใช้ IP ใน subnet เยอะ |
 
 ### CNI ยอดนิยม
+
 | CNI | จุดเด่น |
 |---|---|
 | **Calico** | BGP native routing หรือ VXLAN/IP-in-IP, NetworkPolicy แข็งแรง, มี eBPF dataplane |
@@ -78,6 +81,7 @@ spec:
   - port: 80                     # port ของ Service
     targetPort: 8080             # port ของ container
 ```
+
 | ประเภท | เข้าถึงจาก | การทำงาน |
 |---|---|---|
 | **ClusterIP** (ค่าเริ่มต้น) | ภายใน cluster เท่านั้น | IP เสมือน (เช่น 10.96.x.x) |
@@ -195,6 +199,7 @@ spec:
 | **Pod CIDR** | 10.244.0.0/16 | แบ่ง /24 ต่อ node (ค่าเริ่มต้น ~110 pod ต่อ node) |
 | **Service CIDR** | 10.96.0.0/12 | IP เสมือน (ไม่ route ออกนอก) |
 | LoadBalancer pool | 10.0.50.0/24 | ต้องประกาศ/route ได้จากผู้ใช้ |
+
 ⚠️ **ห้ามชน** กับ IP ขององค์กร, VPN, cluster อื่น (ถ้าต้องเชื่อมกัน) — เปลี่ยนภายหลังยากมาก
 **Egress:** pod ออกนอก cluster มักถูก SNAT เป็น IP ของ node → firewall ภายนอกแยกไม่ออกว่า pod ไหน → ใช้ **egress gateway** (Cilium/Calico/Istio) ให้ IP ออกคงที่ต่อ namespace/แอป
 
@@ -214,6 +219,7 @@ kubectl debug -it pod/web-xxx --image=nicolaka/netshoot --target=web   # ephemer
 kubectl logs -n kube-system -l k8s-app=kube-dns
 cilium status ; hubble observe --namespace shop --verdict DROPPED       # ถ้าใช้ Cilium
 ```
+
 | อาการ | ตรวจ |
 |---|---|
 | Service ไม่ตอบ | EndpointSlice ว่าง → **selector/label ไม่ตรง** หรือ pod ไม่ Ready, targetPort ผิด |

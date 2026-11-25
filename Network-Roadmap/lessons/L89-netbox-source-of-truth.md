@@ -7,6 +7,7 @@
 ## 1. Source of Truth (SoT) คืออะไร
 
 **SoT** = แหล่งข้อมูลที่ **ทุกคนและทุกระบบยอมรับว่าเป็นความจริงหนึ่งเดียว** ว่าเครือข่าย "**ควรเป็นอย่างไร**" (intended state)
+
 | | **Intended state (SoT)** | **Actual/Operational state** |
 |---|---|---|
 | คำถาม | ควรมีอะไร | ตอนนี้เป็นอย่างไร |
@@ -22,6 +23,7 @@
 - ข้อมูลอยู่ในหัวคนคนเดียว — คนลาออก ความรู้หายไป
 
 ### ทำไม Excel ไม่พอ
+
 | Excel | SoT แบบ NetBox |
 |---|---|
 | ไม่มี API | **REST/GraphQL API** สำหรับ automation |
@@ -215,12 +217,14 @@ interface {{ intf.name }}
 ## 8. Reconciliation — ทำให้ข้อมูลตรงกับความจริง
 
 SoT มีค่าก็ต่อเมื่อ **ข้อมูลถูกต้อง** — ข้อมูลผิด = automation ทำผิดในขนาดใหญ่
+
 | วิธี | รายละเอียด |
 |---|---|
 | **Discovery/import ครั้งแรก** | ดึงจากอุปกรณ์จริง (NAPALM getters, LLDP, ARP) → สร้างข้อมูลเริ่มต้น (ระวังนำความผิดเดิมเข้ามา — ตรวจทาน) |
 | **Reconciliation report** ประจำ | เทียบ NetBox vs จริง: interface/VLAN/IP/serial/version ไม่ตรง → รายงาน |
 | **Diode / ORB (NetBox Labs), Nautobot SSoT** | เครื่องมือ sync ข้อมูลจากแหล่งอื่น |
 | **Sync จากระบบอื่น** | vCenter (VM), cloud (VPC/subnet), DHCP leases |
+
 ```python
 # ตัวอย่าง reconciliation: serial ใน NetBox ตรงกับของจริงไหม
 for d in nb.dcim.devices.filter(status="active", platform="cisco_ios"):

@@ -35,6 +35,7 @@
             ┌──────────┬────────┴──────┬────────────────┐
          [Switch]   [Switch]        [Switch]         [vSwitch]    ← data plane (ทำตามที่สั่ง)
 ```
+
 | API | ระหว่าง | ตัวอย่าง |
 |---|---|---|
 | **Northbound** | แอป/คน/orchestrator ↔ controller | REST API, intent API |
@@ -42,6 +43,7 @@
 | East-West | controller ↔ controller (cluster/federation) | |
 
 ### ข้อดี/ข้อเสีย
+
 | ✅ | ❌ |
 |---|---|
 | **มุมมองรวม** — คำนวณ path/นโยบายทั้งเครือข่ายได้ดีกว่า | **Controller เป็นจุดศูนย์กลาง** → ต้องทำ cluster/HA (single point of failure, ความปลอดภัยของ controller สำคัญมาก) |
@@ -56,6 +58,7 @@
 protocol southbound แรกที่ทำให้ SDN เป็นที่รู้จัก (ONF) — controller ติดตั้ง **flow entry** ลงใน **flow table** ของ switch
 
 ### Flow entry
+
 | ส่วน | ตัวอย่าง |
 |---|---|
 | **Match fields** | in_port, eth_src/dst, eth_type, vlan, ip_src/dst, ip_proto, tcp/udp port |
@@ -63,6 +66,7 @@ protocol southbound แรกที่ทำให้ SDN เป็นที่�
 | **Instructions/Actions** | output:port, drop, set-field (แก้ header), push/pop VLAN, goto-table, **send to controller** |
 | **Counters** | packets/bytes ที่ match |
 | **Timeouts** | idle/hard timeout |
+
 ```
  priority=200, ip, nw_src=10.0.50.0/24, nw_dst=10.0.10.0/24 → actions=drop          (Guest ห้ามเข้า server)
  priority=100, in_port=1, dl_dst=00:00:00:00:00:02 → actions=output:2
@@ -84,6 +88,7 @@ match ได้เฉพาะ field ที่ spec กำหนด, ฮาร�
 - รันบน switch ที่ programmable (Intel Tofino — หยุดพัฒนาแล้ว แต่แนวคิดยังอยู่ใน SmartNIC/DPU, FPGA), software switch (BMv2)
 - ควบคุมด้วย **P4Runtime** (southbound)
 - ใช้ทำ **in-band network telemetry (INT)** — ใส่ข้อมูล latency/queue ของทุก hop ลงใน packet
+
 | OpenFlow | P4 |
 |---|---|
 | ควบคุม "ตาราง" ของ switch ที่มีโครงสร้างตายตัว | กำหนด "โครงสร้าง" ของ pipeline เอง |
@@ -105,6 +110,7 @@ match ได้เฉพาะ field ที่ spec กำหนด, ฮาร�
 ## 6. SDN ในงานจริง (ที่คุณอาจใช้อยู่แล้ว)
 
 ปัจจุบัน "SDN" มักหมายถึง **ระบบที่มี controller กลาง + API + automation** ไม่จำเป็นต้องเป็น OpenFlow
+
 | ระบบ | แนวคิด |
 |---|---|
 | **Cisco ACI** | DC fabric: APIC controller, นโยบายแบบ **EPG/contract** (กลุ่มของ endpoint + กฎระหว่างกลุ่ม), VXLAN ภายใน |
@@ -131,6 +137,7 @@ match ได้เฉพาะ field ที่ spec กำหนด, ฮาร�
  ③ Assurance     : ตรวจสอบต่อเนื่อง (telemetry) ว่าเครือข่ายยังทำตาม intent จริงไหม
  ④ Remediation   : พบความต่าง → แจ้งเตือน/แนะนำ/แก้อัตโนมัติ (closed loop)
 ```
+
 | แบบเดิม | IBN |
 |---|---|
 | "ตั้ง ACL 101 บน 40 router" | "Guest ห้ามเข้า server zone" |

@@ -39,10 +39,12 @@
 | **Reputation/Threat intel** | เทียบ IP/domain/hash กับฐานข้อมูลภัย | เร็ว ง่าย | ข้อมูลต้องทันสมัย |
 
 ### ผลลัพธ์ของการตรวจจับ (สำคัญมาก)
+
 | | มีการโจมตีจริง | ไม่มีการโจมตี |
 |---|---|---|
 | **มี alert** | ✅ **True Positive** | ⚠️ **False Positive** (แจ้งผิด) |
 | **ไม่มี alert** | ❌ **False Negative** (หลุดรอด — อันตรายที่สุด) | ✅ True Negative |
+
 - False positive มากเกินไป → **alert fatigue** ทีมเลิกสนใจ alert แล้วพลาด true positive
 - จึงต้อง **tuning** อย่างต่อเนื่อง
 
@@ -80,6 +82,7 @@
          flow:to_server,established; threshold:type both, track by_src, count 10, seconds 60;
          classtype:attempted-admin; sid:1000001; rev:1;)
 ```
+
 | ส่วน | ความหมาย |
 |---|---|
 | **action** | `alert` (แจ้ง), `drop` (บล็อก — IPS mode), `pass`, `reject` |

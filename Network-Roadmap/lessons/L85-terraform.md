@@ -7,6 +7,7 @@
 ## 1. Infrastructure as Code (IaC)
 
 **IaC** = บรรยายโครงสร้างพื้นฐาน (VPC, subnet, firewall rule, DNS record, LB) **เป็นโค้ด** เก็บใน Git แล้วให้เครื่องมือสร้าง/ปรับให้ตรง
+
 | Imperative (สั่งทีละขั้น) | **Declarative** (บอกผลลัพธ์ที่ต้องการ) ⭐ |
 |---|---|
 | "สร้าง subnet A, แล้วเพิ่ม route, แล้ว…" | "ต้องมี VPC นี้ ที่มี subnet 4 ตัว และ route แบบนี้" |
@@ -62,6 +63,7 @@ resource "aws_subnet" "private" {
 }
 output "private_subnet_ids" { value = aws_subnet.private[*].id }
 ```
+
 | องค์ประกอบ | หน้าที่ |
 |---|---|
 | **provider** | plugin ที่คุยกับ API ของแต่ละระบบ |
@@ -71,6 +73,7 @@ output "private_subnet_ids" { value = aws_subnet.private[*].id }
 | **locals** | ค่าคำนวณภายใน |
 | **output** | ค่าที่ส่งออก (ให้ module อื่น/คนดู) |
 | **module** | กลุ่ม resource ที่ใช้ซ้ำได้ |
+
 **ฟังก์ชันที่ network engineer ใช้บ่อย:** `cidrsubnet()`, `cidrhost()`, `cidrnetmask()`, `for_each`, `count`, `lookup()`, `yamldecode(file())`
 
 ---
@@ -100,11 +103,13 @@ terraform output
 ## 4. State — หัวใจของ Terraform
 
 **State file (`terraform.tfstate`)** = แผนที่เชื่อม "resource ในโค้ด" ↔ "ทรัพยากรจริง (ID)" → ใช้คำนวณ diff
+
 | ปัญหา | ทางแก้ |
 |---|---|
 | เก็บไว้บนเครื่องคนเดียว → ทีมใช้ร่วมกันไม่ได้, เครื่องหาย = state หาย | **Remote backend**: S3, Azure Storage, GCS, Terraform Cloud/HCP, GitLab |
 | สองคน apply พร้อมกัน → state พัง | **State locking** (S3 lockfile/DynamoDB, ในตัว backend อื่น) |
 | State มี **ข้อมูลลับ** (password, key ที่ resource สร้าง) | เข้ารหัส backend, จำกัดสิทธิ์อ่าน, **ไม่ commit state ลง Git** |
+
 ```hcl
 terraform {
   backend "s3" {
@@ -212,6 +217,7 @@ resource "cloudflare_dns_record" "www" {
 | State | มี state file | ไม่มี (ตรวจสถานะตอนรัน) |
 | ลบสิ่งที่ไม่อยู่ในโค้ด | ✅ (ลบ resource ที่ถูกเอาออก) | ต้องเขียนเอง |
 | ตัวอย่าง | VPC, TGW, SG, Cloudflare DNS, firewall object | baseline switch, VLAN, OS hardening |
+
 - **OpenTofu** = fork open source ของ Terraform (หลังเปลี่ยน license เป็น BSL ในปี 2023) — syntax ใกล้เคียงกัน
 - ทางเลือก: Pulumi (เขียนด้วย Python/TypeScript), CloudFormation/CDK (AWS), Bicep (Azure), Crossplane (Kubernetes-native)
 

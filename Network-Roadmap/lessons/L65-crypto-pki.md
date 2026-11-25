@@ -85,6 +85,7 @@ hash + **กุญแจลับร่วม** → พิสูจน์ทั�
 **ทางแก้:** **Certificate Authority (CA)** ที่ทุกคนเชื่อถือ **ลงลายเซ็นรับรอง** ว่า public key นี้เป็นของชื่อนี้ → **Certificate (X.509)**
 
 ### ข้อมูลใน Certificate X.509
+
 | Field | ตัวอย่าง |
 |---|---|
 | **Subject** (CN) | CN=vpn.company.example |
@@ -106,6 +107,7 @@ hash + **กุญแจลับร่วม** → พิสูจน์ทั�
 - Root CA ถูกเก็บ **offline** เพื่อความปลอดภัย จึงใช้ intermediate ออก cert ประจำวัน
 
 ### Public CA vs Private (Internal) CA
+
 | | Public CA | Private/Internal CA |
 |---|---|---|
 | ตัวอย่าง | DigiCert, Sectigo, GlobalSign, **Let's Encrypt** (ฟรี) | **AD Certificate Services (AD CS)**, step-ca, EJBCA, HashiCorp Vault, CA ของ firewall |

@@ -17,6 +17,7 @@
 > ทุกอย่างในบทนี้เป็นข้อมูลสมมติเพื่อการเรียนรู้ — เมื่อทำจริงให้ใช้ requirement ของคุณเองหรือปรับตัวเลขได้ แต่ต้องบันทึก assumption ทุกข้อ
 
 ### สิ่งที่ต้องส่งมอบ (10 รายการ)
+
 | # | Deliverable | บทที่เกี่ยวข้อง |
 |---|---|---|
 | 1 | Requirements document + assumptions | L92 |
@@ -35,6 +36,7 @@
 ## 2. Phase 1 — Design: Requirements (ตัวอย่าง)
 
 ### Business requirements
+
 | ID | Requirement | Priority |
 |---|---|---|
 | BR-1 | ระบบขาย/ERP ใช้งานได้ทุกสาขา ≥ 99.9%/เดือน | Must |
@@ -46,6 +48,7 @@
 | BR-7 | ลดค่า WAN เทียบ MPLS เดิม | Should |
 
 ### Technical requirements (วัดได้)
+
 | ID | Requirement |
 |---|---|
 | TR-1 | ไม่มี SPOF ที่ core/firewall/WAN ของ HQ; failover ≤ 3 วินาที |
@@ -86,6 +89,7 @@
    Remote users: ZTNA/SSE (SASE) หรือ SSL/IPsec VPN + MFA → เข้าถึงเฉพาะแอปที่อนุญาต
 ```
 ### ADR ตัวอย่างที่ควรมี (เขียนตามแบบ L92)
+
 | ADR | การตัดสินใจ |
 |---|---|
 | ADR-001 | SD-WAN (dual internet) แทน MPLS — ราคา/ความเร็ว, ยอมรับเพราะใช้ dual ISP + SLA probe |
@@ -132,6 +136,7 @@
  IPv6: 2001:db8:1000::/36 (ตัวอย่างเอกสาร — ใช้ prefix จริงจาก ISP/APNIC) → /48 ต่อ site, /64 ต่อ VLAN (L18/19)
 ```
 ### VLAN template (สาขา)
+
 | VLAN | ชื่อ | Subnet | หมายเหตุ |
 |---|---|---|---|
 | 10 | MGMT | 10.x.10.0/24 | อุปกรณ์ network |
@@ -150,6 +155,7 @@
 - **BFD** บนลิงก์ core/WAN ที่รองรับ
 
 ### Firewall policy matrix (ย่อ — ฉบับเต็มต้องครบทุกคู่ zone)
+
 | From \ To | INFRA | SERVERS | DMZ | AWS-PROD | INTERNET | MGMT | OT-DMZ |
 |---|---|---|---|---|---|---|---|
 | USERS | DNS, DHCP, AD (Kerberos/LDAPS) | ERP 443, File 445 | 443 | 443 (แอปภายใน) | Web ผ่าน SWG/SSE | ✖ | ✖ |
@@ -158,9 +164,11 @@
 | MGMT (jump) | ✔ admin | ✔ admin | ✔ admin | ✔ admin | updates | — | jump→OT-DMZ |
 | SERVERS | ✔ | ตาม app flow | ✖ | API ที่กำหนด | updates allowlist | ✖ | ✖ |
 | OT-DMZ | NTP | ✖ | ✖ | ✖ | ✖ (patch ผ่าน WSUS ภายใน) | log → SIEM | — |
+
 (+ log ทุก deny, IPS profile บน policy ที่ไปหา server/internet, SSL inspection ตามนโยบายและข้อยกเว้น PDPA — L62)
 
 ### QoS (L54)
+
 | Class | DSCP | Queue | ตัวอย่าง |
 |---|---|---|---|
 | Voice | EF (46) | Priority ≤ 10–20% | VoIP, Teams audio |
@@ -168,6 +176,7 @@
 | Business-critical | AF31 | 25% | ERP, POS |
 | Default | 0 | ที่เหลือ | ทั่วไป |
 | Scavenger | CS1 | ≤ 5% | backup, update, streaming |
+
 SD-WAN: application-aware routing — voice ไปลิงก์ที่ jitter/loss ต่ำสุด, backup ไปลิงก์ที่ถูกกว่า
 
 ### AAA/802.1X/NAC (L66)
@@ -271,6 +280,7 @@ topology:
 - Change template + ตัวอย่าง 2 รายการ (standard และ normal)
 
 ### HA/DR Test (L93) — ทดสอบ 10 กรณี
+
 | # | Scenario | วิธีทดสอบ | ผลที่คาดหวัง | วัดอย่างไร |
 |---|---|---|---|---|
 | 1 | ISP-A ของ HQ ขาด | ปิด link | traffic ไป ISP-B ≤ 3 วิ | ping ต่อเนื่อง + log |
@@ -283,6 +293,7 @@ topology:
 | 8 | RADIUS หลักล่ม | stop | auth ไปตัวรอง / critical VLAN | 802.1X log |
 | 9 | Config ผิดถูก deploy | push config ที่ Batfish ควรจับได้ / rollback | pipeline บล็อก หรือ rollback ภายใน X นาที | CI log |
 | 10 | DR: HQ DC ใช้ไม่ได้ | ปิด DC segment | แอปสำคัญเปิดที่ DR/AWS ตาม runbook ภายใน RTO | เวลาจริงเทียบ RTO |
+
 บันทึก: ผลจริง vs คาดหวัง, ปัญหาที่พบ, การแก้ไข, ทดสอบซ้ำ
 
 ---
@@ -290,6 +301,7 @@ topology:
 ## 8. Phase 5 — Present: BOM, TCO, Presentation
 
 ### BOM (ระดับสูง — ตัวอย่างโครงสร้าง ไม่ใช่ราคาจริง)
+
 | หมวด | รายการ | จำนวน |
 |---|---|---|
 | HQ Core | L3 switch 48×25G + 8×100G | 2 |
@@ -308,6 +320,7 @@ topology:
 CAPEX (hardware, ติดตั้ง) + OPEX (subscription, support, วงจร, cloud, ค่าแรงดูแล) — แสดง **อย่างน้อย 2 ทางเลือก** (เช่น NGFW on-prem ทุกสาขา vs SASE) พร้อมข้อดี/ความเสี่ยง และ **ค่าใช้จ่ายรายปี** (ให้ฝ่ายการเงินวางงบ)
 
 ### Presentation 20 นาที
+
 | ช่วง | ผู้บริหาร (10 นาที) | ทีมเทคนิค (10 นาที) |
 |---|---|---|
 | 1 | ปัญหา/เป้าหมายธุรกิจ, ความเสี่ยงปัจจุบัน | สถาปัตยกรรม HLD + เหตุผล (ADR) |
@@ -315,6 +328,7 @@ CAPEX (hardware, ติดตั้ง) + OPEX (subscription, support, วงจ
 | 3 | ประโยชน์: availability, security, ค่า WAN, เปิดสาขาเร็ว | Demo: failover ISP/Core แบบ live + dashboard |
 | 4 | ค่าใช้จ่าย 5 ปี + ทางเลือก + แนะนำ | Security: zones, NAC, SIEM use cases |
 | 5 | Timeline/phase + ความเสี่ยง + สิ่งที่ต้องการให้อนุมัติ | Operations: runbook, monitoring, DR test results |
+
 **ตัวอย่าง slide ปิด (ผู้บริหาร):** "อนุมัติ phase 1 (HQ + 2 สาขา) งบ X ล้าน เริ่ม Q1 — ผลลัพธ์: ERP availability 99.9% → 99.95%, ค่า WAN ลด ~30%, เปิดสาขาใหม่จาก 6 สัปดาห์เหลือ 2 สัปดาห์"
 
 ### Migration plan (สรุป)

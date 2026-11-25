@@ -162,6 +162,7 @@ sudo iptables -t nat -L -n -v | grep -i docker
 ip link show type bridge ; bridge link
 sudo nsenter -t $(docker inspect -f '{{.State.Pid}}' web) -n ss -tlnp   # ดู port ใน namespace
 ```
+
 | อาการ | ตรวจ |
 |---|---|
 | container เรียกกันด้วยชื่อไม่ได้ | อยู่ใน default bridge (ไม่มี DNS) → ใช้ user-defined network; อยู่คนละ network |

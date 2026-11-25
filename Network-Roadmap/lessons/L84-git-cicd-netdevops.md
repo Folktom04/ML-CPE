@@ -7,6 +7,7 @@
 ## 1. NetDevOps คืออะไร
 
 **นำแนวปฏิบัติของ software engineering มาใช้กับเครือข่าย**
+
 | แบบเดิม | NetDevOps |
 |---|---|
 | แก้ config ด้วยมือผ่าน SSH | config ถูก **generate จาก template + ข้อมูล** |
@@ -177,11 +178,13 @@ sudo containerlab destroy -t tests/lab/topology.clab.yml
 ## 6. Pre/Post Check — พิสูจน์ว่าไม่มีอะไรพัง
 
 เก็บ "ภาพถ่ายสถานะ" ก่อนและหลัง change แล้วเทียบ
+
 | เครื่องมือ | จุดเด่น |
 |---|---|
 | **pyATS/Genie** (Cisco, ใช้ฟรี) | `learn` feature (ospf, bgp, interface) → `diff` อัตโนมัติ |
 | **SuzieQ** | เก็บสถานะเครือข่ายหลายยี่ห้อเป็นตาราง query/assert ได้ ดูย้อนหลังได้ |
 | NAPALM getters / Nornir + assert | เขียนเอง |
+
 ```bash
 pyats learn ospf bgp interface routing --testbed-file testbed.yml --output pre/
 # ... ทำ change ...

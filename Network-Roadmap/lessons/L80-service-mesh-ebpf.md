@@ -11,6 +11,7 @@
  [frontend] → [cart] → [pricing] → [inventory] → [db]
         ↘ [user] → [auth]       ↘ [recommend] → [ml-model]
 ```
+
 | ปัญหา | ถ้าไม่มี mesh ต้อง… |
 |---|---|
 | **ความปลอดภัยระหว่าง service** (ใครเรียกใครได้, เข้ารหัส) | แต่ละทีมเขียน TLS/การยืนยันตัวตนเอง |
@@ -37,6 +38,7 @@
 - **Control plane:** แจก config/cert/นโยบายให้ proxy ทั้งหมด
 
 ### Sidecar vs Sidecarless
+
 | แบบ | หลักการ | ข้อดี | ข้อเสีย |
 |---|---|---|---|
 | **Sidecar** (ดั้งเดิม) | proxy 1 ตัวต่อ pod | แยกเด็ดขาด ฟีเจอร์ครบ | ใช้ CPU/RAM มาก (หลายร้อย proxy), latency เพิ่ม, upgrade ต้อง restart pod |
@@ -121,6 +123,7 @@ proxy เห็นทุก request → ได้ **metrics** (request rate, err
                  XDP (driver ของ NIC) · TC (traffic control) · socket · kprobe/tracepoint · cgroup
 ```
 ### Hook ที่สำคัญด้าน network
+
 | Hook | ทำงานที่ | ใช้ทำ |
 |---|---|---|
 | **XDP (eXpress Data Path)** | **เร็วที่สุด** — ทันทีที่ packet มาถึง driver ก่อนสร้าง skb | **DDoS mitigation** (drop หลายสิบล้าน pps), L4 load balancer (Meta Katran, Cloudflare) |
@@ -129,6 +132,7 @@ proxy เห็นทุก request → ได้ **metrics** (request rate, err
 | kprobe/tracepoint | ฟังก์ชันใน kernel | observability, tracing, security monitoring |
 
 ### ทำไม eBPF เปลี่ยนวงการ
+
 | แบบเดิม (iptables) | eBPF |
 |---|---|
 | rule เป็นรายการเชิงเส้น — **หลายพัน service = หลายหมื่น rule ช้าลงเรื่อย ๆ** | **hash map** lookup เวลาคงที่ |
@@ -172,12 +176,14 @@ spec:
 ```
 
 ### เครื่องมือ eBPF อื่น ๆ
+
 | เครื่องมือ | ใช้ทำ |
 |---|---|
 | **bpftrace / BCC** | tracing (`tcpconnect`, `tcpretrans`, `tcplife` — ดูว่า process ไหนเชื่อมต่ออะไร, retransmit ที่ไหน) |
 | **Falco / Tetragon** | runtime security (ตรวจพฤติกรรมผิดปกติ เช่น shell ใน container, เชื่อมต่อ IP แปลก) |
 | **Pixie, Grafana Beyla** | observability อัตโนมัติไม่ต้องแก้โค้ด |
 | Katran, Cloudflare (XDP) | L4 LB/DDoS ระดับ hyperscale |
+
 ```bash
 sudo bpftool prog show                   # eBPF programs ที่โหลดอยู่
 sudo /usr/share/bcc/tools/tcpretrans      # ดู TCP retransmission แบบ real time
@@ -207,6 +213,7 @@ sudo bpftrace -e 'tracepoint:syscalls:sys_enter_connect { @[comm] = count(); }'
 | 503 UF/UH (Envoy) | upstream ไม่มี endpoint healthy, circuit breaker ทำงาน |
 | latency เพิ่ม | proxy hop เพิ่ม, retry ซ้อนหลายชั้น (retry storm) |
 | packet drop ไม่รู้สาเหตุ | `hubble observe --verdict DROPPED` บอก policy ที่ทิ้ง |
+
 ```bash
 istioctl analyze -n shop
 istioctl proxy-status

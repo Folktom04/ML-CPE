@@ -33,6 +33,7 @@
 | จำนวนลิงก์ | สูงสุด 16 (active 8 + standby 8) | 8 | 8 |
 
 **การจับคู่ LACP**
+
 | ฝั่ง A \ ฝั่ง B | active | passive |
 |---|---|---|
 | **active** | ✅ | ✅ |
@@ -98,6 +99,7 @@ show etherchannel port-channel
 show lacp neighbor                    ! ฝั่งตรงข้ามเห็นเราไหม (system ID, port, state)
 show interfaces Port-channel1
 ```
+
 | Flag | ความหมาย |
 |---|---|
 | **SU / RU** | L2 / L3 port-channel ใช้งานอยู่ ✅ |
@@ -150,6 +152,7 @@ EtherChannel ปกติต้องจบที่ switch ตัวเดี�
                 ╲═══════╦════════╱
                     [ACCESS / SERVER]   ← เห็นเป็น LACP bundle เดียว, ไม่มี STP block
 ```
+
 | เทคโนโลยี | ผู้ผลิต | ลักษณะ |
 |---|---|---|
 | **StackWise / Stacking** | Cisco Catalyst, หลายยี่ห้อ | หลาย switch เป็น **control plane เดียว** (จัดการเป็นเครื่องเดียว) |

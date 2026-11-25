@@ -13,6 +13,7 @@
 | **Latency (RTT)** | เวลาไป-กลับ | หน่วง, เว็บโหลดช้า (หลาย round trip) |
 | **Jitter** | ความแปรปรวนของ latency | เสียง/วิดีโอกระตุก |
 | **Packet loss** | packet หาย | TCP ช้าลงมาก, เสียงขาด |
+
 (ทบทวน Level 1/13) — **ต้องวัดให้ถูกตัว** ก่อนสรุปว่า "ต้องซื้อ bandwidth เพิ่ม"
 
 ---
@@ -22,12 +23,14 @@
 ```
  Latency = Propagation + Serialization + Queuing + Processing
 ```
+
 | ส่วน | สาเหตุ | ตัวอย่าง |
 |---|---|---|
 | **Propagation** | ระยะทาง — แสงในไฟเบอร์ ≈ 200,000 km/s → **≈ 5 µs/km** | กรุงเทพ–สิงคโปร์ ~1,500 km (ทางสาย) → 7.5 ms ทางเดียว → **RTT ≥ 15 ms** (จริงมักมากกว่าเพราะเส้นทางอ้อม) |
 | **Serialization** | เวลา "ปล่อย" bit ลงสาย = ขนาด ÷ ความเร็ว | 1500 B บน 1 Mbps = 12 ms · บน 10 Gbps = 1.2 µs |
 | **Queuing** | รอใน buffer เมื่อ congestion | **แปรผันมาก** — ต้นเหตุหลักของ jitter/bufferbloat |
 | **Processing** | lookup, firewall inspection, encryption | firewall ที่ทำ SSL inspection เพิ่มหลาย ms |
+
 💡 **ไม่มีอุปกรณ์ใดลด propagation ได้** — ถ้าต้องการ latency ต่ำต้องย้ายระบบให้ใกล้ผู้ใช้ (CDN, edge, region ใกล้)
 
 ---
@@ -81,6 +84,7 @@ iperf3 -c 10.0.0.10 -C bbr                  # เลือก congestion control
 - UDP: ดู **Jitter** และ **Lost/Total** (สำคัญสำหรับ VoIP/video)
 
 ### วิเคราะห์คอขวด
+
 | ผล | หมายถึง |
 |---|---|
 | 1 stream ได้ 2 Gbps, `-P 8` ได้ 9.4 Gbps | ข้อจำกัด **ต่อ flow** (window/RTT, CPU 1 core, ECMP hash) — ไม่ใช่ลิงก์ |
@@ -129,6 +133,7 @@ sudo sysctl --system
 sysctl net.ipv4.tcp_congestion_control ; ss -tin dst 10.0.0.10     # ดู cwnd, rtt, retrans ของ connection จริง
 ```
 ### NIC และ CPU
+
 | เรื่อง | คำสั่ง/แนวคิด |
 |---|---|
 | **Offloads** (TSO/GSO/GRO/LRO, checksum) | `ethtool -k eth0` — ลดภาระ CPU (ปิดบางตัวเมื่อ capture/debug หรือใช้กับ router/bridge) |
@@ -138,6 +143,7 @@ sysctl net.ipv4.tcp_congestion_control ; ss -tin dst 10.0.0.10     # ดู cwnd
 | **ดู drop** | `ethtool -S eth0 | grep -i -E "drop|miss|err"`, `ip -s link`, `nstat` |
 | **MTU/jumbo** | `ip link set eth0 mtu 9000` — **ทุก hop ใน path ต้องรองรับ** (ทดสอบ `ping -M do -s 8972`) — ใช้กับ storage/DC, ไม่ใช้บนอินเทอร์เน็ต |
 | txqueuelen | `ip link set eth0 txqueuelen 10000` (ระวัง bufferbloat) |
+
 ⚠️ **เปลี่ยนทีละอย่าง วัดก่อน/หลัง** — tuning ตาม blog โดยไม่วัดอาจทำให้แย่ลง
 
 ---
@@ -172,12 +178,14 @@ traffic พุ่งเกินความเร็วพอร์ตในช
 ## 9. การทดสอบระดับมาตรฐาน: RFC 2544, Y.1564, TRex
 
 ### RFC 2544 (benchmark อุปกรณ์ในห้องแล็บ)
+
 | Test | วัด |
 |---|---|
 | **Throughput** | อัตราสูงสุดที่ **ไม่มี loss** (ต่อขนาด frame: 64, 128, 256, 512, 1024, 1280, 1518) |
 | **Latency** | ที่อัตรา throughput |
 | **Frame loss rate** | % loss ที่โหลดต่าง ๆ |
 | **Back-to-back** | burst ยาวสุดที่รับได้โดยไม่ loss (ความสามารถของ buffer) |
+
 💡 **Frame 64 bytes = pps สูงสุด** → แสดงขีดจำกัดของ CPU/forwarding engine (10G line rate ที่ 64B ≈ 14.88 Mpps) — datasheet ที่บอก "10 Gbps" มักวัดที่ frame ใหญ่
 
 ### ITU-T Y.1564 (Ethernet service activation)

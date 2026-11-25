@@ -106,11 +106,13 @@ ip prefix-list FROM-AWS seq 10 permit 10.20.0.0/16 le 24
                  (AWS เรียก "Maximum Resiliency")
 ```
 ### ควบคุมเส้นทางหลัก/สำรองด้วย BGP (Level 49)
+
 | ต้องการ | ทำ |
 |---|---|
 | **ขาออกจาก on-prem** ใช้ DX เป็นหลัก | **Local Preference** สูงกว่าสำหรับ route ที่รับจาก DX |
 | **ขาเข้าจาก AWS** ใช้ DX เป็นหลัก | AWS ชอบ DX มากกว่า VPN อยู่แล้ว (เมื่อ prefix เท่ากัน) · ใช้ **AS-path prepend** บน VPN หรือประกาศ **prefix ที่เจาะจงกว่า** บน DX · BGP community ของ AWS |
 | Active/active สองวงจร DX | ECMP (prefix และ AS path เท่ากัน) |
+
 ⚠️ ระวัง **asymmetric routing** (ไปทาง DX กลับทาง VPN) → stateful firewall ตัด session
 **BFD** บน DX เพื่อ failover เร็ว · ทดสอบ failover จริงตามรอบ (ถอดวงจร/ปิด BGP) — DR ที่ไม่เคยทดสอบ = ไม่มี
 
@@ -151,6 +153,7 @@ ip prefix-list FROM-AWS seq 10 permit 10.20.0.0/16 le 24
 ## 7. Multi-Cloud Networking
 
 ### วิธีเชื่อม cloud กับ cloud
+
 | วิธี | หมายเหตุ |
 |---|---|
 | **ผ่าน on-prem/colocation** (hub ที่ DC) | ใช้วงจรที่มีอยู่ แต่ latency/backhaul |
@@ -189,6 +192,7 @@ ip prefix-list FROM-AWS seq 10 permit 10.20.0.0/16 le 24
 | แอปช้า/ค้าง โอนไฟล์ไม่ได้ | MTU/MSS (ตั้ง `ip tcp adjust-mss 1379`) |
 | ใช้เส้น VPN แทน DX | Local pref/AS path/prefix length, BGP ของ DX ล่ม |
 | resolve ชื่อไม่ได้ข้ามฝั่ง | conditional forwarder/resolver rule, SG ของ resolver endpoint |
+
 ```
 show crypto ikev2 sa ; show crypto ipsec sa | i pkts|peer
 show ip bgp summary ; show ip bgp neighbors 169.254.10.1 advertised-routes

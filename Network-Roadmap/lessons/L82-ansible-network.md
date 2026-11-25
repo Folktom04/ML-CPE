@@ -7,6 +7,7 @@
 ## 1. Ansible คืออะไร
 
 **Ansible** = เครื่องมือ automation แบบ **declarative-ish** ที่อธิบาย "สถานะที่ต้องการ" ด้วยไฟล์ YAML (playbook)
+
 | คุณสมบัติ | อธิบาย |
 |---|---|
 | **Agentless** | ไม่ต้องติดตั้งอะไรบนอุปกรณ์ — ใช้ SSH/API |
@@ -17,6 +18,7 @@
 ### การทำงานกับอุปกรณ์ network ต่างจาก server
 - Server: Ansible copy โค้ด Python ไปรันบนเครื่องปลายทาง
 - **Network: module รันบน control node** แล้วคุยกับอุปกรณ์ผ่าน connection plugin:
+
 | connection | ใช้กับ |
 |---|---|
 | `ansible.netcommon.network_cli` ⭐ | SSH CLI (IOS, NX-OS, EOS, Junos CLI) |
@@ -147,6 +149,7 @@ ansible ios -m cisco.ios.ios_command -a "commands='show clock'"   # ad-hoc
 ## 5. Resource Modules และ State ⭐
 
 module ใหม่ที่จัดการ "ทรัพยากร" ของอุปกรณ์แบบมีโครงสร้าง (`ios_vlans`, `ios_interfaces`, `ios_l2_interfaces`, `ios_l3_interfaces`, `ios_ospfv2`, `ios_bgp_global`, `ios_acls`, `ios_logging_global`, `ios_ntp_global`...)
+
 | state | ความหมาย | ความเสี่ยง |
 |---|---|---|
 | **merged** | เพิ่ม/แก้ตามที่ระบุ ไม่ลบอย่างอื่น | ต่ำ |
@@ -156,6 +159,7 @@ module ใหม่ที่จัดการ "ทรัพยากร" ขอ
 | **gathered** | อ่านค่าปัจจุบันเป็นข้อมูลโครงสร้าง | ไม่มี (อ่านอย่างเดียว) |
 | **rendered** | แสดง CLI ที่จะถูกส่ง โดยไม่ต่ออุปกรณ์ | ไม่มี |
 | **parsed** | แปลงไฟล์ config เป็นข้อมูลโครงสร้าง | ไม่มี |
+
 วิธีที่ง่ายที่สุด: เก็บข้อมูลใน host_vars ให้มีรูปแบบเดียวกับที่ module ต้องการ แล้วส่งให้ module ตรง ๆ
 ```yaml
 # host_vars/sw-acc-01.yml:  vlans_cfg: [{vlan_id: 10, name: USERS}, {vlan_id: 20, name: VOICE}]
@@ -307,6 +311,7 @@ ansible-playbook site.yml --tags vlans        # เฉพาะบางส่�
 | รูปแบบ | YAML playbook | โค้ด | HCL declarative + state |
 | เหมาะกับ | config อุปกรณ์/OS, งานเป็นขั้นตอน, ทีมที่ไม่ถนัดโค้ด | logic ซับซ้อน, data processing, เครื่องมือเฉพาะ | provisioning ทรัพยากร (cloud, firewall object) — Level 85 |
 | ข้อจำกัด | logic ซับซ้อนเขียนยาก, ช้ากว่า | ต้องเขียนโค้ด | ไม่เหมาะกับ config CLI รายเครื่อง |
+
 → ในงานจริงใช้ **ร่วมกัน**
 
 ---

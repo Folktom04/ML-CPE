@@ -35,6 +35,7 @@
    → ตกลง: encryption/integrity ของ ESP, PFS (DH group), lifetime
    → ⭐ Traffic Selector / Proxy ID: วงใดคุยกับวงใด (เช่น 10.1.0.0/16 ↔ 10.21.0.0/16)
 ```
+
 | | Phase 1 | Phase 2 |
 |---|---|---|
 | ปกป้อง | การเจรจาของ IKE เอง | ข้อมูลผู้ใช้ |
@@ -42,6 +43,7 @@
 | Lifetime ทั่วไป | 8–24 ชม. (เช่น 28800/86400 วินาที) | 1 ชม. (3600 วินาที) |
 
 ### ESP vs AH
+
 | | **ESP** (IP protocol **50**) ⭐ | AH (IP protocol 51) |
 |---|---|---|
 | เข้ารหัส | ✅ | ❌ |

@@ -183,6 +183,7 @@ GigabitEthernet0/1 10.0.10.1       YES manual administratively down down      �
 GigabitEthernet0/2 unassigned      YES unset  down                  down      ← L1: สาย/อีกฝั่ง
 Serial0/0/0        10.255.0.1      YES manual up                    down      ← L2: encapsulation/clock/keepalive ไม่ตรง
 ```
+
 | Status / Protocol | ความหมาย |
 |---|---|
 | up / up | ทำงานปกติ |

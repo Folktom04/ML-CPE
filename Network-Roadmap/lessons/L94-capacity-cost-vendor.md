@@ -22,6 +22,7 @@
  ⑤ Action     → upgrade / optimize / เปลี่ยนสถาปัตยกรรม
 ```
 ### ① Baseline — วัดอะไร
+
 | ทรัพยากร | ตัวชี้วัด |
 |---|---|
 | WAN/Internet | **95th percentile** in/out ต่อลิงก์ (Level 86) |
@@ -51,6 +52,7 @@
           + อุปกรณ์ส่งมอบ (สัปดาห์–หลายเดือนเมื่อ supply chain ตึง)
  ถ้า lead time = 4 เดือน และลิงก์จะถึง 85% ภายใน 4 เดือน → ต้องเริ่มตอนนี้
 ```
+
 | ทรัพยากร | Trigger ตัวอย่าง |
 |---|---|
 | WAN/Internet | 95th percentile > 70% ต่อเนื่อง หรือคาดว่าถึง 85% ภายใน lead time |
@@ -69,10 +71,12 @@
 ## 3. Cost — TCO (Total Cost of Ownership)
 
 ### CAPEX vs OPEX
+
 | | **CAPEX** (Capital Expenditure) | **OPEX** (Operating Expenditure) |
 |---|---|---|
 | ความหมาย | ลงทุนซื้อสินทรัพย์ (คิดค่าเสื่อมหลายปี) | ค่าใช้จ่ายดำเนินงานต่อเนื่อง |
 | ตัวอย่าง | ซื้อ switch, firewall, สายไฟเบอร์, งานติดตั้ง | ค่าวงจร ISP, subscription/license รายปี, support contract, cloud, ไฟฟ้า, เงินเดือน, managed service |
+
 - แนวโน้ม: ผู้ผลิตเปลี่ยนเป็น **subscription** (license รายปีแยกจากฮาร์ดแวร์ — ถ้าไม่ต่อ บางฟีเจอร์/การจัดการหยุดทำงาน), **NaaS/managed** = OPEX ล้วน
 - ฝ่ายการเงินบางองค์กรชอบ CAPEX บางแห่งชอบ OPEX — ถามก่อนเสนอ
 
@@ -90,6 +94,7 @@
 − มูลค่าคงเหลือ/trade-in
 ```
 ### ตัวอย่าง: Firewall on-prem vs SASE (5 ปี, 4 สาขา + 300 remote users) — ตัวเลขสมมติ
+
 | รายการ | On-prem NGFW (HA ที่ HQ + สาขา) | SASE/SSE (cloud) |
 |---|---|---|
 | Hardware | 2,400,000 | 200,000 (SD-WAN edge) |
@@ -99,6 +104,7 @@
 | ค่าแรงดูแล (FTE) | 0.5 FTE × 5 ปี = 2,500,000 | 0.2 FTE × 5 ปี = 1,000,000 |
 | **รวม** | **7,600,000** | **6,100,000** |
 | ไม่ใช่ตัวเงิน | ควบคุมเอง, ข้อมูลอยู่ในองค์กร | remote user ได้ policy เดียวกัน, scale ง่าย, พึ่งผู้ให้บริการ |
+
 → ตัดสินใจด้วยทั้งตัวเลขและ **ความเสี่ยง/ความสามารถ/requirement** (PDPA, data residency, ทักษะทีม)
 
 ### Cost Optimization ที่ทำได้
@@ -117,6 +123,7 @@
 | **End of SW Maintenance** | หยุดออก bug fix |
 | **End of Vulnerability/Security Support** | หยุดออก **security patch** ⚠️ |
 | **EoL / LDoS (Last Date of Support)** | หมด support ทั้งหมด — ไม่มี TAC, ไม่มีอะไหล่ |
+
 **ทำไมต้องติดตาม:**
 - ไม่มี security patch → **ช่องโหว่ที่ไม่มีทางแก้** (ผู้โจมตีชอบอุปกรณ์ EoL — Level 61), **ไม่ผ่าน audit/compliance**
 - อุปกรณ์เสียแล้วไม่มีอะไหล่ → MTTR ยาวมาก (Level 93)
@@ -150,6 +157,7 @@
 - ขอ reference ลูกค้า, แผนการติดตั้ง, ทีมงาน, SLA ของ support (เวลาตอบสนอง/อะไหล่)
 
 ### Evaluation Matrix (Weighted Scoring)
+
 | เกณฑ์ | น้ำหนัก | Vendor A | Vendor B | Vendor C |
 |---|---|---|---|---|
 | ตรง requirement ทางเทคนิค | 30% | 9 → 2.7 | 7 → 2.1 | 8 → 2.4 |
@@ -158,6 +166,7 @@
 | Support/partner ในประเทศ | 15% | 9 → 1.35 | 6 → 0.9 | 7 → 1.05 |
 | ความง่ายในการดูแล/ทักษะทีม | 10% | 8 → 0.8 | 7 → 0.7 | 6 → 0.6 |
 | **รวม** | 100% | **7.95** | **7.15** | **7.40** |
+
 - **กำหนดเกณฑ์และน้ำหนักก่อนเห็นข้อเสนอ** (กันอคติ) · ให้คะแนนหลายคนแล้วเฉลี่ย · บันทึกเหตุผล
 
 ### POC (Proof of Concept)
@@ -170,6 +179,7 @@
 ## 6. Vendor & ISP Management
 
 ### SLA ที่ต้องอ่านให้ละเอียด
+
 | หัวข้อ | ตรวจ |
 |---|---|
 | **Availability** | % ต่อเดือน, วัดอย่างไร, ไม่นับ planned maintenance? |
@@ -178,6 +188,7 @@
 | **Penalty/service credit** | ได้คืนเท่าไรเมื่อไม่ถึง (มักน้อยกว่าความเสียหายจริงมาก) |
 | **Support** | 24×7? ช่องทาง? escalation matrix? |
 | **อะไหล่** (vendor) | NBD (next business day) vs 4 ชั่วโมง |
+
 > SLA ไม่ได้ป้องกันเหตุ — แค่ชดเชยบางส่วน **design ต้องรองรับความล้มเหลวเอง** (ISP คู่ — Level 93)
 
 ### การจัดการความสัมพันธ์

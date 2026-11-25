@@ -80,6 +80,7 @@
 "ถ้า X ผิดพลาด กระทบกว้างแค่ไหน" — ใช้กับการเปลี่ยนแปลงด้วย: change ทีละ site, ทีละ AZ
 
 ### Shared Fate ⭐ (สิ่งที่ "ดูเหมือนแยก" แต่เสียพร้อมกัน)
+
 | ดูเหมือน | ความจริง |
 |---|---|
 | ISP สองเจ้า | **ใช้ไฟเบอร์ในท่อเดียวกัน/เสาเดียวกัน/backbone เดียวกัน** — รถแบ็คโฮขุดครั้งเดียวขาดทั้งคู่ |
@@ -89,6 +90,7 @@
 | DNS สองตัว | เป็น VM บน host/storage เดียวกัน |
 | Cloud สอง AZ | พึ่งบริการ control plane ระดับ region เดียวกัน |
 | Link สองเส้นใน port-channel | อยู่บน line card เดียวกัน |
+
 **ตรวจสอบ:** ขอ **เส้นทางสาย (route diversity)** จาก ISP เป็นลายลักษณ์อักษร, เข้าห้องอาคารคนละด้าน, ตรวจ mapping PSU/PDU, กระจาย VM บนคนละ host (anti-affinity), หลีกเลี่ยงการ upgrade ทั้งคู่พร้อมกัน
 
 ---
@@ -106,6 +108,7 @@
 | PortFast / edge port, RSTP | STP converge เร็ว (L36) |
 | HSRP/VRRP timers + preempt delay | gateway สลับเร็ว และไม่ preempt ก่อน routing พร้อม (L50) |
 | BGP PIC (Prefix Independent Convergence) | สลับ next-hop สำรองสำหรับหลายแสน prefix ทีเดียว |
+
 ⚠️ timer ที่เร็วเกินไปอาจทำให้ **flap** บ่อยเมื่อเครือข่ายไม่เสถียร → ใช้ dampening/hold-down อย่างเหมาะสม
 
 ---
@@ -117,10 +120,12 @@
  ────[backup ล่าสุด]────────[เกิดภัย]────────────────────[ระบบกลับมา]────► เวลา
      ข้อมูลช่วงนี้หายได้สูงสุด          ใช้เวลากู้คืนได้สูงสุด
 ```
+
 | | ความหมาย | ตัวอย่าง |
 |---|---|---|
 | **RPO** (Recovery Point Objective) | ข้อมูลหายได้มากสุดเท่าไร (ย้อนเวลา) | 15 นาที → ต้อง replicate อย่างน้อยทุก 15 นาที |
 | **RTO** (Recovery Time Objective) | ระบบต้องกลับมาภายในเท่าไร | 2 ชั่วโมง |
+
 - กำหนดโดย **ธุรกิจ** (ผ่าน **BIA — Business Impact Analysis**) ไม่ใช่ทีม IT เดาเอง
 - RPO/RTO ยิ่งต่ำยิ่งแพง → จัดระดับแอป (tier 1: RPO 0/RTO 15 นาที, tier 3: RPO 24 ชม./RTO 3 วัน)
 - **ผลต่อ network:** bandwidth สำหรับ replication (RPO ต่ำ = ต้องส่งข้อมูลต่อเนื่อง), latency (synchronous replication ต้องการ RTT ต่ำมาก — มักจำกัดระยะ < ~100 km), DCI, การย้าย IP/DNS ตอน failover
@@ -154,6 +159,7 @@
 | ใช้ทรัพยากร | 50% | เต็ม |
 | ความซับซ้อน | ต่ำ คาดเดาง่าย | สูงกว่า (state sync, asymmetric, split-brain) |
 | ⚠️ กับดัก | ตัวสำรองไม่เคยถูกใช้จริง → เสียโดยไม่รู้ (ต้องทดสอบ) | **แต่ละตัวต้องรับโหลดรวมได้เมื่ออีกตัวล่ม** — ถ้าใช้ตัวละ 70% ล่มหนึ่งตัว = 140% → ล่มทั้งระบบ |
+
 **กฎ:** ใน active-active แบบ 2 ตัว **ใช้รวมไม่เกิน ~50% ของความจุรวม** (หรือ N+1 สำหรับ N ตัว)
 
 ### Split-brain
@@ -165,6 +171,7 @@
 ## 9. FMEA — Failure Mode and Effects Analysis
 
 ไล่ทีละส่วนประกอบ: "ถ้าสิ่งนี้เสีย จะเกิดอะไร ตรวจพบอย่างไร กู้อย่างไร"
+
 | ส่วนประกอบ | Failure mode | ผลกระทบ | ตรวจพบ | ระยะเวลา | Mitigation | Severity |
 |---|---|---|---|---|---|---|
 | ISP1 | ขาด | traffic ย้ายไป ISP2 (ขาดหายไม่กี่วินาที) | BGP down alert | — | ISP2 + BFD | ต่ำ |
@@ -172,6 +179,7 @@
 | Firewall HA | config ผิด sync ทั้งคู่ | **ทุกอย่างหยุด** | synthetic | จน rollback | change process, backup, commit confirm | **สูง** |
 | DNS ภายใน | ทั้งคู่บน storage เดียว | login/แอปล้ม | synthetic DNS | ชั่วโมง | แยก host/storage, DNS ที่ DR | **สูง** |
 | ห้อง DC | ไฟดับเกิน UPS | ทั้ง HQ | BMS/SNMP UPS | ชั่วโมง | generator + ทดสอบรายเดือน, DR | สูง |
+
 → ลำดับความสำคัญของการแก้ด้วย Severity × Likelihood (Risk Priority)
 
 ---

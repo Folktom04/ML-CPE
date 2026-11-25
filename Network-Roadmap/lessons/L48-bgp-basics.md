@@ -31,6 +31,7 @@
 ## 2. Autonomous System (AS) และ ASN
 
 **AS** = กลุ่ม IP prefix ภายใต้การบริหารและนโยบาย routing เดียวกัน มีหมายเลข **ASN**
+
 | ช่วง | ประเภท |
 |---|---|
 | 1 – 64,495 | Public ASN (2-byte) |
@@ -51,6 +52,7 @@
     ║                                         
     ╚══iBGP══[R3]────────── eBGP ─────────[ISP-B] AS 64600
 ```
+
 | | **eBGP** | **iBGP** |
 |---|---|---|
 | ระหว่าง | **คนละ AS** | **AS เดียวกัน** |
@@ -73,6 +75,7 @@
 ```
  Idle → Connect → Active → OpenSent → OpenConfirm → Established
 ```
+
 | State | ความหมาย / สิ่งที่บ่งบอก |
 |---|---|
 | **Idle** | ยังไม่เริ่ม หรือถูกปิด/มีข้อผิดพลาด (เช่น ไม่มี route ไปหา neighbor) |
@@ -124,6 +127,7 @@ router bgp 65001
   neighbor 10.0.0.2 activate
   neighbor 10.0.0.2 next-hop-self                  ! ⭐ เปลี่ยน next-hop ของ route ภายนอกเป็นตัวเอง
 ```
+
 | คำสั่ง | ปัญหาที่แก้ |
 |---|---|
 | **update-source Loopback0** | ใช้ IP ของ loopback (ซึ่ง IGP ประกาศไว้และ up ตลอด) ทำ session — ทนต่อลิงก์บางเส้นขาด |

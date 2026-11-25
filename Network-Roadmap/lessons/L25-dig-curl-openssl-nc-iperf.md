@@ -72,6 +72,7 @@ tls=0.075s        ← +TLS handshake
 ttfb=0.420s       ← +รอ server ประมวลผล (Time To First Byte)
 total=0.510s      ← +ดาวน์โหลดเนื้อหา
 ```
+
 | ค่าที่สูงผิดปกติ | ปัญหาน่าจะอยู่ที่ |
 |---|---|
 | dns | DNS server ช้า/timeout (มักเห็นเป็น 5 วินาทีพอดี = timeout แล้วลอง server ถัดไป) |

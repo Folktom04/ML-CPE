@@ -44,6 +44,7 @@
 3. อุปกรณ์ปลายทาง (server, firewall, WAN, storage) ต่อที่ **leaf เท่านั้น**
 
 ### ผลลัพธ์
+
 | คุณสมบัติ | อธิบาย |
 |---|---|
 | **Latency คาดเดาได้** | server คู่ใดก็ตามที่อยู่คนละ leaf ห่าง **leaf → spine → leaf** เสมอ (3 hop ของ switch) |
@@ -71,6 +72,7 @@
  downlink = 48 × 25 = 1,200 Gbps · uplink = 4 × 100 = 400 Gbps → 3 : 1
  เพิ่ม spine เป็น 8 ตัว → uplink 800 Gbps → 1.5 : 1
 ```
+
 | งาน | Oversubscription ที่เหมาะ |
 |---|---|
 | Enterprise DC ทั่วไป | 3:1 หรือต่ำกว่า |
@@ -95,6 +97,7 @@
 ลิงก์ leaf–spine เป็น **routed point-to-point** (ไม่มี L2/STP ระหว่าง leaf–spine) — gateway ของ server อยู่ที่ leaf
 
 ### เลือก Routing Protocol
+
 | ตัวเลือก | หมายเหตุ |
 |---|---|
 | **eBGP** ⭐ (RFC 7938) | นิยมที่สุดใน DC ขนาดกลาง–ใหญ่: เรียบง่าย, scale ดี, policy ยืดหยุ่น, failure domain ชัด, ทำงานดีกับ EVPN |

@@ -72,6 +72,7 @@ ipconfig /all                            # ดู DHCP server, lease obtained/ex
 | **Option** | ค่าเพิ่มเติมที่แจกไปด้วย |
 
 ### DHCP Options ที่ใช้บ่อย
+
 | Option | ค่า |
 |---|---|
 | 1 | Subnet mask |

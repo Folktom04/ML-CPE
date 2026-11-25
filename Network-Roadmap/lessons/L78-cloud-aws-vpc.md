@@ -40,6 +40,7 @@
 
 ### "Public" vs "Private" Subnet
 ไม่ได้ตั้งเป็นค่า แต่ขึ้นกับ **route table**:
+
 | Subnet | Route `0.0.0.0/0` ไปที่ |
 |---|---|
 | **Public** | **Internet Gateway (IGW)** — instance ต้องมี public/Elastic IP ด้วย |
@@ -59,6 +60,7 @@
 - ใช้ **NAT GW แยกต่อ AZ** — ถ้าใช้ NAT GW ตัวเดียว AZ นั้นล่มทุก AZ ออกเน็ตไม่ได้ (และเสียค่า cross-AZ)
 
 ### IGW vs NAT Gateway
+
 | | **Internet Gateway** | **NAT Gateway** |
 |---|---|---|
 | ทิศทาง | เข้า-ออก (instance มี public IP) | **ออกอย่างเดียว** (ขาเข้าเริ่มจากภายนอกไม่ได้) |
@@ -92,6 +94,7 @@
 |---|---|---|---|
 | **Gateway endpoint** | **S3, DynamoDB** | ใส่ route ใน route table | ฟรี (ลดค่า NAT GW ได้มาก) |
 | **Interface endpoint (PrivateLink)** | บริการ AWS อื่น ๆ (SSM, ECR, Secrets Manager...) และบริการของ partner/ของเราเอง | สร้าง ENI + private IP ใน subnet + private DNS | ค่ารายชั่วโมง + ต่อ GB |
+
 - ✅ ความปลอดภัย (traffic ไม่ออกเน็ต) + ลดค่า NAT
 - **PrivateLink** ยังใช้ "เปิดบริการ" ให้ VPC อื่น/ลูกค้าเข้าถึงได้โดยไม่ต้อง peering ทั้ง VPC (และ IP ชนกันได้)
 
@@ -123,6 +126,7 @@
 |---|---|---|---|
 | Layer | L7 (HTTP/HTTPS/gRPC) | L4 (TCP/UDP/TLS) | L3 (ส่งให้ appliance) |
 | จุดเด่น | path/host routing, WAF, OIDC auth | latency ต่ำมาก, **static IP/EIP**, เก็บ IP ของ client | แทรก firewall ของผู้ผลิตแบบ transparent (GENEVE) |
+
 - วาง LB ใน **public subnet อย่างน้อย 2 AZ**, target อยู่ใน private subnet
 - Health check, cross-zone load balancing, ACM จัดการ certificate
 
@@ -147,6 +151,7 @@
 ```
 - **Reachability Analyzer** — วิเคราะห์ว่า A ไป B ได้ไหมและติดที่ไหน (SG/NACL/route) **โดยไม่ต้องส่ง packet**
 - **Network Access Analyzer**, **Traffic Mirroring** (ส่ง packet ให้ IDS), CloudWatch metrics
+
 | อาการ | ตรวจตามลำดับ |
 |---|---|
 | Instance ออกเน็ตไม่ได้ | route table ของ subnet (IGW/NAT), public IP (ถ้าอยู่ public subnet), SG outbound, NACL ทั้งสองทาง, NAT GW อยู่ใน public subnet ไหม |
@@ -165,6 +170,7 @@
 | **NAT Gateway** | ค่าชั่วโมง + ต่อ GB → ใช้ gateway endpoint สำหรับ S3/DynamoDB |
 | TGW / PrivateLink / VPN / Direct Connect | ต่อชั่วโมง/attachment + ต่อ GB |
 | Public IPv4 | คิดค่าต่อ IP (ตั้งแต่ปี 2024) → พิจารณา IPv6/ลด public IP |
+
 → ออกแบบให้ traffic อยู่ใน AZ เดียวกันเท่าที่ทำได้, ใช้ CDN, ตรวจ Cost Explorer แยกตาม usage type
 
 ---

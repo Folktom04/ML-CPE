@@ -13,6 +13,7 @@
 | ตรวจว่าทุกเครื่องมี NTP/syslog ถูกต้อง | compliance report ทุกวัน |
 | เปลี่ยน VLAN 50 สวิตช์ | bulk change + dry-run + rollback |
 | ทำ inventory (model/serial/version) | Excel อัตโนมัติ |
+
 **ไม่ได้มาแทนความรู้ network** — มาช่วยให้ความรู้นั้นทำงานได้ในขนาดใหญ่ แม่นยำ และทำซ้ำได้
 
 ---
@@ -119,12 +120,14 @@ import os, getpass
 user = os.environ.get("NET_USER") or input("Username: ")
 password = os.environ.get("NET_PASS") or getpass.getpass("Password: ")
 ```
+
 | วิธี | เหมาะกับ |
 |---|---|
 | ถามตอนรัน (`getpass`) | สคริปต์ที่คนรันเอง |
 | Environment variable | CI/ตั้งเวลา (ระวังเก็บใน shell history) |
 | **Secret manager** (HashiCorp Vault, Azure Key Vault, AWS Secrets Manager, CyberArk) ⭐ | production |
 | `.env` + `python-dotenv` | dev เท่านั้น — **ใส่ `.env` ใน `.gitignore`** |
+
 - ใช้ **บัญชี automation แยก** (ใน TACACS+/RADIUS) สิทธิ์ตามจำเป็น บันทึก log ทุกคำสั่ง (Level 56/68)
 
 ---
@@ -159,6 +162,7 @@ except (NetmikoTimeoutException, NetmikoAuthenticationException) as e:
 ## 7. Parse Output — จาก Text เป็นข้อมูล
 
 Output ของ CLI เป็นข้อความสำหรับคนอ่าน → ต้อง **parse** เป็นข้อมูลก่อนใช้งานต่อ
+
 | เครื่องมือ | หลักการ |
 |---|---|
 | **TextFSM + ntc-templates** ⭐ | template สำเร็จรูปหลายร้อยคำสั่ง (Netmiko `use_textfsm=True`) |
@@ -166,6 +170,7 @@ Output ของ CLI เป็นข้อความสำหรับคน�
 | **Genie (pyATS)** | parser ของ Cisco ครอบคลุมมาก (`use_genie=True`) |
 | Regex | งานเล็กที่ไม่มี template |
 | ⭐⭐ **ใช้ API ที่คืน JSON แทน** | `show ... | json` (NX-OS/EOS), NETCONF/RESTCONF (Level 83) — ไม่ต้อง parse เลย |
+
 ```python
 from ttp import ttp
 data = """

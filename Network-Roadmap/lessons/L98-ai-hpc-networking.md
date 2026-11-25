@@ -14,6 +14,7 @@
    ③ ทุก GPU ต้อง "รอกัน" ให้ครบก่อนเริ่มรอบถัดไป (synchronization)
 ```
 **ผลกระทบ:** **GPU ที่ช้าที่สุด (หรือ packet ที่ช้าที่สุด) กำหนดความเร็วของทั้ง cluster** → GPU ราคาหลายแสนบาทต่อตัวนั่งรอเครือข่าย = เสียเงินมหาศาล
+
 | เครือข่าย enterprise DC | AI/HPC back-end network |
 |---|---|
 | flow จำนวนมาก ขนาดหลากหลาย | **flow น้อยแต่ใหญ่มาก (elephant)** ระหว่าง GPU |
@@ -27,6 +28,7 @@
 ## 2. ลักษณะ Traffic: Collective Communication
 
 library (NVIDIA **NCCL**, AMD RCCL) ทำ **collective operations**:
+
 | Operation | ความหมาย |
 |---|---|
 | **All-Reduce** ⭐ | ทุก GPU รวมค่า (เช่น บวก gradient) แล้วทุกตัวได้ผลรวม — ใช้มากที่สุดใน data parallel training |
@@ -34,6 +36,7 @@ library (NVIDIA **NCCL**, AMD RCCL) ทำ **collective operations**:
 | Reduce-Scatter | รวมแล้วแบ่งผลลัพธ์ให้แต่ละตัว |
 | All-to-All | ทุกตัวส่งข้อมูลต่างกันให้ทุกตัว — ใช้ใน **Mixture-of-Experts (MoE)** หนักมากต่อเครือข่าย |
 | Broadcast | ส่งจากตัวหนึ่งไปทุกตัว |
+
 **Ring/Tree all-reduce:** GPU ส่งต่อกันเป็นวง/ต้นไม้ — ทุกลิงก์ทำงานพร้อมกันเต็มความเร็ว, เป็นจังหวะ (bursty, synchronized)
 - **Incast:** หลายตัวส่งไปหาตัวเดียวพร้อมกัน → buffer ล้น (Level 90 microburst)
 - **Low entropy:** flow จำนวนน้อย (เช่น 8 flow ต่อ server) ที่ 5-tuple ใกล้เคียงกัน → ECMP hash กระจายได้ไม่ดี (ข้อ 6)
@@ -51,6 +54,7 @@ library (NVIDIA **NCCL**, AMD RCCL) ทำ **collective operations**:
  │ BMC                  ←──── OOB management                                       │
  └─────────────────────────────────────────────────┘
 ```
+
 | เครือข่าย | หน้าที่ | ลักษณะ |
 |---|---|---|
 | **Scale-up** | GPU ↔ GPU ใน server/rack | NVLink/NVSwitch (NVIDIA), UALink (มาตรฐานเปิดใหม่) — bandwidth สูงมาก latency ต่ำมาก |
@@ -69,12 +73,14 @@ library (NVIDIA **NCCL**, AMD RCCL) ทำ **collective operations**:
  GPUDirect RDMA: memory ของ GPU → NIC → NIC → memory ของ GPU (ไม่ผ่าน CPU memory เลย)
 ```
 ### ตัวเลือก Transport
+
 | เทคโนโลยี | ลักษณะ |
 |---|---|
 | **InfiniBand (IB)** | สร้างมาเพื่อ HPC: lossless ด้วย **credit-based flow control**, subnet manager, adaptive routing, SHARP (คำนวณ reduce ใน switch) — ประสิทธิภาพยอดเยี่ยม แต่ระบบนิเวศเฉพาะ (ผู้ผลิตหลักรายเดียว) |
 | **RoCEv2** (RDMA over Converged Ethernet v2) ⭐ | RDMA บน **UDP/IP (dst port 4791)** → route ได้บน Ethernet ปกติ — ต้องทำให้ Ethernet "เกือบ lossless" + congestion control |
 | iWARP | RDMA บน TCP — ใช้น้อยใน AI |
 | **Ultra Ethernet (UEC)** | มาตรฐานใหม่จาก Ultra Ethernet Consortium (spec 1.0 ออกปี 2025): transport ใหม่ที่ออกแบบสำหรับ AI/HPC — packet spraying, รับ packet ไม่เรียงลำดับได้, congestion control ใหม่, ลดการพึ่ง PFC |
+
 แนวโน้ม: Ethernet ได้รับความนิยมเพิ่มขึ้นมากใน AI cluster ขนาดใหญ่ (ราคา, ระบบนิเวศหลายผู้ผลิต, ทักษะ) ขณะที่ InfiniBand ยังเป็นมาตรฐานในหลาย cluster
 
 ---
@@ -90,12 +96,14 @@ switch ส่ง **pause frame เฉพาะ priority (class)** ไปยั�
  Buffer ของ queue 3 ถึง Xoff threshold → ส่ง PFC pause ไปยังพอร์ตต้นทาง → ถึง Xon → resume
 ```
 **ความเสี่ยงของ PFC** ⚠️
+
 | ปัญหา | อธิบาย |
 |---|---|
 | **Head-of-line blocking** | pause ทั้ง priority บนพอร์ต → flow ที่ไม่ได้เป็นต้นเหตุถูกหยุดไปด้วย |
 | **Congestion spreading** | pause แพร่ย้อนกลับเป็นทอด ๆ (tree saturation) ทั่ว fabric |
 | **PFC deadlock** | pause วนเป็นวง (cyclic buffer dependency) → ทุกอย่างค้าง |
 | **PFC storm** | NIC/host เสียส่ง pause ไม่หยุด → ทำให้ส่วนใหญ่ของ fabric ค้าง → ต้องเปิด **PFC watchdog** |
+
 → **PFC เป็นตาข่ายนิรภัยสุดท้าย** ไม่ใช่กลไกหลัก
 
 ### ECN + DCQCN — Congestion Control (กลไกหลัก)
@@ -131,6 +139,7 @@ random-detect ecn  (บน queue 3: minimum-threshold 150 KB, maximum-threshold 
  → เพราะ synchronization ทั้งงานช้าตาม flow ที่ช้าที่สุด
 ```
 ### ทางแก้
+
 | วิธี | หลักการ |
 |---|---|
 | **Flowlet switching** | แบ่ง flow ตามช่องว่างเวลา (gap) → ช่วงใหม่ย้ายลิงก์ได้โดยไม่สลับลำดับ |

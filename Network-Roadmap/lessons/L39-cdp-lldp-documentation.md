@@ -136,6 +136,7 @@ no lldp run
 ชื่อที่มีความหมายช่วยให้อ่าน log, CDP, monitoring เข้าใจทันที
 
 ### 5.6 เครื่องมือ
+
 | เครื่องมือ | ใช้ทำ |
 |---|---|
 | draw.io (diagrams.net), Visio, Lucidchart | แผนภาพ |

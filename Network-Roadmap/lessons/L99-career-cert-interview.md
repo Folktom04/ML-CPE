@@ -15,6 +15,7 @@
            │                                                                                    │
      Principal / Head of Infrastructure / CTO track                          Technical Account Manager, Consultant
 ```
+
 | ระดับ | ถูกคาดหวังให้ | Tier ใน roadmap นี้ |
 |---|---|---|
 | **Helpdesk/NOC** | แก้ปัญหาพื้นฐาน ทำตาม runbook, monitoring, escalate ให้ถูก | 1–3 |
@@ -24,6 +25,7 @@
 | **Architect** | กลยุทธ์ 3–5 ปี, สถาปัตยกรรมทั้งองค์กร, business case, governance | 9–10 |
 
 ### ประเภทนายจ้าง (ในบริบทไทย)
+
 | ประเภท | ลักษณะงาน | ข้อดี/ข้อควรรู้ |
 |---|---|---|
 | **องค์กร (end-user)** — ธนาคาร, โรงพยาบาล, โรงงาน, ค้าปลีก | ดูแลเครือข่ายขององค์กรเดียวลึก ๆ | งานต่อเนื่อง, เห็นผลระยะยาว, compliance เข้ม (ธนาคาร) |
@@ -51,6 +53,7 @@
 ## 3. Certifications — เลือกให้ตรงเป้าหมาย
 
 ### ระดับเริ่มต้น
+
 | Cert | เหมาะกับ |
 |---|---|
 | **CompTIA Network+** | พื้นฐานแบบไม่ผูกยี่ห้อ |
@@ -60,6 +63,7 @@
 | AWS Cloud Practitioner / Azure Fundamentals (AZ-900) | พื้นฐาน cloud |
 
 ### ระดับกลาง (เลือกตามสายที่จะไป)
+
 | สาย | Cert |
 |---|---|
 | Enterprise | **CCNP Enterprise** (ENCOR + concentration เช่น ENARSI, ENWLSI wireless), Aruba ACP/ACMP, Juniper JNCIS/JNCIP-ENT |
@@ -124,11 +128,13 @@ roadmap นี้มี **5 โปรเจคต่อ Level × 100 Level** →
 - **1–2 หน้า** ภาษาอังกฤษ (หรือทั้งสองภาษาตามที่บริษัทต้องการ)
 - **Summary 2–3 บรรทัด:** "Network engineer with 3 years in enterprise campus and SD-WAN; automating config with Ansible; CCNA, Fortinet FCP."
 - **ประสบการณ์ = ผลลัพธ์ที่วัดได้** ไม่ใช่หน้าที่
+
 | ❌ หน้าที่ | ✅ ผลลัพธ์ |
 |---|---|
 | "ดูแล switch และ firewall" | "Migrated 12 branches from MPLS to SD-WAN, cutting WAN cost 35% with zero unplanned downtime" |
 | "ทำ backup config" | "Automated nightly config backup for 300 devices with Python/Git, reducing restore time from hours to minutes" |
 | "แก้ปัญหา network" | "Resolved recurring VPN outage (MTU black hole) affecting 200 remote users; root-caused with multi-point capture" |
+
 - **Skills** จัดกลุ่ม: Routing & Switching / Security / Wireless / Cloud / Automation / Tools
 - **Projects/Portfolio link** (GitHub)
 - **Certifications** พร้อมปี
@@ -173,6 +179,7 @@ headline ชัด ("Network Engineer | SD-WAN • Fortinet • Automation"), �
 ยิ่งลงรายละเอียดถูกต้องในแต่ละชั้นได้มาก ยิ่งแสดงระดับความรู้
 
 ### คำถามพื้นฐานที่ต้องตอบได้คล่อง
+
 | คำถาม | ประเด็นสำคัญ (บทที่ทบทวน) |
 |---|---|
 | OSI 7 layers + ตัวอย่างแต่ละชั้น | L2 |
@@ -202,12 +209,14 @@ headline ชัด ("Network Engineer | SD-WAN • Fortinet • Automation"), �
 (โครงสร้างจาก L30/L91 — ผู้สัมภาษณ์ต้องการเห็น "วิธีคิดเป็นระบบ")
 
 ### Behavioral — ตอบด้วย STAR
+
 | | |
 |---|---|
 | **S**ituation | บริบท |
 | **T**ask | หน้าที่ของคุณ |
 | **A**ction | สิ่งที่ **คุณ** ทำ (ไม่ใช่ "เรา") |
 | **R**esult | ผลลัพธ์ (ตัวเลขถ้าได้) + **สิ่งที่เรียนรู้** |
+
 ตัวอย่าง "เล่าความผิดพลาดที่เคยทำ":
 > S: ผมเพิ่ม VLAN บน trunk ของ core ในช่วงกลางวัน · T: ต้องเพิ่ม VLAN ใหม่ให้ทีม CCTV · A: ผมพิมพ์ `switchport trunk allowed vlan 50` แทน `add 50` ทำให้ VLAN อื่นบน uplink หาย ชั้น 3 หลุด 4 นาที — ผมรู้ตัวจาก alert ทันที แก้กลับด้วย config จาก backup แล้วแจ้งหัวหน้าและ helpdesk ทันที · R: บริการกลับมาภายใน 4 นาที ผมเสนอให้ทีมใช้ template + `--check --diff` ใน Ansible สำหรับการแก้ trunk และทำ change ใน window — หลังจากนั้นไม่เกิดซ้ำ
 (ซื่อสัตย์ + แสดงความรับผิดชอบ + แก้ที่ระบบ — Level 95)

@@ -9,6 +9,7 @@
 **Flat network** (ทุกเครื่องคุยกันได้หมด) → เครื่องเดียวที่ติดมัลแวร์ **ลามไปทั้งองค์กร** (lateral movement) ซึ่งเป็นรูปแบบของ ransomware เกือบทุกเหตุการณ์
 
 **Segmentation** = แบ่งเครือข่ายเป็นส่วน (zone/segment) แล้ว **ควบคุมการสื่อสารระหว่างส่วน** ด้วย policy
+
 | ประโยชน์ | อธิบาย |
 |---|---|
 | **จำกัดความเสียหาย (blast radius)** | เครื่องที่ถูกยึดเข้าถึงได้แค่ใน segment ของมัน |
@@ -33,6 +34,7 @@
 ## 3. Zone Model และ Policy Matrix
 
 ### Zone ที่พบบ่อยในองค์กร
+
 | Zone | ตัวอย่าง | ความเชื่อถือ |
 |---|---|---|
 | **Internet** | ภายนอก | ต่ำสุด |
@@ -48,6 +50,7 @@
 | **OT/ICS** | ระบบควบคุมการผลิต | แยกเฉพาะ |
 
 ### Policy Matrix (ตัวอย่าง — ใครเริ่มเชื่อมต่อไปหาใครได้)
+
 | จาก \ ไป | Internet | DMZ | Users | Servers | DB | Mgmt | Backup |
 |---|---|---|---|---|---|---|---|
 | **Internet** | — | 443 เฉพาะ web | ❌ | ❌ | ❌ | ❌ | ❌ |
@@ -120,6 +123,7 @@ Tier 0 (DC/AD/PKI) · Tier 1 (server) · Tier 2 (workstation) — **บัญช
 ## 6. Micro-Segmentation
 
 ควบคุมการสื่อสาร **ระหว่าง workload แต่ละตัว** — แม้อยู่ VLAN/subnet เดียวกัน
+
 | วิธี | ตัวอย่าง |
 |---|---|
 | Hypervisor-based | VMware NSX Distributed Firewall, Nutanix Flow |

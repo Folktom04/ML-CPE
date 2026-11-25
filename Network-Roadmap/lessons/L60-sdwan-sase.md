@@ -33,6 +33,7 @@
 ```
 
 ### องค์ประกอบ
+
 | ส่วน | หน้าที่ |
 |---|---|
 | **Orchestrator/Manager** | GUI/API ตั้ง policy, template, ดูภาพรวม (Management plane) |
@@ -132,6 +133,7 @@ tunnel เข้ารหัส, segmentation (VRF/VPN ต่อแผนก), N
  ผู้ใช้เดินทาง ─(agent)─┘                         └──(ZTNA connector)──► แอปภายใน DC/cloud
  → policy เดียวกัน ไม่ว่าผู้ใช้อยู่ที่ไหน
 ```
+
 | ผู้ให้บริการ SSE/SASE | ตัวอย่าง |
 |---|---|
 | Zscaler (ZIA/ZPA), Netskope, Palo Alto Prisma Access, Fortinet FortiSASE, Cisco Secure Access, Cloudflare One, Cato Networks |

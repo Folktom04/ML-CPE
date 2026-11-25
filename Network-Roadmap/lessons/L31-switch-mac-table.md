@@ -147,6 +147,7 @@ GigabitEthernet1/0/17 is up, line protocol is up (connected)
      0 late collision, 0 deferred
      5000 output drops (Total output drops)
 ```
+
 | Counter | ความหมาย | สาเหตุที่เป็นไปได้ |
 |---|---|---|
 | **CRC / input errors** | frame เสียระหว่างทาง | สาย/หัว/พอร์ต/SFP เสีย, สัญญาณรบกวน, duplex mismatch |

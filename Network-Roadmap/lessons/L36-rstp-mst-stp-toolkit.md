@@ -9,6 +9,7 @@
 STP เดิม converge 30–50 วินาที ช้าเกินไปสำหรับเครือข่ายปัจจุบัน **RSTP converge ในระดับไม่กี่วินาทีหรือน้อยกว่า** และเป็นค่าเริ่มต้นของ switch รุ่นใหม่ส่วนใหญ่ (Cisco ใช้ **Rapid PVST+** = RSTP ต่อ VLAN)
 
 ### Port States (ลดเหลือ 3)
+
 | 802.1D | RSTP |
 |---|---|
 | Disabled / Blocking / Listening | **Discarding** |
@@ -16,6 +17,7 @@ STP เดิม converge 30–50 วินาที ช้าเกินไป
 | Forwarding | **Forwarding** |
 
 ### Port Roles
+
 | Role | หน้าที่ |
 |---|---|
 | **Root Port** | ทางที่ดีที่สุดไป root |

@@ -48,6 +48,7 @@
 | **mtr ยาว ๆ** | `mtr -rwbzc 600 target` (report 600 รอบ — เห็น loss ที่ hop ไหน) |
 | **เพิ่มความละเอียด telemetry** | interface counters ทุก 10 วินาทีชั่วคราว |
 | **ขอให้ผู้ใช้จดเวลา** | "กดปุ่มนี้เมื่อเกิด" (สคริปต์บันทึก timestamp + traceroute) |
+
 ```
 ! Cisco EEM: เมื่อ BGP neighbor down ให้เก็บข้อมูลทันที
 event manager applet BGP-DOWN-CAPTURE
@@ -133,10 +134,12 @@ test etherchannel load-balance interface po1 ip 10.1.1.10 10.2.2.20   ! ดู�
 show processes cpu sorted 5sec            ! Cisco IOS
 show processes cpu history                ! กราฟ 60 วินาที/60 นาที/72 ชั่วโมง
 ```
+
 | สาเหตุ | สัญญาณ |
 |---|---|
 | **Process** (routing protocol converge, SNMP polling หนัก, SSH/automation ยิงถี่) | process ชื่อ BGP Router, SNMP ENGINE, IP Input |
 | **Interrupt / punt** — traffic ที่ hardware ส่งขึ้น CPU | ค่า CPU ส่วน interrupt สูง (`CPU 85%/70%` ตัวหลังคือ interrupt) |
+
 **Traffic ที่ถูก punt ขึ้น CPU:** ARP จำนวนมาก (ARP storm/scan), **TTL expired** (routing loop, traceroute flood), packet ไปยัง IP ของอุปกรณ์เอง, ACL ที่มี `log`, IP options, ICMP redirect/unreachable จำนวนมาก, glean (ARP ไม่ resolve), fragmentation
 ```
 show platform hardware ... punt / show controllers cpu-interface    ! (ขึ้นกับ platform)
@@ -164,6 +167,7 @@ show hardware capacity / show system resources                                ! 
 ## 8. Packet Walk ใน Firewall
 
 ให้ firewall **จำลอง/ติดตาม** ว่า packet จะถูกทำอะไรในแต่ละขั้น
+
 | Firewall | คำสั่ง |
 |---|---|
 | **Cisco ASA/FTD** | `packet-tracer input inside tcp 10.1.1.10 51000 203.0.113.10 443 detailed` — เห็นทุก phase: route lookup, ACL, NAT, inspection, ผลลัพธ์ ALLOW/DROP + เหตุผล |
@@ -171,6 +175,7 @@ show hardware capacity / show system resources                                ! 
 | **Palo Alto** | `test security-policy-match from trust to untrust source 10.1.1.10 destination 8.8.8.8 protocol 6 destination-port 443 application ssl` · Session browser · **packet capture แบบ 4 stage (receive/firewall/transmit/drop)** · `show counter global filter delta yes packet-filter yes` (ดู drop counter) |
 | **Check Point** | `fw ctl zdebug drop` · `fw monitor` |
 | Linux nftables/iptables | counters ใน rule, `nft monitor trace` |
+
 **Drop counters** ของ firewall บอกเหตุผลการทิ้งได้ละเอียด (เช่น Palo Alto `flow_policy_deny`, `flow_tcp_non_syn_drop` = asymmetric!)
 
 ---
