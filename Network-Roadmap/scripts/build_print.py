@@ -91,6 +91,12 @@ a { color: inherit; text-decoration: none; }
 .toc .row .dots { flex: 1; border-bottom: 1pt dotted #777; margin: 0 6pt; transform: translateY(-3pt); }
 .toc .row .p { flex: 0 0 auto; min-width: 16pt; text-align: right; font-weight: 700; }
 .toc .tips { margin-top: 22pt; font-size: 10pt; }
+.toc.big .row { font-size: 10pt; margin: 2.5pt 0; }
+.toc .tierrow { font-weight: 700; font-size: 11.5pt; margin: 12pt 0 3pt; padding: 2pt 6pt; background: #e8e8e8;
+                break-after: avoid; }
+.toc .tierrow span { font-weight: 400; color: var(--muted); font-size: 10pt; }
+.answers .tier-h { font-weight: 700; font-size: 13pt; margin: 16pt 0 2pt; padding: 3pt 8pt; background: #e8e8e8;
+                   break-after: avoid; }
 
 .lesson { break-before: page; padding-top: 8pt; }
 .answers, .lesson h1:first-child { padding-top: 2pt; }
@@ -208,6 +214,16 @@ def tier_title(first: int, last: int) -> str:
     return ""
 
 
+def tiers() -> list[tuple[int, int, str]]:
+    out = []
+    for f in sorted(ROOT.glob("[01][0-9]-*.md")):
+        head = f.read_text(encoding="utf-8").splitlines()[0].lstrip("# ").strip()
+        m = re.search(r"\(Level (\d+)[–-](\d+)\)", head)
+        if m:
+            out.append((int(m.group(1)), int(m.group(2)), re.sub(r"\s*\(Level .*?\)", "", head)))
+    return out
+
+
 def build_html(lessons: list[tuple[int, Path]], pages: dict[str, int] | None, first: int, last: int,
                learner_name: bool) -> str:
     today = date.today()
@@ -216,7 +232,17 @@ def build_html(lessons: list[tuple[int, Path]], pages: dict[str, int] | None, fi
     short_titles = []
     toc_rows = []
     answer_sections = []
+    multi_tier = not tier_title(first, last)
+    tier_list = tiers()
+    big = len(lessons) > 20
+    current_tier = None
     for num, path in lessons:
+        if multi_tier:
+            t = next((x for x in tier_list if x[0] <= num <= x[1]), None)
+            if t and t != current_tier:
+                current_tier = t
+                toc_rows.append(f"<div class='tierrow'>{html.escape(t[2])} <span>(Level {t[0]}–{t[1]})</span></div>")
+                answer_sections.append(f"<div class='tier-h'>{html.escape(t[2])}</div>")
         title, body, answers = prepare(path.read_text(encoding="utf-8"))
         key = f"L{num:02d}"
         short = re.sub(r"^บทเรียน\s*", "", title).replace(" (ฉบับละเอียด)", "")
@@ -237,8 +263,13 @@ def build_html(lessons: list[tuple[int, Path]], pages: dict[str, int] | None, fi
     toc_rows.append(f"<div class='row'><span class='t'>เฉลยแบบทดสอบทุกบท</span><span class='dots'></span>"
                     f"<span class='p'>{answer_page}</span></div>")
 
+    toc_class = "toc big" if big else "toc"
     tier = tier_title(first, last)
-    contents = "<br>".join("• " + html.escape(t) for t in short_titles)
+    if len(lessons) > 12:      # a long book lists its tiers on the cover instead of every lesson
+        contents = "<br>".join(f"• {html.escape(t[2])} (Level {t[0]}–{t[1]})" for t in tier_list
+                               if t[1] >= first and t[0] <= last)
+    else:
+        contents = "<br>".join("• " + html.escape(t) for t in short_titles)
     name_line = ("<div class='name'>ชื่อ ______________________________ &nbsp; เริ่มเรียน ____/____/______</div>"
                  if learner_name else "")
     cover = f"""
@@ -256,7 +287,7 @@ def build_html(lessons: list[tuple[int, Path]], pages: dict[str, int] | None, fi
   ฉบับออนไลน์และโปรเจคประจำแต่ละ Level อยู่ในโฟลเดอร์ Network-Roadmap</div>
 </div>"""
     toc = f"""
-<div class='toc'>
+<div class='{toc_class}'>
   <h1>สารบัญ</h1>
   {''.join(toc_rows)}
   <div class='tips'>
