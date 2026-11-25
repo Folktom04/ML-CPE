@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320">
+  <!-- generic coach avatar for the static Lab export -->
+  <ellipse cx="100" cy="308" rx="62" ry="9" fill="#000" opacity=".18"/>
+  <path d="M38 300c0-62 26-104 62-104s62 42 62 104z" fill="#2f6fde"/>
+  <path d="M80 200l20 34 20-34" fill="#fff"/>
+  <path d="M96 214h8l4 50h-16z" fill="#f2a93b"/>
+  <rect x="86" y="170" width="28" height="32" rx="10" fill="#f1c7a3"/>
+  <circle cx="100" cy="122" r="56" fill="#f6d2b4"/>
+  <path d="M44 120c0-40 25-64 56-64s56 24 56 64c-10-22-30-34-56-34s-46 12-56 34z" fill="#3b2a24"/>
+  <circle cx="80" cy="128" r="6" fill="#2b2b2b"/>
+  <circle cx="120" cy="128" r="6" fill="#2b2b2b"/>
+  <path d="M84 152q16 12 32 0" stroke="#b5533c" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <rect x="58" y="268" width="84" height="22" rx="6" fill="#1f2937"/>
+  <text x="100" y="284" text-anchor="middle" font-family="Consolas,monospace" font-size="13" fill="#4ade80">switch#</text>
+</svg>

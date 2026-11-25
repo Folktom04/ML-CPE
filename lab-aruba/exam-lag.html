@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="th">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lab: Link Aggregation (LACP) · Lab Aruba</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        (function () {
+            var p = 'dim';
+            try { p = localStorage.getItem('st-theme') || 'dim'; } catch (e) {}
+            if (['auto', 'light', 'dim', 'dark'].indexOf(p) < 0) p = 'dim';
+            var t = p === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : p;
+            var d = document.documentElement.dataset;
+            d.theme = t; d.scheme = t === 'light' ? 'light' : 'dark'; d.pref = p;
+        })();
+    </script>
+    <link rel="stylesheet" href="assets/css/office.css">
+</head>
+<body>
+<header class="topbar">
+    <div class="topbar-in">
+        <a href="index.html" class="logo">
+            <span class="logo-text">Lab Aruba<small>ฝึก switch AOS-CX แบบจำลอง · เปิดในเบราว์เซอร์ได้เลย ไม่ต้องใช้ server</small></span>
+        </a>
+        <div class="spacer"></div>
+        <div class="seg" role="group" aria-label="ธีม">
+            <button type="button" data-theme-set="auto" title="ตามระบบ"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></button>
+            <button type="button" data-theme-set="light" title="โหมดสว่าง"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+            <button type="button" data-theme-set="dim" title="โหมดสลัว"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17" /><path d="M12 3.5a8.5 8.5 0 010 17z" fill="currentColor" stroke="none"/></svg></button>
+            <button type="button" data-theme-set="dark" title="โหมดมืด"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg></button>
+        </div>
+    </div>
+</header>
+<main class="wrap">
+    <style>
+/* หน้า Lab ใช้เต็มความกว้างจอ · จอกว้าง ≥1500px: Kafra อยู่คอลัมน์ขวาของตัวเอง (ไม่บัง terminal) · จอเล็กกว่า: Kafra ลอยมุมขวาล่าง */
+main.wrap{max-width:none;padding-left:18px;padding-right:18px}
+.lab-grid{display:grid;grid-template-columns:minmax(280px,340px) minmax(0,1fr);gap:16px;align-items:start}
+.lab-grid>*{min-width:0}
+@media (max-width:960px){.lab-grid{grid-template-columns:1fr}}
+.lab-work{position:sticky;top:var(--lab-top,72px);display:flex;flex-direction:column;height:calc(100vh / 1.12 - var(--lab-top,72px) - 10px);box-sizing:border-box;padding:14px 16px}
+.lab-work .term{flex:1;height:auto;min-height:220px;margin-top:10px}
+/* html มี zoom 1.12 (office.css) ทำให้ 100vh สูงเกินจอจริง 12% จึงหาร 1.12 */
+.lab-scn-top{font-size:14px;line-height:1.55;padding:10px 14px;border-radius:12px;background:var(--card2);margin-bottom:10px;max-height:24vh;overflow:auto;flex:none}
+.lab-scn-top b{color:var(--brand)}
+.lab-cur{margin-top:6px;padding-top:6px;border-top:1px solid var(--line);font-weight:600}
+.lab-cur:empty{display:none}
+.lab-work .sw,.lab-work .sw-legend{flex:none}
+@media (max-width:960px){.lab-work{position:static;height:auto}.lab-work .term{flex:none;height:440px}}
+.lab-tools{display:flex;gap:8px;align-items:center}
+.lab-mode{margin-top:8px;font-size:12.5px;color:var(--muted)}
+body.lab-exam .lab-mode{color:var(--orange);font-weight:600}
+body.lab-exam .lab-hint-btn,body.lab-exam .lab-hint{display:none!important}
+.lab-tools .btn{white-space:nowrap}
+/* โหมดจอใหญ่: ซ่อนแถบเมนูและท้ายเว็บ ขยาย terminal เต็มความสูง (ปุ่ม "จอใหญ่" / Esc) */
+body.lab-big .topbar,body.lab-big .site-foot{display:none}
+body.lab-big{--lab-top:10px}
+body.lab-big main.wrap{padding-top:12px;padding-bottom:12px}
+body.lab-big .page-head{margin-bottom:10px}
+body.lab-big .page-head h1{font-size:22px}
+body.lab-big .lab-scn{font-size:13.5px}
+.lab-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)}
+.lab-box h2{font-size:15px;margin:0 0 10px}
+.lab-scn{font-size:14px;line-height:1.6;color:var(--ink);margin:0 0 10px}
+.lab-tips{margin:0;padding-left:18px;font-size:13px;line-height:1.6;color:var(--muted)}
+.lab-tips li{margin-bottom:3px}
+details.lab-intro summary{cursor:pointer;font-weight:600;font-size:13.5px;color:var(--brand);margin-top:4px}
+.lab-tasks{list-style:none;margin:0;padding:0;counter-reset:t}
+.lab-task{border:1px solid var(--line);border-radius:14px;padding:11px 12px 11px 42px;margin-bottom:8px;position:relative;counter-increment:t}
+.lab-task::before{content:counter(t);position:absolute;left:11px;top:11px;width:22px;height:22px;border-radius:50%;background:var(--card2);color:var(--muted);font-size:12px;font-weight:700;display:grid;place-items:center}
+.lab-task.ok{background:var(--green-t);border-color:transparent}
+.lab-task.ok::before{content:'✓';background:var(--green-d);color:#fff}
+.lab-task.cur{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-t)}
+.lab-task b{display:block;font-size:14px}
+.lab-task p{margin:3px 0 0;font-size:13px;color:var(--muted);line-height:1.5}
+.lab-task .why{color:var(--red);font-size:12.5px;margin-top:5px}
+.lab-ask{display:flex;gap:6px;margin-top:7px}
+.lab-ask input{flex:1;min-width:0;padding:6px 10px;border-radius:9px;border:1px solid var(--border);background:var(--card2);color:var(--ink);font:13px Consolas,monospace}
+.lab-ask button{padding:6px 12px;border-radius:9px;border:0;background:var(--brand);color:#fff;font:inherit;font-size:12.5px;cursor:pointer}
+.lab-task.ok .lab-ask input{border-color:var(--green-d)}
+.lab-hint-btn{background:none;border:0;padding:0;margin-top:6px;color:var(--brand);font-size:12.5px;cursor:pointer;font-family:inherit}
+.lab-hint{display:none;margin:6px 0 0;padding:8px 10px;background:#0b0f14;color:#d1d5db;border-radius:8px;font:12.5px/1.5 Consolas,'Cascadia Mono',monospace;white-space:pre-wrap}
+.lab-task.show-hint .lab-hint{display:block}
+.lab-done-banner{display:none;margin-bottom:10px;padding:10px 12px;border-radius:12px;background:var(--green-t);color:var(--green-d);font-weight:700;font-size:14px}
+.lab-done-banner.on{display:block}
+.lab-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+
+/* หน้าเครื่อง (front panel) */
+.sw{background:linear-gradient(#3a3f47,#2a2e34);border-radius:10px;padding:12px 14px 10px;color:#cbd5e1;overflow-x:auto}
+.sw-top{display:flex;justify-content:space-between;align-items:center;font:600 12px/1 Inter,sans-serif;margin-bottom:9px;letter-spacing:.3px}
+.sw-top .sw-host{font-family:Consolas,monospace;color:#f8fafc;background:#1e293b;padding:3px 8px;border-radius:4px}
+.sw-body{display:flex;gap:16px;align-items:flex-end;min-width:max-content}
+.sw-grp{display:grid;grid-template-rows:auto auto;grid-auto-flow:column;gap:5px 4px}
+.sw-sep{width:1px;align-self:stretch;background:#4b5563}
+.port{width:30px;cursor:pointer;text-align:center;position:relative}
+.port .num{font:9.5px/1 Consolas,monospace;color:#94a3b8;height:11px}
+.port .jack{height:24px;border-radius:3px;background:#0f1115;border:2px solid var(--vc,#475569);position:relative;display:grid;place-items:center;font:700 10px/1 Inter,sans-serif;color:#fff}
+.port .jack::after{content:'';position:absolute;bottom:2px;left:50%;width:10px;margin-left:-5px;height:5px;background:#1f2937;border-radius:1px}
+.port.sfp .jack{height:18px;border-radius:2px}
+.port .led{width:6px;height:6px;border-radius:50%;margin:3px auto 0;background:#1f2937}
+.port.bot{display:flex;flex-direction:column-reverse}
+.port.bot .led{margin:0 auto 3px}
+.port.up .led{background:#22c55e;box-shadow:0 0 6px #22c55e}
+.port.down .led{background:#57534e}
+.port.off .jack{opacity:.45;border-style:dashed}
+.port.off .led{background:#f59e0b;box-shadow:0 0 5px #f59e0b}
+.port:hover .jack{outline:2px solid #fff;outline-offset:1px}
+.sw-legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;font-size:12px;color:var(--muted)}
+.sw-legend span{display:inline-flex;align-items:center;gap:5px}
+.sw-legend i{width:12px;height:12px;border-radius:3px;border:2px solid;display:inline-block}
+.sw-legend .dot{width:8px;height:8px;border-radius:50%;border:0}
+
+/* terminal */
+.term{background:#0b0f14;color:#d1d5db;border-radius:10px;padding:12px 14px;height:max(440px,calc(100vh - 430px));overflow:auto;font:13.5px/1.45 Consolas,'Cascadia Mono','Courier New',monospace;cursor:text;margin-top:14px}
+.term-out{width:max-content;min-width:100%}
+.term-out div{white-space:pre;min-height:1.45em}
+.term-out .sys{color:#6ee7b7}
+.term-out .err{color:#fca5a5}
+.term-line{display:flex}
+.term-line span{white-space:pre;color:#e5e7eb}
+/* Kafra ครูสอนมุมขวาล่าง (รูปและท่าทางเดียวกับหน้าภาพรวม) */
+.lab-task b{cursor:pointer}
+.lab-task.kf-on{box-shadow:0 0 0 2px #ec4899}
+.kf{--kf-h:min(330px,46vh);position:fixed;right:10px;bottom:0;z-index:60;display:flex;align-items:flex-end;gap:2px;pointer-events:none}
+.kf-girl{position:relative;height:var(--kf-h);aspect-ratio:562/1024;flex:none;pointer-events:auto;cursor:pointer;transform-origin:50% 100%;animation:kf-in .6s cubic-bezier(.3,1.4,.5,1) backwards,kf-breathe 3s ease-in-out .6s infinite;filter:drop-shadow(0 6px 10px rgba(0,0,0,.3))}
+.kf-girl img{display:block;width:100%;height:100%}
+.kf-mouth{position:absolute;left:calc(285 / 562 * 100%);top:calc(285 / 1024 * 100%);width:calc(46 / 562 * 100%);height:calc(24 / 1024 * 100%);translate:-50% -50%;opacity:0;background:radial-gradient(ellipse at center,#fbe6cb 58%,transparent 72%)}
+.kf-mouth i{position:absolute;left:50%;top:50%;width:58%;height:85%;translate:-50% -50%;border-radius:45% 45% 50% 50%;background:#7a2f35;box-shadow:inset 0 -2px 0 #e8838c;scale:1 var(--o,.15)}
+.kf-girl.talk .kf-mouth{opacity:1}
+/* กรอบคำพูดกลางจอแบบบทสนทนาในเกม · Enter = ถัดไป / ใส่คำสั่ง · Esc = ปิด */
+.kf-say{position:fixed;left:50%;top:50%;translate:-50% -50%;z-index:70;pointer-events:auto;width:min(960px,94vw);min-height:min(340px,54vh);max-height:calc(100vh / 1.12 - 40px);overflow-y:auto;box-sizing:border-box;cursor:pointer;background:var(--card);color:var(--ink);border-radius:26px;padding:28px 36px 20px;box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 0 4px #ec4899;font-size:19px;line-height:1.7;display:flex;flex-direction:column;animation:kf-pop .35s cubic-bezier(.3,1.5,.5,1) backwards}
+.kf-keys{text-align:right;color:var(--muted);font-size:12px;margin-top:6px}
+.kf-keys kbd{font:600 11px Inter,sans-serif;padding:1px 6px;border-radius:5px;border:1px solid var(--border);background:var(--card2)}
+.kf-say[hidden]{display:none}
+.kf-say .who{font-weight:700;color:#ec4899;font-size:12.5px;letter-spacing:.3px;margin-bottom:4px}
+.kf-say .hi{font-weight:700;font-size:24px;margin-bottom:10px}
+.kf-say .who{font-size:14px}
+.kf-say .kf-body{flex:1}
+.kf-say .kf-small{font-size:15px}
+.kf-say .kf-task,.kf-pre{font-size:16.5px}
+.kf-say .kf-code{font-size:19px;padding:12px 16px}
+.kf-say .kf-btns button{font-size:15px;padding:9px 18px}
+.kf-say .kf-keys{font-size:13.5px}
+.kf-say .kf-t{margin-bottom:6px}
+.kf-say .kf-ben{font-size:17px;line-height:1.55;padding:4px 12px;border-left:4px solid #ec4899;background:var(--card2);border-radius:8px}
+.kf-say .kf-small{color:var(--muted);font-size:13px}
+.kf-say .kf-task{font-size:13.5px;padding:6px 10px;border-radius:10px;background:var(--brand-t)}
+.kf-code{display:block;margin:4px 0 8px;padding:8px 12px;border-radius:10px;background:#0b0f14;color:#86efac;font:14px/1.4 Consolas,'Cascadia Mono',monospace;white-space:pre-wrap}
+.kf-pre .kf-code{display:inline;padding:1px 6px;margin:0}
+.kf-pre{font-size:13.5px;padding:7px 10px;border-radius:10px;margin-bottom:8px;background:var(--card2)}
+.kf-pre.good{background:var(--green-t)} .kf-pre.good b{color:var(--green-d)}
+.kf-pre.bad{background:var(--red-t)} .kf-pre.bad b{color:var(--red)}
+.kf-btns{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}
+.kf-btns button{border:0;border-radius:10px;padding:6px 12px;font:600 13px inherit;font-family:inherit;cursor:pointer;background:var(--card2);color:var(--ink)}
+.kf-btns button[data-kf=put]{background:#0b0f14;color:#86efac}
+.kf-btns button[data-kf=next]{background:#ec4899;color:#fff}
+.kf-btns button:disabled{opacity:.4;cursor:default}
+.kf-x{position:absolute;top:6px;right:10px;border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:2px}
+.kf-say .kf-t.wait{display:none}
+.kf-say .kf-t.typing::after{content:"▌";margin-left:1px;color:#ec4899;animation:kf-caret .6s steps(1) infinite}
+@keyframes kf-in{from{transform:translateY(110%)}}
+@keyframes kf-breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.01)}}
+@keyframes kf-pop{from{opacity:0;transform:scale(.85)}}
+@keyframes kf-caret{50%{opacity:0}}
+@media (max-width:900px){.kf{--kf-h:200px}.kf-say{font-size:14px;padding:14px 16px}}
+/* จอกว้าง: ตัว Kafra ยืนในคอลัมน์ขวาของตัวเอง ไม่บัง terminal */
+@media (min-width:1500px){
+  .lab-grid{grid-template-columns:minmax(300px,340px) minmax(0,1fr) 270px}
+  .kf{right:18px}
+  .kf-girl{height:min(490px,72vh)}
+}
+@media (prefers-reduced-motion:reduce){.kf-girl,.kf-say{animation:none}}
+.term-line input{flex:1;background:transparent;border:0;outline:0;color:#f9fafb;font:inherit;padding:0;margin:0;caret-color:#4ade80}
+</style>
+
+<div class="page-head">
+    <div>
+        <h1>Lab: Link Aggregation (LACP)</h1>
+        <p class="sub"><a href="index.html">← บทเรียนทั้งหมด</a> · Aruba CX 6300M 24G (จำลอง)</p>
+    </div>
+    <div class="spacer"></div>
+    <div class="lab-tools">
+        <button type="button" class="btn" id="labBig" title="ซ่อนเมนู ขยาย terminal และเปิดเต็มจอ (กดซ้ำหรือ Esc เพื่อออก)">⛶ จอใหญ่</button>
+    </div>
+</div>
+
+<div class="lab-grid">
+    <div>
+        <div class="lab-box">
+            <details class="lab-intro">
+                <summary>วิธีใช้หน้าจอ</summary>
+                <ul class="lab-tips">
+                    <li>AOS-CX: สร้าง interface lag ก่อน ตั้ง VLAN ที่ตัว lag แล้วค่อยใส่ lag &lt;id&gt; ที่ port member</li><li>interface lag ที่สร้างใหม่ยัง shutdown อยู่ ต้อง no shutdown</li><li>ไม่ตั้ง lacp mode = LAG แบบ static · active ส่ง LACPDU เอง · passive รออีกฝั่งส่งมา (passive คู่ passive ไม่เกิด LAG)</li><li>State ALFNCD = Active, Long-timeout, aggregable, iN sync, Collecting, Distributing = ปกติ</li><li>port member ต้องความเร็วและ config เหมือนกัน</li>                </ul>
+            </details>
+        </div>
+        <div class="lab-box" style="margin-top:14px">
+            <h2>งานที่ต้องทำ <span id="labCount" style="color:var(--muted);font-weight:500"></span></h2>
+            <div class="lab-done-banner" id="labBanner">ผ่านบทเรียนนี้แล้ว ✓ ครบทุกข้อ</div>
+            <ol class="lab-tasks" id="labTasks">
+                                    <li class="lab-task" data-i="0">
+                        <b>หา port ที่ต่อ Core</b>
+                        <p>ใช้ LLDP หาว่า port ไหนบ้างต่อไป CORE-SW (ตอบทุก port)</p>
+                                                                            <div class="lab-ask"><input type="text" placeholder="เช่น 1/1/1, 1/1/2" aria-label="คำตอบข้อ 1"><button type="button">ส่ง</button></div>
+                                                <div class="why"></div>
+                        <button type="button" class="lab-hint-btn">ดูเฉลย</button>
+                        <div class="lab-hint">show lldp neighbor-info</div>
+                    </li>
+                                    <li class="lab-task" data-i="1">
+                        <b>สร้าง lag 1</b>
+                        <p>สร้าง interface lag 1 เปิดใช้งาน เป็น trunk native VLAN 1 ส่งเฉพาะ VLAN 10, 20 และใช้ LACP active</p>
+                                                                        <div class="why"></div>
+                        <button type="button" class="lab-hint-btn">ดูเฉลย</button>
+                        <div class="lab-hint">configure terminal
+interface lag 1
+no shutdown
+vlan trunk native 1
+vlan trunk allowed 10,20
+lacp mode active
+exit</div>
+                    </li>
+                                    <li class="lab-task" data-i="2">
+                        <b>ใส่ port member</b>
+                        <p>ใส่ port ที่ต่อ Core ทั้ง 2 เส้นเข้า lag 1 จน in sync</p>
+                                                                        <div class="why"></div>
+                        <button type="button" class="lab-hint-btn">ดูเฉลย</button>
+                        <div class="lab-hint">interface 1/1/25-1/1/26
+no shutdown
+lag 1
+exit</div>
+                    </li>
+                                    <li class="lab-task" data-i="3">
+                        <b>ตรวจสถานะ LACP</b>
+                        <p>ดู State ของฝั่งเรา (Actor) ที่ port 1/1/25 ว่าเป็นอะไร</p>
+                                                                            <div class="lab-ask"><input type="text" placeholder="ตัวอักษร State" aria-label="คำตอบข้อ 4"><button type="button">ส่ง</button></div>
+                                                <div class="why"></div>
+                        <button type="button" class="lab-hint-btn">ดูเฉลย</button>
+                        <div class="lab-hint">end
+show lacp interfaces</div>
+                    </li>
+                                    <li class="lab-task" data-i="4">
+                        <b>ตรวจ VLAN และบันทึก</b>
+                        <p>ดูว่า VLAN 10, 20 วิ่งผ่าน lag1 แล้ว จากนั้นบันทึก config</p>
+                                                                        <div class="why"></div>
+                        <button type="button" class="lab-hint-btn">ดูเฉลย</button>
+                        <div class="lab-hint">show vlan
+write memory</div>
+                    </li>
+                            </ol>
+            <div class="lab-actions">
+                <button type="button" class="btn btn-primary" id="labCheck">ตรวจคำตอบ</button>
+                <button type="button" class="btn" id="labLearn" title="ล้างแล้วเรียนใหม่ Kafra สอนทีละข้อ ดูเฉลยได้">เรียนใหม่</button>
+                <button type="button" class="btn" id="labReset" title="ล้างแล้วทำแบบสอบ ไม่มีสอน ไม่มีเฉลย">เริ่มใหม่ (สอบ)</button>
+            </div>
+            <div class="lab-mode" id="labMode"></div>
+        </div>
+    </div>
+
+    
+    <div class="lab-box lab-work">
+        <div class="lab-scn-top">
+            <b>โจทย์</b> Switch ชั้น access ต่อสาย 2 เส้นขึ้นไปหา CORE-SW ซึ่ง config LAG แบบ LACP active ไว้แล้ว ให้รวม 2 เส้นเป็น lag 1 ส่ง VLAN 10 และ 20 เพื่อเพิ่ม bandwidth และกันสายเส้นเดียวขาด
+            <div class="lab-cur" id="labCur"></div>
+        </div>
+        <div class="sw">
+            <div class="sw-top"><span>AOS-CX · Aruba CX 6300M 24G (จำลอง)</span><span class="sw-host" id="swHost">switch</span></div>
+            <div class="sw-body" id="swPanel"></div>
+        </div>
+        <div class="sw-legend" id="swLegend"></div>
+        <div class="term" id="term">
+            <div class="term-out" id="termOut"></div>
+            <div class="term-line"><span id="termPrompt"></span><input id="termIn" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="คำสั่ง"></div>
+        </div>
+    </div>
+
+
+<div class="kf" id="kf">
+    <div class="kf-say" role="status">
+        <button type="button" class="kf-x" aria-label="ซ่อนกรอบสนทนา">×</button>
+        <div class="who">KAFRA · ครูสอน Aruba</div>
+        <div class="kf-body"></div>
+        <div class="kf-btns">
+            <button type="button" data-kf="prev">◀</button>
+            <button type="button" data-kf="next">ถัดไป ▶</button>
+        </div>
+        <div class="kf-keys"><kbd>Enter</kbd> ถัดไป / ไปพิมพ์คำสั่ง · <kbd>Esc</kbd> ปิดกรอบ · กดที่ตัว Kafra เพื่อเปิดอีกครั้ง</div>
+    </div>
+    <div class="kf-girl" title="Kafra · กดเพื่อซ่อน/แสดงกรอบสนทนา">
+        <img src="assets/images/coach.svg" alt="Kafra">
+        <span class="kf-mouth"><i></i></span>
+    </div>
+</div>
+</div>
+</main>
+<script>
+(function () {
+    var btns = document.querySelectorAll('[data-theme-set]');
+    function mark() { btns.forEach(function (b) { b.classList.toggle('on', b.dataset.themeSet === document.documentElement.dataset.pref); }); }
+    btns.forEach(function (b) {
+        b.addEventListener('click', function () {
+            var p = b.dataset.themeSet;
+            var t = p === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : p;
+            var d = document.documentElement.dataset;
+            d.theme = t; d.scheme = t === 'light' ? 'light' : 'dark'; d.pref = p;
+            try { localStorage.setItem('st-theme', p); } catch (e) {}
+            mark();
+        });
+    });
+    mark();
+})();
+</script>
+<script>window.LAB_LESSON = {"slug":"exam-lag","order":12,"track":"exam","objectives":["1.10","3.2","3.4"],"title":"Link Aggregation (LACP)","level":"\u0e2a\u0e2d\u0e1a \u00b7 Layer 2","summary":"\u0e2b\u0e32 port \u0e17\u0e35\u0e48\u0e15\u0e48\u0e2d Core \u0e14\u0e49\u0e27\u0e22 LLDP, \u0e2a\u0e23\u0e49\u0e32\u0e07 LAG \u0e41\u0e1a\u0e1a LACP active \u0e40\u0e1b\u0e47\u0e19 trunk, \u0e43\u0e2a\u0e48 member \u0e41\u0e25\u0e30\u0e15\u0e23\u0e27\u0e08\u0e2a\u0e16\u0e32\u0e19\u0e30\u0e14\u0e49\u0e27\u0e22 show lacp","benefits":["\u0e43\u0e0a\u0e49 LLDP \u0e2b\u0e32\u0e27\u0e48\u0e32 port \u0e44\u0e2b\u0e19\u0e15\u0e48\u0e2d\u0e44\u0e1b\u0e2d\u0e38\u0e1b\u0e01\u0e23\u0e13\u0e4c\u0e15\u0e31\u0e27\u0e44\u0e2b\u0e19 \u0e42\u0e14\u0e22\u0e44\u0e21\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e44\u0e1b\u0e14\u0e39\u0e2a\u0e32\u0e22\u0e17\u0e35\u0e48\u0e15\u0e39\u0e49","\u0e23\u0e27\u0e21\u0e2b\u0e25\u0e32\u0e22\u0e2a\u0e32\u0e22\u0e40\u0e1b\u0e47\u0e19 LAG \u0e41\u0e1a\u0e1a LACP \u0e44\u0e14\u0e49 \u0e17\u0e31\u0e49\u0e07\u0e40\u0e1e\u0e34\u0e48\u0e21 bandwidth \u0e41\u0e25\u0e30\u0e21\u0e35\u0e2a\u0e32\u0e22\u0e2a\u0e33\u0e23\u0e2d\u0e07\u0e16\u0e49\u0e32\u0e40\u0e2a\u0e49\u0e19\u0e43\u0e14\u0e40\u0e2a\u0e49\u0e19\u0e2b\u0e19\u0e36\u0e48\u0e07\u0e02\u0e32\u0e14","\u0e2d\u0e48\u0e32\u0e19 show lacp interfaces \u0e41\u0e25\u0e49\u0e27\u0e23\u0e39\u0e49\u0e27\u0e48\u0e32 member \u0e44\u0e2b\u0e19 in sync \u0e2b\u0e23\u0e37\u0e2d\u0e21\u0e35\u0e1b\u0e31\u0e0d\u0e2b\u0e32","\u0e15\u0e23\u0e07\u0e01\u0e31\u0e1a\u0e2b\u0e31\u0e27\u0e02\u0e49\u0e2d Link Aggregation \u0e02\u0e2d\u0e07\u0e02\u0e49\u0e2d\u0e2a\u0e2d\u0e1a HPE6-A86 \u0e41\u0e25\u0e30\u0e07\u0e32\u0e19 uplink \u0e43\u0e19\u0e42\u0e04\u0e23\u0e07\u0e01\u0e32\u0e23\u0e08\u0e23\u0e34\u0e07"],"scenario":"Switch \u0e0a\u0e31\u0e49\u0e19 access \u0e15\u0e48\u0e2d\u0e2a\u0e32\u0e22 2 \u0e40\u0e2a\u0e49\u0e19\u0e02\u0e36\u0e49\u0e19\u0e44\u0e1b\u0e2b\u0e32 CORE-SW \u0e0b\u0e36\u0e48\u0e07 config LAG \u0e41\u0e1a\u0e1a LACP active \u0e44\u0e27\u0e49\u0e41\u0e25\u0e49\u0e27 \u0e43\u0e2b\u0e49\u0e23\u0e27\u0e21 2 \u0e40\u0e2a\u0e49\u0e19\u0e40\u0e1b\u0e47\u0e19 lag 1 \u0e2a\u0e48\u0e07 VLAN 10 \u0e41\u0e25\u0e30 20 \u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e40\u0e1e\u0e34\u0e48\u0e21 bandwidth \u0e41\u0e25\u0e30\u0e01\u0e31\u0e19\u0e2a\u0e32\u0e22\u0e40\u0e2a\u0e49\u0e19\u0e40\u0e14\u0e35\u0e22\u0e27\u0e02\u0e32\u0e14","tips":["AOS-CX: \u0e2a\u0e23\u0e49\u0e32\u0e07 interface lag \u0e01\u0e48\u0e2d\u0e19 \u0e15\u0e31\u0e49\u0e07 VLAN \u0e17\u0e35\u0e48\u0e15\u0e31\u0e27 lag \u0e41\u0e25\u0e49\u0e27\u0e04\u0e48\u0e2d\u0e22\u0e43\u0e2a\u0e48 lag \u003Cid\u003E \u0e17\u0e35\u0e48 port member","interface lag \u0e17\u0e35\u0e48\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e43\u0e2b\u0e21\u0e48\u0e22\u0e31\u0e07 shutdown \u0e2d\u0e22\u0e39\u0e48 \u0e15\u0e49\u0e2d\u0e07 no shutdown","\u0e44\u0e21\u0e48\u0e15\u0e31\u0e49\u0e07 lacp mode = LAG \u0e41\u0e1a\u0e1a static \u00b7 active \u0e2a\u0e48\u0e07 LACPDU \u0e40\u0e2d\u0e07 \u00b7 passive \u0e23\u0e2d\u0e2d\u0e35\u0e01\u0e1d\u0e31\u0e48\u0e07\u0e2a\u0e48\u0e07\u0e21\u0e32 (passive \u0e04\u0e39\u0e48 passive \u0e44\u0e21\u0e48\u0e40\u0e01\u0e34\u0e14 LAG)","State ALFNCD = Active, Long-timeout, aggregable, iN sync, Collecting, Distributing = \u0e1b\u0e01\u0e15\u0e34","port member \u0e15\u0e49\u0e2d\u0e07\u0e04\u0e27\u0e32\u0e21\u0e40\u0e23\u0e47\u0e27\u0e41\u0e25\u0e30 config \u0e40\u0e2b\u0e21\u0e37\u0e2d\u0e19\u0e01\u0e31\u0e19"],"teach":["LLDP \u0e04\u0e37\u0e2d\u0e42\u0e1b\u0e23\u0e42\u0e15\u0e04\u0e2d\u0e25\u0e17\u0e35\u0e48\u0e2d\u0e38\u0e1b\u0e01\u0e23\u0e13\u0e4c\u0e1a\u0e2d\u0e01\u0e0a\u0e37\u0e48\u0e2d\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07\u0e43\u0e2b\u0e49\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e19\u0e1a\u0e49\u0e32\u0e19\u0e23\u0e39\u0e49 \u0e43\u0e0a\u0e49\u0e2b\u0e32\u0e27\u0e48\u0e32 port \u0e44\u0e2b\u0e19\u0e15\u0e48\u0e2d\u0e44\u0e1b\u0e40\u0e04\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e44\u0e2b\u0e19\u0e44\u0e14\u0e49\u0e42\u0e14\u0e22\u0e44\u0e21\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e40\u0e14\u0e34\u0e19\u0e44\u0e1b\u0e44\u0e25\u0e48\u0e2a\u0e32\u0e22\u0e04\u0e48\u0e30","LAG \u0e23\u0e27\u0e21\u0e2b\u0e25\u0e32\u0e22\u0e2a\u0e32\u0e22\u0e40\u0e1b\u0e47\u0e19 port \u0e40\u0e2a\u0e21\u0e37\u0e2d\u0e19\u0e40\u0e2a\u0e49\u0e19\u0e40\u0e14\u0e35\u0e22\u0e27 \u0e44\u0e14\u0e49 bandwidth \u0e23\u0e27\u0e21 \u0e41\u0e25\u0e30\u0e16\u0e49\u0e32\u0e2a\u0e32\u0e22\u0e02\u0e32\u0e14\u0e2b\u0e19\u0e36\u0e48\u0e07\u0e40\u0e2a\u0e49\u0e19\u0e01\u0e47\u0e22\u0e31\u0e07\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e44\u0e14\u0e49 \u0e1a\u0e19 AOS-CX \u0e15\u0e49\u0e2d\u0e07\u0e15\u0e31\u0e49\u0e07 VLAN \u0e17\u0e35\u0e48\u0e15\u0e31\u0e27 lag \u0e44\u0e21\u0e48\u0e43\u0e0a\u0e48\u0e17\u0e35\u0e48 port \u0e2a\u0e21\u0e32\u0e0a\u0e34\u0e01 \u0e2a\u0e48\u0e27\u0e19 LACP active \u0e04\u0e37\u0e2d\u0e1d\u0e31\u0e48\u0e07\u0e40\u0e23\u0e32\u0e40\u0e1b\u0e47\u0e19\u0e04\u0e19\u0e2a\u0e48\u0e07\u0e44\u0e1b\u0e40\u0e08\u0e23\u0e08\u0e32\u0e40\u0e2d\u0e07\u0e04\u0e48\u0e30","port \u0e2a\u0e21\u0e32\u0e0a\u0e34\u0e01\u0e15\u0e49\u0e2d\u0e07\u0e04\u0e27\u0e32\u0e21\u0e40\u0e23\u0e47\u0e27\u0e40\u0e17\u0e48\u0e32\u0e01\u0e31\u0e19\u0e41\u0e25\u0e30\u0e15\u0e48\u0e2d\u0e44\u0e1b\u0e40\u0e04\u0e23\u0e37\u0e48\u0e2d\u0e07\u0e40\u0e14\u0e35\u0e22\u0e27\u0e01\u0e31\u0e19 \u0e1e\u0e2d\u0e43\u0e2a\u0e48 lag \u0e41\u0e25\u0e49\u0e27 port \u0e08\u0e30\u0e43\u0e0a\u0e49 config \u0e02\u0e2d\u0e07 lag \u0e41\u0e17\u0e19\u0e02\u0e2d\u0e07\u0e15\u0e31\u0e27\u0e40\u0e2d\u0e07\u0e04\u0e48\u0e30","show lacp interfaces \u0e1a\u0e2d\u0e01\u0e1c\u0e25\u0e01\u0e32\u0e23\u0e40\u0e08\u0e23\u0e08\u0e32 ALFNCD \u0e41\u0e1b\u0e25\u0e27\u0e48\u0e32 Active, Long-timeout, aggregable, iN sync, Collecting, Distributing \u0e04\u0e37\u0e2d\u0e1e\u0e23\u0e49\u0e2d\u0e21\u0e2a\u0e48\u0e07\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e41\u0e25\u0e49\u0e27\u0e04\u0e48\u0e30","\u0e15\u0e23\u0e27\u0e08\u0e27\u0e48\u0e32 VLAN \u0e27\u0e34\u0e48\u0e07\u0e1c\u0e48\u0e32\u0e19 lag1 \u0e08\u0e23\u0e34\u0e07 \u0e41\u0e25\u0e49\u0e27\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01 config \u0e04\u0e48\u0e30"],"device":{"model":"Aruba CX 6300M 24G (\u0e08\u0e33\u0e25\u0e2d\u0e07)","product":"JL662A 6300M 24G 4SFP56 Switch","hostname":"SW-ACC-03","ports":28,"sfpFrom":25,"firmware":"FL.10.13.1000"},"initial":{"vlans":{"10":{"name":"USERS"},"20":{"name":"VOICE"}},"ports":{"1\/1\/1-1\/1\/8":{"access":10}}},"connected":{"1\/1\/1":"PC-01","1\/1\/2":"PC-02","1\/1\/3":"PC-03","1\/1\/25":"CORE-SW","1\/1\/26":"CORE-SW"},"lldp":{"1\/1\/25":{"sys":"CORE-SW","port":"1\/1\/47"},"1\/1\/26":{"sys":"CORE-SW","port":"1\/1\/48"}},"peers":{"lacp":{"ports":["1\/1\/25","1\/1\/26"],"sys":"CORE-SW","mac":"38:21:c7:11:22:00"}},"tasks":[{"title":"\u0e2b\u0e32 port \u0e17\u0e35\u0e48\u0e15\u0e48\u0e2d Core","detail":"\u0e43\u0e0a\u0e49 LLDP \u0e2b\u0e32\u0e27\u0e48\u0e32 port \u0e44\u0e2b\u0e19\u0e1a\u0e49\u0e32\u0e07\u0e15\u0e48\u0e2d\u0e44\u0e1b CORE-SW (\u0e15\u0e2d\u0e1a\u0e17\u0e38\u0e01 port)","hint":["show lldp neighbor-info"],"checks":[{"type":"ran","cmd":"show lldp neighbor-info"},{"type":"answer","mode":"set","expect":["1\/1\/25 1\/1\/26"],"placeholder":"\u0e40\u0e0a\u0e48\u0e19 1\/1\/1, 1\/1\/2"}]},{"title":"\u0e2a\u0e23\u0e49\u0e32\u0e07 lag 1","detail":"\u0e2a\u0e23\u0e49\u0e32\u0e07 interface lag 1 \u0e40\u0e1b\u0e34\u0e14\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19 \u0e40\u0e1b\u0e47\u0e19 trunk native VLAN 1 \u0e2a\u0e48\u0e07\u0e40\u0e09\u0e1e\u0e32\u0e30 VLAN 10, 20 \u0e41\u0e25\u0e30\u0e43\u0e0a\u0e49 LACP active","hint":["configure terminal","interface lag 1","no shutdown","vlan trunk native 1","vlan trunk allowed 10,20","lacp mode active","exit"],"checks":[{"type":"cfg","under":"interface lag 1","line":"no shutdown"},{"type":"trunk","port":"lag1","native":1,"allowed":[10,20]},{"type":"cfg","under":"interface lag 1","line":"lacp mode active"}]},{"title":"\u0e43\u0e2a\u0e48 port member","detail":"\u0e43\u0e2a\u0e48 port \u0e17\u0e35\u0e48\u0e15\u0e48\u0e2d Core \u0e17\u0e31\u0e49\u0e07 2 \u0e40\u0e2a\u0e49\u0e19\u0e40\u0e02\u0e49\u0e32 lag 1 \u0e08\u0e19 in sync","hint":["interface 1\/1\/25-1\/1\/26","no shutdown","lag 1","exit"],"checks":[{"type":"lag","id":1,"members":"1\/1\/25-1\/1\/26","lacp":"active"}]},{"title":"\u0e15\u0e23\u0e27\u0e08\u0e2a\u0e16\u0e32\u0e19\u0e30 LACP","detail":"\u0e14\u0e39 State \u0e02\u0e2d\u0e07\u0e1d\u0e31\u0e48\u0e07\u0e40\u0e23\u0e32 (Actor) \u0e17\u0e35\u0e48 port 1\/1\/25 \u0e27\u0e48\u0e32\u0e40\u0e1b\u0e47\u0e19\u0e2d\u0e30\u0e44\u0e23","hint":["end","show lacp interfaces"],"checks":[{"type":"ran","cmd":"show lacp interfaces"},{"type":"answer","expect":["ALFNCD"],"placeholder":"\u0e15\u0e31\u0e27\u0e2d\u0e31\u0e01\u0e29\u0e23 State"}]},{"title":"\u0e15\u0e23\u0e27\u0e08 VLAN \u0e41\u0e25\u0e30\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01","detail":"\u0e14\u0e39\u0e27\u0e48\u0e32 VLAN 10, 20 \u0e27\u0e34\u0e48\u0e07\u0e1c\u0e48\u0e32\u0e19 lag1 \u0e41\u0e25\u0e49\u0e27 \u0e08\u0e32\u0e01\u0e19\u0e31\u0e49\u0e19\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01 config","hint":["show vlan","write memory"],"checks":[{"type":"ran","cmd":"show vlan"},{"type":"saved"}]}]};</script>
+<script src="assets/js/aruba-lab.js"></script>
+</body>
+</html>
