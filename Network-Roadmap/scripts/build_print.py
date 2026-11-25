@@ -368,6 +368,7 @@ def audit_cuts(pdf: Path) -> list[tuple[int, str]]:
             verticals += [r for r in page.rects if r["width"] < 2 and r["height"] > 5]
             cols_end[n] = {round(l["x0"]) for l in verticals if l["bottom"] > bottom - 60}
             cols_start[n] = {round(l["x0"]) for l in verticals if l["top"] < top + 1.5}
+            page.close()                       # free cached objects: books can have 500+ pages
     cuts = [(n, f"a box runs from page {n} onto page {n + 1}") for n in sorted(at_bottom) if n + 1 in at_top]
     cuts += [(n, f"a table is split between page {n} and page {n + 1}")
              for n in cols_end if cols_end[n] and cols_end[n] == cols_start.get(n + 1)]
