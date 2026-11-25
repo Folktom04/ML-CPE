@@ -3,6 +3,9 @@
 > บทเรียนแต่ละบทอธิบายเนื้อหาของ Level นั้นอย่างละเอียด มีตัวอย่าง config, ข้อควรระวัง, cheat sheet และแบบทดสอบ 10 ข้อพร้อมเฉลย
 > อ่านบทเรียนก่อน แล้วไปทำ **5 โปรเจค** ของ Level นั้นในไฟล์ Tier
 
+> 🖨️ **ต้องการฉบับพิมพ์?** มีไฟล์ PDF ขนาด A4 พร้อมพิมพ์ใน [print/](../print/) (เช่น Level 1–6) หรือสร้างช่วงบทที่ต้องการเอง:
+> `python3 scripts/build_print.py --from 7 --to 12` (ต้องมี Python package `markdown`, `pypdf` และ Node.js + Playwright)
+
 ## Tier 1 — พื้นฐานเครือข่าย (Level 1–10)
 โปรเจคและแบบฝึก: [01-foundations.md](../01-foundations.md)
 
