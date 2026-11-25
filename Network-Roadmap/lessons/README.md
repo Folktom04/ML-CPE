@@ -4,7 +4,7 @@
 > อ่านบทเรียนก่อน แล้วไปทำ **5 โปรเจค** ของ Level นั้นในไฟล์ Tier
 
 > 🖨️ **ต้องการฉบับพิมพ์?** มีไฟล์ PDF ขนาด A4 พร้อมพิมพ์ใน [print/](../print/) (เช่น Level 1–6) หรือสร้างช่วงบทที่ต้องการเอง:
-> `python3 scripts/build_print.py --from 7 --to 12` (ต้องมี Python package `markdown`, `pypdf` และ Node.js + Playwright)
+> `python3 scripts/build_print.py --from 7 --to 12` (ต้องมี Python package `markdown`, `pypdf`, `beautifulsoup4`, `pdfplumber` และ Node.js + Playwright) — สคริปต์จัดหน้าไม่ให้กล่อง/ตาราง/หัวข้อขาดข้ามหน้า และตรวจ PDF ให้อัตโนมัติ
 
 ## Tier 1 — พื้นฐานเครือข่าย (Level 1–10)
 โปรเจคและแบบฝึก: [01-foundations.md](../01-foundations.md)

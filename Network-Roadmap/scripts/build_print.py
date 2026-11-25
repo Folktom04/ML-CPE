@@ -9,9 +9,12 @@
 - Quiz answers (<details> blocks) are moved to an answer key at the end of the book,
   so the quiz can be done on paper without seeing the answers.
 - Navigation lines/links that make no sense on paper are removed.
+- Layout never cuts a code/diagram box, note box, table, list item or heading across
+  pages (headings stay with the content after them); after building, the PDF itself is
+  checked and any split is reported.
 
-Requires: Python packages 'markdown' and 'pypdf', Node.js with Playwright (Chromium),
-and Thai fonts (e.g. Noto Sans Thai / fonts-thai-tlwg).
+Requires: Python packages 'markdown', 'pypdf', 'beautifulsoup4' (and optionally 'pdfplumber'
+for the split check), Node.js with Playwright (Chromium), and Thai fonts (e.g. Noto Sans Thai).
 """
 from __future__ import annotations
 
@@ -96,6 +99,12 @@ a { color: inherit; text-decoration: none; }
 .answers h1 { margin-bottom: 8pt; }
 .answers section { break-inside: avoid-page; margin-bottom: 10pt; }
 .answers h2 { font-size: 12.5pt; margin-top: 10pt; }
+/* ---- pagination: never cut boxes, keep headings with their content ---- */
+pre, blockquote, .tablewrap, .answer-note, .keep, li, tr, img, figure { break-inside: avoid; }
+h1, h2, h3, h4 { break-after: avoid; break-inside: avoid; }
+.tablewrap { margin: 6pt 0 10pt; }
+.tablewrap table { margin: 0; }
+.keep > :last-child { margin-bottom: 6pt; }
 .marker { font-size: 6pt; color: #fff; font-weight: 400; margin-left: 4pt; font-family: "DejaVu Sans Mono", monospace; }
 """
 
@@ -128,7 +137,64 @@ def prepare(text: str) -> tuple[str, str, list[str]]:
 
 
 def md_to_html(text: str) -> str:
-    return markdown.markdown(text, extensions=["tables", "fenced_code", "sane_lists"], output_format="html5")
+    raw = markdown.markdown(text, extensions=["tables", "fenced_code", "sane_lists"], output_format="html5")
+    return keep_together(raw)
+
+
+BLOCKS = {"p", "pre", "table", "ul", "ol", "blockquote", "div", "hr"}
+
+
+def keep_together(fragment: str) -> str:
+    """Group elements so the browser never splits them across pages.
+
+    - every table gets a wrapper that must stay on one page;
+    - a heading stays on the same page as the content that follows it;
+    - a short lead-in paragraph ("ตัวอย่าง:", "วิธีแก้:") stays with the box/list after it.
+    Elements taller than a page still have to split; the build reports them.
+    """
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(fragment, "html.parser")
+    for hr in soup.find_all("hr", recursive=False):     # section separators: headings already stand out,
+        hr.decompose()                                  # and a lone rule at a page edge looks like a defect
+    for table in soup.find_all("table"):
+        table.wrap(soup.new_tag("div", attrs={"class": "tablewrap"}))
+
+    def next_block(el):
+        sib = el.next_sibling
+        while sib is not None and getattr(sib, "name", None) is None:
+            if str(sib).strip():
+                return None
+            sib = sib.next_sibling
+        return sib
+
+    def is_lead_in(el) -> bool:
+        return el.name == "p" and len(el.get_text(strip=True)) <= 180
+
+    def is_heading(el) -> bool:
+        return el is not None and el.name in ("h2", "h3", "h4")
+
+    for el in list(soup.find_all(["h2", "h3", "h4", "p"], recursive=False)):
+        if el.parent is None or el.parent.name == "div" and "keep" in (el.parent.get("class") or []):
+            continue
+        if not (is_heading(el) or is_lead_in(el)):
+            continue
+        group = [el]
+        nxt = next_block(el)
+        # heading -> (optional short lead-in paragraph) -> first block
+        while nxt is not None and nxt.name in BLOCKS | {"h3", "h4"} and len(group) < 4:
+            group.append(nxt)
+            if nxt.name == "p" and is_lead_in(nxt) or is_heading(nxt):
+                nxt = next_block(nxt)
+                continue
+            break
+        if len(group) == 1 or (not is_heading(el) and group[-1].name in ("p", "hr")):
+            continue
+        wrapper = soup.new_tag("div", attrs={"class": "keep"})
+        el.insert_before(wrapper)
+        for g in group:
+            wrapper.append(g.extract())
+    return str(soup)
 
 
 def build_html(lessons: list[tuple[int, Path]], pages: dict[str, int] | None, first: int, last: int,
@@ -226,6 +292,44 @@ def render(html_text: str, pdf: Path, footer: str, work: Path) -> None:
     subprocess.run(["node", str(js), str(html_path), str(pdf), footer], check=True, env=env)
 
 
+def audit_cuts(pdf: Path) -> list[tuple[int, str]]:
+    """Find boxes (code, notes, tables) that were split across a page break.
+
+    A split box is drawn down to the bottom edge of the printable area on one page
+    AND continues from the top edge of the next page. A box that merely starts at
+    the top of a page is fine. Needs 'pdfplumber' (optional).
+    """
+    try:
+        import logging
+        import pdfplumber
+        logging.getLogger("pdfminer").setLevel(logging.ERROR)
+    except ImportError:
+        print("note: pip install pdfplumber to check that no box is cut across pages")
+        return []
+    mm = 72 / 25.4
+    at_bottom, at_top = set(), set()
+    cols_end: dict[int, set] = {}      # column x-positions of a table ending near the page bottom
+    cols_start: dict[int, set] = {}    # column x-positions of a table starting at the page top
+    with pdfplumber.open(str(pdf)) as doc:
+        top, bottom = 16 * mm, doc.pages[0].height - 18 * mm      # same as @page margins
+        for n, page in enumerate(doc.pages, 1):
+            for r in page.rects:                                   # code/note boxes and header cells
+                if r["width"] >= 20 and r["height"] >= 2 and r.get("non_stroking_color") not in (None, [1], (1,), [1, 1, 1], (1, 1, 1)):
+                    if r["bottom"] > bottom - 1.5:
+                        at_bottom.add(n)
+                    if r["top"] < top + 1.5:
+                        at_top.add(n)
+            # table column borders are drawn as thin vertical rectangles (or lines)
+            verticals = [l for l in page.lines if abs(l["x0"] - l["x1"]) < 0.5]
+            verticals += [r for r in page.rects if r["width"] < 2 and r["height"] > 5]
+            cols_end[n] = {round(l["x0"]) for l in verticals if l["bottom"] > bottom - 60}
+            cols_start[n] = {round(l["x0"]) for l in verticals if l["top"] < top + 1.5}
+    cuts = [(n, f"a box runs from page {n} onto page {n + 1}") for n in sorted(at_bottom) if n + 1 in at_top]
+    cuts += [(n, f"a table is split between page {n} and page {n + 1}")
+             for n in cols_end if cols_end[n] and cols_end[n] == cols_start.get(n + 1)]
+    return sorted(cuts)
+
+
 def find_pages(pdf: Path) -> dict[str, int]:
     from pypdf import PdfReader
     pages: dict[str, int] = {}
@@ -256,6 +360,13 @@ def main() -> None:
         check = find_pages(out)
         if any(check.get(k) != v for k, v in pages.items()):
             print("warning: page numbers shifted between passes; table of contents may be off by a page")
+    cuts = audit_cuts(out)
+    if cuts:
+        print(f"warning: {len(cuts)} item(s) split across pages (too tall for one page?):")
+        for _, what in cuts:
+            print(f"  {what}")
+    else:
+        print("check: no code box, note box or table is split across pages")
     from pypdf import PdfReader
     print(f"wrote {out} ({len(PdfReader(str(out)).pages)} pages) · lessons: "
           + json.dumps({k: v for k, v in pages.items() if k.startswith('L') or k == 'ANS'}))
